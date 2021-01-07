@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.controllers
+package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+object ListUtils {
 
-import scala.concurrent.Future
-
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (appConfig: AppConfig, cc: ControllerComponents)
-    extends BackendController(cc) {
-
-  def hello(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(s"Hello world: ${appConfig.auditingEnabled}"))
+  implicit class ListOps[A](private val l: List[A]) extends AnyVal {
+    def partitionWith[B, C](f: A => Either[B, C]): (List[B], List[C]) =
+      l.foldLeft(List.empty[B] -> List.empty[C]) { case (acc, curr) =>
+        f(curr).fold(
+          b => (b :: acc._1) -> acc._2,
+          c => acc._1 -> (c :: acc._2)
+        )
+      }
   }
 }
