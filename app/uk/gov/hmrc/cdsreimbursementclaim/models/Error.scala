@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.controllers
+package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error.{IdKey, IdValue}
 
-import scala.concurrent.Future
+final case class Error(value: Either[String, Throwable], identifiers: Map[IdKey, IdValue])
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (appConfig: AppConfig, cc: ControllerComponents)
-    extends BackendController(cc) {
+object Error {
 
-  def hello(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(s"Hello world: ${appConfig.auditingEnabled}"))
-  }
+  type IdKey   = String
+  type IdValue = String
+
+  def apply(message: String, identifiers: (IdKey, IdValue)*): Error = Error(Left(message), identifiers.toMap)
+
+  def apply(error: Throwable, identifiers: (IdKey, IdValue)*): Error = Error(Right(error), identifiers.toMap)
+
 }
