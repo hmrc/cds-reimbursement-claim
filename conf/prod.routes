@@ -1,5 +1,6 @@
 # Add all the application routes to the app.routes file
-->         /cds-reimbursement-claim              app.Routes
-->         /                          health.Routes
+->          /cds-reimbursement-claim                app.Routes
+->          /cds-reimbursement-claim                upscan.Routes
+->          /                                       health.Routes
 
 GET        /admin/metrics             com.kenshoo.play.metrics.MetricsController.metrics
