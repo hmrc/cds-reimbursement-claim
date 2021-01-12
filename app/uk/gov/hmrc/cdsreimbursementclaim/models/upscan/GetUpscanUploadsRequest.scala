@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.controllers
+package uk.gov.hmrc.cdsreimbursementclaim.models.upscan
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import play.api.libs.json.{Json, OFormat}
 
-import scala.concurrent.Future
+final case class GetUpscanUploadsRequest(uploadReferences: List[UploadReference])
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (appConfig: AppConfig, cc: ControllerComponents)
-    extends BackendController(cc) {
+object GetUpscanUploadsRequest {
 
-  def hello(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(s"Hello world: ${appConfig.auditingEnabled}"))
-  }
+  implicit val format: OFormat[GetUpscanUploadsRequest] = Json.format
+
 }
