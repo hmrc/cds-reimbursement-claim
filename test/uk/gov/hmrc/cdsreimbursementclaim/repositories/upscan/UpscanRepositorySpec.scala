@@ -16,24 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.repositories.upscan
 
-import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{Matchers, WordSpec}
 import play.api.Configuration
-import play.api.test.Helpers.await
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, upscanUploadGen}
+import play.api.test.Helpers._
+import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 
 import java.time.{Clock, LocalDateTime}
-import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.FiniteDuration
-
-class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSupport {
-
-  implicit val timeout: Timeout = Timeout(FiniteDuration(15, TimeUnit.SECONDS))
+class UpscanRepositorySpec extends WordSpec with Matchers with MongoTestSupport {
 
   val config = Configuration(
     ConfigFactory.parseString(
