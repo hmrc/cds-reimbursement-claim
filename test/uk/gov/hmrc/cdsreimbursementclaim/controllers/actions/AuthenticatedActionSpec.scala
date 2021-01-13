@@ -18,8 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
 import akka.util.Timeout
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.{FlatSpec, Matchers}
 import play.api.mvc.{BodyParsers, Results}
 import play.api.test.{FakeRequest, Helpers, NoMaterializer}
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -31,7 +30,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class AuthenticatedActionsSpec extends AnyFlatSpec with Matchers with MockFactory {
+class AuthenticatedActionsSpec extends FlatSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
 
