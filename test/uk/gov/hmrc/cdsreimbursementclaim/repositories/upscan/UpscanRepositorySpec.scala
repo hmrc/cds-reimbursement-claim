@@ -33,7 +33,7 @@ import scala.concurrent.duration.FiniteDuration
 
 class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSupport {
 
-  implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
+  implicit val timeout: Timeout = Timeout(FiniteDuration(15, TimeUnit.SECONDS))
 
   val config = Configuration(
     ConfigFactory.parseString(
