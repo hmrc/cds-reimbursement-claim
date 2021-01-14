@@ -1,3 +1,3 @@
 # microservice specific routes
 
-POST        /CDFPAY/v1/PostNewClaims         uk.gov.hmrc.cdsreimbursementclaim.controllers.PostNewClaimController.claim
+POST        /claim         uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.claim

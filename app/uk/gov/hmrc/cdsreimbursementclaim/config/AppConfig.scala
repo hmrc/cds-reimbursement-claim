@@ -28,7 +28,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  lazy val eisBearerToken: String =servicesConfig.getConfString("eis.bearer-token", "NoBearerToken")
-  lazy val newClaimEndpoint: String = servicesConfig.baseUrl("eis") + servicesConfig.getConfString("eis.context-base", "Undefined")
+  lazy val eisBearerToken: String   = servicesConfig.getConfString("eis.bearer-token", "NoBearerToken")
+  lazy val newClaimEndpoint: String =
+    servicesConfig.baseUrl("eis") + servicesConfig.getConfString("eis.context-base", "Undefined")
 
 }
