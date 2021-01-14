@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import cats.data.EitherT
+import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
@@ -24,15 +26,23 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpErrorFunctions.is2xx
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton
-class EisService @Inject() (appConfig: AppConfig, http: HttpClient) extends EisConnector with Logging {
+@ImplementedBy(classOf[EisServiceImpl])
+trait EisService {
+  def submitClaim(body: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Throwable, HttpResponse]
+}
 
-  def submitClaim(body: JsValue, hc: HeaderCarrier): Future[HttpResponse] = {
+@Singleton
+class EisServiceImpl @Inject() (appConfig: AppConfig, http: HttpClient)
+    extends EisService
+    with EisConnector
+    with Logging {
+  def submitClaim(body: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Throwable, HttpResponse] = {
     val hcWithExtraHeaders = addHeaders(hc, appConfig.eisBearerToken)
-    http
+    val response           = http
       .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, body)(
         implicitly,
         implicitly,
@@ -44,5 +54,6 @@ class EisService @Inject() (appConfig: AppConfig, http: HttpClient) extends EisC
           logger.warn(s"Downstream error,response status: ${response.status}, body: ${response.body}")
         response
       }
+    EitherT.right(response)
   }
 }

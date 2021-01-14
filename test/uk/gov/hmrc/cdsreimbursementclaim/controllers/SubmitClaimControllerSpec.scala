@@ -16,41 +16,37 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
+import cats.data.EitherT
 import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.{JsObject, JsString, JsValue, Json, Writes}
+import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.services.EisService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class SubmitClaimControllerSpec extends ControllerSpec with DefaultAwaitTimeout {
-
-  val httpClient = mock[HttpClient]
-  val appConfig  = instanceOf[AppConfig]
-  val eisService = new EisService(appConfig, httpClient)
 
   implicit val ec           = scala.concurrent.ExecutionContext.Implicits.global
   implicit val materialiser = NoMaterializer
   private val fakeRequest   = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller    = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
+  implicit val hc           = HeaderCarrier()
+
+  val httpClient = mock[HttpClient]
+  val appConfig  = instanceOf[AppConfig]
+  val eisService = mock[EisService]
+
+  private val controller = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
 
   "POST" should {
     "return 200" in {
       val response = JsObject(Seq("hello" -> JsString("word")))
-      (
-        httpClient
-          .POST[JsValue, HttpResponse](_: String, _: JsValue, _: Seq[(String, String)])(
-            _: Writes[JsValue],
-            _: HttpReads[HttpResponse],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          )
-        )
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.successful(HttpResponse(OK, Json.stringify(response))))
+      (eisService
+        .submitClaim(_: JsValue)(_: HeaderCarrier))
+        .expects(*, *)
+        .returning(EitherT.right(Future.successful(HttpResponse(OK, Json.stringify(response)))))
 
       val result = controller.claim()(fakeRequest)
       status(result)        shouldBe Status.OK
@@ -58,17 +54,10 @@ class SubmitClaimControllerSpec extends ControllerSpec with DefaultAwaitTimeout 
     }
 
     "return 404 when resource is unavailable" in {
-      (
-        httpClient
-          .POST[JsValue, HttpResponse](_: String, _: JsValue, _: Seq[(String, String)])(
-            _: Writes[JsValue],
-            _: HttpReads[HttpResponse],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          )
-        )
-        .expects(*, *, *, *, *, *, *)
-        .returning(Future.successful(HttpResponse(NOT_FOUND, "Resource Unavailable")))
+      (eisService
+        .submitClaim(_: JsValue)(_: HeaderCarrier))
+        .expects(*, *)
+        .returning(EitherT.right(Future.successful(HttpResponse(NOT_FOUND, "Resource Unavailable"))))
 
       val result = controller.claim()(fakeRequest)
       status(result)          shouldBe NOT_FOUND
