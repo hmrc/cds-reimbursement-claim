@@ -22,7 +22,7 @@ import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
-import uk.gov.hmrc.cdsreimbursementclaim.services.EisService
+import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 
 import scala.concurrent.Future
@@ -36,7 +36,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with DefaultAwaitTimeout 
 
   val httpClient = mock[HttpClient]
   val appConfig  = instanceOf[AppConfig]
-  val eisService = mock[EisService]
+  val eisService = mock[SubmitClaimService]
 
   private val controller = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
 

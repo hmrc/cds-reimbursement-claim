@@ -16,18 +16,20 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.services.EisService
+import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class SubmitClaimController @Inject() (eisService: EisService, cc: ControllerComponents)(implicit ec: ExecutionContext)
-    extends BackendController(cc)
+class SubmitClaimController @Inject() (eisService: SubmitClaimService, cc: ControllerComponents)(implicit
+  ec: ExecutionContext
+) extends BackendController(cc)
     with Logging {
 
   def claim(): Action[JsValue] = Action.async(parse.json) { implicit request =>
@@ -36,9 +38,9 @@ class SubmitClaimController @Inject() (eisService: EisService, cc: ControllerCom
       .fold(
         e => {
           logger.warn(s"could not submit claim", e)
-          InternalServerError(e.getMessage)
+          InternalServerError
         },
-        response => Status(response.status)(response.body)
+        response => Ok(response) //TODO: returning string atm
       )
   }
 }

@@ -16,29 +16,37 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId}
-
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 trait EisConnector {
 
-  def addHeaders(hc: HeaderCarrier, bearerToken: String): HeaderCarrier = {
-    val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
-    val localDate  = LocalDateTime.now().format(dateFormat)
+  val config: ServicesConfig
 
-    val headers = Seq(
-      ("Date"             -> localDate),
-      ("X-Correlation-ID" -> java.util.UUID.randomUUID().toString),
-      ("X-Forwarded-Host" -> "MDTP"),
-      ("Content-Type"     -> "application/json"),
-      ("Accept"           -> "application/json")
-    )
+  val bearerToken: String = config.getString("eis.bearer-token")
 
-    hc.copy(
-      authorization = Some(Authorization(s"Bearer $bearerToken")),
-      extraHeaders = hc.extraHeaders ++ headers
-    )
-  }
+  val environment: String = config.getString("eis.environment")
+
+  //TODO: add the ones you need here
+  val headers: Seq[(String, String)] = Seq(
+    "Authorization" -> s"Bearer $bearerToken",
+    "Environment"   -> environment
+  )
+
+//  def addHeaders(hc: HeaderCarrier, bearerToken: String): HeaderCarrier = {
+//    val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
+//    val localDate  = LocalDateTime.now().format(dateFormat)
+//
+//    val headers = Seq(
+//      ("Date"             -> localDate),
+//      ("X-Correlation-ID" -> java.util.UUID.randomUUID().toString),
+//      ("X-Forwarded-Host" -> "MDTP"),
+//      ("Content-Type"     -> "application/json"),
+//      ("Accept"           -> "application/json")
+//    )
+//
+//    hc.copy(
+//      authorization = Some(Authorization(s"Bearer $bearerToken")),
+//      extraHeaders = hc.extraHeaders ++ headers
+//    )
+//  }
 }
