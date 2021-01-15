@@ -19,13 +19,14 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.{Application, Configuration, Play}
 
 import scala.reflect.ClassTag
 
-trait ControllerSpec extends WordSpec with Matchers with BeforeAndAfterAll with MockFactory {
+trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with MockFactory {
 
   val overrideBindings: List[GuiceableModule] = List.empty[GuiceableModule]
 

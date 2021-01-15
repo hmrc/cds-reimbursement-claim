@@ -19,7 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.upscan
 import akka.util.Timeout
 import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.await
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class UpscanServiceSpec extends WordSpec with Matchers with MockFactory {
+class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout                           = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global

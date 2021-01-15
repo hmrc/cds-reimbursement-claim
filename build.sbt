@@ -55,7 +55,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(routesImport := Seq.empty)
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
-    scalafmtOnCompile := true,
     addCompilerPlugin(scalafixSemanticdb),
     scalacOptions ++= List(
       "-Yrangepos",

@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.repositories.upscan
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
@@ -26,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class UpscanRepositoryFailureSpec extends WordSpec with Matchers with MongoTestSupport {
+class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTestSupport {
   val config = Configuration(
     ConfigFactory.parseString(
       """
