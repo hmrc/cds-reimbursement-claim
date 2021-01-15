@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.repositories
 import cats.data.EitherT
 import cats.instances.list._
 import cats.syntax.either._
-import com.github.ghik.silencer.silent
 import org.joda.time.DateTime
 import org.slf4j.Logger
 import play.api.libs.json._
@@ -42,7 +41,6 @@ import scala.util.control.NonFatal
 
 trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
 
-  @silent
   implicit val ec: ExecutionContext
 
   val cacheTtl: FiniteDuration
@@ -57,8 +55,10 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
 
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
     for {
-      result <- super.ensureIndexes(ec)
-      _      <- CacheRepository.setTtlIndex(cacheTtlIndex, cacheTtlIndexName, cacheTtl, collection, logger)(ec)
+      result <- super.ensureIndexes(ExecutionContext.global)
+      _      <- CacheRepository.setTtlIndex(cacheTtlIndex, cacheTtlIndexName, cacheTtl, collection, logger)(
+                  ExecutionContext.global
+                )
     } yield result
 
   def set(id: String, value: A, overrideLastUpdatedTime: Option[LocalDateTime] = None): Future[Either[Error, Unit]] =
