@@ -40,7 +40,7 @@ class SubmitClaimController @Inject() (eisService: SubmitClaimService, cc: Contr
           logger.warn(s"could not submit claim", e)
           InternalServerError
         },
-        response => Ok(response) //TODO: returning string atm
+        response => Ok(response)
       )
   }
 }

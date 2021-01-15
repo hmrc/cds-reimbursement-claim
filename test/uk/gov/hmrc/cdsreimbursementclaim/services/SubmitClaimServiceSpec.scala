@@ -17,66 +17,80 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
+import com.fasterxml.jackson.core.JsonParseException
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import play.api.test.Helpers.await
+import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubmitClaimConnector
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import play.api.test.Helpers._
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class SubmitClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val submitClaimConnector = mock[SubmitClaimConnector]
 
-  val submitClaimService =
-    new SubmitClaimServiceImpl(
-      submitClaimConnector
-    )
+  val submitClaimService = new SubmitClaimServiceImpl(submitClaimConnector)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   implicit val request: Request[_] = FakeRequest()
+  val okResponse: JsValue          = Json.parse("""{
+      |    "PostNewClaimsResponse": {
+      |        "ResponseCommon": {
+      |            "Status": "OK",
+      |            "ProcessingDateTime": "2020-12-23T16:58:28Z",
+      |			"CDFPayCaseNumber": "NDRC-1234",
+      |			"CDFPayService":"NDRC"
+      |        }
+      |    }
+      |}""".stripMargin)
 
-  //TODO: take this comment out - we setup a mock for the http call
-  def mockSubmitClaim(submitClaimData: JsValue)(
-    response: Either[Error, HttpResponse]
-  ) =
+  val errorResponse: JsValue = Json.parse("""{
+      |   "ErrorDetails":{
+      |      "ProcessingDateTime":"2016-10-10T13:52:16Z",
+      |      "CorrelationId":"d60de98c-f499-47f5-b2d6-e80966e8d19e",
+      |      "ErrorMessage":"Invalid ClaimType"
+      |    }
+      |}""".stripMargin)
+
+  def mockSubmitClaim(submitClaimData: JsValue)(response: Either[Error, HttpResponse]) =
     (submitClaimConnector
       .submitClaim(_: JsValue)(_: HeaderCarrier))
-      .expects(submitClaimData, hc)
+      .expects(submitClaimData, *)
       .returning(EitherT.fromEither[Future](response))
+      .atLeastOnce()
 
   "Submit Claim Service" when {
-
     "handling submit claim returns" should {
-
       "handle successful submits" when {
-
         "there is a valid payload" in {
-
-          val responseJsonBody =
-            Json.parse(s"""
-                          |{
-                          | //TODO: add some valid payload structure here
-                          |}
-                          |""".stripMargin)
-
-          mockSubmitClaim(
-            Json.parse("{}")
-          )(Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]])))
-
-          await(submitClaimService.submitClaim(Json.parse("{}")).value) shouldBe Right(
-            "{}"
-          ) //TODO: change this to what you need ie the actual response
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(200, okResponse, Map.empty[String, Seq[String]])))
+          await(submitClaimService.submitClaim(JsString("Hello")).value) shouldBe Right(okResponse)
         }
+      }
+
+      "handle unsuccesful submits" when {
+        "400 response" in {
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(400, errorResponse, Map.empty[String, Seq[String]])))
+          val response = await(submitClaimService.submitClaim(JsString("Hello")).value)
+          response.left.getOrElse(null).value.left.getOrElse(null) should include("Call to submit claim data came back")
+        }
+
+        "Invalid Json response" in {
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(200, """{"a"-"b"}""", Map.empty[String, Seq[String]])))
+          val response = await(submitClaimService.submitClaim(JsString("Hello")).value)
+          response.left.getOrElse(null).value.right.getOrElse(null).getClass shouldBe classOf[JsonParseException]
+        }
+
       }
     }
   }
+
 }

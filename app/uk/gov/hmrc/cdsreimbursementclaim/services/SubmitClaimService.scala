@@ -25,32 +25,31 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubmitClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-
 import javax.inject.{Inject, Singleton}
+
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @ImplementedBy(classOf[SubmitClaimServiceImpl])
 trait SubmitClaimService {
-  //TODO: returning string here but change to the actual data the response maps back to
-  def submitClaim(body: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, String]
+  def submitClaim(body: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue]
 }
 
 @Singleton
-class SubmitClaimServiceImpl @Inject() (submitClaimConnector: SubmitClaimConnector)(implicit
-  ec: ExecutionContext
-) extends SubmitClaimService
+class SubmitClaimServiceImpl @Inject() (submitClaimConnector: SubmitClaimConnector)(implicit ec: ExecutionContext)
+    extends SubmitClaimService
     with Logging {
 
-  def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, String] =
+  def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue] =
     submitClaimConnector
-      .submitClaim(
-        claimData
-      )
+      .submitClaim(claimData)
       .subflatMap { httpResponse =>
         if (httpResponse.status === Status.OK)
-          Right(httpResponse.body)
+          Try(httpResponse.json).fold(err => Left(Error(err)), js => Right(js))
         else {
-          Left(Error(s"Call to submit claim data came back with status ${httpResponse.status}"))
+          Left(
+            Error(s"Call to submit claim data came back with status ${httpResponse.status}, body: ${httpResponse.body}")
+          )
         }
       }
 }

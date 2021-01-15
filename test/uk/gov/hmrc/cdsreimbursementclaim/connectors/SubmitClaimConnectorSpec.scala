@@ -1,12 +1,28 @@
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
-import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.Configuration
-import play.api.libs.json.Json
+import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -16,64 +32,33 @@ class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
   val (eisBearerToken, eisEnvironment) = "token" -> "environment"
 
-  val config: Configuration = Configuration(
-    ConfigFactory.parseString(
-      s"""
-         |microservice {
-         |  services {
-         |      eis {
-         |        host = localhost
-         |        port = 7502
-         |        context-base = "/CDFPAY/v1/PostNewClaims"
-         |        bearer-token = "blablabla"
-         |        environment = "qa"
-         |    }
-         |  }
-         |}
-         |
-         |""".stripMargin
-    )
-  )
-
-  val connector = new DefaultSubmitClaimConnector(mockHttp, new ServicesConfig(config))
+  val env            = Environment.simple()
+  val config         = Configuration.load(env)
+  val servicesConfig = new ServicesConfig(config)
+  val appConfig      = new AppConfig(config, servicesConfig)
+  val connector      = new DefaultSubmitClaimConnector(mockHttp, appConfig)
 
   "SubmitClaimConnectorSpec" when {
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val expectedHeaders            = Seq(
-      "Authorization" -> s"Bearer $eisBearerToken",
-      "Environment"   -> eisEnvironment
-    ) // TODO: add the other headers here that you need after gettting the API spec
 
     "handling request to submit claim" must {
 
-      "do a post http call and get the TPIO5 API response" in {
-
-        mockPost(
-          "some url", //TODO: put the correct url here
-          expectedHeaders,
-          *
-        )(
-          Some(
-            HttpResponse(200, "{}")
-          ) //TODO: change later to what is actually expected to be return ie the JSON payload
-        )
-
-        await(connector.submitClaim(Json.parse("{}")).value) shouldBe Right(HttpResponse(200, "{}"))
-
+      "do a post http call and get the TPI-05 API response" in {
+        val responseBody = "The Response"
+        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Some(HttpResponse(200, responseBody)))
+        val response     = await(connector.submitClaim(JsString("The Request")).value).right.getOrElse(null)
+        response.status shouldBe 200
+        response.body   shouldBe responseBody
       }
     }
 
     "return an error" when {
-
       "the call fails" in {
-        mockPost(
-          "some url", //TODO: change
-          expectedHeaders,
-          *
-        )(None)
-
-        await(connector.submitClaim(Json.parse("{}")).value).isLeft shouldBe true
+        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(None)
+        val response = await(connector.submitClaim(JsString("The Request")).value)
+        //response.left.getOrElse(null) shouldBe Error(new Exception("Test exception message"))  //TODO why not equal?
+        response.left.getOrElse(null).value.right.getOrElse(null).getMessage shouldBe "Test exception message"
       }
     }
 

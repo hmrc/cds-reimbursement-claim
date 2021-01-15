@@ -18,12 +18,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
 import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.{JsObject, JsString, JsValue, Json}
+import play.api.libs.json.{JsObject, JsString, JsValue}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
 
@@ -46,22 +47,21 @@ class SubmitClaimControllerSpec extends ControllerSpec with DefaultAwaitTimeout 
       (eisService
         .submitClaim(_: JsValue)(_: HeaderCarrier))
         .expects(*, *)
-        .returning(EitherT.right(Future.successful(HttpResponse(OK, Json.stringify(response)))))
+        .returning(EitherT.right(Future.successful(response)))
 
       val result = controller.claim()(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe response
     }
 
-    "return 404 when resource is unavailable" in {
+    "return 500 when on any error" in {
       (eisService
         .submitClaim(_: JsValue)(_: HeaderCarrier))
         .expects(*, *)
-        .returning(EitherT.right(Future.successful(HttpResponse(NOT_FOUND, "Resource Unavailable"))))
+        .returning(EitherT.left(Future.successful(Error("Resource Unavailable"))))
 
       val result = controller.claim()(fakeRequest)
-      status(result)          shouldBe NOT_FOUND
-      contentAsString(result) shouldBe "Resource Unavailable"
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
 
   }

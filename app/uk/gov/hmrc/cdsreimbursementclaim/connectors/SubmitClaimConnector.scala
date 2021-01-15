@@ -18,43 +18,35 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
-import play.api.libs.json.{JsValue, Json, Writes}
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.HttpReads.Implicits._
-
 import javax.inject.Inject
+import play.api.libs.json.{JsValue, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultSubmitClaimConnector])
 trait SubmitClaimConnector {
-
   def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
-
 }
 
-class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val config: ServicesConfig)(implicit
-  ec: ExecutionContext
-) extends SubmitClaimConnector
+class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends SubmitClaimConnector
     with EisConnector {
 
-  val baseUrl: String = config.baseUrl("eis")
-
-  override def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] = {
-    val submitClaimUrl: String = "" //TODO: add url here
-
-    EitherT[Future, Error, HttpResponse]( //TODO: take this comment out - this lifts the future to this monad context - http exceptions get mapped to our Error (don't use Throwable anywhere in the code base)
+  override def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+    EitherT[Future, Error, HttpResponse](
       http
-        .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(claimData), headers)(
+        .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, claimData)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          hc.copy(authorization = None),
+          enrichHC(hc),
           ec
         )
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
-  }
 
 }
