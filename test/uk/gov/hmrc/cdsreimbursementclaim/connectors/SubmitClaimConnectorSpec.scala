@@ -23,6 +23,7 @@ import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -46,7 +47,7 @@ class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
       "do a post http call and get the TPI-05 API response" in {
         val responseBody = "The Response"
-        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Some(HttpResponse(200, responseBody)))
+        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Right(HttpResponse(200, responseBody)))
         val response     = await(connector.submitClaim(JsString("The Request")).value).right.getOrElse(null)
         response.status shouldBe 200
         response.body   shouldBe responseBody
@@ -55,10 +56,10 @@ class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
     "return an error" when {
       "the call fails" in {
-        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(None)
+        val error    = new Exception("Socket connection error")
+        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Left(error))
         val response = await(connector.submitClaim(JsString("The Request")).value)
-        //response.left.getOrElse(null) shouldBe Error(new Exception("Test exception message"))  //TODO why not equal?
-        response.left.getOrElse(null).value.right.getOrElse(null).getMessage shouldBe "Test exception message"
+        response shouldBe Left(Error(error))
       }
     }
 

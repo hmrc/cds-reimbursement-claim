@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
-import com.fasterxml.jackson.core.JsonParseException
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -52,11 +51,11 @@ class SubmitClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory 
       |    }
       |}""".stripMargin)
 
-  val errorResponse: JsValue = Json.parse("""{
+  def errorResponse(errorMessage: String): JsValue = Json.parse(s"""{
       |   "ErrorDetails":{
       |      "ProcessingDateTime":"2016-10-10T13:52:16Z",
       |      "CorrelationId":"d60de98c-f499-47f5-b2d6-e80966e8d19e",
-      |      "ErrorMessage":"Invalid ClaimType"
+      |      "ErrorMessage":"$errorMessage"
       |    }
       |}""".stripMargin)
 
@@ -78,15 +77,37 @@ class SubmitClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory 
 
       "handle unsuccesful submits" when {
         "400 response" in {
-          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(400, errorResponse, Map.empty[String, Seq[String]])))
-          val response = await(submitClaimService.submitClaim(JsString("Hello")).value)
-          response.left.getOrElse(null).value.left.getOrElse(null) should include("Call to submit claim data came back")
+          val eisResponse = errorResponse("Invalid ClaimType")
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(400, eisResponse, Map.empty[String, Seq[String]])))
+          val response    = await(submitClaimService.submitClaim(JsString("Hello")).value)
+          response.fold(_.message should include("Invalid ClaimType"), _ => fail())
+        }
+
+        "404 response" in {
+          val eisResponse = errorResponse("Resource is unavailable")
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(404, eisResponse, Map.empty[String, Seq[String]])))
+          val response    = await(submitClaimService.submitClaim(JsString("Hello")).value)
+          response.fold(_.message should include("Resource is unavailable"), _ => fail())
+        }
+
+        "405 response" in {
+          val eisResponse = errorResponse("Method not allowed")
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(405, eisResponse, Map.empty[String, Seq[String]])))
+          val response    = await(submitClaimService.submitClaim(JsString("Hello")).value)
+          response.fold(_.message should include("Method not allowed"), _ => fail())
+        }
+
+        "500 response" in {
+          val eisResponse = errorResponse("invalid JSON format")
+          mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(500, eisResponse, Map.empty[String, Seq[String]])))
+          val response    = await(submitClaimService.submitClaim(JsString("Hello")).value)
+          response.fold(_.message should include("invalid JSON format"), _ => fail())
         }
 
         "Invalid Json response" in {
           mockSubmitClaim(JsString("Hello"))(Right(HttpResponse(200, """{"a"-"b"}""", Map.empty[String, Seq[String]])))
           val response = await(submitClaimService.submitClaim(JsString("Hello")).value)
-          response.left.getOrElse(null).value.right.getOrElse(null).getClass shouldBe classOf[JsonParseException]
+          response.fold(_.message should include("Unexpected character"), _ => fail())
         }
 
       }
