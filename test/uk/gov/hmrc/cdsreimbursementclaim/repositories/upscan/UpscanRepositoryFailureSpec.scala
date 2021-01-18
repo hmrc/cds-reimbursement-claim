@@ -26,6 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanU
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTestSupport {
   val config = Configuration(
@@ -38,7 +39,11 @@ class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTe
 
   val repository = new DefaultUpscanRepository(reactiveMongoComponent, config)
 
-  repository.count.map(_ => reactiveMongoComponent.mongoConnector.helper.driver.close())
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    Thread.sleep(500) //allow indexing to complete
+    reactiveMongoComponent.mongoConnector.helper.driver.close(FiniteDuration(10, SECONDS))
+  }
 
   "Upscan Repository" when {
     "inserting" should {
