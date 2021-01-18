@@ -46,11 +46,10 @@ class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactor
     "handling request to submit claim" must {
 
       "do a post http call and get the TPI-05 API response" in {
-        val responseBody = "The Response"
-        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Right(HttpResponse(200, responseBody)))
-        val response     = await(connector.submitClaim(JsString("The Request")).value).right.getOrElse(null)
-        response.status shouldBe 200
-        response.body   shouldBe responseBody
+        val httpResponse = HttpResponse(200, "The Response")
+        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Right(httpResponse))
+        val response     = await(connector.submitClaim(JsString("The Request")).value)
+        response shouldBe Right(httpResponse)
       }
     }
 
