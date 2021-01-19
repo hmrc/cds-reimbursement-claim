@@ -32,34 +32,30 @@ class SubmitClaimControllerSpec extends ControllerSpec with DefaultAwaitTimeout 
 
   implicit val ec           = scala.concurrent.ExecutionContext.Implicits.global
   implicit val materialiser = NoMaterializer
-  private val fakeRequest   = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
+  val httpClient            = mock[HttpClient]
   implicit val hc           = HeaderCarrier()
+  val appConfig             = instanceOf[AppConfig]
+  val eisService            = mock[SubmitClaimService]
+  private val fakeRequest   = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
+  private val controller    = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
 
-  val httpClient = mock[HttpClient]
-  val appConfig  = instanceOf[AppConfig]
-  val eisService = mock[SubmitClaimService]
-
-  private val controller = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
+  def mockEisResponse(response: EitherT[Future, Error, JsValue]) =
+    (eisService
+      .submitClaim(_: JsValue)(_: HeaderCarrier))
+      .expects(*, *)
+      .returning(response)
 
   "POST" should {
     "return 200" in {
       val response = JsObject(Seq("hello" -> JsString("word")))
-      (eisService
-        .submitClaim(_: JsValue)(_: HeaderCarrier))
-        .expects(*, *)
-        .returning(EitherT.right(Future.successful(response)))
-
-      val result = controller.claim()(fakeRequest)
+      mockEisResponse(EitherT.right(Future.successful(response)))
+      val result   = controller.claim()(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe response
     }
 
     "return 500 when on any error" in {
-      (eisService
-        .submitClaim(_: JsValue)(_: HeaderCarrier))
-        .expects(*, *)
-        .returning(EitherT.left(Future.successful(Error("Resource Unavailable"))))
-
+      mockEisResponse(EitherT.left(Future.successful(Error("Resource Unavailable"))))
       val result = controller.claim()(fakeRequest)
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
