@@ -31,6 +31,7 @@ trait MongoTestSupport extends MongoSpecSupport with BeforeAndAfterEach with Bef
   abstract override def beforeEach(): Unit = {
     super.beforeEach()
     mongo().drop()
+    ()
   }
 
   abstract override def afterAll(): Unit = {

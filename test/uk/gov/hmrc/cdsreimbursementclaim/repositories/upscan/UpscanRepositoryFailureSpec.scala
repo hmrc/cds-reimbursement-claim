@@ -41,7 +41,7 @@ class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTe
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    Thread.sleep(500) //allow indexing to complete
+    Thread.sleep(1200) //allow indexing to complete
     reactiveMongoComponent.mongoConnector.helper.driver.close(FiniteDuration(10, SECONDS))
   }
 
