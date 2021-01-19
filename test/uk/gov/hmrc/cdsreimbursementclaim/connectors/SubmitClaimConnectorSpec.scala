@@ -41,13 +41,14 @@ class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
   "SubmitClaimConnectorSpec" when {
 
+    val backEndUrl                 = "http://localhost:7502/tpi/postoverpaymentclaim/v1"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling request to submit claim" must {
 
       "do a post http call and get the TPI-05 API response" in {
         val httpResponse = HttpResponse(200, "The Response")
-        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Right(httpResponse))
+        mockPost(backEndUrl, Seq.empty, *)(Right(httpResponse))
         val response     = await(connector.submitClaim(JsString("The Request")).value)
         response shouldBe Right(httpResponse)
       }
@@ -56,7 +57,7 @@ class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactor
     "return an error" when {
       "the call fails" in {
         val error    = new Exception("Socket connection error")
-        mockPost("http://localhost:7502/CDFPAY/v1/PostNewClaims", Seq.empty, *)(Left(error))
+        mockPost(backEndUrl, Seq.empty, *)(Left(error))
         val response = await(connector.submitClaim(JsString("The Request")).value)
         response shouldBe Left(Error(error))
       }
