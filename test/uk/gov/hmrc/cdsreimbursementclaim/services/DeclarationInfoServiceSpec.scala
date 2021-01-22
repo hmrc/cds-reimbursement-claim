@@ -85,13 +85,22 @@ class DeclarationInfoServiceSpec extends AnyWordSpec with Matchers with MockFact
           response.fold(_.message should include("Invalid Request"), _ => fail())
         }
 
-        "404 response" in {
-          val decInfoResponse = errorResponse("Resource is unavailable")
+        "401 response" in {
+          val decInfoResponse = errorResponse("Unauthorized")
           mockDeclarationConnector(JsString("Hello"))(
             Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
           )
           val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
-          response.fold(_.message should include("Resource is unavailable"), _ => fail())
+          response.fold(_.message should include("Unauthorized"), _ => fail())
+        }
+
+        "403 response" in {
+          val decInfoResponse = errorResponse("WAF Forbidden")
+          mockDeclarationConnector(JsString("Hello"))(
+            Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
+          )
+          val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          response.fold(_.message should include("WAF Forbidden"), _ => fail())
         }
 
         "405 response" in {
