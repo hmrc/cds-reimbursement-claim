@@ -1,3 +1,5 @@
 # microservice specific routes
 
-POST        /claim         uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.claim
+POST        /claim                   uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.claim
+
+POST        /declaration-info       uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationInfoController.getDeclarationInfo

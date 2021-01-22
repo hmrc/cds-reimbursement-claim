@@ -32,4 +32,10 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val eisBaseUrl: String       = servicesConfig.baseUrl("eis")
   val newClaimEndpoint: String = eisBaseUrl + servicesConfig.getConfString("eis.context-base", "Undefined")
 
+  val decInfoService             = "declaration-info-request"
+  val decInfoBearerToken: String = servicesConfig.getConfString(s"$decInfoService.bearer-token", "NoBearerToken")
+  val decInfoBaseUrl: String     = servicesConfig.baseUrl(decInfoService)
+  val decInfoEndpoint: String    =
+    decInfoBaseUrl + servicesConfig.getConfString(s"$decInfoService.context-base", "Undefined")
+
 }
