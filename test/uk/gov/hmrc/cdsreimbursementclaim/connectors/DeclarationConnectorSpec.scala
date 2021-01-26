@@ -16,26 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class DeclarationInfoConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
+class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
 
-  val env            = Environment.simple()
-  val config         = Configuration.load(env)
-  val servicesConfig = new ServicesConfig(config)
-  val appConfig      = new AppConfig(config, servicesConfig)
-  val connector      = new DeclarationInfoConnector(mockHttp, appConfig)
+  val connector = new DefaultDeclarationConnector(mockHttp, appConfig)
 
   "DeclarationInfoConnector" when {
 

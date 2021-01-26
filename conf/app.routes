@@ -2,4 +2,4 @@
 
 POST        /claim                   uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.claim
 
-POST        /declaration-info       uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationInfoController.getDeclarationInfo
+GET         /declaration/:id             uk.gov.hmrc.cdsreimbursementclaim.controllers.GetDeclarationController.declaration(id:String)

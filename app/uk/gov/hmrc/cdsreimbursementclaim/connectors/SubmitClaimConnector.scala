@@ -43,7 +43,7 @@ class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: Ap
         .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, claimData)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          enrichHC(hc),
+          enrichHC(hc, appConfig.eisBearerToken),
           ec
         )
         .map(Right(_))

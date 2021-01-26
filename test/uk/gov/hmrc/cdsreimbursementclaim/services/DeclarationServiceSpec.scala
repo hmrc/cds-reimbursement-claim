@@ -24,18 +24,19 @@ import play.api.libs.json._
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationInfoConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
+import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DeclarationInfoServiceSpec extends AnyWordSpec with Matchers with MockFactory {
+class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
-  val declarationInfoConnector = mock[DeclarationInfoConnector]
+  val declarationInfoConnector = mock[DefaultDeclarationConnector]
 
-  val declarationInfoService = new DeclarationInfoService(declarationInfoConnector)
+  val declarationInfoService = new DeclarationServiceImpl(declarationInfoConnector)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -57,75 +58,88 @@ class DeclarationInfoServiceSpec extends AnyWordSpec with Matchers with MockFact
                                                                    |    }
                                                                    |}""".stripMargin)
 
-  def mockDeclarationConnector(declarationInfo: JsValue)(response: Either[Error, HttpResponse]) =
+  def mockDeclarationConnector(response: Either[Error, HttpResponse]) =
     (declarationInfoConnector
       .getDeclarationInfo(_: JsValue)(_: HeaderCarrier))
-      .expects(declarationInfo, *)
+      .expects(*, *)
       .returning(EitherT.fromEither[Future](response))
       .atLeastOnce()
+
+  val emptyHeaders = Map.empty[String, Seq[String]]
 
   "Declaration Information Request Service" when {
     "handling a request returns" should {
       "handle successful submits" when {
         "there is a valid payload" in {
-          mockDeclarationConnector(JsString("Hello"))(
-            Right(HttpResponse(200, okResponse, Map.empty[String, Seq[String]]))
-          )
-          await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value) shouldBe Right(okResponse)
+          val genResponse   = sample[DeclarationInfoResponse]
+          val declarationId =
+            genResponse.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
+          mockDeclarationConnector(Right(HttpResponse(200, Json.toJson(genResponse), emptyHeaders)))
+          val response      = await(declarationInfoService.getDeclaration(declarationId).value)
+          response
+            .getOrElse(fail)
+            .overpaymentDeclarationDisplayResponse
+            .responseDetail
+            .getOrElse(fail)
+            .declarationId shouldBe declarationId
         }
       }
 
       "handle unsuccesful submits" when {
         "400 response" in {
+          val declarationId   = "GB349970632046"
           val decInfoResponse = errorResponse("Invalid Request")
-          mockDeclarationConnector(JsString("Hello"))(
-            Right(HttpResponse(400, decInfoResponse, Map.empty[String, Seq[String]]))
-          )
-          val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          mockDeclarationConnector(Right(HttpResponse(400, decInfoResponse, Map.empty[String, Seq[String]])))
+          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
           response.fold(_.message should include("Invalid Request"), _ => fail())
         }
 
         "401 response" in {
+          val declarationId   = "GB349970632046"
           val decInfoResponse = errorResponse("Unauthorized")
-          mockDeclarationConnector(JsString("Hello"))(
+          mockDeclarationConnector(
             Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
           response.fold(_.message should include("Unauthorized"), _ => fail())
         }
 
         "403 response" in {
+          val declarationId   = "GB349970632046"
           val decInfoResponse = errorResponse("WAF Forbidden")
-          mockDeclarationConnector(JsString("Hello"))(
+          mockDeclarationConnector(
             Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
           response.fold(_.message should include("WAF Forbidden"), _ => fail())
         }
 
         "405 response" in {
+          val declarationId   = "GB349970632046"
           val decInfoResponse = errorResponse("Method not allowed")
-          mockDeclarationConnector(JsString("Hello"))(
+          mockDeclarationConnector(
             Right(HttpResponse(405, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
           response.fold(_.message should include("Method not allowed"), _ => fail())
         }
 
         "500 response" in {
+          val declarationId   = "GB349970632046"
           val decInfoResponse = errorResponse("invalid JSON format")
-          mockDeclarationConnector(JsString("Hello"))(
+          mockDeclarationConnector(
             Right(HttpResponse(500, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
           response.fold(_.message should include("invalid JSON format"), _ => fail())
         }
 
         "Invalid Json response" in {
-          mockDeclarationConnector(JsString("Hello"))(
+          val declarationId = "GB349970632046"
+          mockDeclarationConnector(
             Right(HttpResponse(200, """{"a"-"b"}""", Map.empty[String, Seq[String]]))
           )
-          val response = await(declarationInfoService.getDeclarationInfo(JsString("Hello")).value)
+          val response      = await(declarationInfoService.getDeclaration(declarationId).value)
           response.fold(_.message should include("Unexpected character"), _ => fail())
         }
 

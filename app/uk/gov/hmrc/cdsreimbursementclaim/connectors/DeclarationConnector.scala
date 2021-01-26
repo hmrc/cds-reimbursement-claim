@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
+import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
@@ -26,9 +27,15 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@ImplementedBy(classOf[DefaultDeclarationConnector])
+trait DeclarationConnector {
+  def getDeclarationInfo(declarationInfo: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
+}
+
 @Singleton
-class DeclarationInfoConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
-    extends EisConnector {
+class DefaultDeclarationConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends DeclarationConnector
+    with EisConnector {
 
   def getDeclarationInfo(declarationInfo: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
@@ -36,7 +43,7 @@ class DeclarationInfoConnector @Inject() (http: HttpClient, val appConfig: AppCo
         .POST[JsValue, HttpResponse](appConfig.decInfoEndpoint, declarationInfo)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          enrichHC(hc),
+          enrichHC(hc, appConfig.decInfoBearerToken),
           ec
         )
         .map(Right(_))

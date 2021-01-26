@@ -19,13 +19,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneId}
 
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
 
 trait EisConnector {
-
-  val appConfig: AppConfig
 
   def getExtraHeaders(): Seq[(String, String)] = {
     val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
@@ -41,9 +38,9 @@ trait EisConnector {
 
   }
 
-  def enrichHC(hc: HeaderCarrier): HeaderCarrier =
+  def enrichHC(hc: HeaderCarrier, bearerToken: String): HeaderCarrier =
     hc.copy(
-      authorization = Some(Authorization(s"Bearer ${appConfig.eisBearerToken}")),
+      authorization = Some(Authorization(s"Bearer $bearerToken")),
       extraHeaders = hc.extraHeaders ++ getExtraHeaders
     )
 

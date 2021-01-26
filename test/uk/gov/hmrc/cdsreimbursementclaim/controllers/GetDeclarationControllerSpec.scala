@@ -18,45 +18,45 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
 import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationInfoService
+import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
+import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error}
+import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
 
-class DeclarationInfoControllerSpec extends ControllerSpec with DefaultAwaitTimeout {
+class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
   implicit val ec            = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val materialiser  = NoMaterializer
   val httpClient             = mock[HttpClient]
-  implicit val hc            = HeaderCarrier()
-  val appConfig              = instanceOf[AppConfig]
-  val declarationInfoService = mock[DeclarationInfoService]
+  val declarationInfoService = mock[DeclarationServiceImpl]
   private val fakeRequest    = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller     = new DeclarationInfoController(declarationInfoService, Helpers.stubControllerComponents())
+  private val controller     = new GetDeclarationController(declarationInfoService, Helpers.stubControllerComponents())
 
-  def mockEisResponse(response: EitherT[Future, Error, JsValue]) =
+  def mockEisResponse(response: EitherT[Future, Error, DeclarationInfoResponse]) =
     (declarationInfoService
-      .getDeclarationInfo(_: JsValue)(_: HeaderCarrier))
+      .getDeclaration(_: String)(_: HeaderCarrier))
       .expects(*, *)
       .returning(response)
 
   "POST" should {
     "return 200" in {
-      val response = JsObject(Seq("hello" -> JsString("word")))
+      val response      = sample[DeclarationInfoResponse]
+      val declarationId =
+        response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
       mockEisResponse(EitherT.right(Future.successful(response)))
-      val result   = controller.getDeclarationInfo()(fakeRequest)
+      val result        = controller.declaration(declarationId)(fakeRequest)
       status(result)        shouldBe Status.OK
-      contentAsJson(result) shouldBe response
+      contentAsJson(result) shouldBe Json.toJson(response)
     }
 
     "return 500 when on any error" in {
+      val declarationId = "GB349970632046"
       mockEisResponse(EitherT.left(Future.successful(Error("Resource Unavailable"))))
-      val result = controller.getDeclarationInfo()(fakeRequest)
+      val result        = controller.declaration(declarationId)(fakeRequest)
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
 

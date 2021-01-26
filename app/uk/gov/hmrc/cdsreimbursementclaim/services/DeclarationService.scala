@@ -18,26 +18,37 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
 import cats.syntax.eq._
+import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationInfoConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import play.api.libs.json.Json
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
+import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoRequest, DeclarationInfoResponse, Error}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-@Singleton
-class DeclarationInfoService @Inject()(declarationInfoConnector: DeclarationInfoConnector)(implicit ec: ExecutionContext) extends Logging {
+@ImplementedBy(classOf[DeclarationServiceImpl])
+trait DeclarationService {
+  def getDeclaration(declarationId: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, DeclarationInfoResponse]
+}
 
-  def getDeclarationInfo(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue] =
+@Singleton
+class DeclarationServiceImpl @Inject() (declarationInfoConnector: DefaultDeclarationConnector)(implicit
+  ec: ExecutionContext
+) extends DeclarationService
+    with Logging {
+
+  def getDeclaration(
+    declarationId: String
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, DeclarationInfoResponse] =
     declarationInfoConnector
-      .getDeclarationInfo(claimData)
+      .getDeclarationInfo(Json.toJson(DeclarationInfoRequest(declarationId)))
       .subflatMap { httpResponse =>
         if (httpResponse.status === Status.OK)
-          Try(httpResponse.json).fold(err => Left(Error(err)), js => Right(js))
+          Try(httpResponse.json.as[DeclarationInfoResponse]).fold(err => Left(Error(err)), js => Right(js))
         else {
           Left(
             Error(

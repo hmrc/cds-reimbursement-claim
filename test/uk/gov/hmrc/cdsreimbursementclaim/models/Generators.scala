@@ -18,16 +18,15 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import akka.util.ByteString
 import org.joda.time.DateTime
-import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
-
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import scala.reflect.{ClassTag, classTag}
+import org.scalacheck.ScalacheckShapeless._
 
-object Generators extends GenUtils with UpscanGen {
+object Generators extends GenUtils with UpscanGen with DeclarationGen {
 
   def sample[A : ClassTag](implicit gen: Gen[A]): A =
     gen.sample.getOrElse(sys.error(s"Could not generate instance of ${classTag[A].runtimeClass.getSimpleName}"))
@@ -97,4 +96,16 @@ trait UpscanGen { this: GenUtils =>
   implicit val upscanUploadGen: Gen[UpscanUpload]       = gen[UpscanUpload]
   implicit val uploadReferenceGen: Gen[UploadReference] = gen[UploadReference]
   implicit val upscanSuccessGen: Gen[UpscanSuccess]     = gen[UpscanSuccess]
+}
+
+trait DeclarationGen { this: GenUtils =>
+  implicit val declarationRequestGen: Gen[DeclarationInfoRequest] = gen[DeclarationInfoRequest]
+
+  val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] = for {
+    rc <- gen[ResponseCommon]
+    rd <- Gen.some(gen[ResponseDetail])
+  } yield OverpaymentDeclarationDisplayResponse(rc, rd)
+
+  implicit val declarationResponseGen: Gen[DeclarationInfoResponse] =
+    overpaymentDeclarationDisplayResponseGen.map(DeclarationInfoResponse.apply)
 }

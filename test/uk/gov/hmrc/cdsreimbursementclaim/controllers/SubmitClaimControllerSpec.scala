@@ -21,23 +21,20 @@ import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.{JsObject, JsString, JsValue}
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
 
-class SubmitClaimControllerSpec extends ControllerSpec with DefaultAwaitTimeout {
+class SubmitClaimControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
-  implicit val ec           = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val materialiser = NoMaterializer
-  val httpClient            = mock[HttpClient]
-  implicit val hc           = HeaderCarrier()
-  val appConfig             = instanceOf[AppConfig]
-  val eisService            = mock[SubmitClaimService]
-  private val fakeRequest   = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller    = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
+  implicit val ec         = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val hc         = HeaderCarrier()
+  val httpClient          = mock[HttpClient]
+  val eisService          = mock[SubmitClaimService]
+  private val fakeRequest = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
+  private val controller  = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
 
   def mockEisResponse(response: EitherT[Future, Error, JsValue]) =
     (eisService
