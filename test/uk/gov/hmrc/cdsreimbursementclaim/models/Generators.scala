@@ -113,16 +113,12 @@ trait DeclarationGen { this: GenUtils =>
   implicit val ndrcDetailsGen          = gen[NdrcDetails]
 
   // request
-  implicit val requestCommonGen: Gen[RequestCommon]                                               = gen[RequestCommon]
-  implicit val requestDetailGen: Gen[RequestDetail]                                               = gen[RequestDetail]
-  implicit val declarationRequestGen: Gen[DeclarationInfoRequest]                                 = gen[DeclarationInfoRequest]
-  implicit val overpaymentDeclarationDisplayRequestGen: Gen[OverpaymentDeclarationDisplayRequest] =
-    gen[OverpaymentDeclarationDisplayRequest]
+  implicit val requestCommonGen: Gen[RequestCommon]              = gen[RequestCommon]
+  implicit val requestDetailGen: Gen[RequestDetail]              = gen[RequestDetail]
+  implicit val declarationRequestGen: Gen[GetDeclarationRequest] = gen[GetDeclarationRequest]
 
   // response
-  implicit val responseCommonGen: Gen[ResponseCommon]                                               = gen[ResponseCommon]
-  implicit val responseDetailGen: Gen[ResponseDetail]                                               = gen[ResponseDetail]
-  implicit val declarationInfoResponseGen: Gen[DeclarationInfoResponse]                             = gen[DeclarationInfoResponse]
-  implicit val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] =
-    gen[OverpaymentDeclarationDisplayResponse]
+  implicit val responseCommonGen: Gen[ResponseCommon]                   = gen[ResponseCommon]
+  implicit val responseDetailGen: Gen[ResponseDetail]                   = gen[ResponseDetail]
+  implicit val declarationInfoResponseGen: Gen[DeclarationInfoResponse] = gen[DeclarationInfoResponse]
 }

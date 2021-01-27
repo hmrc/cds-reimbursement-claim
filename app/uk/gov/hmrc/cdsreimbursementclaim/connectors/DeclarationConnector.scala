@@ -43,7 +43,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val appConfig: Ap
         .POST[JsValue, HttpResponse](appConfig.decInfoEndpoint, declarationInfo)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          enrichHC(hc, appConfig.decInfoBearerToken),
+          enrichHC,
           ec
         )
         .map(Right(_))

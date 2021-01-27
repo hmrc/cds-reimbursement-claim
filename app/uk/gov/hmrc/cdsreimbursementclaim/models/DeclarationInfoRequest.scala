@@ -16,75 +16,44 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import java.time.{Instant, ZoneId}
-import java.time.format.DateTimeFormatter
+import java.time.Instant
 import java.util.UUID
 
 import play.api.libs.json.{Json, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils._
 
-/** @param overpaymentDeclarationDisplayRequest
-  */
-final case class DeclarationInfoRequest(
-  overpaymentDeclarationDisplayRequest: OverpaymentDeclarationDisplayRequest
-)
+object GetDeclarationRequest {
 
-object DeclarationInfoRequest {
-
-  val dateFormat: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssz").withZone(ZoneId.systemDefault())
-
-  def apply(declarationId: String): DeclarationInfoRequest =
-    DeclarationInfoRequest(
-      OverpaymentDeclarationDisplayRequest(
-        RequestCommon("CDSPay", dateFormat.format(Instant.now()), UUID.randomUUID().toString),
-        RequestDetail(declarationId, None)
-      )
+  def apply(declarationId: String): GetDeclarationRequest =
+    GetDeclarationRequest(
+      RequestCommon("MDTP", RequestDate(), UUID.randomUUID().toString),
+      RequestDetail(declarationId, None)
     )
 
-  implicit val requestCommonReads: Writes[RequestCommon]                                               = Json.writes
-  implicit val requestDetailReads: Writes[RequestDetail]                                               = Json.writes
-  implicit val overpaymentDeclarationDisplayRequestReads: Writes[OverpaymentDeclarationDisplayRequest] = Json.writes
-  implicit val declarationInfoRequestReads: Writes[DeclarationInfoRequest]                             = Json.writes
+  implicit val requestDateWrites: Writes[RequestDate]                     = Json.valueWrites
+  implicit val requestCommonWrites: Writes[RequestCommon]                 = Json.writes
+  implicit val requestDetailWrites: Writes[RequestDetail]                 = Json.writes
+  implicit val getDeclarationRequestWrites: Writes[GetDeclarationRequest] = Json.writes
 }
 
-/** @param requestCommon
-  * @param requestDetail
-  */
-final case class OverpaymentDeclarationDisplayRequest(
+final case class GetDeclarationRequest(
   requestCommon: RequestCommon,
   requestDetail: RequestDetail
 )
 
-/** @param originatingSystem The name of the application system that submitted the message.
-  * @param receiptDate
-  * @param acknowledgementReference Unique id created at source after a form is saved. Unique ID throughout the journey of a message -- stored in the ETMP system for search and retrieval purposes
-  */
 final case class RequestCommon(
   originatingSystem: String,
-  receiptDate: String,
+  receiptDate: RequestDate,
   acknowledgementReference: String
 )
 
-/** @param declarationId
-  * @param securityReason Security Reason Codes Description:
-  *                       "MDP"  Missing Document Preference
-  *                       "MDL"  Missing Document License Quota
-  *                       "ACS"  Account Sales
-  *                       "CEP"  CAP Entry Price
-  *                       "CSD"  CAP Safeguard Duties
-  *                       "T24"  Temporary Admission (2 years Expiration)
-  *                       "TA6"  Temporary Admission (6 months Expiration)
-  *                       "TA3"  Temporary Admission (3 months Expiration)
-  *                       "TA2"  Temporary Admission (2 months Expiration)
-  *                       "IPR"  Inward Processing Relief
-  *                       "OPR"  Outward Processing Relief
-  *                       "ENU"  End-use (Authorisation by Declaration)
-  *                       "RED"  Revenue Dispute
-  *                       "MOD"  Manual Override Deposit
-  *                       "MDC" Missing Document CSDR              "CRQ" Critical Quota
-  *                       "PDD" Provisional Dumping Duties (both Anti-Dumping and Countervailing)
-  */
 final case class RequestDetail(
   declarationId: String,
   securityReason: Option[String]
 )
+
+final case class RequestDate(value: String) extends AnyVal
+
+object RequestDate {
+  def apply(): RequestDate = RequestDate(eisDateFormat.format(Instant.now()))
+}

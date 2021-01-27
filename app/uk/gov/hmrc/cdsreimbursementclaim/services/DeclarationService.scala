@@ -23,7 +23,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoRequest, DeclarationInfoResponse, Error}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error, GetDeclarationRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -45,7 +45,7 @@ class DeclarationServiceImpl @Inject() (declarationInfoConnector: DefaultDeclara
     declarationId: String
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, DeclarationInfoResponse] =
     declarationInfoConnector
-      .getDeclarationInfo(Json.toJson(DeclarationInfoRequest(declarationId)))
+      .getDeclarationInfo(Json.toJson(GetDeclarationRequest(declarationId)))
       .subflatMap { httpResponse =>
         if (httpResponse.status === Status.OK)
           Try(httpResponse.json.as[DeclarationInfoResponse]).fold(err => Left(Error(err)), js => Right(js))

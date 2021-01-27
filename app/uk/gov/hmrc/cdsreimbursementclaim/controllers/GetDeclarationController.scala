@@ -40,7 +40,7 @@ class GetDeclarationController @Inject() (declarationInfoService: DeclarationSer
           logger.warn(s"could not get declaration information", e)
           InternalServerError
         },
-        response => Ok(Json.toJson(response))
+        declaration => Ok(Json.toJson(declaration))
       )
   }
 }

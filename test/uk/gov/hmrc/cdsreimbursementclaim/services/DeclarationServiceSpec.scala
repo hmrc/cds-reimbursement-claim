@@ -26,7 +26,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error, ResponseDetail}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -71,18 +71,14 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
     "handling a request returns" should {
       "handle successful submits" when {
         "there is a valid payload" in {
-          val responseDetail                        = sample[ResponseDetail]
-          val overpaymentDeclarationDisplayResponse =
-            sample[OverpaymentDeclarationDisplayResponse].copy(responseDetail = Some(responseDetail))
-          val response: DeclarationInfoResponse     = sample[DeclarationInfoResponse]
-            .copy(overpaymentDeclarationDisplayResponse = overpaymentDeclarationDisplayResponse)
-          val declarationId                         =
-            response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
+          val responseDetail                    = sample[ResponseDetail]
+          val response: DeclarationInfoResponse =
+            sample[DeclarationInfoResponse].copy(responseDetail = Some(responseDetail))
+          val declarationId                     = response.responseDetail.map(_.declarationId).getOrElse(fail)
           mockDeclarationConnector(Right(HttpResponse(200, Json.toJson(response), emptyHeaders)))
-          val result                                = await(declarationInfoService.getDeclaration(declarationId).value)
+          val result                            = await(declarationInfoService.getDeclaration(declarationId).value)
           result
             .getOrElse(fail)
-            .overpaymentDeclarationDisplayResponse
             .responseDetail
             .getOrElse(fail)
             .declarationId shouldBe declarationId
