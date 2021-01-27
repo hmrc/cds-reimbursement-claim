@@ -23,7 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.cdsreimbursementclaim.models.DeclarationInfoResponse._
+import uk.gov.hmrc.cdsreimbursementclaim.models.GetDeclarationResponse._
 import scala.concurrent.ExecutionContext
 
 @Singleton()

@@ -22,21 +22,25 @@ import java.util.UUID
 import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils._
 
+final case class GetDeclarationRequest(overpaymentDeclarationDisplayRequest: OverpaymentDeclarationDisplayRequest)
 object GetDeclarationRequest {
 
   def apply(declarationId: String): GetDeclarationRequest =
     GetDeclarationRequest(
-      RequestCommon("MDTP", RequestDate(), UUID.randomUUID().toString),
-      RequestDetail(declarationId, None)
+      OverpaymentDeclarationDisplayRequest(
+        RequestCommon("MDTP", RequestDate(), UUID.randomUUID().toString),
+        RequestDetail(declarationId, None)
+      )
     )
 
-  implicit val requestDateWrites: Writes[RequestDate]                     = Json.valueWrites
-  implicit val requestCommonWrites: Writes[RequestCommon]                 = Json.writes
-  implicit val requestDetailWrites: Writes[RequestDetail]                 = Json.writes
-  implicit val getDeclarationRequestWrites: Writes[GetDeclarationRequest] = Json.writes
+  implicit val requestDateWrites: Writes[RequestDate]                                                  = Json.valueWrites
+  implicit val requestCommonWrites: Writes[RequestCommon]                                              = Json.writes
+  implicit val requestDetailWrites: Writes[RequestDetail]                                              = Json.writes
+  implicit val overpaymentDeclarationDisplayRequestReads: Writes[OverpaymentDeclarationDisplayRequest] = Json.writes
+  implicit val getDeclarationRequestWrites: Writes[GetDeclarationRequest]                              = Json.writes
 }
 
-final case class GetDeclarationRequest(
+final case class OverpaymentDeclarationDisplayRequest(
   requestCommon: RequestCommon,
   requestDetail: RequestDetail
 )

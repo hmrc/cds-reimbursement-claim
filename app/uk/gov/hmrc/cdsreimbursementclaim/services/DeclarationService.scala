@@ -23,7 +23,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error, GetDeclarationRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationRequest, GetDeclarationResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -32,7 +32,7 @@ import scala.util.Try
 
 @ImplementedBy(classOf[DeclarationServiceImpl])
 trait DeclarationService {
-  def getDeclaration(declarationId: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, DeclarationInfoResponse]
+  def getDeclaration(declarationId: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse]
 }
 
 @Singleton
@@ -43,12 +43,12 @@ class DeclarationServiceImpl @Inject() (declarationInfoConnector: DefaultDeclara
 
   def getDeclaration(
     declarationId: String
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, DeclarationInfoResponse] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse] =
     declarationInfoConnector
       .getDeclarationInfo(Json.toJson(GetDeclarationRequest(declarationId)))
       .subflatMap { httpResponse =>
         if (httpResponse.status === Status.OK)
-          Try(httpResponse.json.as[DeclarationInfoResponse]).fold(err => Left(Error(err)), js => Right(js))
+          Try(httpResponse.json.as[GetDeclarationResponse]).fold(err => Left(Error(err)), js => Right(js))
         else {
           Left(
             Error(

@@ -22,7 +22,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, OverpaymentDeclarationDisplayResponse, ResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -36,7 +36,7 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
   private val fakeRequest    = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
   private val controller     = new GetDeclarationController(declarationInfoService, Helpers.stubControllerComponents())
 
-  def mockEisResponse(response: EitherT[Future, Error, DeclarationInfoResponse]) =
+  def mockEisResponse(response: EitherT[Future, Error, GetDeclarationResponse]) =
     (declarationInfoService
       .getDeclaration(_: String)(_: HeaderCarrier))
       .expects(*, *)
@@ -44,11 +44,16 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
   "POST" should {
     "return 200" in {
-      val responseDetail = sample[ResponseDetail]
-      val response       = sample[DeclarationInfoResponse].copy(responseDetail = Some(responseDetail))
-      val declarationId  = response.responseDetail.map(_.declarationId).getOrElse(fail)
+      val responseDetail                        = sample[ResponseDetail]
+      val overpaymentDeclarationDisplayResponse =
+        sample[OverpaymentDeclarationDisplayResponse].copy(responseDetail = Some(responseDetail))
+      val response                              = sample[GetDeclarationResponse].copy(overpaymentDeclarationDisplayResponse =
+        overpaymentDeclarationDisplayResponse
+      )
+      val declarationId                         =
+        response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
       mockEisResponse(EitherT.right(Future.successful(response)))
-      val result         = controller.declaration(declarationId)(fakeRequest)
+      val result                                = controller.declaration(declarationId)(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe Json.toJson(response)
     }

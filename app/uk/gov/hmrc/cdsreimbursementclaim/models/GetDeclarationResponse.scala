@@ -18,25 +18,30 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import play.api.libs.json.{Json, OFormat}
 
-object DeclarationInfoResponse {
-  implicit val returnParametersReads: OFormat[ReturnParameters]                = Json.format
-  implicit val establishmentAddressReads: OFormat[EstablishmentAddress]        = Json.format
-  implicit val contactDetailsReads: OFormat[ContactDetails]                    = Json.format
-  implicit val declarantDetailsReads: OFormat[DeclarantDetails]                = Json.format
-  implicit val consigneeBankDetailsReads: OFormat[ConsigneeBankDetails]        = Json.format
-  implicit val declarantBankDetailsReads: OFormat[DeclarantBankDetails]        = Json.format
-  implicit val bankDetailsReads: OFormat[BankDetails]                          = Json.format
-  implicit val taxDetailsReads: OFormat[TaxDetails]                            = Json.format
-  implicit val consigneeDetailsReads: OFormat[ConsigneeDetails]                = Json.format
-  implicit val accountDetailsReads: OFormat[AccountDetails]                    = Json.format
-  implicit val securityDetailsReads: OFormat[SecurityDetails]                  = Json.format
-  implicit val ndrcDetailsReads: OFormat[NdrcDetails]                          = Json.format
-  implicit val responseDetailReads: OFormat[ResponseDetail]                    = Json.format
-  implicit val responseCommonReads: OFormat[ResponseCommon]                    = Json.format
-  implicit val declarationInfoResponseReader: OFormat[DeclarationInfoResponse] = Json.format
+final case class GetDeclarationResponse(
+  overpaymentDeclarationDisplayResponse: OverpaymentDeclarationDisplayResponse
+)
+
+object GetDeclarationResponse {
+  implicit val returnParametersReads: OFormat[ReturnParameters]                                            = Json.format
+  implicit val establishmentAddressReads: OFormat[EstablishmentAddress]                                    = Json.format
+  implicit val contactDetailsReads: OFormat[ContactDetails]                                                = Json.format
+  implicit val declarantDetailsReads: OFormat[DeclarantDetails]                                            = Json.format
+  implicit val consigneeBankDetailsReads: OFormat[ConsigneeBankDetails]                                    = Json.format
+  implicit val declarantBankDetailsReads: OFormat[DeclarantBankDetails]                                    = Json.format
+  implicit val bankDetailsReads: OFormat[BankDetails]                                                      = Json.format
+  implicit val taxDetailsReads: OFormat[TaxDetails]                                                        = Json.format
+  implicit val consigneeDetailsReads: OFormat[ConsigneeDetails]                                            = Json.format
+  implicit val accountDetailsReads: OFormat[AccountDetails]                                                = Json.format
+  implicit val securityDetailsReads: OFormat[SecurityDetails]                                              = Json.format
+  implicit val ndrcDetailsReads: OFormat[NdrcDetails]                                                      = Json.format
+  implicit val responseDetailReads: OFormat[ResponseDetail]                                                = Json.format
+  implicit val responseCommonReads: OFormat[ResponseCommon]                                                = Json.format
+  implicit val overpaymentDeclarationDisplayResponseReader: OFormat[OverpaymentDeclarationDisplayResponse] = Json.format
+  implicit val declarationInfoResponseReader: OFormat[GetDeclarationResponse]                              = Json.format
 }
 
-final case class DeclarationInfoResponse(
+final case class OverpaymentDeclarationDisplayResponse(
   responseCommon: ResponseCommon,
   responseDetail: Option[ResponseDetail]
 )
