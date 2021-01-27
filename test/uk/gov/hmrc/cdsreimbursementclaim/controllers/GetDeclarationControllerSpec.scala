@@ -22,7 +22,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{DeclarationInfoResponse, Error, OverpaymentDeclarationDisplayResponse, ResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -44,11 +44,16 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
   "POST" should {
     "return 200" in {
-      val response      = sample[DeclarationInfoResponse]
-      val declarationId =
+      val responseDetail                        = sample[ResponseDetail]
+      val overpaymentDeclarationDisplayResponse =
+        sample[OverpaymentDeclarationDisplayResponse].copy(responseDetail = Some(responseDetail))
+      val response                              = sample[DeclarationInfoResponse].copy(overpaymentDeclarationDisplayResponse =
+        overpaymentDeclarationDisplayResponse
+      )
+      val declarationId                         =
         response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
       mockEisResponse(EitherT.right(Future.successful(response)))
-      val result        = controller.declaration(declarationId)(fakeRequest)
+      val result                                = controller.declaration(declarationId)(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe Json.toJson(response)
     }

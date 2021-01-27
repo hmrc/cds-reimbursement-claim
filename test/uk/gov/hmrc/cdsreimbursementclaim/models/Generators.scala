@@ -22,6 +22,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
+
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import scala.reflect.{ClassTag, classTag}
 import org.scalacheck.ScalacheckShapeless._
@@ -99,13 +100,29 @@ trait UpscanGen { this: GenUtils =>
 }
 
 trait DeclarationGen { this: GenUtils =>
-  implicit val declarationRequestGen: Gen[DeclarationInfoRequest] = gen[DeclarationInfoRequest]
+  implicit val bankDetailsGen          = gen[BankDetails]
+  implicit val accountDetailsGen       = gen[AccountDetails]
+  implicit val declarantDetailsGen     = gen[DeclarantDetails]
+  implicit val contactDetailsGen       = gen[ContactDetails]
+  implicit val consigneeDetailsGen     = gen[ConsigneeDetails]
+  implicit val establishmentAddressGen = gen[EstablishmentAddress]
+  implicit val consigneeBankDetailsGen = gen[ConsigneeBankDetails]
+  implicit val declarantBankDetailsGen = gen[DeclarantBankDetails]
+  implicit val securityDetailsGen      = gen[SecurityDetails]
+  implicit val taxDetailsGen           = gen[TaxDetails]
+  implicit val ndrcDetailsGen          = gen[NdrcDetails]
 
-  val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] = for {
-    rc <- gen[ResponseCommon]
-    rd <- Gen.some(gen[ResponseDetail])
-  } yield OverpaymentDeclarationDisplayResponse(rc, rd)
+  // request
+  implicit val requestCommonGen: Gen[RequestCommon]                                               = gen[RequestCommon]
+  implicit val requestDetailGen: Gen[RequestDetail]                                               = gen[RequestDetail]
+  implicit val declarationRequestGen: Gen[DeclarationInfoRequest]                                 = gen[DeclarationInfoRequest]
+  implicit val overpaymentDeclarationDisplayRequestGen: Gen[OverpaymentDeclarationDisplayRequest] =
+    gen[OverpaymentDeclarationDisplayRequest]
 
-  implicit val declarationResponseGen: Gen[DeclarationInfoResponse] =
-    overpaymentDeclarationDisplayResponseGen.map(DeclarationInfoResponse.apply)
+  // response
+  implicit val responseCommonGen: Gen[ResponseCommon]                                               = gen[ResponseCommon]
+  implicit val responseDetailGen: Gen[ResponseDetail]                                               = gen[ResponseDetail]
+  implicit val declarationInfoResponseGen: Gen[DeclarationInfoResponse]                             = gen[DeclarationInfoResponse]
+  implicit val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] =
+    gen[OverpaymentDeclarationDisplayResponse]
 }
