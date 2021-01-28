@@ -100,6 +100,10 @@ trait UpscanGen { this: GenUtils =>
 }
 
 trait DeclarationGen { this: GenUtils =>
+  @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
+  implicit val mrnGen: Arbitrary[MRN]  = Arbitrary(
+    Gen.oneOf("21GBIDMSXBLNR06016", "57GBIDMSXBLNR06016").map(MRN.parse(_).get)
+  )
   implicit val bankDetailsGen          = gen[BankDetails]
   implicit val accountDetailsGen       = gen[AccountDetails]
   implicit val declarantDetailsGen     = gen[DeclarantDetails]

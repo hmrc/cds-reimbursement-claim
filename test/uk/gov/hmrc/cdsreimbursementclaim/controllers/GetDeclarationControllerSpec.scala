@@ -22,7 +22,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -31,6 +31,7 @@ import scala.concurrent.Future
 class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
   implicit val ec            = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val materializer  = NoMaterializer
   val httpClient             = mock[HttpClient]
   val declarationInfoService = mock[DeclarationServiceImpl]
   private val fakeRequest    = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
@@ -38,9 +39,10 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
   def mockEisResponse(response: EitherT[Future, Error, GetDeclarationResponse]) =
     (declarationInfoService
-      .getDeclaration(_: String)(_: HeaderCarrier))
+      .getDeclaration(_: MRN)(_: HeaderCarrier))
       .expects(*, *)
       .returning(response)
+      .atLeastOnce()
 
   "POST" should {
     "return 200" in {
@@ -59,9 +61,9 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
     }
 
     "return 500 when on any error" in {
-      val declarationId = "GB349970632046"
+      val mrn    = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
       mockEisResponse(EitherT.left(Future.successful(Error("Resource Unavailable"))))
-      val result        = controller.declaration(declarationId)(fakeRequest)
+      val result = controller.declaration(mrn)(fakeRequest)
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
 

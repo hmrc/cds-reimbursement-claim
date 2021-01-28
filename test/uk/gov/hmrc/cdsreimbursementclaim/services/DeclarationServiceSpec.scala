@@ -26,7 +26,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -91,59 +91,59 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
 
       "handle unsuccesful submits" when {
         "400 response" in {
-          val declarationId   = "GB349970632046"
+          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
           val decInfoResponse = errorResponse("Invalid Request")
           mockDeclarationConnector(Right(HttpResponse(400, decInfoResponse, Map.empty[String, Seq[String]])))
-          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
+          val response        = await(declarationInfoService.getDeclaration(mrn).value)
           response.fold(_.message should include("Invalid Request"), _ => fail())
         }
 
         "401 response" in {
-          val declarationId   = "GB349970632046"
+          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
           val decInfoResponse = errorResponse("Unauthorized")
           mockDeclarationConnector(
             Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
+          val response        = await(declarationInfoService.getDeclaration(mrn).value)
           response.fold(_.message should include("Unauthorized"), _ => fail())
         }
 
         "403 response" in {
-          val declarationId   = "GB349970632046"
+          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
           val decInfoResponse = errorResponse("WAF Forbidden")
           mockDeclarationConnector(
             Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
+          val response        = await(declarationInfoService.getDeclaration(mrn).value)
           response.fold(_.message should include("WAF Forbidden"), _ => fail())
         }
 
         "405 response" in {
-          val declarationId   = "GB349970632046"
+          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
           val decInfoResponse = errorResponse("Method not allowed")
           mockDeclarationConnector(
             Right(HttpResponse(405, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
+          val response        = await(declarationInfoService.getDeclaration(mrn).value)
           response.fold(_.message should include("Method not allowed"), _ => fail())
         }
 
         "500 response" in {
-          val declarationId   = "GB349970632046"
+          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
           val decInfoResponse = errorResponse("invalid JSON format")
           mockDeclarationConnector(
             Right(HttpResponse(500, decInfoResponse, Map.empty[String, Seq[String]]))
           )
-          val response        = await(declarationInfoService.getDeclaration(declarationId).value)
+          val response        = await(declarationInfoService.getDeclaration(mrn).value)
           response.fold(_.message should include("invalid JSON format"), _ => fail())
         }
 
         "Invalid Json response" in {
-          val declarationId = "GB349970632046"
+          val mrn      = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
           mockDeclarationConnector(
             Right(HttpResponse(200, """{"a"-"b"}""", Map.empty[String, Seq[String]]))
           )
-          val response      = await(declarationInfoService.getDeclaration(declarationId).value)
+          val response = await(declarationInfoService.getDeclaration(mrn).value)
           response.fold(_.message should include("Unexpected character"), _ => fail())
         }
 

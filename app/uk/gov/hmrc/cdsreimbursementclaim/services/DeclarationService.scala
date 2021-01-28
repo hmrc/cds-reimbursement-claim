@@ -22,8 +22,8 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationRequest, GetDeclarationResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationRequest, GetDeclarationResponse, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -32,17 +32,17 @@ import scala.util.Try
 
 @ImplementedBy(classOf[DeclarationServiceImpl])
 trait DeclarationService {
-  def getDeclaration(declarationId: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse]
+  def getDeclaration(declarationId: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse]
 }
 
 @Singleton
-class DeclarationServiceImpl @Inject() (declarationInfoConnector: DefaultDeclarationConnector)(implicit
+class DeclarationServiceImpl @Inject() (declarationInfoConnector: DeclarationConnector)(implicit
   ec: ExecutionContext
 ) extends DeclarationService
     with Logging {
 
   def getDeclaration(
-    declarationId: String
+    declarationId: MRN
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse] =
     declarationInfoConnector
       .getDeclarationInfo(Json.toJson(GetDeclarationRequest(declarationId)))

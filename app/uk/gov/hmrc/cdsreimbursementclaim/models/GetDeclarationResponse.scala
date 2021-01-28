@@ -59,7 +59,7 @@ final case class ReturnParameters(
 )
 
 final case class ResponseDetail(
-  declarationId: String,
+  declarationId: MRN,
   acceptanceDate: String,
   declarantReferenceNumber: Option[String],
   securityReason: Option[String],

@@ -25,13 +25,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils._
 final case class GetDeclarationRequest(overpaymentDeclarationDisplayRequest: OverpaymentDeclarationDisplayRequest)
 object GetDeclarationRequest {
 
-  def apply(declarationId: String): GetDeclarationRequest =
+  def apply(declarationId: MRN): GetDeclarationRequest =
     GetDeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
-        RequestCommon("MDTP", RequestDate(), UUID.randomUUID().toString),
+        RequestCommon("MDTP", RequestDate(), generateAcknoledgementId),
         RequestDetail(declarationId, None)
       )
     )
+
+  def generateAcknoledgementId: String = UUID.randomUUID().toString.replaceAll("-", "").take(31)
 
   implicit val requestDateWrites: Writes[RequestDate]                                                  = Json.valueWrites
   implicit val requestCommonWrites: Writes[RequestCommon]                                              = Json.writes
@@ -52,7 +54,7 @@ final case class RequestCommon(
 )
 
 final case class RequestDetail(
-  declarationId: String,
+  declarationId: MRN,
   securityReason: Option[String]
 )
 

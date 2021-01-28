@@ -17,22 +17,24 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.cdsreimbursementclaim.models.GetDeclarationResponse._
+import uk.gov.hmrc.cdsreimbursementclaim.models.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.cdsreimbursementclaim.models.GetDeclarationResponse._
+
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class GetDeclarationController @Inject() (declarationInfoService: DeclarationServiceImpl, cc: ControllerComponents)(
-  implicit ec: ExecutionContext
+class GetDeclarationController @Inject() (declarationInfoService: DeclarationService, cc: ControllerComponents)(implicit
+  ec: ExecutionContext
 ) extends BackendController(cc)
     with Logging {
 
-  def declaration(declarationId: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def declaration(declarationId: MRN): Action[AnyContent] = Action.async { implicit request =>
     declarationInfoService
       .getDeclaration(declarationId)
       .fold(
