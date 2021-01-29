@@ -27,20 +27,20 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[DefaultSubmitClaimConnector])
-trait SubmitClaimConnector {
-  def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
+@ImplementedBy(classOf[DefaultDeclarationConnector])
+trait DeclarationConnector {
+  def getDeclarationInfo(declarationInfo: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 }
 
 @Singleton
-class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
-    extends SubmitClaimConnector
+class DefaultDeclarationConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends DeclarationConnector
     with EisConnector {
 
-  override def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  def getDeclarationInfo(declarationInfo: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, claimData)(
+        .POST[JsValue, HttpResponse](appConfig.decInfoEndpoint, declarationInfo)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
           enrichHC,

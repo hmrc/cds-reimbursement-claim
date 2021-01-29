@@ -41,7 +41,7 @@ trait EisConnector {
 
   }
 
-  def enrichHC(hc: HeaderCarrier): HeaderCarrier =
+  def enrichHC(implicit hc: HeaderCarrier): HeaderCarrier =
     hc.copy(
       authorization = Some(Authorization(s"Bearer ${appConfig.eisBearerToken}")),
       extraHeaders = hc.extraHeaders ++ getExtraHeaders

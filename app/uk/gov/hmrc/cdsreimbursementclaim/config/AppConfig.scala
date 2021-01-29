@@ -28,8 +28,9 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  val eisBearerToken: String   = servicesConfig.getConfString("eis.bearer-token", "NoBearerToken")
   val eisBaseUrl: String       = servicesConfig.baseUrl("eis")
-  val newClaimEndpoint: String = eisBaseUrl + servicesConfig.getConfString("eis.context-base", "Undefined")
+  val eisBearerToken: String   = servicesConfig.getConfString("eis.bearer-token", "NoBearerToken")
+  val newClaimEndpoint: String = eisBaseUrl + servicesConfig.getConfString("eis.overpayment-claim", "Undefined")
+  val decInfoEndpoint: String  = eisBaseUrl + servicesConfig.getConfString(s"eis.declaration-info", "Undefined")
 
 }

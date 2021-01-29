@@ -18,7 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import akka.util.ByteString
 import org.joda.time.DateTime
-import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
@@ -26,8 +25,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanU
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import scala.reflect.{ClassTag, classTag}
+import org.scalacheck.ScalacheckShapeless._
 
-object Generators extends GenUtils with UpscanGen {
+object Generators extends GenUtils with UpscanGen with DeclarationGen {
 
   def sample[A : ClassTag](implicit gen: Gen[A]): A =
     gen.sample.getOrElse(sys.error(s"Could not generate instance of ${classTag[A].runtimeClass.getSimpleName}"))
@@ -91,10 +91,44 @@ sealed trait GenUtils {
         .map(_ => BSONObjectID.generate())
     )
 
+  implicit val mrn = Arbitrary(for {
+    d1      <- Gen.listOfN(2, Gen.numChar)
+    letter2 <- Gen.listOfN(2, Gen.alphaUpperChar)
+    word    <- Gen.listOfN(13, Gen.numChar)
+    d2      <- Gen.listOfN(1, Gen.numChar)
+  } yield MRN(s"${d1.mkString("")}${letter2.mkString("")}${word.mkString("")}${d2.mkString("")}"))
+
 }
 
 trait UpscanGen { this: GenUtils =>
   implicit val upscanUploadGen: Gen[UpscanUpload]       = gen[UpscanUpload]
   implicit val uploadReferenceGen: Gen[UploadReference] = gen[UploadReference]
   implicit val upscanSuccessGen: Gen[UpscanSuccess]     = gen[UpscanSuccess]
+}
+
+trait DeclarationGen { this: GenUtils =>
+  implicit val mrnGen                  = gen[MRN]
+  implicit val bankDetailsGen          = gen[BankDetails]
+  implicit val accountDetailsGen       = gen[AccountDetails]
+  implicit val declarantDetailsGen     = gen[DeclarantDetails]
+  implicit val contactDetailsGen       = gen[ContactDetails]
+  implicit val consigneeDetailsGen     = gen[ConsigneeDetails]
+  implicit val establishmentAddressGen = gen[EstablishmentAddress]
+  implicit val consigneeBankDetailsGen = gen[ConsigneeBankDetails]
+  implicit val declarantBankDetailsGen = gen[DeclarantBankDetails]
+  implicit val securityDetailsGen      = gen[SecurityDetails]
+  implicit val taxDetailsGen           = gen[TaxDetails]
+  implicit val ndrcDetailsGen          = gen[NdrcDetails]
+
+  // request
+  implicit val requestCommonGen: Gen[RequestCommon]              = gen[RequestCommon]
+  implicit val requestDetailGen: Gen[RequestDetail]              = gen[RequestDetail]
+  implicit val declarationRequestGen: Gen[GetDeclarationRequest] = gen[GetDeclarationRequest]
+
+  // response
+  implicit val responseCommonGen: Gen[ResponseCommon]                                               = gen[ResponseCommon]
+  implicit val responseDetailGen: Gen[ResponseDetail]                                               = gen[ResponseDetail]
+  implicit val declarationInfoResponseGen: Gen[GetDeclarationResponse]                              = gen[GetDeclarationResponse]
+  implicit val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] =
+    gen[OverpaymentDeclarationDisplayResponse]
 }

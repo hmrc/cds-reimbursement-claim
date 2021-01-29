@@ -24,23 +24,21 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
+class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
 
-  val (eisBearerToken, eisEnvironment) = "token" -> "environment"
+  val connector = new DefaultDeclarationConnector(mockHttp, appConfig)
 
-  val connector = new DefaultSubmitClaimConnector(mockHttp, appConfig)
+  "DeclarationInfoConnector" when {
 
-  "SubmitClaimConnectorSpec" when {
-
-    val backEndUrl                 = "http://localhost:7502/claim"
+    val backEndUrl                 = "http://localhost:7502/declaration"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    "handling request to submit claim" must {
+    "handling request for declaration" must {
 
-      "do a post http call and get the TPI-05 API response" in {
+      "do a post http call and get the ACC14 API response" in {
         val httpResponse = HttpResponse(200, "The Response")
         mockPost(backEndUrl, Seq.empty, *)(Right(httpResponse))
-        val response     = await(connector.submitClaim(JsString("The Request")).value)
+        val response     = await(connector.getDeclarationInfo(JsString("The Request")).value)
         response shouldBe Right(httpResponse)
       }
     }
@@ -49,7 +47,7 @@ class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
       "the call fails" in {
         val error    = new Exception("Socket connection error")
         mockPost(backEndUrl, Seq.empty, *)(Left(error))
-        val response = await(connector.submitClaim(JsString("The Request")).value)
+        val response = await(connector.getDeclarationInfo(JsString("The Request")).value)
         response shouldBe Left(Error(error))
       }
     }
