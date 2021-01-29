@@ -32,7 +32,7 @@ class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
 
   "SubmitClaimConnectorSpec" when {
 
-    val backEndUrl                 = "http://localhost:7502/tpi/postoverpaymentclaim/v1"
+    val backEndUrl                 = "http://localhost:7502/claim"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling request to submit claim" must {

@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import java.time.{Duration, LocalDateTime, ZoneId}
+
 import cats.data.EitherT
+import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -27,6 +30,7 @@ import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -74,18 +78,35 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           val responseDetail                        = sample[ResponseDetail]
           val overpaymentDeclarationDisplayResponse =
             sample[OverpaymentDeclarationDisplayResponse].copy(responseDetail = Some(responseDetail))
-          val response: GetDeclarationResponse      = sample[GetDeclarationResponse]
+          val decResponse: GetDeclarationResponse   = sample[GetDeclarationResponse]
             .copy(overpaymentDeclarationDisplayResponse = overpaymentDeclarationDisplayResponse)
           val declarationId                         =
-            response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
-          mockDeclarationConnector(Right(HttpResponse(200, Json.toJson(response), emptyHeaders)))
-          val result                                = await(declarationInfoService.getDeclaration(declarationId).value)
-          result
+            decResponse.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
+          val httpResponse                          = Right(HttpResponse(200, Json.toJson(decResponse), emptyHeaders))
+
+          val requestBody = CaptureOne[JsValue]()
+          (declarationInfoConnector
+            .getDeclarationInfo(_: JsValue)(_: HeaderCarrier))
+            .expects(capture(requestBody), *)
+            .returning(EitherT.fromEither[Future](httpResponse))
+            .atLeastOnce()
+
+          val declaration = await(declarationInfoService.getDeclaration(declarationId).value)
+          declaration
             .getOrElse(fail)
             .overpaymentDeclarationDisplayResponse
             .responseDetail
             .getOrElse(fail)
             .declarationId shouldBe declarationId
+          val responseInternal = requestBody.value \ "overpaymentDeclarationDisplayRequest"
+          (responseInternal \ "requestCommon" \ "originatingSystem").get.as[String] shouldBe "MDTP"
+          val requestDate = LocalDateTime.parse(
+            (responseInternal \ "requestCommon" \ "receiptDate").get.as[String],
+            TimeUtils.eisDateFormat
+          )
+          Duration.between(LocalDateTime.now(ZoneId.systemDefault()), requestDate).getSeconds.toInt should be < 5
+          (responseInternal \ "requestCommon" \ "acknowledgementReference").isDefined             shouldBe true
+          (responseInternal \ "requestDetail" \ "declarationId").get.as[String]                   shouldBe declarationId.value
         }
       }
 

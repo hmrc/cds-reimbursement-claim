@@ -37,7 +37,7 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
   private val fakeRequest    = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
   private val controller     = new GetDeclarationController(declarationInfoService, Helpers.stubControllerComponents())
 
-  def mockEisResponse(response: EitherT[Future, Error, GetDeclarationResponse]) =
+  def mockDeclarationService(response: EitherT[Future, Error, GetDeclarationResponse]) =
     (declarationInfoService
       .getDeclaration(_: MRN)(_: HeaderCarrier))
       .expects(*, *)
@@ -54,7 +54,7 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
       )
       val declarationId                         =
         response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
-      mockEisResponse(EitherT.right(Future.successful(response)))
+      mockDeclarationService(EitherT.right(Future.successful(response)))
       val result                                = controller.declaration(declarationId)(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe Json.toJson(response)
@@ -62,7 +62,7 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
     "return 500 when on any error" in {
       val mrn    = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-      mockEisResponse(EitherT.left(Future.successful(Error("Resource Unavailable"))))
+      mockDeclarationService(EitherT.left(Future.successful(Error("Resource Unavailable"))))
       val result = controller.declaration(mrn)(fakeRequest)
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }

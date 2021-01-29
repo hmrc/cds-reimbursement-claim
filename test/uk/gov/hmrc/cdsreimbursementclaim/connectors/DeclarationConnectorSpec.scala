@@ -30,7 +30,7 @@ class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
 
   "DeclarationInfoConnector" when {
 
-    val backEndUrl                 = "http://localhost:7502/accounts/overpaymentdeclarationdisplay/v1"
+    val backEndUrl                 = "http://localhost:7502/declaration"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling request for declaration" must {
