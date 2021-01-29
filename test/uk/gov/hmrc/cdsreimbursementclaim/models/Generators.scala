@@ -91,6 +91,13 @@ sealed trait GenUtils {
         .map(_ => BSONObjectID.generate())
     )
 
+  implicit val mrn = Arbitrary(for {
+    d1      <- Gen.listOfN(2, Gen.numChar)
+    letter2 <- Gen.listOfN(2, Gen.alphaUpperChar)
+    word    <- Gen.listOfN(13, Gen.numChar)
+    d2      <- Gen.listOfN(1, Gen.numChar)
+  } yield MRN(s"${d1.mkString("")}${letter2.mkString("")}${word.mkString("")}${d2.mkString("")}"))
+
 }
 
 trait UpscanGen { this: GenUtils =>
@@ -100,10 +107,7 @@ trait UpscanGen { this: GenUtils =>
 }
 
 trait DeclarationGen { this: GenUtils =>
-  @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
-  implicit val mrnGen: Arbitrary[MRN]  = Arbitrary(
-    Gen.oneOf("21GBIDMSXBLNR06016", "57GBIDMSXBLNR06016").map(MRN.parse(_).get)
-  )
+  implicit val mrnGen                  = gen[MRN]
   implicit val bankDetailsGen          = gen[BankDetails]
   implicit val accountDetailsGen       = gen[AccountDetails]
   implicit val declarantDetailsGen     = gen[DeclarantDetails]

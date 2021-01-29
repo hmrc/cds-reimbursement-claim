@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
-final class MRN private[MRN] (val value: String) extends AnyVal
+final case class MRN(value: String) extends AnyVal
 
 object MRN {
 
