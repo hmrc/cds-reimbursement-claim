@@ -2,15 +2,15 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import org.scalatest.matchers.should._
 import org.scalatest.wordspec.AnyWordSpec
+import ru.tinkoff.phobos.akka_http._
 
 import scala.xml.XML
 
 class BatchFileInterfaceMetadataSpec extends AnyWordSpec with Matchers {
 
-  "this" should {
+  "the encoders" should {
 
-    "Full doc" in {
-      import ru.tinkoff.phobos.akka_http._
+    "serialize case classes to xml" in {
       val properties = PropertiesType(
         Seq(
           PropertyType("DeclarationId", "20GB5J7MBW7E4FGVA2"),
