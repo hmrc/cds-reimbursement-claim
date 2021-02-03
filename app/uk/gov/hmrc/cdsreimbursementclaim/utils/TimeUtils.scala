@@ -19,6 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.utils
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+final case class EisTime(value: String) extends AnyVal
+
 object TimeUtils {
 
   val eisDateFormat: DateTimeFormatter =
