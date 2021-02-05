@@ -22,12 +22,16 @@ import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
-
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
+
 import scala.reflect.{ClassTag, classTag}
 import org.scalacheck.ScalacheckShapeless._
 
-object Generators extends GenUtils with UpscanGen with DeclarationGen {
+object GenerateUpscan extends Generators with UpscanGen
+object GenerateDeclaration extends Generators with DeclarationGen
+object GenerateSubmitClaim extends Generators with SubmitClaimGen
+
+sealed trait Generators extends GenUtils {
 
   def sample[A : ClassTag](implicit gen: Gen[A]): A =
     gen.sample.getOrElse(sys.error(s"Could not generate instance of ${classTag[A].runtimeClass.getSimpleName}"))
@@ -131,4 +135,41 @@ trait DeclarationGen { this: GenUtils =>
   implicit val declarationInfoResponseGen: Gen[GetDeclarationResponse]                              = gen[GetDeclarationResponse]
   implicit val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] =
     gen[OverpaymentDeclarationDisplayResponse]
+}
+
+trait SubmitClaimGen { this: GenUtils =>
+  //Request
+  import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest._
+  implicit val establishmentAddressGen    = gen[EstablishmentAddress]
+  implicit val cdsEstablishmentAddressGen = gen[CdsEstablishmentAddress]
+  implicit val contactInformationGen      = gen[ContactInformation]
+  implicit val vatDetailsGen              = gen[VatDetails]
+  implicit val agentEoriDetailsGen        = gen[AgentEoriDetails]
+  implicit val goodsDetailsGen            = gen[GoodsDetails]
+  implicit val importerEoriDetailsGen     = gen[ImporterEoriDetails]
+  implicit val eoriDetailsGen             = gen[EoriDetails]
+  implicit val contactDetailsGen          = gen[ContactDetails]
+  implicit val consigneeDetailsGen        = gen[ConsigneeDetails]
+  implicit val declarantDetailsGen        = gen[DeclarantDetails]
+  implicit val accountDetailsGen          = gen[AccountDetails]
+  implicit val consigneeBankDetailsGen    = gen[ConsigneeBankDetails]
+  implicit val declarantBankDetailsGen    = gen[DeclarantBankDetails]
+  implicit val bankInfoGen                = gen[BankInfo]
+  implicit val ndrcDetailsGen             = gen[NdrcDetails]
+  implicit val mrnDetailsGen              = gen[MrnDetails]
+  implicit val duplicateMrnDetailsGen     = gen[DuplicateMrnDetails]
+  implicit val entryDetailsGen            = gen[EntryDetails]
+  implicit val duplicateEntryDetailsGen   = gen[DuplicateEntryDetails]
+  implicit val requestCommonGen           = gen[RequestCommon]
+  implicit val requestDetailGen           = gen[RequestDetail]
+  implicit val postNewClaimsRequestGen    = gen[PostNewClaimsRequest]
+  implicit val submitClaimRequestGen      = gen[SubmitClaimRequest]
+
+  //Response
+  import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimResponse._
+  implicit val returnParametersGen      = gen[ReturnParameters]
+  implicit val responseCommonGen        = gen[ResponseCommon]
+  implicit val postNewClaimsResponseGen = gen[PostNewClaimsResponse]
+  implicit val submitClaimResponseGen   = gen[SubmitClaimResponse]
+
 }

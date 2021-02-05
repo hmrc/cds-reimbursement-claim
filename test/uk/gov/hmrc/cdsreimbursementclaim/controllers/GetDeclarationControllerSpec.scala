@@ -21,8 +21,8 @@ import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 

@@ -28,7 +28,7 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}

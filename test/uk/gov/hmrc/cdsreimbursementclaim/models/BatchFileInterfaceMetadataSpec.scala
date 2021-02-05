@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import org.scalatest.matchers.should._
@@ -27,19 +43,19 @@ class BatchFileInterfaceMetadataSpec extends AnyWordSpec with Matchers {
         )
       )
 
-      val xmlString  = Dec64Body.soapEncoder.encode(HeadlessEnvelope(bfim))
-      val xml = XML.loadString(xmlString)
-      val body = xml \ "Body" \ "BatchFileInterfaceMetadata"
-      (body \ "sourceSystem").text shouldBe "MDTP"
+      val xmlString = Dec64Body.soapEncoder.encode(HeadlessEnvelope(bfim))
+      val xml       = XML.loadString(xmlString)
+      val body      = xml \ "Body" \ "BatchFileInterfaceMetadata"
+      (body \ "sourceSystem").text     shouldBe "TPI"
       (body \ "sourceSystemType").text shouldBe "AWS"
-      (body \ "interfaceName").text shouldBe "DEC64"
+      (body \ "interfaceName").text    shouldBe "DEC64"
       (body \ "interfaceVersion").text shouldBe "1.0.0"
-      (body \ "checksum").text shouldBe "123123123"
-      (body \ "fileSize").text shouldBe "1000"
-      (body \ "sourceLocation").text shouldBe "https://somewhere.on.aws"
-      (body \ "sourceFileName").text shouldBe "filename.pdf"
+      (body \ "checksum").text         shouldBe "123123123"
+      (body \ "fileSize").text         shouldBe "1000"
+      (body \ "sourceLocation").text   shouldBe "https://somewhere.on.aws"
+      (body \ "sourceFileName").text   shouldBe "filename.pdf"
       val props = body \ "properties" \ "property"
-      (props \ "name").map(_.text) shouldBe Seq("DeclarationId", "Eori")
+      (props \ "name").map(_.text)  shouldBe Seq("DeclarationId", "Eori")
       (props \ "value").map(_.text) shouldBe Seq("20GB5J7MBW7E4FGVA2", "GB239355053000")
     }
 

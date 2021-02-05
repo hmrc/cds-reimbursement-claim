@@ -18,10 +18,11 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
 import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateSubmitClaim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -29,29 +30,31 @@ import scala.concurrent.Future
 
 class SubmitClaimControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
-  implicit val ec         = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc         = HeaderCarrier()
-  val httpClient          = mock[HttpClient]
-  val eisService          = mock[SubmitClaimService]
-  private val fakeRequest = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller  = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
+  implicit val ec           = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val hc           = HeaderCarrier()
+  implicit val materializer = NoMaterializer
+  val httpClient            = mock[HttpClient]
+  val eisService            = mock[SubmitClaimService]
+  private val fakeRequest   =
+    FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), Json.toJson(sample[SubmitClaimRequest]))
+  private val controller    = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
 
-  def mockEisResponse(response: EitherT[Future, Error, JsValue]) =
+  def mockEisResponse(response: EitherT[Future, Error, SubmitClaimResponse]) =
     (eisService
-      .submitClaim(_: JsValue)(_: HeaderCarrier))
+      .submitClaim(_: SubmitClaimRequest)(_: HeaderCarrier))
       .expects(*, *)
       .returning(response)
 
   "POST" should {
     "return 200" in {
-      val response = JsObject(Seq("hello" -> JsString("word")))
+      val response = sample[SubmitClaimResponse]
       mockEisResponse(EitherT.right(Future.successful(response)))
       val result   = controller.claim()(fakeRequest)
-      status(result)        shouldBe Status.OK
-      contentAsJson(result) shouldBe response
+      status(result)                                shouldBe Status.OK
+      contentAsJson(result).as[SubmitClaimResponse] shouldBe response
     }
 
-    "return 500 when on any error" in {
+    "return 500 on any error" in {
       mockEisResponse(EitherT.left(Future.successful(Error("Resource Unavailable"))))
       val result = controller.claim()(fakeRequest)
       status(result) shouldBe INTERNAL_SERVER_ERROR

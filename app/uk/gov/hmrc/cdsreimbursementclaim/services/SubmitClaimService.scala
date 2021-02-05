@@ -19,20 +19,20 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 import cats.data.EitherT
 import cats.syntax.eq._
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Singleton}
 import play.api.http.Status
-import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubmitClaimConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @ImplementedBy(classOf[SubmitClaimServiceImpl])
 trait SubmitClaimService {
-  def submitClaim(body: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue]
+  def submitClaim(body: SubmitClaimRequest)(implicit hc: HeaderCarrier): EitherT[Future, Error, SubmitClaimResponse]
 }
 
 @Singleton
@@ -40,12 +40,14 @@ class SubmitClaimServiceImpl @Inject() (submitClaimConnector: SubmitClaimConnect
     extends SubmitClaimService
     with Logging {
 
-  def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue] =
+  def submitClaim(
+    claimData: SubmitClaimRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, SubmitClaimResponse] =
     submitClaimConnector
-      .submitClaim(claimData)
+      .submitClaim(Json.toJson(claimData))
       .subflatMap { httpResponse =>
         if (httpResponse.status === Status.OK)
-          Try(httpResponse.json).fold(err => Left(Error(err)), js => Right(js))
+          Try(httpResponse.json.as[SubmitClaimResponse]).fold(err => Left(Error(err)), js => Right(js))
         else {
           Left(
             Error(s"Call to submit claim data came back with status ${httpResponse.status}, body: ${httpResponse.body}")

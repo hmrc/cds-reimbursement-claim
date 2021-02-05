@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.test.Helpers._
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUpscan._
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 
