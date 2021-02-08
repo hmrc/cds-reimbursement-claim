@@ -16,23 +16,51 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import com.typesafe.config.ConfigFactory
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
+class SubmitClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
 
   val (eisBearerToken, eisEnvironment) = "token" -> "environment"
 
-  val connector = new DefaultSubmitClaimConnector(mockHttp, appConfig)
+  val config: Configuration = Configuration(
+    ConfigFactory.parseString(
+      """
+        | self {
+        |   url = host1.com
+        |  },
+        |  microservice {
+        |    services {
+        |      claim {
+        |        protocol = http
+        |        host     = localhost
+        |        port     = 7502
+        |      }
+        |   }
+        |}
+        |eis {
+        |    bearer-token = "test-token"
+        |}
+        |
+        |""".stripMargin
+    )
+  )
+
+  val connector = new DefaultSubmitClaimConnector(mockHttp, new ServicesConfig(config))
 
   "SubmitClaimConnectorSpec" when {
 
-    val backEndUrl                 = "http://localhost:7502/claim"
+    val backEndUrl                 = "http://localhost:7502/tpi/postoverpaymentclaim/v1"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling request to submit claim" must {

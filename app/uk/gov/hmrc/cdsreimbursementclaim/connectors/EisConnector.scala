@@ -16,34 +16,31 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId}
-
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import play.api.http.{HeaderNames, MimeTypes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGeneratorImpl
+import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 trait EisConnector {
 
-  val appConfig: AppConfig
+  val config: ServicesConfig
 
-  def getExtraHeaders(): Seq[(String, String)] = {
-    val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
-    val localDate  = LocalDateTime.now().format(dateFormat)
+  val eisBearerToken: String = config.getString("eis.bearer-token")
 
+  def getExtraHeaders: Seq[(String, String)] =
     Seq(
-      ("Date"             -> localDate),
-      ("X-Correlation-ID" -> java.util.UUID.randomUUID().toString),
-      ("X-Forwarded-Host" -> "MDTP"),
-      ("Content-Type"     -> "application/json"),
-      ("Accept"           -> "application/json")
+      HeaderNames.DATE             -> TimeUtils.rfc7231DateTimeNow,
+      "X-Correlation-ID"           -> new UUIDGeneratorImpl().correlationId,
+      HeaderNames.X_FORWARDED_HOST -> "MDTP",
+      HeaderNames.CONTENT_TYPE     -> MimeTypes.JSON,
+      HeaderNames.ACCEPT           -> MimeTypes.JSON
     )
-
-  }
 
   def enrichHC(implicit hc: HeaderCarrier): HeaderCarrier =
     hc.copy(
-      authorization = Some(Authorization(s"Bearer ${appConfig.eisBearerToken}")),
+      authorization = Some(Authorization(s"Bearer $eisBearerToken")),
       extraHeaders = hc.extraHeaders ++ getExtraHeaders
     )
 
