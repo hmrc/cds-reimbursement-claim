@@ -16,158 +16,87 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import java.time.{Duration, LocalDateTime, ZoneId}
-
 import cats.data.EitherT
-import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json._
-import play.api.mvc.Request
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultDeclarationConnector
+import play.api.libs.json.Json
+import play.api.test.Helpers._
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
-  val declarationInfoConnector = mock[DefaultDeclarationConnector]
+  val declarationConnector = mock[DeclarationConnector]
+  val mockUUIDGenerator    = mock[UUIDGenerator]
+  val mockTransformer      = mock[DeclarationTransformerService]
+  val mockDateGenerator    = mock[DateGenerator]
 
-  val declarationInfoService = new DeclarationServiceImpl(declarationInfoConnector)
+  val declarationService =
+    new DeclarationServiceImpl(declarationConnector, mockUUIDGenerator, mockDateGenerator, mockTransformer)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  implicit val request: Request[_] = FakeRequest()
-  val okResponse: JsValue          = Json.parse(s"""{
-                                                       |  "overpaymentDeclarationDisplayResponse": {
-                                                       |    "responseCommon": {
-                                                       |      "status": "OK",
-                                                       |      "processingDate": "9447-42-84T35:41:48Z"
-                                                       |    }
-                                                       |  }
-                                                       |}""".stripMargin)
+  def mockGenerateUUID(uuid: UUID) =
+    (mockUUIDGenerator.compactCorrelationId _: () => String).expects().returning(uuid.toString)
 
-  def errorResponse(errorMessage: String): JsValue = Json.parse(s"""{
-                                                                   |   "ErrorDetails":{
-                                                                   |      "ProcessingDateTime":"2016-10-10T13:52:16Z",
-                                                                   |      "CorrelationId":"d60de98c-f499-47f5-b2d6-e80966e8d19e",
-                                                                   |      "ErrorMessage":"$errorMessage"
-                                                                   |    }
-                                                                   |}""".stripMargin)
+  def mockGenerateAcknowledgementDate(acknowledgmentDate: String) =
+    (mockDateGenerator.nextAcknowledgementDate _: () => String).expects().returning(acknowledgmentDate)
 
-  def mockDeclarationConnector(response: Either[Error, HttpResponse]) =
-    (declarationInfoConnector
-      .getDeclarationInfo(_: JsValue)(_: HeaderCarrier))
-      .expects(*, *)
+  def mockDeclarationConnector(declarationRequest: DeclarationRequest)(
+    response: Either[Error, HttpResponse]
+  ) =
+    (declarationConnector
+      .getDeclaration(_: DeclarationRequest)(_: HeaderCarrier))
+      .expects(declarationRequest, *)
       .returning(EitherT.fromEither[Future](response))
-      .atLeastOnce()
 
-  val emptyHeaders = Map.empty[String, Seq[String]]
+  def mockTransformDeclarationResponse(declarationResponse: DeclarationResponse)(
+    response: Either[Error, Declaration]
+  ) =
+    (mockTransformer
+      .toDeclaration(_: DeclarationResponse))
+      .expects(declarationResponse)
+      .returning(response)
 
-  "Declaration Information Request Service" when {
-    "handling a request returns" should {
-      "handle successful submits" when {
-        "there is a valid payload" in {
-          val responseDetail                        = sample[ResponseDetail]
-          val overpaymentDeclarationDisplayResponse =
-            sample[OverpaymentDeclarationDisplayResponse].copy(responseDetail = Some(responseDetail))
-          val decResponse: GetDeclarationResponse   = sample[GetDeclarationResponse]
-            .copy(overpaymentDeclarationDisplayResponse = overpaymentDeclarationDisplayResponse)
-          val declarationId                         =
-            decResponse.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
-          val httpResponse                          = Right(HttpResponse(200, Json.toJson(decResponse), emptyHeaders))
+  "Declaration Service" when {
+    "handling requests to get a declaration" should {
+      "get a declaration" in {
+        val mrn                                  = sample[MRN]
+        val correlationId                        = UUID.randomUUID()
+        val acknowledgementDate                  = TimeUtils.eisDateTimeNow
+        val requestCommon                        = sample[RequestCommon].copy("MDTP", acknowledgementDate, correlationId.toString)
+        val requestDetail                        = sample[RequestDetail].copy(declarationId = mrn.value, securityReason = None)
+        val overpaymentDeclarationDisplayRequest = sample[OverpaymentDeclarationDisplayRequest]
+          .copy(requestCommon = requestCommon, requestDetail = requestDetail)
+        val declarationRequest                   =
+          sample[DeclarationRequest].copy(overpaymentDeclarationDisplayRequest = overpaymentDeclarationDisplayRequest)
 
-          val requestBody = CaptureOne[JsValue]()
-          (declarationInfoConnector
-            .getDeclarationInfo(_: JsValue)(_: HeaderCarrier))
-            .expects(capture(requestBody), *)
-            .returning(EitherT.fromEither[Future](httpResponse))
-            .atLeastOnce()
+        val declarationResponse = sample[DeclarationResponse]
+        val declaration         = sample[Declaration]
 
-          val declaration = await(declarationInfoService.getDeclaration(declarationId).value)
-          declaration
-            .getOrElse(fail)
-            .overpaymentDeclarationDisplayResponse
-            .responseDetail
-            .getOrElse(fail)
-            .declarationId shouldBe declarationId
-          val responseInternal = requestBody.value \ "overpaymentDeclarationDisplayRequest"
-          (responseInternal \ "requestCommon" \ "originatingSystem").get.as[String] shouldBe "MDTP"
-          val requestDate = LocalDateTime.parse(
-            (responseInternal \ "requestCommon" \ "receiptDate").get.as[String],
-            TimeUtils.eisDateFormat
+        inSequence {
+          mockGenerateAcknowledgementDate(acknowledgementDate)
+          mockGenerateUUID(correlationId)
+          mockDeclarationConnector(declarationRequest)(
+            Right(HttpResponse(200, Json.toJson(declarationResponse).toString(), Map.empty[String, Seq[String]]))
           )
-          Duration.between(LocalDateTime.now(ZoneId.systemDefault()), requestDate).getSeconds.toInt should be < 5
-          (responseInternal \ "requestCommon" \ "acknowledgementReference").isDefined             shouldBe true
-          (responseInternal \ "requestDetail" \ "declarationId").get.as[String]                   shouldBe declarationId.value
-        }
-      }
-
-      "handle unsuccesful submits" when {
-        "400 response" in {
-          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-          val decInfoResponse = errorResponse("Invalid Request")
-          mockDeclarationConnector(Right(HttpResponse(400, decInfoResponse, Map.empty[String, Seq[String]])))
-          val response        = await(declarationInfoService.getDeclaration(mrn).value)
-          response.fold(_.message should include("Invalid Request"), _ => fail())
+          mockTransformDeclarationResponse(declarationResponse)(Right(declaration))
         }
 
-        "401 response" in {
-          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-          val decInfoResponse = errorResponse("Unauthorized")
-          mockDeclarationConnector(
-            Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
-          )
-          val response        = await(declarationInfoService.getDeclaration(mrn).value)
-          response.fold(_.message should include("Unauthorized"), _ => fail())
-        }
-
-        "403 response" in {
-          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-          val decInfoResponse = errorResponse("WAF Forbidden")
-          mockDeclarationConnector(
-            Right(HttpResponse(404, decInfoResponse, Map.empty[String, Seq[String]]))
-          )
-          val response        = await(declarationInfoService.getDeclaration(mrn).value)
-          response.fold(_.message should include("WAF Forbidden"), _ => fail())
-        }
-
-        "405 response" in {
-          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-          val decInfoResponse = errorResponse("Method not allowed")
-          mockDeclarationConnector(
-            Right(HttpResponse(405, decInfoResponse, Map.empty[String, Seq[String]]))
-          )
-          val response        = await(declarationInfoService.getDeclaration(mrn).value)
-          response.fold(_.message should include("Method not allowed"), _ => fail())
-        }
-
-        "500 response" in {
-          val mrn             = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-          val decInfoResponse = errorResponse("invalid JSON format")
-          mockDeclarationConnector(
-            Right(HttpResponse(500, decInfoResponse, Map.empty[String, Seq[String]]))
-          )
-          val response        = await(declarationInfoService.getDeclaration(mrn).value)
-          response.fold(_.message should include("invalid JSON format"), _ => fail())
-        }
-
-        "Invalid Json response" in {
-          val mrn      = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
-          mockDeclarationConnector(
-            Right(HttpResponse(200, """{"a"-"b"}""", Map.empty[String, Seq[String]]))
-          )
-          val response = await(declarationInfoService.getDeclaration(mrn).value)
-          response.fold(_.message should include("Unexpected character"), _ => fail())
-        }
-
+        await(declarationService.getDeclaration(mrn).value) shouldBe Right(declaration)
       }
     }
   }

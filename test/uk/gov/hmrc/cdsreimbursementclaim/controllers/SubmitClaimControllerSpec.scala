@@ -17,6 +17,9 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.{JsObject, JsString, JsValue}
 import play.api.test.Helpers._
@@ -27,7 +30,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
 
-class SubmitClaimControllerSpec extends BaseSpec with DefaultAwaitTimeout {
+class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFactory with DefaultAwaitTimeout {
 
   implicit val ec         = scala.concurrent.ExecutionContext.Implicits.global
   implicit val hc         = HeaderCarrier()

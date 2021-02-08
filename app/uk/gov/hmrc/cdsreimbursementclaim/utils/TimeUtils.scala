@@ -16,12 +16,26 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import java.time.ZoneId
+import java.time._
 import java.time.format.DateTimeFormatter
+import scala.util.Try
 
 object TimeUtils {
 
-  val eisDateFormat: DateTimeFormatter =
+  def acceptanceDateDisplayFormat(acceptanceDate: String): Option[String] = {
+    val result = for {
+      t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("u-M-d")))
+      f <- Try(DateTimeFormatter.ofPattern("d MMMM u").format(t))
+    } yield f
+    result.toOption
+  }
+
+  val eisDateTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
 
+  val eisDateTimeNow: String = eisDateTimeFormat.format(LocalDateTime.now)
+
+  val rfc7231DateTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
+
+  val rfc7231DateTimeNow: String = rfc7231DateTimeFormat.format(ZonedDateTime.now(ZoneOffset.UTC))
 }

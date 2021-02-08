@@ -16,30 +16,33 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.models.GetDeclarationResponse._
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class GetDeclarationController @Inject() (declarationInfoService: DeclarationService, cc: ControllerComponents)(implicit
-  ec: ExecutionContext
-) extends BackendController(cc)
+class DeclarationController @Inject() (
+  authenticate: AuthenticateActions,
+  declarationService: DeclarationService,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
     with Logging {
 
-  def declaration(declarationId: MRN): Action[AnyContent] = Action.async { implicit request =>
-    declarationInfoService
-      .getDeclaration(declarationId)
+  def declaration(mrn: MRN): Action[AnyContent] = authenticate.async { implicit request =>
+    declarationService
+      .getDeclaration(mrn)
       .fold(
         e => {
-          logger.warn(s"could not get declaration information", e)
+          logger.warn(s"could not get declaration", e)
           InternalServerError
         },
         declaration => Ok(Json.toJson(declaration))
