@@ -24,9 +24,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class BaseSpec extends AnyWordSpec with Matchers with MockFactory {
-  val env            = Environment.simple()
-  val config         = Configuration.load(env)
-  val servicesConfig = new ServicesConfig(config)
-  val appConfig      = new AppConfig(config, servicesConfig)
+  val env                = Environment.simple()
+  val config             = Configuration.load(env)
+  val servicesConfig     = new ServicesConfig(config)
+  implicit val appConfig = new AppConfig(config, servicesConfig)
 
 }

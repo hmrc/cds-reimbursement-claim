@@ -30,6 +30,8 @@ import org.scalacheck.ScalacheckShapeless._
 object GenerateUpscan extends Generators with UpscanGen
 object GenerateDeclaration extends Generators with DeclarationGen
 object GenerateSubmitClaim extends Generators with SubmitClaimGen
+object GenerateFrontendSubmitClaim extends Generators with FrontendSumbitClaimGen
+object GenerateUploadFiles extends Generators with UploadFileGen
 
 sealed trait Generators extends GenUtils {
 
@@ -149,17 +151,13 @@ trait SubmitClaimGen { this: GenUtils =>
   implicit val importerEoriDetailsGen     = gen[ImporterEoriDetails]
   implicit val eoriDetailsGen             = gen[EoriDetails]
   implicit val contactDetailsGen          = gen[ContactDetails]
-  implicit val consigneeDetailsGen        = gen[ConsigneeDetails]
   implicit val declarantDetailsGen        = gen[DeclarantDetails]
   implicit val accountDetailsGen          = gen[AccountDetails]
-  implicit val consigneeBankDetailsGen    = gen[ConsigneeBankDetails]
-  implicit val declarantBankDetailsGen    = gen[DeclarantBankDetails]
+  implicit val consigneeBankDetailsGen    = gen[BankDetails]
   implicit val bankInfoGen                = gen[BankInfo]
   implicit val ndrcDetailsGen             = gen[NdrcDetails]
   implicit val mrnDetailsGen              = gen[MrnDetails]
-  implicit val duplicateMrnDetailsGen     = gen[DuplicateMrnDetails]
   implicit val entryDetailsGen            = gen[EntryDetails]
-  implicit val duplicateEntryDetailsGen   = gen[DuplicateEntryDetails]
   implicit val requestCommonGen           = gen[RequestCommon]
   implicit val requestDetailGen           = gen[RequestDetail]
   implicit val postNewClaimsRequestGen    = gen[PostNewClaimsRequest]
@@ -172,4 +170,15 @@ trait SubmitClaimGen { this: GenUtils =>
   implicit val postNewClaimsResponseGen = gen[PostNewClaimsResponse]
   implicit val submitClaimResponseGen   = gen[SubmitClaimResponse]
 
+}
+
+trait FrontendSumbitClaimGen { this: GenUtils =>
+  import uk.gov.hmrc.cdsreimbursementclaim.models.FrontendSubmitClaim._
+  implicit val frontendSumbitClaimGen = gen[FrontendSubmitClaim]
+  implicit val fileInformationGen     = gen[FileInformation]
+
+}
+
+trait UploadFileGen { self: GenUtils =>
+  implicit val dec64BodyGen = gen[Dec64Body]
 }

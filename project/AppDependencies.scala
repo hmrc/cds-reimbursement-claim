@@ -11,7 +11,8 @@ object AppDependencies {
     "org.julienrf"      %% "play-json-derived-codecs"  % "7.0.0",
     "com.github.kxbmap" %% "configs"                   % "0.5.0",
     "ru.tinkoff"        %% "phobos-core"               % "0.9.2",
-    "ru.tinkoff"        %% "phobos-akka-http"          % "0.9.2",
+    "uk.gov.hmrc"       %% "work-item-repo"            % "7.11.0-play-27",
+    "uk.gov.hmrc"       %% "play-scheduling-play-27"   % "7.10.0",
     compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
     "com.github.ghik"    % "silencer-lib"              % silencerVersion % Provided cross CrossVersion.full
   )

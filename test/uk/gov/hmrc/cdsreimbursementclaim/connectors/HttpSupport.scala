@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import org.scalamock.matchers.ArgCapture.CaptureOne
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Writes
@@ -28,7 +29,9 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
   val mockHttp: HttpClient = mock[HttpClient]
 
-  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(result: Either[Throwable, HttpResponse]) =
+  def mockPost[A](url: String, body: A, hc: Option[CaptureOne[HeaderCarrier]] = None)(
+    result: Either[Throwable, HttpResponse]
+  ) =
     (mockHttp
       .POST(_: String, _: A, _: Seq[(String, String)])(
         _: Writes[A],
@@ -36,7 +39,7 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
         _: HeaderCarrier,
         _: ExecutionContext
       ))
-      .expects(url, body, headers, *, *, *, *)
+      .expects(url, body, *, *, *, hc.fold(*)(capture(_)), *)
       .returning(
         result.fold[Future[HttpResponse]](Future.failed, Future.successful)
       )

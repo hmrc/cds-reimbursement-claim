@@ -27,24 +27,24 @@ trait EisConnector {
 
   val appConfig: AppConfig
 
-  def getExtraHeaders(): Seq[(String, String)] = {
-    val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
-    val localDate  = LocalDateTime.now().format(dateFormat)
+  val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
 
+  val jsonHeaders = Seq(("Content-Type" -> "application/json"), ("Accept" -> "application/json"))
+  val xmlHeaders  = Seq(("Content-Type" -> "application/xml; charset=UTF-8"), ("Accept" -> "application/xml"))
+
+  def getStandardHeaders(): Seq[(String, String)] =
     Seq(
-      ("Date"             -> localDate),
+      ("Date"             -> LocalDateTime.now().format(dateFormat)),
       ("X-Correlation-ID" -> java.util.UUID.randomUUID().toString),
-      ("X-Forwarded-Host" -> "MDTP"),
-      ("Content-Type"     -> "application/json"),
-      ("Accept"           -> "application/json")
+      ("X-Forwarded-Host" -> "MDTP")
     )
 
-  }
-
-  def enrichHC(implicit hc: HeaderCarrier): HeaderCarrier =
+  def enrichHC(isJson: Boolean)(implicit hc: HeaderCarrier): HeaderCarrier = {
+    val jsonOrXmlHeaders = if (isJson) jsonHeaders else xmlHeaders
     hc.copy(
       authorization = Some(Authorization(s"Bearer ${appConfig.eisBearerToken}")),
-      extraHeaders = hc.extraHeaders ++ getExtraHeaders
+      extraHeaders = hc.extraHeaders ++ getStandardHeaders() ++ jsonOrXmlHeaders
     )
+  }
 
 }

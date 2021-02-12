@@ -30,7 +30,9 @@ object Logging {
   implicit class LoggerOps(private val l: Logger) extends AnyVal {
     def warn(msg: => String, error: => Error): Unit = {
       val idString = error.identifiers.map { case (k, v) => s"[$k: $v]" }.mkString(" ")
-      error.throwable.fold(l.warn(s"$idString $msg"))(e => l.warn(s"$idString $msg", e))
+      error.throwable.fold(l.warn(s"$idString $msg ${error.message}"))(e =>
+        l.warn(s"$idString $msg ${error.message}", e)
+      )
     }
 
   }

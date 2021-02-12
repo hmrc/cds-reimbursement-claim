@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -26,27 +25,26 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
+class FileUploadConnectorSpec extends BaseSpec with HttpSupport {
 
-  val connector = new DefaultDeclarationConnector(mockHttp, appConfig)
+  val connector                  = new DefaultFileUploadConnector(mockHttp, appConfig)
+  val backEndUrl                 = "http://localhost:7502/fileupload"
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "DeclarationInfoConnector" when {
-
-    val backEndUrl                 = "http://localhost:7502/declaration"
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+  "FileUploadConnector" when {
 
     "handling request for declaration" must {
 
-      "do a post http call and get the ACC14 API response" in {
+      "do a post http call to the DEC64 api and get a response" in {
         val httpResponse = HttpResponse(200, "The Response")
         val capturedHc   = CaptureOne[HeaderCarrier]()
         mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
-        val response     = await(connector.getDeclarationInfo(JsString("The Request")).value)
+        val response     = await(connector.upload("<file>upload</file>").value)
         response                                                         shouldBe Right(httpResponse)
         capturedHc.value.authorization                                   shouldBe Some(Authorization("Bearer NoBearerToken"))
         capturedHc.value.extraHeaders                                      should contain("X-Forwarded-Host" -> "MDTP")
-        capturedHc.value.extraHeaders                                      should contain("Content-Type" -> "application/json")
-        capturedHc.value.extraHeaders                                      should contain("Accept" -> "application/json")
+        capturedHc.value.extraHeaders                                      should contain("Content-Type" -> "application/xml; charset=UTF-8")
+        capturedHc.value.extraHeaders                                      should contain("Accept" -> "application/xml")
         capturedHc.value.extraHeaders.exists(_._1 == "Date")             shouldBe true
         capturedHc.value.extraHeaders.exists(_._1 == "X-Correlation-ID") shouldBe true
       }
@@ -56,7 +54,7 @@ class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
       "the call fails" in {
         val error    = new Exception("Socket connection error")
         mockPost(backEndUrl, *)(Left(error))
-        val response = await(connector.getDeclarationInfo(JsString("The Request")).value)
+        val response = await(connector.upload("<file>upload</file>").value)
         response shouldBe Left(Error(error))
       }
     }

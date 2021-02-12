@@ -18,8 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import org.scalatest.matchers.should._
 import org.scalatest.wordspec.AnyWordSpec
-import ru.tinkoff.phobos.akka_http._
-
 import scala.xml.XML
 
 class BatchFileInterfaceMetadataSpec extends AnyWordSpec with Matchers {
@@ -35,8 +33,9 @@ class BatchFileInterfaceMetadataSpec extends AnyWordSpec with Matchers {
       )
       val bfim       = Dec64Body(
         BatchFileInterfaceMetadata(
+          correlationID = "123456789",
           checksum = "123123123",
-          fileSize = 1000L,
+          fileSize = Some(1000L),
           sourceLocation = "https://somewhere.on.aws",
           sourceFileName = "filename.pdf",
           properties = Some(properties)

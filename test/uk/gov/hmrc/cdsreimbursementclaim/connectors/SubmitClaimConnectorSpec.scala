@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import org.scalamock.matchers.ArgCapture.CaptureOne
 import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,17 +40,25 @@ class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
     "handling request to submit claim" must {
 
       "do a post http call and get the TPI-05 API response" in {
+        val capturedHc   = CaptureOne[HeaderCarrier]()
         val httpResponse = HttpResponse(200, "The Response")
-        mockPost(backEndUrl, Seq.empty, *)(Right(httpResponse))
+        mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
         val response     = await(connector.submitClaim(JsString("The Request")).value)
-        response shouldBe Right(httpResponse)
+        response                                                         shouldBe Right(httpResponse)
+        capturedHc.value.authorization                                   shouldBe Some(Authorization("Bearer NoBearerToken"))
+        capturedHc.value.extraHeaders                                      should contain("X-Forwarded-Host" -> "MDTP")
+        capturedHc.value.extraHeaders                                      should contain("Content-Type" -> "application/json")
+        capturedHc.value.extraHeaders                                      should contain("Accept" -> "application/json")
+        capturedHc.value.extraHeaders.exists(_._1 == "Date")             shouldBe true
+        capturedHc.value.extraHeaders.exists(_._1 == "X-Correlation-ID") shouldBe true
+
       }
     }
 
     "return an error" when {
       "the call fails" in {
         val error    = new Exception("Socket connection error")
-        mockPost(backEndUrl, Seq.empty, *)(Left(error))
+        mockPost(backEndUrl, *)(Left(error))
         val response = await(connector.submitClaim(JsString("The Request")).value)
         response shouldBe Left(Error(error))
       }

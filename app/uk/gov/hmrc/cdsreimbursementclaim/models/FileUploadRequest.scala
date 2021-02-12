@@ -17,16 +17,15 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId}
-import java.util.UUID
+import java.time.{LocalDateTime, ZoneId}
 
 import ru.tinkoff.phobos.Namespace
-import ru.tinkoff.phobos.akka_http.HeadlessEnvelope
 import ru.tinkoff.phobos.derivation.semiauto._
 import ru.tinkoff.phobos.encoding.{ElementEncoder, XmlEncoder}
 import ru.tinkoff.phobos.syntax.xmlns
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EisTime
 
+//This class implements the DEC64 API, and the xml serialization. There are no response classes as the ok response is 204 No Content
 final case class BifNS()
 object BifNS {
   implicit val batchFileInterfaceMetadataNs: Namespace[BifNS.type] =
@@ -76,17 +75,20 @@ object PropertiesType {
     caseReference: String,
     eori: String,
     declarationId: String,
-    documentType: String
-  ): Seq[PropertyType] = {
+    documentType: String,
+    localDateTime: LocalDateTime = LocalDateTime.now()
+  ): PropertiesType = {
     val receivedDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
-    List(
-      PropertyType("CaseReference", caseReference),
-      PropertyType("EORI", eori),
-      PropertyType("DeclarationID", declarationId),
-      PropertyType("DeclarationType", documentType),
-      PropertyType("ApplicationName", "NDRC"), //Possible values are NDRC & Securities
-      PropertyType("DocumentType", "MRN"), //can be either EntryNumber or MRN
-      PropertyType("DocumentReceivedDate", receivedDateFormatter.format(Instant.now()))
+    PropertiesType(
+      List(
+        PropertyType("CaseReference", caseReference),
+        PropertyType("EORI", eori),
+        PropertyType("DeclarationID", declarationId),
+        PropertyType("DeclarationType", documentType),
+        PropertyType("ApplicationName", "NDRC"), //Possible values are NDRC & Securities
+        PropertyType("DocumentType", "MRN"), //can be either EntryNumber or MRN
+        PropertyType("DocumentReceivedDate", receivedDateFormatter.format(localDateTime))
+      )
     )
   }
 }
@@ -110,7 +112,7 @@ final case class BatchFileInterfaceMetadata(
   @xmlns(BifNS) sourceSystemOS: Option[String] = None,
   @xmlns(BifNS) interfaceName: String = "DEC64",
   @xmlns(BifNS) interfaceVersion: String = "1.0.0",
-  @xmlns(BifNS) correlationID: String = UUID.randomUUID().toString.replaceAll("-", "").take(31),
+  @xmlns(BifNS) correlationID: String,
   @xmlns(BifNS) conversationID: Option[String] = None,
   @xmlns(BifNS) transactionID: Option[String] = None,
   @xmlns(BifNS) messageID: Option[String] = None,
@@ -124,7 +126,7 @@ final case class BatchFileInterfaceMetadata(
   @xmlns(BifNS) checksum: String,
   @xmlns(BifNS) checksumAlgorithm: ChecksumAlgorithmType = SHA256,
   @xmlns(BifNS) signature: Option[String] = None,
-  @xmlns(BifNS) fileSize: Long,
+  @xmlns(BifNS) fileSize: Option[Long] = None,
   @xmlns(BifNS) compressed: Boolean = false,
   @xmlns(BifNS) compressionAlgorithm: Option[CompressionAlgorithmSimpleType] = None,
   @xmlns(BifNS) compressedChecksum: Option[String] = None,

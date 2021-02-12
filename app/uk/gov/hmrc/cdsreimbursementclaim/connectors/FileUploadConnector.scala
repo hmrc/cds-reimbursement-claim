@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -27,23 +26,24 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[DefaultSubmitClaimConnector])
-trait SubmitClaimConnector {
-  def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
+//Sending xml data to the DEC64 API
+@ImplementedBy(classOf[DefaultDeclarationConnector])
+trait FileUploadConnector {
+  def upload(declarationInfo: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 }
 
 @Singleton
-class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
-    extends SubmitClaimConnector
+class DefaultFileUploadConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends FileUploadConnector
     with EisConnector {
 
-  override def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  def upload(declarationInfo: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, claimData)(
-          implicitly[Writes[JsValue]],
+        .POST[String, HttpResponse](appConfig.fileUpload, declarationInfo)(
+          implicitly,
           HttpReads[HttpResponse],
-          enrichHC(true),
+          enrichHC(false),
           ec
         )
         .map(Right(_))

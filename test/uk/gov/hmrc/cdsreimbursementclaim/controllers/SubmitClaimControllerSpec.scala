@@ -21,9 +21,11 @@ import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateSubmitClaim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanCallBack, UpscanUpload}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, FrontendSubmitClaim, SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
+import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
@@ -35,9 +37,17 @@ class SubmitClaimControllerSpec extends BaseSpec with DefaultAwaitTimeout {
   implicit val materializer = NoMaterializer
   val httpClient            = mock[HttpClient]
   val eisService            = mock[SubmitClaimService]
-  private val fakeRequest   =
-    FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), Json.toJson(sample[SubmitClaimRequest]))
-  private val controller    = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
+  val upscanService         = mock[UpscanService]
+  private val fakeRequest = {
+    import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateFrontendSubmitClaim._
+    FakeRequest(
+      "POST",
+      "/",
+      FakeHeaders(Seq(HeaderNames.HOST -> "localhost")),
+      Json.toJson(sample[FrontendSubmitClaim])
+    )
+  }
+  private val controller    = new SubmitClaimController(eisService, upscanService, Helpers.stubControllerComponents())
 
   def mockEisResponse(response: EitherT[Future, Error, SubmitClaimResponse]) =
     (eisService
@@ -45,13 +55,56 @@ class SubmitClaimControllerSpec extends BaseSpec with DefaultAwaitTimeout {
       .expects(*, *)
       .returning(response)
 
+  def mockUpscan(response: EitherT[Future, Error, List[UpscanUpload]]) =
+    (upscanService.readUpscanUploads(_: List[UploadReference])).expects(*).returning(response)
+
+  def getClaimResponse(caseNumber: Option[String], correlationId: Option[String]) = {
+    import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateSubmitClaim._
+    val submitClaimResponse = sample[SubmitClaimResponse]
+    submitClaimResponse.copy(postNewClaimsResponse =
+      submitClaimResponse.postNewClaimsResponse.copy(responseCommon =
+        submitClaimResponse.postNewClaimsResponse.responseCommon
+          .copy(CDFPayCaseNumber = caseNumber, correlationID = correlationId)
+      )
+    )
+  }
+
+  val upscanSuccess = UpscanSuccess(
+    "reference-123",
+    "uploaded-123",
+    "downloadUrl-123",
+    Map(
+      "checksum"        -> "checksum",
+      "fileName"        -> "fileName",
+      "fileMimeType"    -> "fileMimeType",
+      "uploadTimestamp" -> "uploadTimestamp",
+      "fileSize"        -> "1000"
+    )
+  )
+  def getUpscanUpload(upscanCallBack: Option[UpscanCallBack]) = {
+    import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUpscan._
+    sample[UpscanUpload].copy(upscanCallBack = upscanCallBack)
+  }
+
   "POST" should {
     "return 200" in {
-      val response = sample[SubmitClaimResponse]
-      mockEisResponse(EitherT.right(Future.successful(response)))
-      val result   = controller.claim()(fakeRequest)
+      val claimResponse = getClaimResponse(Some("CaseNumber-12345"), Some("correlationID-12345"))
+      mockEisResponse(EitherT.right(Future.successful(claimResponse)))
+      val upscanUpload  = getUpscanUpload(Some(upscanSuccess))
+      mockUpscan(EitherT.rightT(List(upscanUpload)))
+      val result        = controller.claim()(fakeRequest)
       status(result)                                shouldBe Status.OK
-      contentAsJson(result).as[SubmitClaimResponse] shouldBe response
+      contentAsJson(result).as[SubmitClaimResponse] shouldBe claimResponse
+    }
+
+    "fail if no caseNumber returned" in {
+      val claimResponse = getClaimResponse(None, Some("correlationID-12345"))
+      mockEisResponse(EitherT.right(Future.successful(claimResponse)))
+      val upscanUpload  = getUpscanUpload(Some(upscanSuccess))
+      mockUpscan(EitherT.rightT(List(upscanUpload)))
+      val result        = controller.claim()(fakeRequest)
+      status(result)                                shouldBe Status.OK
+      contentAsJson(result).as[SubmitClaimResponse] shouldBe claimResponse
     }
 
     "return 500 on any error" in {

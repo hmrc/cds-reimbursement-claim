@@ -20,6 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.concurrent.duration.FiniteDuration
+
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
@@ -32,5 +34,11 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val eisBearerToken: String   = servicesConfig.getConfString("eis.bearer-token", "NoBearerToken")
   val newClaimEndpoint: String = eisBaseUrl + servicesConfig.getConfString("eis.overpayment-claim", "Undefined")
   val decInfoEndpoint: String  = eisBaseUrl + servicesConfig.getConfString(s"eis.declaration-info", "Undefined")
+  val fileUpload: String       = eisBaseUrl + servicesConfig.getConfString(s"eis.file-upload", "Undefined")
 
+  val queueRetryAfter: FiniteDuration = config.get[FiniteDuration]("queue.retry-after")
+  val queueMaxRetries: Int            = config.get[Int]("queue.max-retries")
+
+  val scheduleInitialDelay: FiniteDuration = config.get[FiniteDuration]("scheduling.initial-delay")
+  val scheduleInterval: FiniteDuration     = config.get[FiniteDuration]("scheduling.interval")
 }
