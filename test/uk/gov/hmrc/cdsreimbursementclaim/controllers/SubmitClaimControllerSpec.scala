@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.{HeaderNames, Status}
@@ -30,6 +31,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
 
+@Ignore
 class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFactory with DefaultAwaitTimeout {
 
   implicit val ec         = scala.concurrent.ExecutionContext.Implicits.global
