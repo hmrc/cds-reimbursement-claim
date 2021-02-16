@@ -18,14 +18,17 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import akka.util.ByteString
 import org.joda.time.DateTime
+import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 
 import scala.reflect.{ClassTag, classTag}
-import org.scalacheck.ScalacheckShapeless._
 
 object GenerateUpscan extends Generators with UpscanGen
 object GenerateDeclaration extends Generators with DeclarationGen
@@ -73,6 +76,13 @@ sealed trait GenUtils {
         .map(l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.systemDefault()))
     )
 
+  implicit val instantArb: Arbitrary[Instant] =
+    Arbitrary(
+      Gen
+        .chooseNum(0L, 10000L)
+        .map(Instant.ofEpochMilli)
+    )
+
   implicit val jodaDateTime: Arbitrary[DateTime] =
     Arbitrary(
       Gen
@@ -111,9 +121,11 @@ trait UpscanGen { this: GenUtils =>
   implicit val upscanUploadGen: Gen[UpscanUpload]       = gen[UpscanUpload]
   implicit val uploadReferenceGen: Gen[UploadReference] = gen[UploadReference]
   implicit val upscanSuccessGen: Gen[UpscanSuccess]     = gen[UpscanSuccess]
+  implicit val uploadDetailsGen: Gen[UploadDetails]     = gen[UploadDetails]
 }
 
 trait DeclarationGen { this: GenUtils =>
+  implicit val declarationGen          = gen[Declaration]
   implicit val mrnGen                  = gen[MRN]
   implicit val bankDetailsGen          = gen[BankDetails]
   implicit val accountDetailsGen       = gen[AccountDetails]
@@ -128,16 +140,22 @@ trait DeclarationGen { this: GenUtils =>
   implicit val ndrcDetailsGen          = gen[NdrcDetails]
 
   // request
-  implicit val requestCommonGen: Gen[RequestCommon]              = gen[RequestCommon]
-  implicit val requestDetailGen: Gen[RequestDetail]              = gen[RequestDetail]
-  implicit val declarationRequestGen: Gen[GetDeclarationRequest] = gen[GetDeclarationRequest]
+  implicit val requestCommonGen: Gen[RequestCommon]           = gen[RequestCommon]
+  implicit val requestDetailGen: Gen[RequestDetail]           = gen[RequestDetail]
+  implicit val declarationRequestGen: Gen[DeclarationRequest] = gen[DeclarationRequest]
 
   // response
   implicit val responseCommonGen: Gen[ResponseCommon]                                               = gen[ResponseCommon]
   implicit val responseDetailGen: Gen[ResponseDetail]                                               = gen[ResponseDetail]
-  implicit val declarationInfoResponseGen: Gen[GetDeclarationResponse]                              = gen[GetDeclarationResponse]
+  implicit val declarationInfoResponseGen: Gen[DeclarationResponse]                                 = gen[DeclarationResponse]
   implicit val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] =
     gen[OverpaymentDeclarationDisplayResponse]
+
+  implicit val overpaymentDeclarationDisplayRequestGen: Gen[OverpaymentDeclarationDisplayRequest] =
+    gen[OverpaymentDeclarationDisplayRequest]
+
+  implicit val maskedBankDetails: Gen[MaskedBankDetails] = gen[MaskedBankDetails]
+
 }
 
 trait SubmitClaimGen { this: GenUtils =>

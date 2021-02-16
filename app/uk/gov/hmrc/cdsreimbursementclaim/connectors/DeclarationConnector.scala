@@ -18,30 +18,40 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsValue, Writes}
-import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
+import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.DeclarationRequest
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultDeclarationConnector])
 trait DeclarationConnector {
-  def getDeclarationInfo(declarationInfo: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
+  def getDeclaration(declarationRequest: DeclarationRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HttpResponse]
 }
 
 @Singleton
-class DefaultDeclarationConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
-    extends DeclarationConnector
-    with EisConnector {
+class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: ServicesConfig)(implicit
+  ec: ExecutionContext
+) extends DeclarationConnector
+    with EisConnector
+    with Logging {
 
-  def getDeclarationInfo(declarationInfo: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  private val getDeclarationUrl: String = s"${config.baseUrl("declaration")}/accounts/overpaymentdeclarationdisplay/v1"
+
+  def getDeclaration(
+    declarationRequest: DeclarationRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[JsValue, HttpResponse](appConfig.decInfoEndpoint, declarationInfo)(
-          implicitly[Writes[JsValue]],
+        .POST[DeclarationRequest, HttpResponse](getDeclarationUrl, declarationRequest)(
+          implicitly[Writes[DeclarationRequest]],
           HttpReads[HttpResponse],
           enrichHC(true),
           ec

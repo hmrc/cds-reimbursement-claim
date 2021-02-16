@@ -17,44 +17,69 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
+import cats.instances.future._
+import cats.instances.int._
+import cats.syntax.either._
 import cats.syntax.eq._
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
 import play.api.http.Status
-import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationRequest, GetDeclarationResponse, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.DeclarationResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 @ImplementedBy(classOf[DeclarationServiceImpl])
 trait DeclarationService {
-  def getDeclaration(declarationId: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse]
+  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Declaration]
 }
 
 @Singleton
-class DeclarationServiceImpl @Inject() (declarationInfoConnector: DeclarationConnector)(implicit
+class DeclarationServiceImpl @Inject() (
+  declarationConnector: DeclarationConnector,
+  uuidGenerator: UUIDGenerator,
+  dateGenerator: DateGenerator,
+  declarationTransformerService: DeclarationTransformerService
+)(implicit
   ec: ExecutionContext
 ) extends DeclarationService
     with Logging {
 
-  def getDeclaration(
-    declarationId: MRN
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, GetDeclarationResponse] =
-    declarationInfoConnector
-      .getDeclarationInfo(Json.toJson(GetDeclarationRequest(declarationId)))
-      .subflatMap { httpResponse =>
-        if (httpResponse.status === Status.OK)
-          Try(httpResponse.json.as[GetDeclarationResponse]).fold(err => Left(Error(err)), js => Right(js))
-        else {
-          Left(
-            Error(
-              s"Call to get declaration information came back with status ${httpResponse.status}, body: ${httpResponse.body}"
-            )
-          )
+  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Declaration] = {
+    val declarationRequest = DeclarationRequest(
+      OverpaymentDeclarationDisplayRequest(
+        RequestCommon(
+          "MDTP",
+          dateGenerator.nextAcknowledgementDate,
+          uuidGenerator.compactCorrelationId
+        ),
+        RequestDetail(
+          mrn.value,
+          None
+        )
+      )
+    )
+
+    declarationConnector
+      .getDeclaration(declarationRequest)
+      .subflatMap { response =>
+        if (response.status === Status.OK) {
+          for {
+            declarationResponse <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
+            displayDeclaration  <- declarationTransformerService.toDeclaration(declarationResponse)
+          } yield displayDeclaration
+        } else {
+          logger.warn(s"could not get declaration: http status: ${response.status} | ${response.body}")
+          Left(Error(s"call to get declaration failed ${response.status}"))
         }
       }
+  }
 }
