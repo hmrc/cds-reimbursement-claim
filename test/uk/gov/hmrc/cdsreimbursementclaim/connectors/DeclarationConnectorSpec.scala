@@ -42,13 +42,13 @@ class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
         val capturedHc   = CaptureOne[HeaderCarrier]()
         mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
         val response     = await(connector.getDeclarationInfo(JsString("The Request")).value)
-        response                                                         shouldBe Right(httpResponse)
-        capturedHc.value.authorization                                   shouldBe Some(Authorization("Bearer NoBearerToken"))
-        capturedHc.value.extraHeaders                                      should contain("X-Forwarded-Host" -> "MDTP")
-        capturedHc.value.extraHeaders                                      should contain("Content-Type" -> "application/json")
-        capturedHc.value.extraHeaders                                      should contain("Accept" -> "application/json")
-        capturedHc.value.extraHeaders.exists(_._1 == "Date")             shouldBe true
-        capturedHc.value.extraHeaders.exists(_._1 == "X-Correlation-ID") shouldBe true
+        response                                                          shouldBe Right(httpResponse)
+        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer NoBearerToken"))
+        capturedHc.value.extraHeaders                                       should contain("X-Forwarded-Host" -> "MDTP")
+        capturedHc.value.extraHeaders                                       should contain("Content-Type" -> "application/json")
+        capturedHc.value.extraHeaders                                       should contain("Accept" -> "application/json")
+        capturedHc.value.extraHeaders.exists(_._1 === "Date")             shouldBe true
+        capturedHc.value.extraHeaders.exists(_._1 === "X-Correlation-ID") shouldBe true
       }
     }
 

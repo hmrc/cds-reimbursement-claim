@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
@@ -35,7 +36,8 @@ trait SubmitClaimConnector {
 @Singleton
 class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends SubmitClaimConnector
-    with EisConnector {
+    with EisConnector
+    with Logging {
 
   override def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
@@ -46,7 +48,8 @@ class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: Ap
           enrichHC(true),
           ec
         )
-        .map(Right(_))
+        .map { a => logger.error("SubmitClaimConnector Response: " + a.body); Right(a) }
+//        .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
 

@@ -18,19 +18,16 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan
 
 import java.time.LocalDateTime
 
-import akka.stream.Materializer
 import cats.data.EitherT
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import play.api.inject.bind
-import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{BodyParsers, Headers, WrappedRequest}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers, NoMaterializer}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.ControllerSpec
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticatedRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUpscan._
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
@@ -41,7 +38,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyChecks {
+class UpscanControllerSpec extends BaseSpec with ScalaCheckDrivenPropertyChecks {
 
   val mockUpscanService: UpscanService = mock[UpscanService]
   val fixedTimestamp                   = LocalDateTime.of(2019, 9, 24, 15, 47, 20)
@@ -55,15 +52,6 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
     new BodyParsers.Default()(NoMaterializer),
     executionContext
   )
-
-  override val overrideBindings: List[GuiceableModule] =
-    List(
-      bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[AuthenticateActions].toInstance(Fake.login(Fake.user, fixedTimestamp)),
-      bind[UpscanService].toInstance(mockUpscanService)
-    )
-
-  implicit lazy val mat: Materializer = fakeApplication.materializer
 
   val headerCarrier = HeaderCarrier()
 

@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import scala.concurrent.{ExecutionContext, Future}
 
 //Sending xml data to the DEC64 API
-@ImplementedBy(classOf[DefaultDeclarationConnector])
+@ImplementedBy(classOf[DefaultFileUploadConnector])
 trait FileUploadConnector {
   def upload(declarationInfo: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 }

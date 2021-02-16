@@ -20,12 +20,12 @@ import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.libs.iteratee.{Enumerator, Iteratee}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Dec64Body, HeadlessEnvelope, WorkItemHeaders, WorkItemPayload, WorkItemResult}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{WorkItemHeaders, WorkItemPayload, WorkItemResult}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.FileUploadsRepository
-import uk.gov.hmrc.workitem.{Failed, PermanentlyFailed, WorkItem}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.workitem.{Failed, PermanentlyFailed, WorkItem}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,13 +34,6 @@ class FileUploadQueue @Inject() (repository: FileUploadsRepository, fileUploadSe
   appConfig: AppConfig,
   ec: ExecutionContext
 ) extends Logging {
-
-  def queueRequests(dec64Bodies: Seq[Dec64Body])(implicit hc: HeaderCarrier): Future[Seq[WorkItem[WorkItemPayload]]] =
-    Future.sequence(
-      dec64Bodies
-        .map(body => Dec64Body.soapEncoder.encode(HeadlessEnvelope(body)))
-        .map(queueRequest(_))
-    )
 
   def queueRequest(soapMessage: String)(implicit hc: HeaderCarrier): Future[WorkItem[WorkItemPayload]] = {
     val workItemPayload = new WorkItemPayload(soapMessage, WorkItemHeaders.apply(hc))
@@ -56,7 +49,7 @@ class FileUploadQueue @Inject() (repository: FileUploadsRepository, fileUploadSe
   protected def processOneItem(
     acc: Seq[WorkItemResult],
     workItem: WorkItem[WorkItemPayload]
-  ): Future[Seq[WorkItemResult]] = {
+  ): Future[Seq[WorkItemResult]] =
     fileUploadService
       .upload(workItem.item.soapRequest)(workItem.item.headers.toHeaderCarrier)
       .fold(
@@ -73,6 +66,5 @@ class FileUploadQueue @Inject() (repository: FileUploadsRepository, fileUploadSe
         response => repository.complete(workItem.id).map(_ => acc :+ WorkItemResult(workItem.item, Right(response)))
       )
       .flatten
-  }
 
 }

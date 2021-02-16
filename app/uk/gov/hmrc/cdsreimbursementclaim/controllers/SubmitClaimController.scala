@@ -24,12 +24,14 @@ import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest.{MrnDetails, PostNewClaimsRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanUpload
-import uk.gov.hmrc.cdsreimbursementclaim.models.{BatchFileInterfaceMetadata, Dec64Body, Error, FrontendSubmitClaim, PropertiesType, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{BatchFileInterfaceMetadata, Dec64Body, Error, FrontendSubmitClaim, HeadlessEnvelope, PropertiesType, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
 import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.workitem.WorkItem
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -49,7 +51,7 @@ class SubmitClaimController @Inject() (
     (for {
       frontendClaim <- EitherT.fromEither[Future](Try(request.body.as[FrontendSubmitClaim]).toEither.leftMap(Error(_)))
       claimResponse <- eisService.submitClaim(createSubmitClaim(frontendClaim))
-      _             <- EitherT.rightT[Future, Error](process(frontendClaim, claimResponse))
+      _             <- createAndStoreDec64Requests(frontendClaim, claimResponse)
     } yield claimResponse)
       .fold(
         e => {
@@ -68,63 +70,39 @@ class SubmitClaimController @Inject() (
     SubmitClaimRequest(postNewClaimsRequest)
   }
 
-  def process(claimRequest: FrontendSubmitClaim, claimResponse: SubmitClaimResponse): Unit = {
-    //val uploadReferences = claimRequest.files.map(_.uploadReference)
-    //upscanService.readUpscanUploads(uploadReferences).map(_ => ())
-    println(claimRequest)
-    println(claimResponse)
-    println(fileUploadQueue)
-    println(upscanService)
+  def createAndStoreDec64Requests(claimRequest: FrontendSubmitClaim, claimResponse: SubmitClaimResponse)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[WorkItem[WorkItemPayload]]] = {
+    val uploadReferences = claimRequest.files.map(_.uploadReference)
+    for {
+      uploads  <- upscanService.readUpscanUploads(uploadReferences)
+      messages <- EitherT.rightT[Future, Error]((0 until uploads.size).toList.map { i =>
+                    createDec64Request(
+                      uploads(i),
+                      claimRequest,
+                      claimResponse,
+                      claimRequest.files(i).documentType,
+                      i + 1,
+                      uploads.size
+                    ).map(body => fileUploadQueue.queueRequest(Dec64Body.soapEncoder.encode(HeadlessEnvelope(body))))
+                  })
+      result   <- {
+        messages.partition(_.isLeft) match {
+          case (Nil, responses) =>
+            val listOfResponses = for (Right(j) <- responses) yield j
+            EitherT(
+              Future
+                .sequence(listOfResponses)
+                .map(a => Right(a))
+                .recover { case err => Left(Error(err)) }
+            )
+          case (errors, _)      =>
+            val onlyErrors = for (Left(s) <- errors) yield s
+            EitherT.leftT[Future, List[WorkItem[WorkItemPayload]]](Error(onlyErrors.map(_.message).mkString("\r\n")))
+        }
+      }
+    } yield result
   }
-//    val uploadReferences = claimRequest.files.map(_.uploadReference)
-//    for {
-//      uploads <- upscanService.readUpscanUploads(uploadReferences)
-//      messages <- EitherT.rightT[Future,Error]((0 until uploads.size).map(i =>
-//                  createDec64Request(
-//                    uploads(i),
-//                    claimRequest,
-//                    claimResponse,
-//                    claimRequest.files(i).documentType,
-//                    i + 1,
-//                    uploads.size
-//                  )
-//                ))
-//      _ <- messages.map(a => a.map(b => b) )
-//
-//        _ <- uploads.foreach(u => (u))
-//
-//    } yield ()
-//    println(claimResponse)
-//  }
-  //  def process(
-//    claimRequest: FrontendSubmitClaim,
-//    claimResponse: SubmitClaimResponse
-//  ) = {
-//    val uploadReferences = claimRequest.files.map(_.uploadReference)
-//    upscanService.readUpscanUploads(uploadReferences)
-//    println(claimResponse)
-//      .map { uploads =>
-//        println(uploads + "" + claimResponse)
-//        (0 until uploads.size).foreach(i =>
-//          createDec64Request(
-//            uploads(i),
-//            claimRequest,
-//            claimResponse,
-//            claimRequest.files(i).documentType,
-//            i + 1,
-//            uploads.size
-//          )
-//        )
-//        ()
-//      }
-//  }
-
-//  def uploadFile(file:Dec64Body)(implicit hc:HeaderCarrier):Unit = {
-//    fileUploadService.upload(file).value   match {  //TODO If Future.failed or Either.Left send to WorkItemRepo
-//      case Success(e) => 1
-//      case Failure(ex) => 1
-//    }
-//  }
 
   def createDec64Request(
     upscanUpload: UpscanUpload,
@@ -150,7 +128,7 @@ class SubmitClaimController @Inject() (
                          Error("Upscan upload failed")
                        )
       checksum      <- Either.fromOption(upscanSuccess.uploadDetails.get("checksum"), Error("checksum was not found"))
-      fileName      <- Either.fromOption(upscanSuccess.uploadDetails.get("fileName"), Error("fileName was not found"))
+      //fileName      <- Either.fromOption(upscanSuccess.uploadDetails.get("fileName"), Error("fileName was not found"))  //TODO Send it when available
       fileMimeType  <-
         Either.fromOption(upscanSuccess.uploadDetails.get("fileMimeType"), Error("fileMimeType was not found"))
     } yield {
@@ -170,7 +148,7 @@ class SubmitClaimController @Inject() (
           batchSize = Some(batchSize),
           checksum = checksum,
           sourceLocation = upscanSuccess.downloadUrl,
-          sourceFileName = fileName,
+          //sourceFileName = fileName,  //TODO Put it back when we receive it
           sourceFileMimeType = Some(fileMimeType),
           properties = Some(properties)
         )

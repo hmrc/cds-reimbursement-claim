@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[SubmitClaimServiceImpl])
+@ImplementedBy(classOf[FileUploadServiceImpl])
 trait FileUploadService {
   def upload(body: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 }

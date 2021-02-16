@@ -16,25 +16,20 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import java.util.UUID
-
 import cats.data.EitherT
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.Span
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.{Configuration, Environment}
 import play.api.inject.DefaultApplicationLifecycle
 import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponentImpl
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
-import uk.gov.hmrc.cdsreimbursementclaim.models.WorkItemResult
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Dec64Body, HeadlessEnvelope, WorkItemResult}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-//import ru.tinkoff.phobos.akka_http.HeadlessEnvelope
-//import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUploadFiles._
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.FileUploadsRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -75,15 +70,17 @@ class FileUploadQueueSpec extends AnyWordSpec with Matchers with MockFactory wit
       .returning(EitherT.fromEither[Future](result))
       .once()
 
-  //def generateData: String = Dec64Body.soapEncoder.encode(HeadlessEnvelope(sample[Dec64Body]))
-  def generateData: String = UUID.randomUUID().toString.replaceAll("-", "").take(5)
+  def generateData: String = {
+    import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUploadFiles._
+    Dec64Body.soapEncoder.encode(HeadlessEnvelope(sample[Dec64Body]))
+  }
 
   "queue" should {
     "enqueue and dequeue a request" in {
       val payload  = generateData
       val workItem = await(queue.queueRequest(payload))
       mockUploadService(Right(()))
-      val result   = await(queue.processAllRequests()).head
+      val result   = await(queue.processAllRequests()).headOption.getOrElse(fail("queue is empty"))
       result.payload.headers.requestId shouldBe Some("RequestId")
       result.payload.headers.sessionId shouldBe Some("SessionId")
       result.payload.soapRequest       shouldBe payload
@@ -97,13 +94,13 @@ class FileUploadQueueSpec extends AnyWordSpec with Matchers with MockFactory wit
       val workItem = await(queue.queueRequest(payload))
       val error    = Left(Error(s"Something terrible happened"))
       mockUploadService(error)
-      await(queue.processAllRequests()).head.response shouldBe error
-      val dataAfterFailure = await(repository.findById(workItem.id))
-      dataAfterFailure.getOrElse(fail).failureCount shouldBe 1
-      dataAfterFailure.getOrElse(fail).status       shouldBe Failed
+      await(queue.processAllRequests()).headOption.getOrElse(fail("queue is empty")).response shouldBe error
+      val dataAfterFailure = await(repository.findById(workItem.id)).getOrElse(fail("WorkItem was not found in mongo"))
+      dataAfterFailure.failureCount shouldBe 1
+      dataAfterFailure.status       shouldBe Failed
     }
 
-    "Retry unitil permamently fails" in {
+    "Retry until permamently fails" in {
       val timeout: Timeout   = Timeout(Span(5, Seconds))
       val interval: Interval = Interval(Span(100, Millis))
 
@@ -118,17 +115,18 @@ class FileUploadQueueSpec extends AnyWordSpec with Matchers with MockFactory wit
       (1 to appConfig.queueMaxRetries).foreach { i =>
         val error = Left(Error(s"Failed $i times"))
         mockUploadService(error)
-        tryProcessing().head.response shouldBe error
-        val dataAfterFailure = await(repository.findById(workItem.id))
-        dataAfterFailure.getOrElse(fail).failureCount shouldBe i
-        dataAfterFailure.getOrElse(fail).status       shouldBe Failed
+        tryProcessing().headOption.getOrElse(fail("queue is empty")).response shouldBe error
+        val dataAfterFailure =
+          await(repository.findById(workItem.id)).getOrElse(fail("WorkItem was not found in mongo"))
+        dataAfterFailure.failureCount shouldBe i
+        dataAfterFailure.status       shouldBe Failed
       }
       val error    = Left(Error("PermanentlyFailed"))
       mockUploadService(error)
-      tryProcessing().head.response shouldBe error
-      val dataAfterFailure = await(repository.findById(workItem.id))
-      dataAfterFailure.getOrElse(fail).failureCount shouldBe appConfig.queueMaxRetries
-      dataAfterFailure.getOrElse(fail).status       shouldBe PermanentlyFailed
+      tryProcessing().headOption.getOrElse(fail("queue is empty")).response shouldBe error
+      val dataAfterFailure = await(repository.findById(workItem.id)).getOrElse(fail("WorkItem was not found in mongo"))
+      dataAfterFailure.failureCount shouldBe appConfig.queueMaxRetries
+      dataAfterFailure.status       shouldBe PermanentlyFailed
     }
 
   }

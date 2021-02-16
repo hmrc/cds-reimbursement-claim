@@ -32,6 +32,7 @@ object GenerateDeclaration extends Generators with DeclarationGen
 object GenerateSubmitClaim extends Generators with SubmitClaimGen
 object GenerateFrontendSubmitClaim extends Generators with FrontendSumbitClaimGen
 object GenerateUploadFiles extends Generators with UploadFileGen
+object GenerateWorkItem extends Generators with WorkItemGen
 
 sealed trait Generators extends GenUtils {
 
@@ -181,4 +182,11 @@ trait FrontendSumbitClaimGen { this: GenUtils =>
 
 trait UploadFileGen { self: GenUtils =>
   implicit val dec64BodyGen = gen[Dec64Body]
+}
+
+trait WorkItemGen { self: GenUtils =>
+  import uk.gov.hmrc.workitem._
+  implicit val workItemHeadersGen = gen[WorkItemHeaders]
+  implicit val workItemPayloadGen = gen[WorkItemPayload]
+  implicit val workItemGen        = gen[WorkItem[WorkItemPayload]]
 }

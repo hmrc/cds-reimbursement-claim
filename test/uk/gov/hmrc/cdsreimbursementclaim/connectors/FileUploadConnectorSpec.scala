@@ -40,13 +40,13 @@ class FileUploadConnectorSpec extends BaseSpec with HttpSupport {
         val capturedHc   = CaptureOne[HeaderCarrier]()
         mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
         val response     = await(connector.upload("<file>upload</file>").value)
-        response                                                         shouldBe Right(httpResponse)
-        capturedHc.value.authorization                                   shouldBe Some(Authorization("Bearer NoBearerToken"))
-        capturedHc.value.extraHeaders                                      should contain("X-Forwarded-Host" -> "MDTP")
-        capturedHc.value.extraHeaders                                      should contain("Content-Type" -> "application/xml; charset=UTF-8")
-        capturedHc.value.extraHeaders                                      should contain("Accept" -> "application/xml")
-        capturedHc.value.extraHeaders.exists(_._1 == "Date")             shouldBe true
-        capturedHc.value.extraHeaders.exists(_._1 == "X-Correlation-ID") shouldBe true
+        response                                                          shouldBe Right(httpResponse)
+        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer NoBearerToken"))
+        capturedHc.value.extraHeaders                                       should contain("X-Forwarded-Host" -> "MDTP")
+        capturedHc.value.extraHeaders                                       should contain("Content-Type" -> "application/xml; charset=UTF-8")
+        capturedHc.value.extraHeaders                                       should contain("Accept" -> "application/xml")
+        capturedHc.value.extraHeaders.exists(_._1 === "Date")             shouldBe true
+        capturedHc.value.extraHeaders.exists(_._1 === "X-Correlation-ID") shouldBe true
       }
     }
 
