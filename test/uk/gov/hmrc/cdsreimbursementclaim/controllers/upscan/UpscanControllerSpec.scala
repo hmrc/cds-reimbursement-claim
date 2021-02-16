@@ -31,12 +31,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.controllers.ControllerSpec
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan._
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
@@ -489,17 +489,21 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
       "return NO CONTENT if the payload contains a valid status" in {
         val uploadReference = UploadReference("11370e18-6e24-453e-b45a-76d3e32ea33d")
         val upscanUpload    = sample[UpscanUpload].copy(uploadReference = uploadReference)
+        val uploadDetails   = sample[UploadDetails].copy(
+          size = 9,
+          fileName = "test.pdf",
+          fileMimeType = "application/pdf",
+          checksum = "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+          uploadTimestamp = LocalDate.parse("2018-04-24").atStartOfDay(ZoneId.of("Europe/Paris")).toInstant
+        )
         val upscanSuccess   = sample[UpscanSuccess].copy(
           reference = "reference",
           fileStatus = "READY",
           downloadUrl = "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-          uploadDetails = Map(
-            ("uploadTimestamp", "2018-04-24T09:30:00Z"),
-            ("checksum", "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100"),
-            ("fileName", "test.pdf"),
-            ("fileMimeType", "application/pdf")
-          )
+          uploadDetails = uploadDetails
         )
+
+        println(s"${Json.toJson(upscanUpload.copy(upscanCallBack = Some(upscanSuccess)))}")
 
         val upscanCallBackRequest =
           s"""
@@ -508,10 +512,11 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
              |    "fileStatus" : "READY",
              |    "downloadUrl" : "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
              |    "uploadDetails": {
-             |        "uploadTimestamp": "2018-04-24T09:30:00Z",
+             |        "uploadTimestamp": "2018-04-23T22:00:00Z",
              |        "checksum": "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
              |        "fileName": "test.pdf",
-             |        "fileMimeType": "application/pdf"
+             |        "fileMimeType": "application/pdf",
+             |        "size": 9
              |    }
              |}
              |""".stripMargin

@@ -21,10 +21,10 @@ import org.joda.time.DateTime
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
@@ -69,6 +69,13 @@ sealed trait GenUtils {
         .map(l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.systemDefault()))
     )
 
+  implicit val instantArb: Arbitrary[Instant] =
+    Arbitrary(
+      Gen
+        .chooseNum(0L, 10000L)
+        .map(Instant.ofEpochMilli)
+    )
+
   implicit val jodaDateTime: Arbitrary[DateTime] =
     Arbitrary(
       Gen
@@ -107,6 +114,7 @@ trait UpscanGen { this: GenUtils =>
   implicit val upscanUploadGen: Gen[UpscanUpload]       = gen[UpscanUpload]
   implicit val uploadReferenceGen: Gen[UploadReference] = gen[UploadReference]
   implicit val upscanSuccessGen: Gen[UpscanSuccess]     = gen[UpscanSuccess]
+  implicit val uploadDetailsGen: Gen[UploadDetails]     = gen[UploadDetails]
 }
 
 trait DeclarationGen { this: GenUtils =>
