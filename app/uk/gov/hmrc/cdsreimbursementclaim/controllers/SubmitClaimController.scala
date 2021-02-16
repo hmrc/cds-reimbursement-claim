@@ -23,7 +23,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
@@ -48,12 +47,7 @@ class SubmitClaimController @Inject() (eisService: SubmitClaimService, cc: Contr
       .fold(
         e => {
           logger.warn(s"could not submit claim", e)
-          val s = SubmitClaimResponse(
-            "ABC0000123456789",
-            "NDRC",
-            LocalDate.now.toString
-          )
-          Ok(Json.toJson(s))
+          InternalServerError
         },
         response => Ok(response)
       )

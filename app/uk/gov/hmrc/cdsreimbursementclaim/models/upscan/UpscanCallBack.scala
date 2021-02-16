@@ -19,15 +19,29 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.upscan
 import julienrf.json.derived
 import play.api.libs.json.{Json, OFormat}
 
+import java.time.Instant
+
 sealed trait UpscanCallBack extends Product with Serializable
 
 object UpscanCallBack {
+
+  final case class UploadDetails(
+    fileName: String,
+    fileMimeType: String,
+    uploadTimestamp: Instant,
+    checksum: String,
+    size: Long // bytes
+  )
+
+  object UploadDetails {
+    implicit val format: OFormat[UploadDetails] = Json.format[UploadDetails]
+  }
 
   final case class UpscanSuccess(
     reference: String,
     fileStatus: String,
     downloadUrl: String,
-    uploadDetails: Map[String, String]
+    uploadDetails: UploadDetails
   ) extends UpscanCallBack
 
   object UpscanSuccess {
