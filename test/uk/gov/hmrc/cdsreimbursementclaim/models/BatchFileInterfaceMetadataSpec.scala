@@ -37,7 +37,7 @@ class BatchFileInterfaceMetadataSpec extends AnyWordSpec with Matchers {
           checksum = "123123123",
           fileSize = Some(1000L),
           sourceLocation = "https://somewhere.on.aws",
-          sourceFileName = Some("filename.pdf"),
+          sourceFileName = "filename.pdf",
           properties = Some(properties)
         )
       )

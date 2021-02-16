@@ -45,11 +45,10 @@ class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: Ap
         .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, claimData)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          enrichHC(true),
+          enrichHC(true, appConfig.eisBearerToken),
           ec
         )
-        .map { a => logger.error("SubmitClaimConnector Response: " + a.body); Right(a) }
-//        .map(Right(_))
+        .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
 

@@ -34,7 +34,7 @@ class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
 
   "SubmitClaimConnectorSpec" when {
 
-    val backEndUrl                 = "http://localhost:7502/claim"
+    val backEndUrl                 = "http://localhost:7502/tpi/postoverpaymentclaim/v1"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling request to submit claim" must {
@@ -45,7 +45,7 @@ class SubmitClaimConnectorSpec extends BaseSpec with HttpSupport {
         mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
         val response     = await(connector.submitClaim(JsString("The Request")).value)
         response                                                          shouldBe Right(httpResponse)
-        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer NoBearerToken"))
+        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer test-token"))
         capturedHc.value.extraHeaders                                       should contain("X-Forwarded-Host" -> "MDTP")
         capturedHc.value.extraHeaders                                       should contain("Content-Type" -> "application/json")
         capturedHc.value.extraHeaders                                       should contain("Accept" -> "application/json")

@@ -127,10 +127,9 @@ class SubmitClaimController @Inject() (
                          upscanUpload.upscanCallBack.collect { case us: UpscanSuccess => us },
                          Error("Upscan upload failed")
                        )
-      checksum      <- Either.fromOption(upscanSuccess.uploadDetails.get("checksum"), Error("checksum was not found"))
-      //fileName      <- Either.fromOption(upscanSuccess.uploadDetails.get("fileName"), Error("fileName was not found"))  //TODO Send it when available
-      fileMimeType  <-
-        Either.fromOption(upscanSuccess.uploadDetails.get("fileMimeType"), Error("fileMimeType was not found"))
+      checksum      <- Right(upscanSuccess.uploadDetails.checksum)
+      fileName      <- Right(upscanSuccess.uploadDetails.fileName)
+      fileMimeType  <- Right(upscanSuccess.uploadDetails.fileMimeType)
     } yield {
       val properties =
         PropertiesType.generateMandatoryList(
@@ -148,7 +147,7 @@ class SubmitClaimController @Inject() (
           batchSize = Some(batchSize),
           checksum = checksum,
           sourceLocation = upscanSuccess.downloadUrl,
-          //sourceFileName = fileName,  //TODO Put it back when we receive it
+          sourceFileName = fileName,
           sourceFileMimeType = Some(fileMimeType),
           properties = Some(properties)
         )

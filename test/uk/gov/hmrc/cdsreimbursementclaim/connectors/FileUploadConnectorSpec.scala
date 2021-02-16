@@ -28,7 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class FileUploadConnectorSpec extends BaseSpec with HttpSupport {
 
   val connector                  = new DefaultFileUploadConnector(mockHttp, appConfig)
-  val backEndUrl                 = "http://localhost:7502/fileupload"
+  val backEndUrl                 = "http://localhost:7502/filetransfer/init/1.0.0"
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "FileUploadConnector" when {
@@ -41,7 +41,7 @@ class FileUploadConnectorSpec extends BaseSpec with HttpSupport {
         mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
         val response     = await(connector.upload("<file>upload</file>").value)
         response                                                          shouldBe Right(httpResponse)
-        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer NoBearerToken"))
+        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer test-token"))
         capturedHc.value.extraHeaders                                       should contain("X-Forwarded-Host" -> "MDTP")
         capturedHc.value.extraHeaders                                       should contain("Content-Type" -> "application/xml; charset=UTF-8")
         capturedHc.value.extraHeaders                                       should contain("Accept" -> "application/xml")

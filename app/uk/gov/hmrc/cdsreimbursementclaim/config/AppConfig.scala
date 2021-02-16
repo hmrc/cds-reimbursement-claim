@@ -30,15 +30,18 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  val eisBaseUrl: String       = servicesConfig.baseUrl("eis")
-  val eisBearerToken: String   = servicesConfig.getConfString("eis.bearer-token", "NoBearerToken")
-  val newClaimEndpoint: String = eisBaseUrl + servicesConfig.getConfString("eis.overpayment-claim", "Undefined")
-  val decInfoEndpoint: String  = eisBaseUrl + servicesConfig.getConfString(s"eis.declaration-info", "Undefined")
-  val fileUpload: String       = eisBaseUrl + servicesConfig.getConfString(s"eis.file-upload", "Undefined")
+  val eisBearerToken: String = config.get[String]("eis.bearer-token")
+
+  val newClaimEndpoint: String = getUri("claim")
+  val decInfoEndpoint: String  = getUri(s"declaration")
+  val fileUpload: String       = getUri(s"fileupload")
 
   val queueRetryAfter: FiniteDuration = config.get[FiniteDuration]("queue.retry-after")
   val queueMaxRetries: Int            = config.get[Int]("queue.max-retries")
 
   val scheduleInitialDelay: FiniteDuration = config.get[FiniteDuration]("scheduling.initial-delay")
   val scheduleInterval: FiniteDuration     = config.get[FiniteDuration]("scheduling.interval")
+
+  def getUri(serviceName: String): String =
+    servicesConfig.baseUrl(serviceName) + config.get[String](s"microservice.services.$serviceName.context-base")
 }

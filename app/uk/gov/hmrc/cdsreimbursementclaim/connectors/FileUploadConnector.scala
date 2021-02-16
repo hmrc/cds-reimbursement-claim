@@ -43,7 +43,7 @@ class DefaultFileUploadConnector @Inject() (http: HttpClient, val appConfig: App
         .POST[String, HttpResponse](appConfig.fileUpload, declarationInfo)(
           implicitly,
           HttpReads[HttpResponse],
-          enrichHC(false),
+          enrichHC(false, appConfig.eisBearerToken),
           ec
         )
         .map(Right(_))

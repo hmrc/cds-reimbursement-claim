@@ -17,10 +17,11 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import play.api.libs.json.JsString
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.DeclarationRequest
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -32,7 +33,7 @@ class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
 
   "DeclarationInfoConnector" when {
 
-    val backEndUrl                 = "http://localhost:7502/declaration"
+    val backEndUrl                 = "http://localhost:7502/accounts/overpaymentdeclarationdisplay/v1"
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling request for declaration" must {
@@ -41,9 +42,10 @@ class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
         val httpResponse = HttpResponse(200, "The Response")
         val capturedHc   = CaptureOne[HeaderCarrier]()
         mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
-        val response     = await(connector.getDeclarationInfo(JsString("The Request")).value)
+        val data         = sample[DeclarationRequest]
+        val response     = await(connector.getDeclaration(data).value)
         response                                                          shouldBe Right(httpResponse)
-        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer NoBearerToken"))
+        capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer test-token"))
         capturedHc.value.extraHeaders                                       should contain("X-Forwarded-Host" -> "MDTP")
         capturedHc.value.extraHeaders                                       should contain("Content-Type" -> "application/json")
         capturedHc.value.extraHeaders                                       should contain("Accept" -> "application/json")
@@ -56,7 +58,8 @@ class DeclarationConnectorSpec extends BaseSpec with HttpSupport {
       "the call fails" in {
         val error    = new Exception("Socket connection error")
         mockPost(backEndUrl, *)(Left(error))
-        val response = await(connector.getDeclarationInfo(JsString("The Request")).value)
+        val data     = sample[DeclarationRequest]
+        val response = await(connector.getDeclaration(data).value)
         response shouldBe Left(Error(error))
       }
     }

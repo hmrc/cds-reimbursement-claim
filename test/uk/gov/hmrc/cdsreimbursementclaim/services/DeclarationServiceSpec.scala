@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration

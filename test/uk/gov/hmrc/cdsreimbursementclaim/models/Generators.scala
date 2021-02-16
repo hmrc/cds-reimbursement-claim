@@ -21,9 +21,6 @@ import org.joda.time.DateTime
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
@@ -125,6 +122,10 @@ trait UpscanGen { this: GenUtils =>
 }
 
 trait DeclarationGen { this: GenUtils =>
+  import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+  import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response._
+  import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankDetails}
+
   implicit val declarationGen          = gen[Declaration]
   implicit val mrnGen                  = gen[MRN]
   implicit val bankDetailsGen          = gen[BankDetails]

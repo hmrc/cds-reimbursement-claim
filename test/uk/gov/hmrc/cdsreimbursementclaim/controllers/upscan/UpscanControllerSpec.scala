@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime, ZoneId}
 
 import cats.data.EitherT
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -26,16 +26,15 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers, NoMaterializer}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.ControllerSpec
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.BaseSpec
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticatedRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUpscan._
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan._
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 

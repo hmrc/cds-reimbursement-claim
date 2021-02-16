@@ -16,13 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
+import java.time.LocalDateTime
+
 import cats.data.EitherT
 import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, GetDeclarationResponse, MRN, OverpaymentDeclarationDisplayResponse, ResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -34,10 +38,12 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
   implicit val materializer  = NoMaterializer
   val httpClient             = mock[HttpClient]
   val declarationInfoService = mock[DeclarationServiceImpl]
+  val authenticateActions    = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20))
   private val fakeRequest    = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller     = new GetDeclarationController(declarationInfoService, Helpers.stubControllerComponents())
+  private val controller     =
+    new DeclarationController(authenticateActions, declarationInfoService, Helpers.stubControllerComponents())
 
-  def mockDeclarationService(response: EitherT[Future, Error, GetDeclarationResponse]) =
+  def mockDeclarationService(response: EitherT[Future, Error, Declaration]) =
     (declarationInfoService
       .getDeclaration(_: MRN)(_: HeaderCarrier))
       .expects(*, *)
@@ -46,16 +52,10 @@ class GetDeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
   "POST" should {
     "return 200" in {
-      val responseDetail                        = sample[ResponseDetail]
-      val overpaymentDeclarationDisplayResponse =
-        sample[OverpaymentDeclarationDisplayResponse].copy(responseDetail = Some(responseDetail))
-      val response                              = sample[GetDeclarationResponse].copy(overpaymentDeclarationDisplayResponse =
-        overpaymentDeclarationDisplayResponse
-      )
-      val declarationId                         =
-        response.overpaymentDeclarationDisplayResponse.responseDetail.map(_.declarationId).getOrElse(fail)
+      val response      = sample[Declaration]
+      val declarationId = MRN.parse("21GBIDMSXBLNR06016").getOrElse(fail)
       mockDeclarationService(EitherT.right(Future.successful(response)))
-      val result                                = controller.declaration(declarationId)(fakeRequest)
+      val result        = controller.declaration(declarationId)(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe Json.toJson(response)
     }

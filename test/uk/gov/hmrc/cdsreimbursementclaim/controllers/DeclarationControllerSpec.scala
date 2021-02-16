@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
+import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
 import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService

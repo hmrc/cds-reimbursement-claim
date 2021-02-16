@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
+import java.time.Instant
+
 import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.Ignore
@@ -25,7 +27,7 @@ import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanCallBack, UpscanUpload}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, FrontendSubmitClaim, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
 import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
@@ -87,14 +89,9 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
     "reference-123",
     "uploaded-123",
     "downloadUrl-123",
-    Map(
-      "checksum"        -> "checksum",
-      "fileName"        -> "fileName",
-      "fileMimeType"    -> "fileMimeType",
-      "uploadTimestamp" -> "uploadTimestamp",
-      "fileSize"        -> "1000"
-    )
+    UploadDetails("fileName", "fileMimeType", Instant.now(), "checksum", 1000L)
   )
+
   def getUpscanUpload(upscanCallBack: Option[UpscanCallBack]) = {
     import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUpscan._
     sample[UpscanUpload].copy(upscanCallBack = upscanCallBack)
@@ -141,26 +138,6 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
       val upscanUpload  = getUpscanUpload(None)
       mockUpscan(EitherT.rightT(List(upscanUpload)))
       val result        = controller.claim()(fakeRequest)
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-    }
-
-    "fail if no file checksum returned by upscan" in {
-      val claimResponse    = getClaimResponse(Some("CaseNumber-12345"), Some("correlationID-12345"))
-      mockEisResponse(EitherT.right(Future.successful(claimResponse)))
-      val upscanNoChecksum = upscanSuccess.copy(uploadDetails = upscanSuccess.uploadDetails - "checksum")
-      val upscanUpload     = getUpscanUpload(Some(upscanNoChecksum))
-      mockUpscan(EitherT.rightT(List(upscanUpload)))
-      val result           = controller.claim()(fakeRequest)
-      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-    }
-
-    "fail if no fileMimeType returned by upscan" in {
-      val claimResponse    = getClaimResponse(Some("CaseNumber-12345"), Some("correlationID-12345"))
-      mockEisResponse(EitherT.right(Future.successful(claimResponse)))
-      val upscanNoMimeType = upscanSuccess.copy(uploadDetails = upscanSuccess.uploadDetails - "fileMimeType")
-      val upscanUpload     = getUpscanUpload(Some(upscanNoMimeType))
-      mockUpscan(EitherT.rightT(List(upscanUpload)))
-      val result           = controller.claim()(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 

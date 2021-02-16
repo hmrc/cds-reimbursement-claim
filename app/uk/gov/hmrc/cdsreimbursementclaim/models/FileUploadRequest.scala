@@ -138,7 +138,7 @@ final case class BatchFileInterfaceMetadata(
   @xmlns(BifNS) encryptedSignature: Option[String] = None,
   @xmlns(BifNS) properties: Option[PropertiesType] = None,
   @xmlns(BifNS) sourceLocation: String,
-  @xmlns(BifNS) sourceFileName: Option[String] = None,
+  @xmlns(BifNS) sourceFileName: String,
   @xmlns(BifNS) sourceFileEncoding: Option[String] = None,
   @xmlns(BifNS) sourceFileMimeType: Option[String] = None,
   @xmlns(BifNS) virusScan: Option[VirusScanType] = None,
