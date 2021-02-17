@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.cdsreimbursementclaim.models.FrontendSubmitClaim.FileInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference
 
@@ -24,8 +24,26 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference
 final case class FrontendSubmitClaim(
   eori: String,
   declarationId: String,
+  declarationIdType: DeclarationIdType,
   files: List[FileInformation]
 )
+
+sealed trait DeclarationIdType
+case object MRNType extends DeclarationIdType { override def toString: String = "MRN" }
+case object CHIEFType extends DeclarationIdType { override def toString: String = "CHIEF" }
+
+object DeclarationIdType {
+  implicit val declarationIdTypeFormat: Format[DeclarationIdType] = new Format[DeclarationIdType] {
+    def reads(json: JsValue): JsResult[DeclarationIdType] =
+      json.as[String] match {
+        case "MRN"   => JsSuccess(MRNType)
+        case "CHIEF" => JsSuccess(CHIEFType)
+      }
+    def writes(dec: DeclarationIdType): JsValue           = JsString(dec.toString)
+
+  }
+
+}
 
 object FrontendSubmitClaim {
 

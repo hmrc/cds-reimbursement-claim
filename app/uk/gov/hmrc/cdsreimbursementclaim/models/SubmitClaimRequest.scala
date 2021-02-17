@@ -232,6 +232,21 @@ object SubmitClaimRequest {
     NDRCDetails: Option[List[NdrcDetails]]
   )
 
+  object EntryDetails {
+    def apply(declarationId: String): EntryDetails =
+      EntryDetails(
+        entryNumber = Some(declarationId),
+        entryDate = None,
+        declarantReferenceNumber = None,
+        mainDeclarationReference = Some(true),
+        declarantDetails = None,
+        accountDetails = None,
+        consigneeDetails = None,
+        bankInfo = None,
+        NDRCDetails = None
+      )
+  }
+
   final case class DeclarantDetails(
     EORI: String,
     legalName: String,

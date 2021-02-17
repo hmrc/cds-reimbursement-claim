@@ -21,12 +21,12 @@ import cats.syntax.either._
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest.{MrnDetails, PostNewClaimsRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest.{EntryDetails, MrnDetails, PostNewClaimsRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanUpload
-import uk.gov.hmrc.cdsreimbursementclaim.models.{BatchFileInterfaceMetadata, Dec64Body, Error, FrontendSubmitClaim, HeadlessEnvelope, PropertiesType, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
-import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{BatchFileInterfaceMetadata, CHIEFType, Dec64Body, Error, FrontendSubmitClaim, HeadlessEnvelope, MRNType, PropertiesType, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
+import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
@@ -64,8 +64,14 @@ class SubmitClaimController @Inject() (
 
   def createSubmitClaim(frontendSubmitClaim: FrontendSubmitClaim): SubmitClaimRequest = {
     val requestCommon        = RequestCommon()
-    val mrnDetails           = MrnDetails(frontendSubmitClaim.declarationId)
-    val requestDetail        = RequestDetail(frontendSubmitClaim.eori).copy(MRNDetails = Some(List(mrnDetails)))
+    val requestDetail        = frontendSubmitClaim.declarationIdType match {
+      case MRNType   =>
+        val mrnDetails = MrnDetails(frontendSubmitClaim.declarationId)
+        RequestDetail(frontendSubmitClaim.eori).copy(MRNDetails = Some(List(mrnDetails)))
+      case CHIEFType =>
+        val entryDetails = EntryDetails(frontendSubmitClaim.declarationId)
+        RequestDetail(frontendSubmitClaim.eori).copy(entryDetails = Some(List(entryDetails)))
+    }
     val postNewClaimsRequest = PostNewClaimsRequest(requestCommon, requestDetail)
     SubmitClaimRequest(postNewClaimsRequest)
   }
