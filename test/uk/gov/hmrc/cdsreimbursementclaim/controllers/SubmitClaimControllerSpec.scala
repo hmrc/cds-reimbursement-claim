@@ -20,7 +20,6 @@ import java.time.Instant
 
 import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.{HeaderNames, Status}
@@ -30,14 +29,13 @@ import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanCallBack, UpscanUpload}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, FrontendSubmitClaim, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
-import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
+import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.workitem.WorkItem
 
 import scala.concurrent.Future
 
-@Ignore
 class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFactory with DefaultAwaitTimeout {
 
   implicit val ec           = scala.concurrent.ExecutionContext.Implicits.global

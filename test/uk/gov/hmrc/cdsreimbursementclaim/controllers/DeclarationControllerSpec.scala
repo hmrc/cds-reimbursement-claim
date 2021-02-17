@@ -16,72 +16,56 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import akka.stream.Materializer
+import java.time.LocalDateTime
+
 import cats.data.EitherT
-import play.api.libs.json.Json
+import play.api.http.{HeaderNames, Status}
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateDeclaration._
 import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
-import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationServiceImpl
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
-import java.time.LocalDateTime
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DeclarationControllerSpec extends ControllerSpec {
+class DeclarationControllerSpec extends BaseSpec with DefaultAwaitTimeout {
 
-  val declarationService              = mock[DeclarationService]
-  implicit val headerCarrier          = HeaderCarrier()
-  implicit lazy val mat: Materializer = fakeApplication.materializer
+  implicit val ec            = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val materializer  = NoMaterializer
+  val httpClient             = mock[HttpClient]
+  val declarationInfoService = mock[DeclarationServiceImpl]
+  val authenticateActions    = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20))
+  private val fakeRequest    = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
+  private val controller     =
+    new DeclarationController(authenticateActions, declarationInfoService, Helpers.stubControllerComponents())
 
-  val request = new AuthenticatedRequest(
-    Fake.user,
-    LocalDateTime.now(),
-    headerCarrier,
-    FakeRequest()
-  )
-
-  val controller = new DeclarationController(
-    authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
-    declarationService,
-    Helpers.stubControllerComponents()
-  )
-
-  def mockDeclarationService(mrn: MRN)(response: Either[Error, Declaration]) =
-    (declarationService
+  def mockDeclarationService(response: EitherT[Future, Error, Declaration]) =
+    (declarationInfoService
       .getDeclaration(_: MRN)(_: HeaderCarrier))
-      .expects(mrn, *)
-      .returning(EitherT.fromEither[Future](response))
+      .expects(*, *)
+      .returning(response)
+      .atLeastOnce()
 
-  "Declaration Controller" when {
-
-    "handling request to get a declaration" must {
-
-      "return 200 OK for a successful call" in {
-
-        val mrn                  = sample[MRN]
-        val expectedResponseBody = sample[Declaration]
-
-        inSequence {
-          mockDeclarationService(mrn)(Right(expectedResponseBody))
-        }
-
-        val result = controller.declaration(mrn)(request)
-        status(result)        shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(expectedResponseBody)
-      }
-
-      "return 500 when eis call fails" in {
-        val mrn    = sample[MRN]
-        mockDeclarationService(mrn)(Left(Error.apply("error while getting declaration")))
-        val result = controller.declaration(mrn)(request)
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
+  "POST" should {
+    "return 200" in {
+      val response      = sample[Declaration]
+      val declarationId = sample[MRN]
+      mockDeclarationService(EitherT.right(Future.successful(response)))
+      val result        = controller.declaration(declarationId)(fakeRequest)
+      status(result)        shouldBe Status.OK
+      contentAsJson(result) shouldBe Json.toJson(response)
     }
+
+    "return 500 when on any error" in {
+      val mrn    = sample[MRN]
+      mockDeclarationService(EitherT.left(Future.successful(Error("Resource Unavailable"))))
+      val result = controller.declaration(mrn)(fakeRequest)
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+    }
+
   }
 }
