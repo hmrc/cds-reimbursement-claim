@@ -17,8 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.OptionUtils.optionFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.{ConsigneeDetails, DeclarantDetails, SecurityDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.{ConsigneeDetails, DeclarantDetails, NdrcDetails, SecurityDetails}
 
 final case class Declaration(
   declarantId: String,
@@ -26,7 +25,8 @@ final case class Declaration(
   declarantDetails: DeclarantDetails,
   consigneeDetails: Option[ConsigneeDetails],
   maskedBankDetails: Option[MaskedBankDetails],
-  securityDetails: Option[List[SecurityDetails]]
+  securityDetails: Option[List[SecurityDetails]],
+  ndrcDetails: Option[List[NdrcDetails]]
 )
 
 object Declaration {

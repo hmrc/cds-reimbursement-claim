@@ -44,7 +44,8 @@ class DefaultDeclarationTransformerService @Inject() () extends DeclarationTrans
             responseDetail.declarantDetails,
             responseDetail.consigneeDetails,
             responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails)),
-            responseDetail.securityDetails
+            responseDetail.securityDetails,
+            responseDetail.ndrcDetails
           )
         )
       case None                 => Left(Error("could not find declaration detail"))
