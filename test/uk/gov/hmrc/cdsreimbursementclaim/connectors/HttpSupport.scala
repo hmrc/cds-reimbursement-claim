@@ -44,4 +44,17 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
         result.fold[Future[HttpResponse]](Future.failed, Future.successful)
       )
 
+  def mockPostString(url: String, hc: Option[CaptureOne[HeaderCarrier]] = None)(
+    result: Either[Throwable, HttpResponse]
+  ) =
+    (mockHttp
+      .POSTString(_: String, _: String, _: Seq[(String, String)])(
+        _: HttpReads[HttpResponse],
+        _: HeaderCarrier,
+        _: ExecutionContext
+      ))
+      .expects(url, *, *, *, hc.fold(*)(capture(_)), *)
+      .returning(
+        result.fold[Future[HttpResponse]](Future.failed, Future.successful)
+      )
 }

@@ -492,8 +492,6 @@ class UpscanControllerSpec extends BaseSpec with ScalaCheckDrivenPropertyChecks 
           uploadDetails = uploadDetails
         )
 
-        println(s"${Json.toJson(upscanUpload.copy(upscanCallBack = Some(upscanSuccess)))}")
-
         val upscanCallBackRequest =
           s"""
              |{

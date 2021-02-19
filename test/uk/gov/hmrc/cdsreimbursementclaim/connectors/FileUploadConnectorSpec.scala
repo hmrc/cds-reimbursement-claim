@@ -38,7 +38,7 @@ class FileUploadConnectorSpec extends BaseSpec with HttpSupport {
       "do a post http call to the DEC64 api and get a response" in {
         val httpResponse = HttpResponse(200, "The Response")
         val capturedHc   = CaptureOne[HeaderCarrier]()
-        mockPost(backEndUrl, *, Some(capturedHc))(Right(httpResponse))
+        mockPostString(backEndUrl, Some(capturedHc))(Right(httpResponse))
         val response     = await(connector.upload("<file>upload</file>").value)
         response                                                          shouldBe Right(httpResponse)
         capturedHc.value.authorization                                    shouldBe Some(Authorization("Bearer test-token"))
@@ -53,7 +53,7 @@ class FileUploadConnectorSpec extends BaseSpec with HttpSupport {
     "return an error" when {
       "the call fails" in {
         val error    = new Exception("Socket connection error")
-        mockPost(backEndUrl, *)(Left(error))
+        mockPostString(backEndUrl)(Left(error))
         val response = await(connector.upload("<file>upload</file>").value)
         response shouldBe Left(Error(error))
       }

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 
 import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
@@ -26,6 +26,7 @@ import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
+import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanCallBack, UpscanUpload}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, FrontendSubmitClaim, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
@@ -42,6 +43,7 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
   implicit val hc           = HeaderCarrier()
   implicit val materializer = NoMaterializer
   val httpClient            = mock[HttpClient]
+  val authAction            = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20))
   val eisService            = mock[SubmitClaimService]
   val upscanService         = mock[UpscanService]
   val fileUploadQueue       = mock[FileUploadQueue]
@@ -55,7 +57,13 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
     )
   }
   val controller            =
-    new SubmitClaimController(eisService, upscanService, fileUploadQueue, Helpers.stubControllerComponents())
+    new SubmitClaimController(
+      authAction,
+      eisService,
+      upscanService,
+      fileUploadQueue,
+      Helpers.stubControllerComponents()
+    )
 
   def mockEisResponse(response: EitherT[Future, Error, SubmitClaimResponse]) =
     (eisService
@@ -78,7 +86,7 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
     submitClaimResponse.copy(postNewClaimsResponse =
       submitClaimResponse.postNewClaimsResponse.copy(responseCommon =
         submitClaimResponse.postNewClaimsResponse.responseCommon
-          .copy(CDFPayCaseNumber = caseNumber, correlationID = correlationId)
+          .copy(CDFPayCaseNumber = caseNumber, correlationId = correlationId)
       )
     )
   }

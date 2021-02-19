@@ -16,25 +16,43 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import com.google.inject.{Inject, Singleton}
+import akka.actor.{ActorSystem, Cancellable}
+import com.google.inject.{AbstractModule, Inject, Singleton}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.scheduling.ExclusiveScheduledJob
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
+
+class SchedulerModule extends AbstractModule {
+  override def configure(): Unit =
+    bind(classOf[FileUploadScheduler]).asEagerSingleton()
+}
 
 @Singleton
-class FileUploadScheduler @Inject() (appConfig: AppConfig, fileUploadQueue: FileUploadQueue)
-    extends ExclusiveScheduledJob
+class FileUploadScheduler @Inject() (actorSystem: ActorSystem, appConfig: AppConfig, fileUploadQueue: FileUploadQueue)(
+  implicit ec: ExecutionContext
+) extends ExclusiveScheduledJob
     with Logging {
-
-  override def name: String = "FileUploadScheduler"
-
-  override def executeInMutex(implicit ec: ExecutionContext): Future[Result] =
-    fileUploadQueue.processAllRequests().map(items => Result(s"Processed ${items.size} file uploads"))
 
   lazy val initialDelay: FiniteDuration = appConfig.scheduleInitialDelay
   lazy val interval: FiniteDuration     = appConfig.scheduleInterval
+  val cancellable: Cancellable          = actorSystem.scheduler.schedule(initialDelay, interval)(executor)
+
+  override def executeInMutex(implicit ec: ExecutionContext): Future[Result] =
+    fileUploadQueue.processAllRequests().map(items => Result(items.size.toString))
+
+  def executor(implicit ec: ExecutionContext): Unit =
+    execute.onComplete {
+      case Success(Result(res)) =>
+        val count = Try(res.toInt).toOption.getOrElse(0)
+        if (count > 0) logger.info(s"FileUploadScheduler uploaded $count files.")
+      case Failure(throwable)   =>
+        logger.error(s"$name: Exception completing work item", throwable)
+    }
+
+  override def name: String = "FileUploadScheduler"
 
 }

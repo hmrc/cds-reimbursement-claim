@@ -82,8 +82,8 @@ object PropertiesType {
     PropertiesType(
       List(
         PropertyType("CaseReference", caseReference),
-        PropertyType("EORI", eori),
-        PropertyType("DeclarationID", declarationId),
+        PropertyType("Eori", eori),
+        PropertyType("DeclarationId", declarationId),
         PropertyType("DeclarationType", documentType),
         PropertyType("ApplicationName", "NDRC"), //Possible values are NDRC & Securities
         PropertyType("DocumentType", "MRN"), //can be either EntryNumber or MRN
@@ -126,7 +126,7 @@ final case class BatchFileInterfaceMetadata(
   @xmlns(BifNS) checksum: String,
   @xmlns(BifNS) checksumAlgorithm: ChecksumAlgorithmType = SHA256,
   @xmlns(BifNS) signature: Option[String] = None,
-  @xmlns(BifNS) fileSize: Option[Long] = None,
+  @xmlns(BifNS) fileSize: Long,
   @xmlns(BifNS) compressed: Boolean = false,
   @xmlns(BifNS) compressionAlgorithm: Option[CompressionAlgorithmSimpleType] = None,
   @xmlns(BifNS) compressedChecksum: Option[String] = None,

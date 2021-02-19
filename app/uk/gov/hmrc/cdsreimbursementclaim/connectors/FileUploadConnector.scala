@@ -21,6 +21,7 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
@@ -35,13 +36,13 @@ trait FileUploadConnector {
 @Singleton
 class DefaultFileUploadConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends FileUploadConnector
-    with EisConnector {
+    with EisConnector
+    with Logging {
 
   def upload(declarationInfo: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[String, HttpResponse](appConfig.fileUpload, declarationInfo)(
-          implicitly,
+        .POSTString[HttpResponse](appConfig.fileUpload, declarationInfo)(
           HttpReads[HttpResponse],
           enrichHC(false, appConfig.eisBearerToken),
           ec

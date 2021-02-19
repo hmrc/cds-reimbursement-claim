@@ -40,7 +40,7 @@ object SubmitClaimResponse {
     processingDate: String,
     CDFPayService: Option[String],
     CDFPayCaseNumber: Option[String],
-    correlationID: Option[String],
+    correlationId: Option[String],
     errorMessage: Option[String],
     returnParameters: Option[List[ReturnParameters]]
   )

@@ -21,6 +21,7 @@ import cats.syntax.either._
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest.{EntryDetails, MrnDetails, PostNewClaimsRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanUpload
@@ -38,6 +39,7 @@ import scala.util.Try
 
 @Singleton()
 class SubmitClaimController @Inject() (
+  authenticate: AuthenticateActions,
   eisService: SubmitClaimService,
   upscanService: UpscanService,
   fileUploadQueue: FileUploadQueue,
@@ -47,7 +49,7 @@ class SubmitClaimController @Inject() (
 ) extends BackendController(cc)
     with Logging {
 
-  def claim(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def claim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
     (for {
       frontendClaim <- EitherT.fromEither[Future](Try(request.body.as[FrontendSubmitClaim]).toEither.leftMap(Error(_)))
       claimResponse <- eisService.submitClaim(createSubmitClaim(frontendClaim))
@@ -126,16 +128,13 @@ class SubmitClaimController @Inject() (
                          Error("caseReference was not found")
                        )
       correlationID <- Either.fromOption(
-                         claimResponse.postNewClaimsResponse.responseCommon.correlationID,
+                         claimResponse.postNewClaimsResponse.responseCommon.correlationId,
                          Error("correlationId was not found")
                        )
       upscanSuccess <- Either.fromOption(
                          upscanUpload.upscanCallBack.collect { case us: UpscanSuccess => us },
                          Error("Upscan upload failed")
                        )
-      checksum      <- Right(upscanSuccess.uploadDetails.checksum)
-      fileName      <- Right(upscanSuccess.uploadDetails.fileName)
-      fileMimeType  <- Right(upscanSuccess.uploadDetails.fileMimeType)
     } yield {
       val properties =
         PropertiesType.generateMandatoryList(
@@ -151,10 +150,11 @@ class SubmitClaimController @Inject() (
           batchID = Some(correlationID),
           batchCount = Some(batchCount),
           batchSize = Some(batchSize),
-          checksum = checksum,
+          checksum = upscanSuccess.uploadDetails.checksum,
           sourceLocation = upscanSuccess.downloadUrl,
-          sourceFileName = fileName,
-          sourceFileMimeType = Some(fileMimeType),
+          sourceFileName = upscanSuccess.uploadDetails.fileName,
+          sourceFileMimeType = Some(upscanSuccess.uploadDetails.fileMimeType),
+          fileSize = upscanSuccess.uploadDetails.size,
           properties = Some(properties)
         )
       )
