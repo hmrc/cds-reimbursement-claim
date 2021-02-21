@@ -55,7 +55,7 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
           ccsSubmissionPayload.headers
         )(
           HttpReads[HttpResponse],
-          enrichHC,
+          extraHeaders,
           ec
         )
         .map(Right(_))

@@ -25,10 +25,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpSupport { this: MockFactory with Matchers ⇒
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   val mockHttp: HttpClient = mock[HttpClient]
 
-  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(result: Either[Throwable, HttpResponse]) =
+  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(result: Option[HttpResponse]): Unit =
     (mockHttp
       .POST(_: String, _: A, _: Seq[(String, String)])(
         _: Writes[A],
@@ -38,7 +37,7 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
       ))
       .expects(url, body, headers, *, *, *, *)
       .returning(
-        result.fold[Future[HttpResponse]](Future.failed, Future.successful)
+        result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
 }

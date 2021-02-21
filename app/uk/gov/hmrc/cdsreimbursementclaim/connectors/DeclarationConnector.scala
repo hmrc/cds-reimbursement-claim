@@ -55,7 +55,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: Servi
         .POST[DeclarationRequest, HttpResponse](getDeclarationUrl, declarationRequest)(
           implicitly[Writes[DeclarationRequest]],
           HttpReads[HttpResponse],
-          enrichHC,
+          extraHeaders,
           ec
         )
         .map(Right(_))

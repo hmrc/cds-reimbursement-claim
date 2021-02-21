@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.libs.json.{JsValue, Json, Writes}
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.EmailConnectorImpl.SendEmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultEmailConnector.SendEmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
@@ -31,7 +31,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[EmailConnectorImpl])
+@ImplementedBy(classOf[DefaultEmailConnector])
 trait EmailConnector {
   def sendClaimSubmitConfirmationEmail(
     submitClaimResponse: SubmitClaimResponse,
@@ -42,7 +42,7 @@ trait EmailConnector {
 }
 
 @Singleton
-class EmailConnectorImpl @Inject() (
+class DefaultEmailConnector @Inject() (
   http: HttpClient,
   servicesConfig: ServicesConfig
 )(implicit
@@ -71,7 +71,7 @@ class EmailConnectorImpl @Inject() (
                               Json.toJson(
                                 SendEmailRequest(
                                   List(emailRequest.email.value),
-                                  EmailConnectorImpl.getEmailTemplate(acceptLanguage, claimSubmittedTemplateId),
+                                  DefaultEmailConnector.getEmailTemplate(acceptLanguage, claimSubmittedTemplateId),
                                   Map(
                                     "name"       -> emailRequest.contactName.value,
                                     "caseNumber" -> submitClaimResponse.caseNumber
@@ -89,7 +89,7 @@ class EmailConnectorImpl @Inject() (
 
 }
 
-object EmailConnectorImpl {
+object DefaultEmailConnector {
 
   final case class SendEmailRequest(
     to: List[String],

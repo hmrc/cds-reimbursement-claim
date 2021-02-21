@@ -14,27 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.connectors
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.Json
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import org.scalacheck.Gen
+import org.scalacheck.ScalacheckShapeless._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
 
-class FooSpec extends AnyWordSpec {
+object CompleteClaimGen extends GenUtils {
 
-  "SubmitClaimConnectorSpec" when {
-
-    "handling request to submit claim" must {
-
-      "do a post http call and get the TPI-05 API response" in {
-        val c = sample[SubmitClaimRequest]
-        println(s"${Json.toJson(c)}")
-        assert(1 === 1)
-      }
-
-    }
-
-  }
+  implicit val completeClaimGen: Gen[CompleteClaim] = gen[CompleteClaim]
 
 }

@@ -17,18 +17,17 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ConsigneeDetails, DeclarantDetails, NdrcDetails, SecurityDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ConsigneeDetails, DeclarantDetails, NdrcDetails}
 
-final case class Declaration(
+final case class DisplayDeclaration(
   declarantId: String,
   acceptanceDate: String,
   declarantDetails: DeclarantDetails,
   consigneeDetails: Option[ConsigneeDetails],
   maskedBankDetails: Option[MaskedBankDetails],
-  securityDetails: Option[List[SecurityDetails]],
   ndrcDetails: Option[List[NdrcDetails]]
 )
 
-object Declaration {
-  implicit val format: OFormat[Declaration] = Json.format[Declaration]
+object DisplayDeclaration {
+  implicit val format: OFormat[DisplayDeclaration] = Json.format[DisplayDeclaration]
 }

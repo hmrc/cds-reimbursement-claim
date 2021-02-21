@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
 
 import play.api.http.{HeaderNames, MimeTypes}
+import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
+import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGeneratorImpl
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
@@ -24,11 +26,11 @@ trait JsonHeaders {
 
   def getExtraHeaders: Seq[(String, String)] =
     Seq(
-      HeaderNames.DATE             -> TimeUtils.rfc7231DateTimeNow,
-      "X-Correlation-ID"           -> new UUIDGeneratorImpl().correlationId,
-      HeaderNames.X_FORWARDED_HOST -> "MDTP",
-      HeaderNames.CONTENT_TYPE     -> MimeTypes.JSON,
-      HeaderNames.ACCEPT           -> MimeTypes.JSON
+      HeaderNames.DATE                   -> TimeUtils.rfc7231DateTimeNow,
+      CustomHeaderNames.X_CORRELATION_ID -> new UUIDGeneratorImpl().correlationId,
+      HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
+      HeaderNames.CONTENT_TYPE           -> MimeTypes.JSON,
+      HeaderNames.ACCEPT                 -> MimeTypes.JSON
     )
 
 }

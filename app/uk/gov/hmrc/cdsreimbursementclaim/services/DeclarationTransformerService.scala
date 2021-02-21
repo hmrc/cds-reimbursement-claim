@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankDetails, ConsigneeBankDetails, DeclarantBankDetails, DeclarationResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{Declaration, MaskedBankAccount, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, MaskedBankAccount, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationTransformerService.maskBankDetails
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
@@ -27,16 +27,16 @@ import javax.inject.Singleton
 
 @ImplementedBy(classOf[DefaultDeclarationTransformerService])
 trait DeclarationTransformerService {
-  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Declaration]
+  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, DisplayDeclaration]
 }
 
 @Singleton
 class DefaultDeclarationTransformerService @Inject() () extends DeclarationTransformerService with Logging {
-  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Declaration] =
+  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, DisplayDeclaration] =
     declarationResponse.overpaymentDeclarationDisplayResponse.responseDetail match {
       case Some(responseDetail) =>
         Right(
-          Declaration(
+          DisplayDeclaration(
             responseDetail.declarationId,
             TimeUtils
               .acceptanceDateDisplayFormat(responseDetail.acceptanceDate)
@@ -44,7 +44,6 @@ class DefaultDeclarationTransformerService @Inject() () extends DeclarationTrans
             responseDetail.declarantDetails,
             responseDetail.consigneeDetails,
             responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails)),
-            responseDetail.securityDetails,
             responseDetail.ndrcDetails
           )
         )

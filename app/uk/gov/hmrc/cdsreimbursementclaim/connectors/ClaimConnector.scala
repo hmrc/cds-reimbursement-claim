@@ -53,7 +53,7 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
         .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(submitClaimRequest))(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          enrichHC,
+          extraHeaders,
           ec
         )
         .map(Right(_))

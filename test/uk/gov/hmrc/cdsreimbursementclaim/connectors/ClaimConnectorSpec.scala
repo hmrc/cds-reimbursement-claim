@@ -22,9 +22,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SubmitClaimGen._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -59,7 +59,7 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
 
   val connector = new DefaultClaimConnector(mockHttp, new ServicesConfig(config))
 
-  "SubmitClaimConnectorSpec" when {
+  "Claim Connector" when {
 
     val backEndUrl                 = "http://localhost:7502/tpi/postoverpaymentclaim/v1"
     implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -69,7 +69,7 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
       "do a post http call and get the TPI-05 API response" in {
         val request      = sample[EisSubmitClaimRequest]
         val httpResponse = HttpResponse(200, "The Response")
-        mockPost(backEndUrl, Seq.empty, *)(Right(httpResponse))
+        mockPost(backEndUrl, Seq.empty, *)(Some(httpResponse))
         val response     = await(connector.submitClaim(request).value)
         response shouldBe Right(httpResponse)
       }
@@ -77,11 +77,9 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
 
     "return an error" when {
       "the call fails" in {
-        val request  = sample[EisSubmitClaimRequest]
-        val error    = new Exception("Socket connection error")
-        mockPost(backEndUrl, Seq.empty, *)(Left(error))
-        val response = await(connector.submitClaim(request).value)
-        response shouldBe Left(Error(error))
+        val request = sample[EisSubmitClaimRequest]
+        mockPost(backEndUrl, Seq.empty, *)(None)
+        await(connector.submitClaim(request).value).isLeft shouldBe true
       }
     }
 

@@ -16,115 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json._
-import play.api.mvc.Request
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
-import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators.{sample, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class SubmitClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
-  val submitClaimConnector = mock[ClaimConnector]
-  val mockEmail            = mock[EmailService]
-  val mockAudit            = mock[AuditService]
-  val mockMetrics          = mock[Metrics]
-
-  val submitClaimService = new SubmitClaimServiceImpl(submitClaimConnector, mockEmail, mockAudit, mockMetrics)
-
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  implicit val request: Request[_] = FakeRequest()
-  val okResponse: JsValue          = Json.parse("""{
-      |    "PostNewClaimsResponse": {
-      |        "ResponseCommon": {
-      |            "Status": "OK",
-      |            "ProcessingDateTime": "2020-12-23T16:58:28Z",
-      |			"CDFPayCaseNumber": "NDRC-1234",
-      |			"CDFPayService":"NDRC"
-      |        }
-      |    }
-      |}""".stripMargin)
-
-  def errorResponse(errorMessage: String): JsValue = Json.parse(s"""{
-      |   "ErrorDetails":{
-      |      "ProcessingDateTime":"2016-10-10T13:52:16Z",
-      |      "CorrelationId":"d60de98c-f499-47f5-b2d6-e80966e8d19e",
-      |      "ErrorMessage":"$errorMessage"
-      |    }
-      |}""".stripMargin)
-
-  def mockSubmitClaim(eisSubmitClaimRequest: EisSubmitClaimRequest)(response: Either[Error, HttpResponse]) =
-    (submitClaimConnector
-      .submitClaim(_: EisSubmitClaimRequest)(_: HeaderCarrier))
-      .expects(eisSubmitClaimRequest, *)
-      .returning(EitherT.fromEither[Future](response))
-      .atLeastOnce()
-
-  "Submit Claim Service" when {
-    val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
-    val submitClaimRequest    = sample[SubmitClaimRequest]
-
-    "handling submit claim returns" should {
-      "handle successful submits" when {
-        "there is a valid payload" in {
-          mockSubmitClaim(eisSubmitClaimRequest)(Right(HttpResponse(200, okResponse, Map.empty[String, Seq[String]])))
-          await(submitClaimService.submitClaim(submitClaimRequest).value) shouldBe Right(okResponse)
-        }
-      }
-
-      "handle unsuccesful submits" when {
-        "400 response" in {
-          val eisResponse = errorResponse("Invalid ClaimType")
-          mockSubmitClaim(eisSubmitClaimRequest)(Right(HttpResponse(400, eisResponse, Map.empty[String, Seq[String]])))
-          val response    = await(submitClaimService.submitClaim(submitClaimRequest).value)
-          response.fold(_.message should include("Invalid ClaimType"), _ => fail())
-        }
-
-        "404 response" in {
-          val eisResponse = errorResponse("Resource is unavailable")
-          mockSubmitClaim(eisSubmitClaimRequest)(Right(HttpResponse(404, eisResponse, Map.empty[String, Seq[String]])))
-          val response    = await(submitClaimService.submitClaim(submitClaimRequest).value)
-          response.fold(_.message should include("Resource is unavailable"), _ => fail())
-        }
-
-        "405 response" in {
-          val eisResponse = errorResponse("Method not allowed")
-          mockSubmitClaim(eisSubmitClaimRequest)(Right(HttpResponse(405, eisResponse, Map.empty[String, Seq[String]])))
-          val response    = await(submitClaimService.submitClaim(submitClaimRequest).value)
-          response.fold(_.message should include("Method not allowed"), _ => fail())
-        }
-
-        "500 response" in {
-          val eisResponse = errorResponse("invalid JSON format")
-          mockSubmitClaim(eisSubmitClaimRequest)(Right(HttpResponse(500, eisResponse, Map.empty[String, Seq[String]])))
-          val response    = await(submitClaimService.submitClaim(submitClaimRequest).value)
-          response.fold(_.message should include("invalid JSON format"), _ => fail())
-        }
-
-        "Invalid Json response" in {
-          mockSubmitClaim(eisSubmitClaimRequest)(
-            Right(HttpResponse(200, """{"a"-"b"}""", Map.empty[String, Seq[String]]))
-          )
-          val response = await(submitClaimService.submitClaim(submitClaimRequest).value)
-          response.fold(_.message should include("Unexpected character"), _ => fail())
-        }
-
-      }
-    }
-  }
+  "Submit Claim Service" when {}
 
 }

@@ -26,5 +26,5 @@ trait DateGenerator {
 
 @Singleton
 class DateGeneratorImpl extends DateGenerator {
-  def nextAcknowledgementDate: String = TimeUtils.eisDateTimeNow
+  def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
 }

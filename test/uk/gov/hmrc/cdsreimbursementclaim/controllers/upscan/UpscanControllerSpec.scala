@@ -30,7 +30,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.ControllerSpec
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan._
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
@@ -502,8 +503,6 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
           downloadUrl = "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
           uploadDetails = uploadDetails
         )
-
-        println(s"${Json.toJson(upscanUpload.copy(upscanCallBack = Some(upscanSuccess)))}")
 
         val upscanCallBackRequest =
           s"""

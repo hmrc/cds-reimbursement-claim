@@ -23,10 +23,11 @@ import cats.syntax.either._
 import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import play.api.http.Status
+import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.Declaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
@@ -39,7 +40,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DeclarationServiceImpl])
 trait DeclarationService {
-  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Declaration]
+  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, DisplayDeclaration]
 }
 
 @Singleton
@@ -48,16 +49,15 @@ class DeclarationServiceImpl @Inject() (
   uuidGenerator: UUIDGenerator,
   dateGenerator: DateGenerator,
   declarationTransformerService: DeclarationTransformerService
-)(implicit
-  ec: ExecutionContext
-) extends DeclarationService
+)(implicit ec: ExecutionContext)
+    extends DeclarationService
     with Logging {
 
-  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Declaration] = {
+  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, DisplayDeclaration] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
-          "MDTP",
+          Platform.MDTP,
           dateGenerator.nextAcknowledgementDate,
           uuidGenerator.compactCorrelationId
         ),

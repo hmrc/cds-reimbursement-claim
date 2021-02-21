@@ -14,24 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import org.scalacheck.Gen
+import org.scalacheck.ScalacheckShapeless._
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 
-trait EisConnector {
-
-  val config: ServicesConfig
-
-  val eisBearerToken: String = config.getString("eis.bearer-token")
-
-  def getExtraHeaders: Seq[(String, String)]
-
-  def extraHeaders(implicit hc: HeaderCarrier): HeaderCarrier =
-    hc.copy(
-      authorization = Some(Authorization(s"Bearer $eisBearerToken")),
-      extraHeaders = hc.extraHeaders ++ getExtraHeaders
-    )
-
+object EmailRequestGen extends GenUtils {
+  implicit val emailRequestGen: Gen[EmailRequest] = gen[EmailRequest]
 }

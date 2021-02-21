@@ -22,9 +22,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -66,8 +66,8 @@ class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactor
     "handling request for declaration" must {
 
       "do a post http call and get the ACC14 API response" in {
-        val httpResponse = HttpResponse(200, "The Response")
-        mockPost(backEndUrl, Seq.empty, *)(Right(httpResponse))
+        val httpResponse = HttpResponse(200, "acc-14 response payload")
+        mockPost(backEndUrl, Seq.empty, *)(Some(httpResponse))
         val response     = await(connector.getDeclaration(request).value)
         response shouldBe Right(httpResponse)
       }
@@ -75,12 +75,10 @@ class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
     "return an error" when {
       "the call fails" in {
-        val error    = new Exception("Socket connection error")
-        mockPost(backEndUrl, Seq.empty, *)(Left(error))
+        mockPost(backEndUrl, Seq.empty, *)(None)
         val response = await(connector.getDeclaration(request).value)
-        response shouldBe Left(Error(error))
+        response.isLeft shouldBe true
       }
     }
-
   }
 }

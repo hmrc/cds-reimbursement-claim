@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import akka.stream.Materializer
 import cats.data.EitherT
+import org.scalamock.handlers.CallHandler2
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.Declaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,9 +36,8 @@ import scala.concurrent.Future
 
 class DeclarationControllerSpec extends ControllerSpec {
 
-  val declarationService              = mock[DeclarationService]
-  implicit val headerCarrier          = HeaderCarrier()
-  implicit lazy val mat: Materializer = fakeApplication.materializer
+  val mockDeclarationService: DeclarationService = mock[DeclarationService]
+  implicit val headerCarrier: HeaderCarrier      = HeaderCarrier()
 
   val request = new AuthenticatedRequest(
     Fake.user,
@@ -48,12 +48,14 @@ class DeclarationControllerSpec extends ControllerSpec {
 
   val controller = new DeclarationController(
     authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
-    declarationService,
+    mockDeclarationService,
     Helpers.stubControllerComponents()
   )
 
-  def mockDeclarationService(mrn: MRN)(response: Either[Error, Declaration]) =
-    (declarationService
+  def mockDeclarationService(mrn: MRN)(
+    response: Either[Error, DisplayDeclaration]
+  ): CallHandler2[MRN, HeaderCarrier, EitherT[Future, Error, DisplayDeclaration]] =
+    (mockDeclarationService
       .getDeclaration(_: MRN)(_: HeaderCarrier))
       .expects(mrn, *)
       .returning(EitherT.fromEither[Future](response))
@@ -62,23 +64,21 @@ class DeclarationControllerSpec extends ControllerSpec {
 
     "handling request to get a declaration" must {
 
-      "return 200 OK for a successful call" in {
+      "return 200 OK with declaration JSON payload for a successful ACC-14 call" in {
 
         val mrn                  = sample[MRN]
-        val expectedResponseBody = sample[Declaration]
+        val expectedResponseBody = sample[DisplayDeclaration]
 
-        inSequence {
-          mockDeclarationService(mrn)(Right(expectedResponseBody))
-        }
+        mockDeclarationService(mrn)(Right(expectedResponseBody))
 
         val result = controller.declaration(mrn)(request)
         status(result)        shouldBe OK
         contentAsJson(result) shouldBe Json.toJson(expectedResponseBody)
       }
 
-      "return 500 when eis call fails" in {
+      "return 500 when the ACC-14 call fails or is unsuccessful" in {
         val mrn    = sample[MRN]
-        mockDeclarationService(mrn)(Left(Error.apply("error while getting declaration")))
+        mockDeclarationService(mrn)(Left(Error("error while getting declaration")))
         val result = controller.declaration(mrn)(request)
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }

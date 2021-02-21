@@ -47,6 +47,8 @@ class CcsSubmissionPoller @Inject() (
   executionContext: CcsSubmissionPollerExecutionContext
 ) extends Logging {
 
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   private val jitteredInitialDelay: FiniteDuration = FiniteDuration(
     servicesConfig.getDuration("ccs.submission-poller.initial-delay").toMillis,
     TimeUnit.MILLISECONDS
@@ -78,9 +80,6 @@ class CcsSubmissionPoller @Inject() (
         } else {
           val id = uuidGenerator.nextId()
           logger.info(getLogMessage(workItem, s"processing ccs submission work-item with id $id"))
-
-          //TODO: reconstruct the headercarrier
-          implicit val hc: HeaderCarrier = HeaderCarrier()
 
           ccsSubmissionService
             .submitToCcs(

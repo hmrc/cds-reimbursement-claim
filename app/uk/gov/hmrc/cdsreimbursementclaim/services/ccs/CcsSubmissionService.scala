@@ -36,9 +36,9 @@ import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.Future
+
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
-
   def enqueue(
     claimRequest: SubmitClaimRequest,
     submitClaimResponse: SubmitClaimResponse
@@ -70,13 +70,12 @@ class DefaultCcsSubmissionService @Inject() (
       .get[A](s"ccs.$key")
       .value
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def submitToCcs(
     ccsSubmissionPayload: CcsSubmissionPayload
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     ccsConnector.submitToCcs(CcsSubmissionPayload(ccsSubmissionPayload.dec64Body, hc.headers))
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  @SuppressWarnings(Array("org.wartremover.warts.Any")) // compiler can't infer the type properly on sequence
   override def enqueue(
     submitClaimRequest: SubmitClaimRequest,
     submitClaimResponse: SubmitClaimResponse
@@ -87,7 +86,6 @@ class DefaultCcsSubmissionService @Inject() (
     val k = submitClaimRequest.completeClaim.movementReferenceNumber
     val i = submitClaimRequest.completeClaim.correlationId
 
-    //todo: save the headercarrier info as well
     val foo: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
       makeDec64Payload(i, k, submitClaimResponse.caseNumber, a, r)
         .map(p =>
