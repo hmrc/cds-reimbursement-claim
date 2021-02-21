@@ -10,6 +10,8 @@ object AppDependencies {
     "org.typelevel"     %% "cats-core"                 % "2.3.1",
     "org.julienrf"      %% "play-json-derived-codecs"  % "7.0.0",
     "com.github.kxbmap" %% "configs"                   % "0.5.0",
+    "uk.gov.hmrc"       %% "work-item-repo"            % "7.11.0-play-27",
+    "ru.tinkoff"        %% "phobos-core"               % "0.9.2",
     compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
     "com.github.ghik"    % "silencer-lib"              % silencerVersion % Provided cross CrossVersion.full
   )

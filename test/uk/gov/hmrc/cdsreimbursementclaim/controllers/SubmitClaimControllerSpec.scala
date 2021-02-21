@@ -22,11 +22,14 @@ import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.{HeaderNames, Status}
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json.JsObject
+import play.api.mvc.Request
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import scala.concurrent.Future
@@ -38,27 +41,28 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
   implicit val hc         = HeaderCarrier()
   val httpClient          = mock[HttpClient]
   val eisService          = mock[SubmitClaimService]
+  val ccs                 = mock[CcsSubmissionService]
   private val fakeRequest = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller  = new SubmitClaimController(eisService, Helpers.stubControllerComponents())
+  private val controller  = new SubmitClaimController(eisService, ccs, Helpers.stubControllerComponents())
 
-  def mockEisResponse(response: EitherT[Future, Error, JsValue]) =
+  def mockEisResponse(response: EitherT[Future, Error, SubmitClaimResponse]) =
     (eisService
-      .submitClaim(_: JsValue)(_: HeaderCarrier))
-      .expects(*, *)
+      .submitClaim(_: SubmitClaimRequest)(_: HeaderCarrier, _: Request[_]))
+      .expects(*, *, *)
       .returning(response)
 
   "POST" should {
     "return 200" in {
-      val response = JsObject(Seq("hello" -> JsString("word")))
+      val response = SubmitClaimResponse("")
       mockEisResponse(EitherT.right(Future.successful(response)))
-      val result   = controller.claim()(fakeRequest)
+      val result   = controller.submitClaim()(fakeRequest)
       status(result)        shouldBe Status.OK
       contentAsJson(result) shouldBe response
     }
 
     "return 500 when on any error" in {
       mockEisResponse(EitherT.left(Future.successful(Error("Resource Unavailable"))))
-      val result = controller.claim()(fakeRequest)
+      val result = controller.submitClaim()(fakeRequest)
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
 

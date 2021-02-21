@@ -15,41 +15,150 @@
  */
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
-
 import cats.data.EitherT
+import cats.instances.future._
+import cats.instances.int._
+import cats.syntax.either._
 import cats.syntax.eq._
 import com.google.inject.ImplementedBy
-import play.api.http.Status
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubmitClaimConnector
+import play.api.http.Status.OK
+import play.api.libs.json.Json
+import play.api.mvc.Request
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
+import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
+import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import uk.gov.hmrc.http.HeaderCarrier
-import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @ImplementedBy(classOf[SubmitClaimServiceImpl])
 trait SubmitClaimService {
-  def submitClaim(body: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue]
+  def submitClaim(submitClaimRequest: SubmitClaimRequest)(implicit
+    hc: HeaderCarrier,
+    request: Request[_]
+  ): EitherT[Future, Error, SubmitClaimResponse]
 }
 
 @Singleton
-class SubmitClaimServiceImpl @Inject() (submitClaimConnector: SubmitClaimConnector)(implicit ec: ExecutionContext)
-    extends SubmitClaimService
+class SubmitClaimServiceImpl @Inject() (
+  claimConnector: ClaimConnector,
+  emailService: EmailService,
+  auditService: AuditService,
+  metrics: Metrics
+)(implicit
+  ec: ExecutionContext
+) extends SubmitClaimService
     with Logging {
 
-  def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, JsValue] =
-    submitClaimConnector
-      .submitClaim(claimData)
+  def submitClaim(
+    submitClaimRequest: SubmitClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse] = {
+
+    val eisSubmitClaimRequest: EisSubmitClaimRequest = EisSubmitClaimRequest(submitClaimRequest)
+    val emailRequest                                 = EmailRequest(
+      submitClaimRequest.userDetails.email,
+      submitClaimRequest.userDetails.eori,
+      submitClaimRequest.userDetails.contactName
+    )
+    val _                                            = for {
+      _                      <- auditClaimBeforeSubmit(submitClaimRequest, eisSubmitClaimRequest)
+      returnHttpResponse     <- submitClaimAndAudit(submitClaimRequest, eisSubmitClaimRequest)
+      eisSubmitClaimResponse <- EitherT.fromEither[Future](
+                                  returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
+                                )
+      claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
+      _                      <- emailService.sendClaimConfirmationEmail(emailRequest, claimResponse).leftFlatMap { e =>
+                                  logger.warn("could not send claim submission confirmation email or audit event", e)
+                                  EitherT.pure[Future, Error](())
+                                }
+    } yield claimResponse
+
+    EitherT.rightT[Future, Error](SubmitClaimResponse("dfsdfs"))
+
+  }
+
+  private def auditClaimBeforeSubmit(
+    submitClaimRequest: SubmitClaimRequest,
+    eisSubmitClaimRequest: EisSubmitClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] =
+    EitherT.pure[Future, Error](
+      auditService.sendEvent(
+        "submitClaim",
+        SubmitClaimEvent(
+          eisSubmitClaimRequest,
+          submitClaimRequest.userDetails.eori
+        ),
+        "submit-claim"
+      )
+    )
+
+  private def submitClaimAndAudit(
+    submitClaimRequest: SubmitClaimRequest,
+    eisSubmitClaimRequest: EisSubmitClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, HttpResponse] = {
+    val timer = metrics.submitClaimTimer.time()
+    print(s"${submitClaimRequest.toString}")
+    claimConnector
+      .submitClaim(
+        eisSubmitClaimRequest
+      )
       .subflatMap { httpResponse =>
-        if (httpResponse.status === Status.OK)
-          Try(httpResponse.json).fold(err => Left(Error(err)), js => Right(js))
+        timer.close()
+        auditSubmitClaimResponse(
+          httpResponse.status,
+          httpResponse.body,
+          eisSubmitClaimRequest
+        )
+
+        if (httpResponse.status === OK)
+          Right(httpResponse)
         else {
-          Left(
-            Error(s"Call to submit claim data came back with status ${httpResponse.status}, body: ${httpResponse.body}")
-          )
+          metrics.submitClaimErrorCounter.inc()
+          Left(Error(s"call to submit claim came back with status ${httpResponse.status}"))
         }
       }
+  }
+
+  private def auditSubmitClaimResponse(
+    responseHttpStatus: Int,
+    responseBody: String,
+    eisSubmitClaimRequest: EisSubmitClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[_]): Unit = {
+    val responseJson =
+      Try(Json.parse(responseBody))
+        .getOrElse(Json.parse(s"""{ "body" : "could not parse body as JSON: $responseBody" }"""))
+    val requestJson  = Json.toJson(eisSubmitClaimRequest)
+
+    auditService.sendEvent(
+      "submitClaimResponse",
+      SubmitClaimResponseEvent(
+        responseHttpStatus,
+        responseJson,
+        requestJson,
+        "submitClaimResponse.caseNumber" //TODO: fix this thread it through
+      ),
+      "submit-claim-response"
+    )
+  }
+
+  private def prepareSubmitClaimResponse(
+    response: EisSubmitClaimResponse
+  ): EitherT[Future, Error, SubmitClaimResponse] =
+    EitherT.fromEither[Future] {
+      Right(
+        SubmitClaimResponse(
+          response.caseNumber
+        )
+      )
+    }
 }

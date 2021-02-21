@@ -18,8 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.{BankDetails, ConsigneeBankDetails, DeclarantBankDetails, DeclarationResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankAccount, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankDetails, ConsigneeBankDetails, DeclarantBankDetails, DeclarationResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{Declaration, MaskedBankAccount, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationTransformerService.maskBankDetails
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 

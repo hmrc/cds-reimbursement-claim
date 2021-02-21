@@ -26,9 +26,9 @@ import play.api.http.Status
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.DeclarationResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.Declaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging

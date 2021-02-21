@@ -24,7 +24,7 @@ import play.api.Configuration
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.Generators._
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.DeclarationRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 

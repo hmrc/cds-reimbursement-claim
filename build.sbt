@@ -58,7 +58,8 @@ lazy val microservice = Project(appName, file("."))
     addCompilerPlugin(scalafixSemanticdb),
     scalacOptions ++= List(
       "-Yrangepos",
-      "-language:postfixOps"
+      "-language:postfixOps",
+      "-Ypartial-unification"
     ),
     scalacOptions in Test --= Seq("-Ywarn-value-discard"),
     scalacOptions += "-P:silencer:pathFilters=routes"

@@ -21,16 +21,18 @@ import org.joda.time.DateTime
 import org.scalacheck.ScalacheckShapeless._
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteClaim, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{Declaration, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import scala.reflect.{ClassTag, classTag}
 
-object Generators extends GenUtils with UpscanGen with DeclarationGen {
+object Generators extends GenUtils with UpscanGen with DeclarationGen with SubmitClaimGen with CompleteClaimGen {
 
   def sample[A : ClassTag](implicit gen: Gen[A]): A =
     gen.sample.getOrElse(sys.error(s"Could not generate instance of ${classTag[A].runtimeClass.getSimpleName}"))
@@ -107,6 +109,18 @@ sealed trait GenUtils {
     word    <- Gen.listOfN(13, Gen.numChar)
     d2      <- Gen.listOfN(1, Gen.numChar)
   } yield MRN(s"${d1.mkString("")}${letter2.mkString("")}${word.mkString("")}${d2.mkString("")}"))
+
+}
+trait CompleteClaimGen { this: GenUtils =>
+
+  implicit val completeClaimGen = gen[CompleteClaim]
+
+}
+trait SubmitClaimGen { this: GenUtils =>
+
+  implicit val eisSubmitClaimGen: Gen[EisSubmitClaimRequest]    = gen[EisSubmitClaimRequest]
+  implicit val submitClaimResponseGen: Gen[SubmitClaimResponse] = gen[SubmitClaimResponse]
+  implicit val subClaimRequestGen: Gen[SubmitClaimRequest]      = gen[SubmitClaimRequest]
 
 }
 
