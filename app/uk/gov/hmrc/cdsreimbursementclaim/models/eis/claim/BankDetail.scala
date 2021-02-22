@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import cats.data.NonEmptyList
-import cats.data.Validated.{Invalid, Valid}
-import play.api.libs.functional.syntax._
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
 
-final case class Email(value: String) extends AnyVal
+final case class BankDetail(
+  accountHolderName: String,
+  sortCode: String,
+  accountNumber: String
+)
 
-object Email {
-
-  implicit val format: Format[Email] =
-    implicitly[Format[String]].inmap(Email(_), _.value)
-
-  def emailValidation(
-    email: Option[String]
-  ): Validation[Email] =
-    email match {
-      case Some(emailAddress) => Valid(Email(emailAddress))
-      case None               => Invalid(NonEmptyList.one("Email address is missing"))
-    }
-
+object BankDetail {
+  implicit val format: OFormat[BankDetail] = Json.format[BankDetail]
 }

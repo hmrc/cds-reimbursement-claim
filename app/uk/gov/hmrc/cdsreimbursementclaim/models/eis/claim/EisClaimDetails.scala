@@ -21,15 +21,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
 final case class EisClaimDetails(submitClaimRequest: SubmitClaimRequest)
 
 object EisClaimDetails {
-  def apply(submitClaimRequest: SubmitClaimRequest): PostNewClaimsRequest =
-    PostNewClaimsRequest(
-      RequestCommon(
-        "",
-        "",
-        submitClaimRequest.userDetails.toString
-      ),
-      RequestDetail(
-        ""
-      )
-    )
+//  def apply(submitClaimRequest: SubmitClaimRequest): PostNewClaimsRequest =
+  //    PostNewClaimsRequest(
+  //      RequestCommon(
+  //        "",
+  //        "",
+  //        submitClaimRequest.userDetails.toString
+  //      ),
+  //      RequestDetail(
+  //        ""
+  //      )
+  //    )
 }

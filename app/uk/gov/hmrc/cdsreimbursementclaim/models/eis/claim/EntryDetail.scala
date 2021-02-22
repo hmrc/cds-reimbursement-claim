@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.email
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 
-final case class EmailRequest(
-  email: Email,
-  eori: Eori,
-  contactName: ContactName
+final case class EntryDetail(
+  entryNumber: Option[String],
+  entryDate: Option[String],
+  declarantReferenceNumber: Option[String],
+  mainDeclarationReference: Option[Boolean],
+  declarantDetails: Option[MRNInformation],
+  accountDetails: Option[AccountDetail],
+  consigneeDetails: Option[MRNInformation],
+  bankDetails: Option[BankDetails],
+  ndrcDetails: Option[List[NdrcDetails]]
 )
 
-object EmailRequest {
-  implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
+object EntryDetail {
+  implicit val format: OFormat[EntryDetail] = Json.format[EntryDetail]
 }

@@ -14,13 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models
+package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
-import play.api.libs.json.{Json, OFormat}
+import cats.syntax.eq._
+import com.google.inject.{ImplementedBy, Singleton}
 
-//TODO: impl
-final case class Eori(value: String)
+import java.util.UUID
 
-object Eori {
-  implicit val format: OFormat[Eori] = Json.format[Eori]
+@ImplementedBy(classOf[UUIDGeneratorImpl])
+trait UUIDGenerator {
+  def nextId(): UUID
+  def correlationId: String
+  def compactCorrelationId: String
+}
+
+@Singleton
+class UUIDGeneratorImpl extends UUIDGenerator {
+  def nextId(): UUID               = UUID.randomUUID()
+  def correlationId: String        = nextId().toString
+  def compactCorrelationId: String = correlationId.filterNot(c => c === '-')
 }

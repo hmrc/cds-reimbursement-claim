@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.Ids
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import cats.syntax.eq._
-import com.google.inject.{ImplementedBy, Singleton}
+import play.api.libs.json.{Json, OFormat}
 
-import java.util.UUID
+final case class ContactInformation(
+  contactPerson: Option[String],
+  addressLine1: Option[String],
+  addressLine2: Option[String],
+  addressLine3: Option[String],
+  street: Option[String],
+  city: Option[String],
+  countryCode: Option[String],
+  postalCode: Option[String],
+  telephoneNumber: Option[String],
+  faxNumber: Option[String],
+  emailAddress: Option[String]
+)
 
-@ImplementedBy(classOf[UUIDGeneratorImpl])
-trait UUIDGenerator {
-  def nextId(): UUID
-  def correlationId: String
-  def compactCorrelationId: String
-}
-
-@Singleton
-class UUIDGeneratorImpl extends UUIDGenerator {
-  def nextId(): UUID               = UUID.randomUUID()
-  def correlationId: String        = nextId().toString
-  def compactCorrelationId: String = correlationId.filterNot(c => c === '-')
+object ContactInformation {
+  implicit val format: OFormat[ContactInformation] = Json.format[ContactInformation]
 }

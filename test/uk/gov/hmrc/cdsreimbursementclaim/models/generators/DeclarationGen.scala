@@ -18,10 +18,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
-import uk.gov.hmrc.cdsreimbursementclaim.models.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 object DeclarationGen extends GenUtils {
   implicit val declarationGen: Gen[DisplayDeclaration]                                              = gen[DisplayDeclaration]

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models
+package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable

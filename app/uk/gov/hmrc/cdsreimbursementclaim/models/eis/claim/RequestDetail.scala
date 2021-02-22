@@ -16,10 +16,56 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.{unlift, _}
+import play.api.libs.json.{Format, JsPath, Json, OFormat}
 
-final case class RequestDetail(data: String)
+// The root structure for the JSON payload exceed 22 fields. Therefore the type needs to be split.
+final case class RequestDetailA(
+  CDFPayservice: String,
+  dateReceived: Option[String],
+  claimType: Option[String],
+  caseType: Option[String],
+  customDeclarationType: Option[String],
+  declarationMode: Option[String],
+  claimDate: Option[String],
+  claimAmountTotal: Option[String],
+  disposalMethod: Option[String],
+  reimbursementMethod: Option[String],
+  basisOfClaim: Option[String],
+  claimant: Option[String],
+  payeeIndicator: Option[String],
+  newEORI: Option[String],
+  newDAN: Option[String],
+  authorityTypeProvided: Option[String],
+  ClaimantEORI: Option[String],
+  claimantEmailAddress: Option[String],
+  goodsDetails: Option[GoodsDetails],
+  EORIDetails: Option[EORIDetails]
+)
+
+object RequestDetailA {
+  implicit val format: OFormat[RequestDetailA] = Json.format[RequestDetailA]
+}
+
+final case class RequestDetailB(
+  MRNDetails: Option[List[MRNDetail]],
+  duplicateMRNDetails: Option[MRNDetail],
+  entryDetails: Option[List[EntryDetail]],
+  duplicateEntryDetails: Option[EntryDetail]
+)
+
+object RequestDetailB {
+  implicit val format: OFormat[RequestDetailB] = Json.format[RequestDetailB]
+}
+
+final case class RequestDetail(
+  requestDetailA: RequestDetailA,
+  requestDetailB: RequestDetailB
+)
 
 object RequestDetail {
-  implicit val format: OFormat[RequestDetail] = Json.format[RequestDetail]
+  implicit val format: Format[RequestDetail] = (
+    JsPath.format[RequestDetailA] and
+      JsPath.format[RequestDetailB]
+  )(RequestDetail.apply, unlift(RequestDetail.unapply))
 }

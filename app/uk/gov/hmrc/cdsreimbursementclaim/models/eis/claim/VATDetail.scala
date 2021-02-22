@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class EntryNumber(value: String) extends AnyVal
+final case class VATDetail(
+  VATID: String,
+  countryCode: String
+)
 
-object EntryNumber {
-  implicit val format: OFormat[EntryNumber] = Json.format[EntryNumber]
+object VATDetail {
+  implicit val format: OFormat[VATDetail] = Json.format[VATDetail]
 }

@@ -64,7 +64,7 @@ class SubmitClaimServiceImpl @Inject() (
     submitClaimRequest: SubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse] = {
 
-    val eisSubmitClaimRequest: EisSubmitClaimRequest = EisSubmitClaimRequest(submitClaimRequest)
+    val eisSubmitClaimRequest: EisSubmitClaimRequest = EisSubmitClaimRequest("")
     val emailRequest                                 = EmailRequest(
       submitClaimRequest.userDetails.email,
       submitClaimRequest.userDetails.eori,

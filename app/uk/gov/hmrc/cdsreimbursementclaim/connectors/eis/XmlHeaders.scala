@@ -20,7 +20,7 @@ import play.api.http.{ContentTypes, HeaderNames, MimeTypes}
 import play.api.mvc.Codec
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGeneratorImpl
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGeneratorImpl
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
 trait XmlHeaders {

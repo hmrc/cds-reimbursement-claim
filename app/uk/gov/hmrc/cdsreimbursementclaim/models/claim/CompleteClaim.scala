@@ -18,8 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import julienrf.json.derived
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.{EntryNumber, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.EitherUtils._
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 
 import java.util.UUID
 

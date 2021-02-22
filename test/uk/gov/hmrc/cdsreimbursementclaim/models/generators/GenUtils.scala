@@ -20,7 +20,7 @@ import akka.util.ByteString
 import org.joda.time.DateTime
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.cdsreimbursementclaim.models.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 

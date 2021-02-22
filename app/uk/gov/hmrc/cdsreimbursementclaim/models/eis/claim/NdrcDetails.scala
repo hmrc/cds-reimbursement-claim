@@ -14,8 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.Ids
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import java.util.UUID
+import play.api.libs.json.{Json, OFormat}
 
-final case class CorrelationId(uuid: UUID) extends AnyVal
+final case class NdrcDetails(
+  paymentMethod: String,
+  paymentReference: String,
+  CMAEligible: Option[String],
+  taxType: String,
+  amount: String,
+  claimantAmount: Option[String]
+)
+
+object NdrcDetails {
+  implicit val format: OFormat[NdrcDetails] = Json.format[NdrcDetails]
+}

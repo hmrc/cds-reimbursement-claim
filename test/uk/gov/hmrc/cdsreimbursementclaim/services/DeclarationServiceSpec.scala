@@ -24,14 +24,14 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{OverpaymentDeclarationDisplayResponse, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 

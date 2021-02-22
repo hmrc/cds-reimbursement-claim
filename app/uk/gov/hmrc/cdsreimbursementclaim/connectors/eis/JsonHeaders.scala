@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
 import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGeneratorImpl
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGeneratorImpl
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
 trait JsonHeaders {

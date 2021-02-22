@@ -17,20 +17,20 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
 
 final case class EisSubmitClaimRequest(
-  postNewClaimsRequest: PostNewClaimsRequest
+  data: String
+  // postNewClaimsRequest: PostNewClaimsRequest
 )
 
 object EisSubmitClaimRequest {
 
-  def apply(
-    submitClaimRequest: SubmitClaimRequest
-  ): EisSubmitClaimRequest = {
-    val postNewClaimsRequest = EisClaimDetails(submitClaimRequest)
-    EisSubmitClaimRequest(postNewClaimsRequest)
-  }
+//  def apply(
+//    submitClaimRequest: SubmitClaimRequest
+//  ): EisSubmitClaimRequest = {
+//    val postNewClaimsRequest = EisClaimDetails(submitClaimRequest)
+//    EisSubmitClaimRequest(postNewClaimsRequest)
+//  }
 
   implicit val format: OFormat[EisSubmitClaimRequest] = Json.format[EisSubmitClaimRequest]
 }
