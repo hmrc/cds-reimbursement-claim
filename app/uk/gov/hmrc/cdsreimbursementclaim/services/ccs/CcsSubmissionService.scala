@@ -26,7 +26,7 @@ import reactivemongo.bson.BSONObjectID
 import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{DeclarantType, SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{EntryNumber, Error, MRN, UserDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, toUUIDString}
@@ -85,11 +85,22 @@ class DefaultCcsSubmissionService @Inject() (
     val a = submitClaimRequest.userDetails
     val k = submitClaimRequest.completeClaim.movementReferenceNumber
     val i = submitClaimRequest.completeClaim.correlationId
+    val b = submitClaimRequest.completeClaim.declarantType.declarantType
 
     val foo: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
-      makeDec64Payload(i, k, submitClaimResponse.caseNumber, a, r)
+      makeDec64Payload(i, k, submitClaimResponse.caseNumber, a, r, b)
         .map(p =>
-          ccsSubmissionRepo.set(CcsSubmissionRequest(XmlEncoder[BatchFileInterfaceMetadata].encode(p), hc.headers))
+          ccsSubmissionRepo.set(
+            CcsSubmissionRequest(
+              XmlEncoder[BatchFileInterfaceMetadata]
+                .encode(p)
+                .trim
+                .replaceAllLiterally("\n", "")
+                .replaceAllLiterally(" ", "")
+                .replaceAllLiterally("\r", ""),
+              hc.headers
+            )
+          )
         )
     foo.sequence
   }
@@ -109,7 +120,8 @@ class DefaultCcsSubmissionService @Inject() (
     movementReferenceNumber: Either[EntryNumber, MRN],
     caseReference: String,
     userDetails: UserDetails,
-    supportingEvidences: List[SupportingEvidence]
+    supportingEvidences: List[SupportingEvidence],
+    declarantType: DeclarantType
   ): List[BatchFileInterfaceMetadata] = {
 
     def innerLogin(
@@ -122,13 +134,15 @@ class DefaultCcsSubmissionService @Inject() (
       url: String,
       fileName: String,
       mimeType: String,
-      fileSize: Long
+      fileSize: Long,
+      declarantType: String
     ): BatchFileInterfaceMetadata = {
       val properties =
         PropertiesType.generateMandatoryList(
           caseReference,
           userDetails.eori.value,
           referenceNumber,
+          declarantType,
           documentType,
           uploadTime
         )
@@ -147,20 +161,20 @@ class DefaultCcsSubmissionService @Inject() (
         destinations = Destinations(
           List(
             Destination(
-              "CDS"
+              "CDFPay" //TODO: either remove or default it or change this
             )
           )
         )
       )
-
     }
+
     movementReferenceNumber match {
       case Left(entryNumber) =>
         val batchSize: Int = supportingEvidences.size
         supportingEvidences.zipWithIndex.map { case (evidence, index) =>
           innerLogin(
             entryNumber.value,
-            evidence.documentType.toString, //FIXME
+            evidence.documentType.map(s => s.toString).getOrElse(""), //FIXME
             evidence.uploadedOn,
             index.toLong,
             batchSize.toLong,
@@ -168,7 +182,8 @@ class DefaultCcsSubmissionService @Inject() (
             evidence.upscanSuccess.downloadUrl,
             evidence.upscanSuccess.uploadDetails.fileName,
             evidence.upscanSuccess.uploadDetails.fileMimeType,
-            evidence.upscanSuccess.uploadDetails.size
+            evidence.upscanSuccess.uploadDetails.size,
+            declarantType.toString
           )
         }
       case Right(mrn)        =>
@@ -176,7 +191,7 @@ class DefaultCcsSubmissionService @Inject() (
         supportingEvidences.zipWithIndex.map { case (evidence, index) =>
           innerLogin(
             mrn.value,
-            evidence.documentType.toString, //FIXME
+            evidence.documentType.map(s => s.toString).getOrElse(""), //FIXME
             evidence.uploadedOn,
             index.toLong,
             batchSize.toLong,
@@ -184,7 +199,8 @@ class DefaultCcsSubmissionService @Inject() (
             evidence.upscanSuccess.downloadUrl,
             evidence.upscanSuccess.uploadDetails.fileName,
             evidence.upscanSuccess.uploadDetails.fileMimeType,
-            evidence.upscanSuccess.uploadDetails.size
+            evidence.upscanSuccess.uploadDetails.size,
+            declarantType.toString
           )
         }
     }

@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.generators
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import org.scalacheck.Gen
-import org.scalacheck.ScalacheckShapeless._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
+import play.api.libs.json.{Json, OFormat}
 
-object CompleteClaimGen extends GenUtils {
+final case class CompleteDeclarantTypeAnswer(
+  declarantType: DeclarantType
+)
 
-  implicit val completeClaimGen: Gen[CompleteClaim]         = gen[CompleteClaim]
-  implicit val completeC285ClaimGen: Gen[CompleteC285Claim] = gen[CompleteC285Claim]
-
+object CompleteDeclarantTypeAnswer {
+  implicit val format: OFormat[CompleteDeclarantTypeAnswer] = Json.format[CompleteDeclarantTypeAnswer]
 }

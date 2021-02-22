@@ -42,7 +42,7 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
     with EisConnector
     with XmlHeaders {
 
-  private val ccsSubmissionUrl: String = s"${config.baseUrl("file-transfer")}/filetransfer/init/v1"
+  private val ccsSubmissionUrl: String = s"${config.baseUrl("ccs")}/filetransfer/init/v1"
 
   override def submitToCcs(ccsSubmissionPayload: CcsSubmissionPayload)(implicit
     hc: HeaderCarrier

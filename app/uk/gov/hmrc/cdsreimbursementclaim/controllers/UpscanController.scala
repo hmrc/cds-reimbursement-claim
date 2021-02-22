@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan
+package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
@@ -27,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UpscanFailure, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{GetUpscanUploadsRequest, GetUpscanUploadsResponse, UploadReference, UpscanUpload}
-import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
+import uk.gov.hmrc.cdsreimbursementclaim.services.UpscanService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.JsErrorOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._

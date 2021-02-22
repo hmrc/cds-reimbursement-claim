@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
 
-  val (eisBearerToken, eisEnvironment) = "token" -> "environment"
+  val eisBearerToken = "token"
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(

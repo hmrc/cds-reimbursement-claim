@@ -22,7 +22,7 @@ import ru.tinkoff.phobos.syntax.xmlns
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
 
 final case class BatchFileInterfaceMetadata(
-  @xmlns(mdg) sourceSystem: String = "CDFPay",
+  @xmlns(mdg) sourceSystem: String = "TPI",
   @xmlns(mdg) sourceSystemType: String = "AWS",
   @xmlns(mdg) interfaceName: String = "DEC64",
   @xmlns(mdg) interfaceVersion: String = "1.0.0",

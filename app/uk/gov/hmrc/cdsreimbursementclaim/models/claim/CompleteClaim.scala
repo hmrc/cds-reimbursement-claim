@@ -31,21 +31,26 @@ object CompleteClaim {
   final case class CompleteC285Claim(
     id: UUID,
     movementReferenceNumber: Either[EntryNumber, MRN],
-    supportingEvidences: CompleteSupportingEvidenceAnswer
+    supportingEvidences: CompleteSupportingEvidenceAnswer,
+    declarantType: CompleteDeclarantTypeAnswer
   ) extends CompleteClaim
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
 
     def evidences: List[SupportingEvidence] = completeClaim match {
-      case CompleteC285Claim(_, _, completeSupportingEvidenceAnswer) => completeSupportingEvidenceAnswer.evidences
+      case CompleteC285Claim(_, _, completeSupportingEvidenceAnswer, _) => completeSupportingEvidenceAnswer.evidences
     }
 
     def movementReferenceNumber: Either[EntryNumber, MRN] = completeClaim match {
-      case CompleteC285Claim(_, movementReferenceNumber, _) => movementReferenceNumber
+      case CompleteC285Claim(_, movementReferenceNumber, _, _) => movementReferenceNumber
     }
 
     def correlationId: UUID = completeClaim match {
-      case CompleteC285Claim(id, _, _) => id
+      case CompleteC285Claim(id, _, _, _) => id
+    }
+
+    def declarantType: CompleteDeclarantTypeAnswer = completeClaim match {
+      case CompleteC285Claim(_, _, _, declarantType) => declarantType
     }
 
   }

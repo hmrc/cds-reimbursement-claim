@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.services.upscan
+package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import akka.util.Timeout
 import cats.data.EitherT

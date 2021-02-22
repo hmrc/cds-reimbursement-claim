@@ -78,7 +78,7 @@ class CcsSubmissionPoller @Inject() (
           val _ = ccsSubmissionService.setResultStatus(workItem.id, PermanentlyFailed)
           Future.successful(())
         } else {
-          val id = uuidGenerator.nextId()
+          val id = uuidGenerator.nextId() //TODO: fix as not used
           logger.info(getLogMessage(workItem, s"processing ccs submission work-item with id $id"))
 
           ccsSubmissionService

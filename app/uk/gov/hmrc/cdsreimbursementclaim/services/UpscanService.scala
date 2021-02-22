@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.services.upscan
+package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}

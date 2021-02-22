@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan
+package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import akka.stream.Materializer
 import cats.data.EitherT
@@ -27,14 +27,13 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers, NoMaterializer}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.ControllerSpec
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan._
-import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
+import uk.gov.hmrc.cdsreimbursementclaim.services.UpscanService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, LocalDateTime, ZoneId}

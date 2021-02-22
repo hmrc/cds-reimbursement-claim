@@ -19,37 +19,35 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.ccs
 import ru.tinkoff.phobos.derivation.semiauto.deriveElementEncoder
 import ru.tinkoff.phobos.encoding.ElementEncoder
 import ru.tinkoff.phobos.syntax.xmlns
-import ru.tinkoff.phobos.derivation.semiauto._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
+import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId}
+import java.time.LocalDateTime
 
 final case class PropertiesType(@xmlns(mdg) property: Seq[PropertyType] = Nil)
 
 object PropertiesType {
+
   def generateMandatoryList(
     caseReference: String,
     eori: String,
     declarationId: String,
+    declarantType: String,
     documentType: String,
-    localDateTime: LocalDateTime = LocalDateTime.now()
-  ): PropertiesType = {
-    val receivedDateFormatter = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-      .withZone(ZoneId.systemDefault()) ///TODO: fix use the Timeeutils
+    fileUpscanDateTime: LocalDateTime
+  ): PropertiesType =
     PropertiesType(
       List(
         PropertyType("CaseReference", caseReference),
         PropertyType("Eori", eori),
         PropertyType("DeclarationId", declarationId),
-        PropertyType("DeclarationType", documentType),
-        PropertyType("ApplicationName", "NDRC"), //Possible values are NDRC & Securities //TODO
-        PropertyType("DocumentType", "MRN"), //can be either EntryNumber or MRN //TODO
-        PropertyType("DocumentReceivedDate", receivedDateFormatter.format(localDateTime))
+        PropertyType("DeclarationType", declarantType),
+        PropertyType("ApplicationName", "NDRC"),
+        PropertyType("DocumentType", documentType),
+        PropertyType("DocumentReceivedDate", TimeUtils.cdsDateTimeFormat.format(fileUpscanDateTime))
       )
     )
-  }
+
   implicit val propertiesTypeEnc: ElementEncoder[PropertiesType] = deriveElementEncoder[PropertiesType]
 
 }

@@ -33,10 +33,10 @@ object TimeUtils {
     result.toOption
   }
 
-  val eisDateTimeFormat: DateTimeFormatter =
+  val cdsDateTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
 
-  val eisDateTimeNow: String = eisDateTimeFormat.format(LocalDateTime.now)
+  val cdsDateTimeNow: String = cdsDateTimeFormat.format(LocalDateTime.now)
 
   val rfc7231DateTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
 
