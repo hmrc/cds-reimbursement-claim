@@ -22,7 +22,6 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionPoller.OnCompleteHandler
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -41,8 +40,7 @@ class CcsSubmissionPoller @Inject() (
   ccsSubmissionService: CcsSubmissionService,
   ccsSubmissionPollerExecutionContext: CcsSubmissionPollerExecutionContext,
   servicesConfig: ServicesConfig,
-  onCompleteHandler: OnCompleteHandler,
-  uuidGenerator: UUIDGenerator
+  onCompleteHandler: OnCompleteHandler
 )(implicit
   executionContext: CcsSubmissionPollerExecutionContext
 ) extends Logging {
@@ -78,8 +76,7 @@ class CcsSubmissionPoller @Inject() (
           val _ = ccsSubmissionService.setResultStatus(workItem.id, PermanentlyFailed)
           Future.successful(())
         } else {
-          val id = uuidGenerator.nextId() //TODO: fix as not used
-          logger.info(getLogMessage(workItem, s"processing ccs submission work-item with id $id"))
+          logger.info(getLogMessage(workItem, s"processing ccs submission work-item with id ${workItem.id.toString()}"))
 
           ccsSubmissionService
             .submitToCcs(

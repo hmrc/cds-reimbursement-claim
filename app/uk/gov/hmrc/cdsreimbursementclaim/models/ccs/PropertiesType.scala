@@ -20,34 +20,9 @@ import ru.tinkoff.phobos.derivation.semiauto.deriveElementEncoder
 import ru.tinkoff.phobos.encoding.ElementEncoder
 import ru.tinkoff.phobos.syntax.xmlns
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
-
-import java.time.LocalDateTime
 
 final case class PropertiesType(@xmlns(mdg) property: Seq[PropertyType] = Nil)
 
 object PropertiesType {
-
-  def generateMandatoryList(
-    caseReference: String,
-    eori: String,
-    declarationId: String,
-    declarantType: String,
-    documentType: String,
-    fileUpscanDateTime: LocalDateTime
-  ): PropertiesType =
-    PropertiesType(
-      List(
-        PropertyType("CaseReference", caseReference),
-        PropertyType("Eori", eori),
-        PropertyType("DeclarationId", declarationId),
-        PropertyType("DeclarationType", declarantType),
-        PropertyType("ApplicationName", "NDRC"),
-        PropertyType("DocumentType", documentType),
-        PropertyType("DocumentReceivedDate", TimeUtils.cdsDateTimeFormat.format(fileUpscanDateTime))
-      )
-    )
-
   implicit val propertiesTypeEnc: ElementEncoder[PropertiesType] = deriveElementEncoder[PropertiesType]
-
 }

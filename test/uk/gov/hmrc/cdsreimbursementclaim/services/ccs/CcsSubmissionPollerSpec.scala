@@ -134,11 +134,9 @@ class CcsSubmissionPollerSpec
       "process the work item and set it to succeed if the ccs submission is successful" in {
         val onCompleteListener = TestProbe()
         val workItem           = sample[WorkItem[CcsSubmissionRequest]].copy(failureCount = 0, status = ToDo)
-        val id                 = UUID.randomUUID()
 
         inSequence {
           mockCcsSubmissionRequestDequeue()(Right(Some(workItem)))
-          mockNextUUID(id)
           mockSubmitToCcs(
             CcsSubmissionPayload(
               workItem.item.payload,
@@ -154,8 +152,7 @@ class CcsSubmissionPollerSpec
             mockCcsSubmissionService,
             ccsSubmissionPollerExecutionContext,
             servicesConfig,
-            new TestOnCompleteHandler(onCompleteListener.ref),
-            mockUUIDGenerator
+            new TestOnCompleteHandler(onCompleteListener.ref)
           )
 
         onCompleteListener.expectMsg(TestOnCompleteHandler.Completed)
@@ -166,11 +163,9 @@ class CcsSubmissionPollerSpec
       val onCompleteListener = TestProbe()
 
       val workItem = sample[WorkItem[CcsSubmissionRequest]].copy(failureCount = 0, status = ToDo)
-      val id       = UUID.randomUUID()
 
       inSequence {
         mockCcsSubmissionRequestDequeue()(Right(Some(workItem)))
-        mockNextUUID(id)
         mockSubmitToCcs(
           CcsSubmissionPayload(
             workItem.item.payload,
@@ -186,8 +181,7 @@ class CcsSubmissionPollerSpec
           mockCcsSubmissionService,
           ccsSubmissionPollerExecutionContext,
           servicesConfig,
-          new TestOnCompleteHandler(onCompleteListener.ref),
-          mockUUIDGenerator
+          new TestOnCompleteHandler(onCompleteListener.ref)
         )
 
       onCompleteListener.expectMsg(TestOnCompleteHandler.Completed)
@@ -208,8 +202,7 @@ class CcsSubmissionPollerSpec
           mockCcsSubmissionService,
           ccsSubmissionPollerExecutionContext,
           servicesConfig,
-          new TestOnCompleteHandler(onCompleteListener.ref),
-          mockUUIDGenerator
+          new TestOnCompleteHandler(onCompleteListener.ref)
         )
 
       onCompleteListener.expectMsg(TestOnCompleteHandler.Completed)
@@ -226,8 +219,7 @@ class CcsSubmissionPollerSpec
             mockCcsSubmissionService,
             ccsSubmissionPollerExecutionContext,
             servicesConfig,
-            new TestOnCompleteHandler(onCompleteListener.ref),
-            mockUUIDGenerator
+            new TestOnCompleteHandler(onCompleteListener.ref)
           )
 
         onCompleteListener.expectMsg(TestOnCompleteHandler.Completed)

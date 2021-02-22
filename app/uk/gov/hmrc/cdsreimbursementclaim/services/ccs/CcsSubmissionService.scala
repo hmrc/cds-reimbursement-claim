@@ -25,16 +25,15 @@ import play.api.Configuration
 import reactivemongo.bson.BSONObjectID
 import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{DeclarantType, SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{EntryNumber, Error, MRN, UserDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, toUUIDString}
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.DefaultCcsSubmissionService.makeBatchFileInterfaceMetaDataPayload
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 
-import java.time.LocalDateTime
-import java.util.UUID
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
@@ -80,33 +79,25 @@ class DefaultCcsSubmissionService @Inject() (
     submitClaimRequest: SubmitClaimRequest,
     submitClaimResponse: SubmitClaimResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
-    //TODO: refactor
-    val r = submitClaimRequest.completeClaim.evidences
-    val a = submitClaimRequest.userDetails
-    val k = submitClaimRequest.completeClaim.movementReferenceNumber
-    val i = submitClaimRequest.completeClaim.correlationId
-    val b = submitClaimRequest.completeClaim.declarantType.declarantType
 
-    val foo: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
-      makeDec64Payload(i, k, submitClaimResponse.caseNumber, a, r, b)
-        .map(p =>
+    val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
+      makeBatchFileInterfaceMetaDataPayload(submitClaimRequest, submitClaimResponse)
+        .map(data =>
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
               XmlEncoder[BatchFileInterfaceMetadata]
-                .encode(p)
+                .encode(data)
                 .trim
-                .replaceAllLiterally("\n", "")
-                .replaceAllLiterally(" ", "")
-                .replaceAllLiterally("\r", ""),
+                .filter(_ >= ' ')
+                .replaceAllLiterally(" ", ""),
               hc.headers
             )
           )
         )
-    foo.sequence
+    queueCcsSubmissions.sequence
   }
 
-  override def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]] =
-    ccsSubmissionRepo.get
+  override def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]] = ccsSubmissionRepo.get
 
   override def setProcessingStatus(id: BSONObjectID, status: ProcessingStatus): EitherT[Future, Error, Boolean] =
     ccsSubmissionRepo.setProcessingStatus(id, status)
@@ -114,95 +105,69 @@ class DefaultCcsSubmissionService @Inject() (
   override def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean] =
     ccsSubmissionRepo.setResultStatus(id, status)
 
-  // need to validate the data before enqueing
-  private def makeDec64Payload(
-    correlationId: UUID,
-    movementReferenceNumber: Either[EntryNumber, MRN],
-    caseReference: String,
-    userDetails: UserDetails,
-    supportingEvidences: List[SupportingEvidence],
-    declarantType: DeclarantType
+}
+
+object DefaultCcsSubmissionService {
+
+  def makeBatchFileInterfaceMetaDataPayload(
+    submitClaimRequest: SubmitClaimRequest,
+    submitClaimResponse: SubmitClaimResponse
   ): List[BatchFileInterfaceMetadata] = {
-
-    def innerLogin(
+    def make(
       referenceNumber: String,
-      documentType: String,
-      uploadTime: LocalDateTime,
-      batchCount: Long,
-      batchSize: Long,
-      checkSum: String,
-      url: String,
-      fileName: String,
-      mimeType: String,
-      fileSize: Long,
-      declarantType: String
-    ): BatchFileInterfaceMetadata = {
-      val properties =
-        PropertiesType.generateMandatoryList(
-          caseReference,
-          userDetails.eori.value,
-          referenceNumber,
-          declarantType,
-          documentType,
-          uploadTime
-        )
-
+      evidence: SupportingEvidence,
+      batchCount: Long
+    ): BatchFileInterfaceMetadata =
       BatchFileInterfaceMetadata(
-        correlationID = correlationId,
-        batchID = correlationId,
+        correlationID = submitClaimRequest.completeClaim.correlationId,
+        batchID = submitClaimRequest.completeClaim.correlationId,
         batchCount = batchCount,
-        batchSize = batchSize,
-        checksum = checkSum,
-        sourceLocation = url,
-        sourceFileName = fileName,
-        sourceFileMimeType = mimeType,
-        fileSize = fileSize,
-        properties = properties,
-        destinations = Destinations(
+        batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
+        checksum = evidence.upscanSuccess.uploadDetails.checksum,
+        sourceLocation = evidence.upscanSuccess.downloadUrl,
+        sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
+        sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
+        fileSize = evidence.upscanSuccess.uploadDetails.size,
+        properties = PropertiesType(
           List(
-            Destination(
-              "CDFPay" //TODO: either remove or default it or change this
+            PropertyType("CaseReference", submitClaimResponse.caseNumber),
+            PropertyType("Eori", submitClaimRequest.userDetails.eori.value),
+            PropertyType("DeclarationId", referenceNumber),
+            PropertyType(
+              "DeclarationType",
+              submitClaimRequest.completeClaim.declarantType.declarantType.toString
+            ),
+            PropertyType("ApplicationName", "NDRC"),
+            PropertyType(
+              "DocumentType",
+              evidence.documentType.map(documentType => documentType.toString).getOrElse("Document Type missing")
+            ),
+            PropertyType(
+              "DocumentReceivedDate",
+              TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn)
             )
           )
         )
       )
-    }
 
-    movementReferenceNumber match {
+    submitClaimRequest.completeClaim.movementReferenceNumber match {
       case Left(entryNumber) =>
-        val batchSize: Int = supportingEvidences.size
-        supportingEvidences.zipWithIndex.map { case (evidence, index) =>
-          innerLogin(
+        submitClaimRequest.completeClaim.evidences.zipWithIndex.map { case (evidence, index) =>
+          make(
             entryNumber.value,
-            evidence.documentType.map(s => s.toString).getOrElse(""), //FIXME
-            evidence.uploadedOn,
-            index.toLong,
-            batchSize.toLong,
-            evidence.upscanSuccess.uploadDetails.checksum,
-            evidence.upscanSuccess.downloadUrl,
-            evidence.upscanSuccess.uploadDetails.fileName,
-            evidence.upscanSuccess.uploadDetails.fileMimeType,
-            evidence.upscanSuccess.uploadDetails.size,
-            declarantType.toString
+            evidence,
+            index.toLong
           )
         }
       case Right(mrn)        =>
-        val batchSize = supportingEvidences.size
-        supportingEvidences.zipWithIndex.map { case (evidence, index) =>
-          innerLogin(
+        submitClaimRequest.completeClaim.evidences.zipWithIndex.map { case (evidence, index) =>
+          make(
             mrn.value,
-            evidence.documentType.map(s => s.toString).getOrElse(""), //FIXME
-            evidence.uploadedOn,
-            index.toLong,
-            batchSize.toLong,
-            evidence.upscanSuccess.uploadDetails.checksum,
-            evidence.upscanSuccess.downloadUrl,
-            evidence.upscanSuccess.uploadDetails.fileName,
-            evidence.upscanSuccess.uploadDetails.fileMimeType,
-            evidence.upscanSuccess.uploadDetails.size,
-            declarantType.toString
+            evidence,
+            index.toLong
           )
         }
     }
   }
+
 }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import akka.util.Timeout
 import cats.data.EitherT
+import org.scalamock.handlers.{CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -36,12 +37,12 @@ class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout                           = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
   implicit val executionContext: ExecutionContextExecutor = ExecutionContext.global
-  val mockUpscanRepository                                = mock[UpscanRepository]
+  val mockUpscanRepository: UpscanRepository              = mock[UpscanRepository]
   val service                                             = new UpscanServiceImpl(mockUpscanRepository)
 
   def mockStoreUpscanUpload(upscanUpload: UpscanUpload)(
     response: Either[Error, Unit]
-  ) =
+  ): CallHandler1[UpscanUpload, EitherT[Future, Error, Unit]] =
     (mockUpscanRepository
       .insert(_: UpscanUpload))
       .expects(upscanUpload)
@@ -49,7 +50,7 @@ class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   def mockReadUpscanUpload(uploadReference: UploadReference)(
     response: Either[Error, Option[UpscanUpload]]
-  ) =
+  ): CallHandler1[UploadReference, EitherT[Future, Error, Option[UpscanUpload]]] =
     (mockUpscanRepository
       .select(_: UploadReference))
       .expects(uploadReference)
@@ -57,7 +58,7 @@ class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   def mockReadUpscanUploads(uploadReferences: List[UploadReference])(
     response: Either[Error, List[UpscanUpload]]
-  ) =
+  ): CallHandler1[List[UploadReference], EitherT[Future, Error, List[UpscanUpload]]] =
     (mockUpscanRepository
       .selectAll(_: List[UploadReference]))
       .expects(uploadReferences)
@@ -68,13 +69,13 @@ class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
     upscanUpload: UpscanUpload
   )(
     response: Either[Error, Unit]
-  ) =
+  ): CallHandler2[UploadReference, UpscanUpload, EitherT[Future, Error, Unit]] =
     (mockUpscanRepository
       .update(_: UploadReference, _: UpscanUpload))
       .expects(uploadReference, upscanUpload)
       .returning(EitherT[Future, Error, Unit](Future.successful(response)))
 
-  val upscanUpload = sample[UpscanUpload]
+  val upscanUpload: UpscanUpload = sample[UpscanUpload]
 
   "Upscan Service" when {
 

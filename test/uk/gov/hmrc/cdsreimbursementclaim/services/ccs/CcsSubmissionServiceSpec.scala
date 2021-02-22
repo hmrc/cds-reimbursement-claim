@@ -154,7 +154,9 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
       |        </ans1:destination>
       |    </ans1:destinations>
       |</ans1:BatchFileInterfaceMetadata>
-      |""".stripMargin.trim.replaceAllLiterally("\n", "").replaceAllLiterally(" ", "").replaceAllLiterally("\r", "")
+      |""".stripMargin
+      .filter(_ >= ' ')
+      .replaceAllLiterally(" ", "")
 
   def mockCcsSubmissionRequestGet()(
     response: Either[Error, Option[WorkItem[CcsSubmissionRequest]]]
