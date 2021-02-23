@@ -16,32 +16,34 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId}
-
+import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
 
-trait EisConnector {
-
-  val dateFormat = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(ZoneId.systemDefault())
-
-  val jsonHeaders = Seq(("Content-Type" -> "application/json"), ("Accept" -> "application/json"))
-  val xmlHeaders  = Seq(("Content-Type" -> "application/xml; charset=UTF-8"), ("Accept" -> "application/xml"))
+trait EisHeaders {
+  val contentHeaders: Seq[(String, String)]
 
   def getStandardHeaders(): Seq[(String, String)] =
     Seq(
-      ("Date"             -> LocalDateTime.now().format(dateFormat)),
+      ("Date"             -> TimeUtils.rfc7231DateTimeNow),
       ("X-Correlation-ID" -> java.util.UUID.randomUUID().toString),
       ("X-Forwarded-Host" -> "MDTP")
     )
+}
 
-  def enrichHC(isJson: Boolean, bearerToken: String)(implicit hc: HeaderCarrier): HeaderCarrier = {
-    val jsonOrXmlHeaders = if (isJson) jsonHeaders else xmlHeaders
+trait JsonHeaders extends EisHeaders {
+  val contentHeaders = Seq(("Content-Type" -> "application/json"), ("Accept" -> "application/json"))
+}
+
+trait XmlHeaders extends EisHeaders {
+  val contentHeaders = Seq(("Content-Type" -> "application/xml; charset=UTF-8"), ("Accept" -> "application/xml"))
+}
+
+trait EisConnector { self: EisHeaders =>
+  def enrichHC(bearerToken: String)(implicit hc: HeaderCarrier): HeaderCarrier =
     hc.copy(
       authorization = Some(Authorization(s"Bearer $bearerToken")),
-      extraHeaders = hc.extraHeaders ++ getStandardHeaders() ++ jsonOrXmlHeaders
+      extraHeaders = hc.extraHeaders ++ getStandardHeaders() ++ contentHeaders
     )
-  }
 
 }

@@ -25,9 +25,11 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubmitClaimConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateSubmitClaim.{sample, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.response.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request.SubmitClaimRequest
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

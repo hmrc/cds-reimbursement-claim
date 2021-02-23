@@ -21,13 +21,15 @@ import org.joda.time.{DateTime, Duration}
 import play.api.Configuration
 import play.api.libs.json.{Format, JsObject, JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.WorkItemPayload
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.time.DateTimeUtils
 import uk.gov.hmrc.workitem._
+import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 object MongoPayloadDetailsFormats {
@@ -35,13 +37,30 @@ object MongoPayloadDetailsFormats {
 }
 
 @Singleton
-class FileUploadsRepository @Inject() (configuration: Configuration, reactiveMongoComponent: ReactiveMongoComponent)
-    extends WorkItemRepository[WorkItemPayload, BSONObjectID](
+class FileUploadsRepository @Inject() (configuration: Configuration, reactiveMongoComponent: ReactiveMongoComponent)(
+  implicit ec: ExecutionContext
+) extends WorkItemRepository[WorkItemPayload, BSONObjectID](
       "FileUploadQueue",
       reactiveMongoComponent.mongoConnector.db,
       MongoPayloadDetailsFormats.formats,
       configuration.underlying
     ) {
+
+  val expireAfterSeconds            = "expireAfterSeconds"
+  lazy val timeToLiveInSeconds: Int = configuration.get[FiniteDuration]("queue.ttl").toSeconds.toInt
+  private val indexer               = createIndex("receivedAt", "workItemExpiry", timeToLiveInSeconds)
+  logger.debug("TTL Indexer started: " + indexer.toString)
+
+  private def createIndex(field: String, indexName: String, ttl: Int): Future[Boolean] =
+    collection.indexesManager.ensure(
+      Index(Seq((field, IndexType.Ascending)), Some(indexName), options = BSONDocument(expireAfterSeconds -> ttl))
+    ) map { result =>
+      logger.debug(s"set [$indexName] with value $ttl -> result : $result")
+      result
+    } recover { case e =>
+      logger.error("Failed to set TTL index", e)
+      false
+    }
 
   override def now: DateTime = DateTimeUtils.now
 

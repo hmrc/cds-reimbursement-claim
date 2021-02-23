@@ -28,16 +28,18 @@ import play.api.inject.DefaultApplicationLifecycle
 import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponentImpl
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Dec64Body, HeadlessEnvelope, WorkItemResult}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{HeadlessEnvelope, WorkItemResult}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.FileUploadsRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging._
 import uk.gov.hmrc.workitem._
+
 import scala.concurrent.{ExecutionContext, Future}
 import org.scalatest.concurrent.PatienceConfiguration.{Interval, Timeout}
 import org.scalatest.time.{Millis, Seconds, Span}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dec64.Dec64Body
 
 class FileUploadQueueSpec extends AnyWordSpec with Matchers with MockFactory with BeforeAndAfterEach with Eventually {
 

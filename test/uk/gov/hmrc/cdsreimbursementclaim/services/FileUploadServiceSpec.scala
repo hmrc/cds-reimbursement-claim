@@ -25,7 +25,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.FileUploadConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.GenerateUploadFiles._
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Dec64Body, Error, HeadlessEnvelope}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dec64.Dec64Body
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, HeadlessEnvelope}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global

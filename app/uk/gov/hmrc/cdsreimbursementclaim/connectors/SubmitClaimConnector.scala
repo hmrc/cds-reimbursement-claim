@@ -37,6 +37,7 @@ trait SubmitClaimConnector {
 class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends SubmitClaimConnector
     with EisConnector
+    with JsonHeaders
     with Logging {
 
   override def submitClaim(claimData: JsValue)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
@@ -45,7 +46,7 @@ class DefaultSubmitClaimConnector @Inject() (http: HttpClient, val appConfig: Ap
         .POST[JsValue, HttpResponse](appConfig.newClaimEndpoint, claimData)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
-          enrichHC(true, appConfig.eisBearerToken),
+          enrichHC(appConfig.eisBearerToken),
           ec
         )
         .map(Right(_))

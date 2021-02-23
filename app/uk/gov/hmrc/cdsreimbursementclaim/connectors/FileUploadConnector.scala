@@ -37,6 +37,7 @@ trait FileUploadConnector {
 class DefaultFileUploadConnector @Inject() (http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends FileUploadConnector
     with EisConnector
+    with XmlHeaders
     with Logging {
 
   def upload(declarationInfo: String)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
@@ -44,7 +45,7 @@ class DefaultFileUploadConnector @Inject() (http: HttpClient, val appConfig: App
       http
         .POSTString[HttpResponse](appConfig.fileUpload, declarationInfo)(
           HttpReads[HttpResponse],
-          enrichHC(false, appConfig.eisBearerToken),
+          enrichHC(appConfig.eisBearerToken),
           ec
         )
         .map(Right(_))

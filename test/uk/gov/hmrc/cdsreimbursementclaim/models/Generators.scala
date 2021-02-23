@@ -25,6 +25,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDet
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 
+import uk.gov.hmrc.cdsreimbursementclaim.models.dec64.Dec64Body
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.response.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request.SubmitClaimRequest
+
 import scala.reflect.{ClassTag, classTag}
 
 object GenerateUpscan extends Generators with UpscanGen
@@ -161,7 +165,7 @@ trait DeclarationGen { this: GenUtils =>
 
 trait SubmitClaimGen { this: GenUtils =>
   //Request
-  import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest._
+  import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request._
   implicit val establishmentAddressGen    = gen[EstablishmentAddress]
   implicit val cdsEstablishmentAddressGen = gen[CdsEstablishmentAddress]
   implicit val contactInformationGen      = gen[ContactInformation]
@@ -179,12 +183,12 @@ trait SubmitClaimGen { this: GenUtils =>
   implicit val mrnDetailsGen              = gen[MrnDetails]
   implicit val entryDetailsGen            = gen[EntryDetails]
   implicit val requestCommonGen           = gen[RequestCommon]
-  implicit val requestDetailGen           = gen[RequestDetail]
+  implicit val requestDetailGen           = gen[TPI05RequestDetail]
   implicit val postNewClaimsRequestGen    = gen[PostNewClaimsRequest]
   implicit val submitClaimRequestGen      = gen[SubmitClaimRequest]
 
   //Response
-  import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimResponse._
+  import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.response._
   implicit val returnParametersGen      = gen[ReturnParameters]
   implicit val responseCommonGen        = gen[ResponseCommon]
   implicit val postNewClaimsResponseGen = gen[PostNewClaimsResponse]

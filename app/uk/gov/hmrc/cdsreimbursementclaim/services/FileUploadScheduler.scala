@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import akka.actor.{ActorSystem, Cancellable}
+import java.util.concurrent.{Executors, TimeUnit}
+
+import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill, Props}
 import com.google.inject.{AbstractModule, Inject, Singleton}
+import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.cdsreimbursementclaim.config.AppConfig
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import uk.gov.hmrc.play.scheduling.ExclusiveScheduledJob
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.Future
 
 class SchedulerModule extends AbstractModule {
   override def configure(): Unit =
@@ -32,27 +32,45 @@ class SchedulerModule extends AbstractModule {
 }
 
 @Singleton
-class FileUploadScheduler @Inject() (actorSystem: ActorSystem, appConfig: AppConfig, fileUploadQueue: FileUploadQueue)(
-  implicit ec: ExecutionContext
-) extends ExclusiveScheduledJob
-    with Logging {
+class FileUploadScheduler @Inject() (
+  actorSystem: ActorSystem,
+  appConfig: AppConfig,
+  fileUploadQueue: FileUploadQueue,
+  applicationLifecycle: ApplicationLifecycle
+) extends Logging {
 
-  lazy val initialDelay: FiniteDuration = appConfig.scheduleInitialDelay
-  lazy val interval: FiniteDuration     = appConfig.scheduleInterval
-  val cancellable: Cancellable          = actorSystem.scheduler.schedule(initialDelay, interval)(executor)
+  case object SendTheFiles
 
-  override def executeInMutex(implicit ec: ExecutionContext): Future[Result] =
-    fileUploadQueue.processAllRequests().map(items => Result(items.size.toString))
-
-  def executor(implicit ec: ExecutionContext): Unit =
-    execute.onComplete {
-      case Success(Result(res)) =>
-        val count = Try(res.toInt).toOption.getOrElse(0)
-        if (count > 0) logger.info(s"FileUploadScheduler uploaded $count files.")
-      case Failure(throwable)   =>
-        logger.error(s"$name: Exception completing work item", throwable)
+  class FileUploadActor extends Actor {
+    @SuppressWarnings(Array("org.wartremover.warts.NonUnitStatements", "org.wartremover.warts.Any"))
+    def receive: Receive = { case SendTheFiles =>
+      fileUploadQueue.processAllRequests()
+      ()
     }
+  }
 
-  override def name: String = "FileUploadScheduler"
+  val bootstrap: Runnable       = new Runnable {
+    override def run(): Unit = fileUploadActor ! SendTheFiles
+  }
+  val fileUploadActor: ActorRef = actorSystem.actorOf(Props(new FileUploadActor()))
+  private val scheduledFuture   =
+    Executors
+      .newScheduledThreadPool(1)
+      .scheduleAtFixedRate(
+        bootstrap,
+        appConfig.scheduleInitialDelay.toSeconds,
+        appConfig.scheduleInterval.toSeconds,
+        TimeUnit.SECONDS
+      )
+  logger.debug("Scheduler Started: " + scheduledFuture.toString)
+
+  def shutDown(): Unit =
+    fileUploadActor ! PoisonPill
+
+  applicationLifecycle.addStopHook { () =>
+    logger.debug("Scheduler shutting down")
+    shutDown()
+    Future.successful(())
+  }
 
 }

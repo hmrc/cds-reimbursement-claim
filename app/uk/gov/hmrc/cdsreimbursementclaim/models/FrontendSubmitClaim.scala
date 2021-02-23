@@ -18,10 +18,12 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import play.api.libs.json._
 import uk.gov.hmrc.cdsreimbursementclaim.models.FrontendSubmitClaim.FileInformation
+//import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest.TPI05RequestDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference
 
 //This protocol is used when the frontend wants to send down to this service for the finel submission.
 final case class FrontendSubmitClaim(
+  //submitClaimRequest: TPI05RequestDetail,
   eori: String,
   declarationId: String,
   declarationIdType: DeclarationIdType,

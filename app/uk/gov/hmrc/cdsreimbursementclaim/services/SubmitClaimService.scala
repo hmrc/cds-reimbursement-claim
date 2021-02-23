@@ -23,7 +23,9 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubmitClaimConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.response.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request.SubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 

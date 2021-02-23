@@ -27,9 +27,11 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.response.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request.SubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanCallBack, UpscanUpload}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, FrontendSubmitClaim, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, FrontendSubmitClaim, WorkItemPayload}
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
 import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}

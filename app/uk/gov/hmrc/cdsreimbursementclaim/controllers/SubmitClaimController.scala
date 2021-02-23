@@ -22,13 +22,16 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
-import uk.gov.hmrc.cdsreimbursementclaim.models.SubmitClaimRequest.{EntryDetails, MrnDetails, PostNewClaimsRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request.{EntryDetails, MrnDetails, PostNewClaimsRequest, RequestCommon, TPI05RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dec64.{BatchFileInterfaceMetadata, Dec64Body, DestinationType, DestinationsType, PropertiesType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.response.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi05.request.SubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanUpload
-import uk.gov.hmrc.cdsreimbursementclaim.models.{BatchFileInterfaceMetadata, CHIEFType, Dec64Body, Error, FrontendSubmitClaim, HeadlessEnvelope, MRNType, PropertiesType, SubmitClaimRequest, SubmitClaimResponse, WorkItemPayload}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{CHIEFType, Error, FrontendSubmitClaim, HeadlessEnvelope, MRNType, WorkItemPayload}
 import uk.gov.hmrc.cdsreimbursementclaim.services.upscan.UpscanService
 import uk.gov.hmrc.cdsreimbursementclaim.services.{FileUploadQueue, SubmitClaimService}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{EisTime, Logging, TimeUtils}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -69,10 +72,10 @@ class SubmitClaimController @Inject() (
     val requestDetail        = frontendSubmitClaim.declarationIdType match {
       case MRNType   =>
         val mrnDetails = MrnDetails(frontendSubmitClaim.declarationId)
-        RequestDetail(frontendSubmitClaim.eori).copy(MRNDetails = Some(List(mrnDetails)))
+        TPI05RequestDetail(frontendSubmitClaim.eori).copy(MRNDetails = Some(List(mrnDetails)))
       case CHIEFType =>
         val entryDetails = EntryDetails(frontendSubmitClaim.declarationId)
-        RequestDetail(frontendSubmitClaim.eori).copy(entryDetails = Some(List(entryDetails)))
+        TPI05RequestDetail(frontendSubmitClaim.eori).copy(entryDetails = Some(List(entryDetails)))
     }
     val postNewClaimsRequest = PostNewClaimsRequest(requestCommon, requestDetail)
     SubmitClaimRequest(postNewClaimsRequest)
@@ -84,9 +87,9 @@ class SubmitClaimController @Inject() (
     val uploadReferences = claimRequest.files.map(_.uploadReference)
     for {
       uploads  <- upscanService.readUpscanUploads(uploadReferences)
-      messages <- EitherT.rightT[Future, Error]((0 until uploads.size).toList.map { i =>
+      messages <- EitherT.rightT[Future, Error](uploads.zipWithIndex.map { case (upload, i) =>
                     createDec64Request(
-                      uploads(i),
+                      upload,
                       claimRequest,
                       claimResponse,
                       claimRequest.files(i).documentType,
@@ -147,15 +150,17 @@ class SubmitClaimController @Inject() (
       Dec64Body(
         BatchFileInterfaceMetadata(
           correlationID = correlationID,
-          batchID = Some(correlationID),
-          batchCount = Some(batchCount),
-          batchSize = Some(batchSize),
+          batchID = correlationID,
+          batchCount = batchCount,
+          batchSize = batchSize,
+          extractEndDateTime = EisTime(TimeUtils.eisDateTimeNow),
           checksum = upscanSuccess.uploadDetails.checksum,
           sourceLocation = upscanSuccess.downloadUrl,
           sourceFileName = upscanSuccess.uploadDetails.fileName,
-          sourceFileMimeType = Some(upscanSuccess.uploadDetails.fileMimeType),
+          sourceFileMimeType = upscanSuccess.uploadDetails.fileMimeType,
           fileSize = upscanSuccess.uploadDetails.size,
-          properties = Some(properties)
+          properties = properties,
+          destinations = DestinationsType(Seq(DestinationType()))
         )
       )
     })

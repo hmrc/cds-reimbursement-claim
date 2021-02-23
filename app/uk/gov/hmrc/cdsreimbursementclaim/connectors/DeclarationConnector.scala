@@ -41,6 +41,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val appConfig: Ap
   ec: ExecutionContext
 ) extends DeclarationConnector
     with EisConnector
+    with JsonHeaders
     with Logging {
 
   def getDeclaration(
@@ -51,7 +52,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val appConfig: Ap
         .POST[DeclarationRequest, HttpResponse](appConfig.decInfoEndpoint, declarationRequest)(
           implicitly[Writes[DeclarationRequest]],
           HttpReads[HttpResponse],
-          enrichHC(true, appConfig.eisBearerToken),
+          enrichHC(appConfig.eisBearerToken),
           ec
         )
         .map(Right(_))
