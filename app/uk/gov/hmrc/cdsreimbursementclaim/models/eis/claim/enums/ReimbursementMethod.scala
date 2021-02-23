@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+sealed trait ReimbursementMethod extends Product with Serializable
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
-)
+object ReimbursementMethod {
+  case object Deferment extends ReimbursementMethod
+  case object BankTransfer extends ReimbursementMethod
+  case object PayableOrder extends ReimbursementMethod
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+  implicit def reimbursementMethodToString(reimbursementMethod: ReimbursementMethod): String =
+    reimbursementMethod match {
+      case Deferment    => "Deferment"
+      case BankTransfer => "Bank Transfer"
+      case PayableOrder => "Payable Order"
+    }
 }

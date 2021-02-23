@@ -36,11 +36,15 @@ object TimeUtils {
   val cdsDateTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
 
-  val cdsDateTimeNow: String = cdsDateTimeFormat.format(LocalDateTime.now)
+  def cdsDateTimeNow: String = cdsDateTimeFormat.format(LocalDateTime.now)
 
   val rfc7231DateTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
+  def rfc7231DateTimeNow: String               = rfc7231DateTimeFormat.format(ZonedDateTime.now(ZoneOffset.UTC))
 
-  val rfc7231DateTimeNow: String = rfc7231DateTimeFormat.format(ZonedDateTime.now(ZoneOffset.UTC))
+  val iso8601DateTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  def iso8601DateTimeNow: String               = iso8601DateTimeFormat.format(ZonedDateTime.now(ZoneOffset.UTC))
+
+  def isoLocalDateNow: String = DateTimeFormatter.ISO_LOCAL_DATE.format(ZonedDateTime.now(ZoneOffset.UTC))
 
   implicit class JavaToJoda(clock: Clock) {
     def nowAsJoda: DateTime =

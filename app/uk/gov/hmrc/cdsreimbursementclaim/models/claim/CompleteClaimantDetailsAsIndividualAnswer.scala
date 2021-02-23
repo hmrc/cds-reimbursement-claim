@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import play.api.libs.json.{Json, OFormat}
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
+final case class CompleteClaimantDetailsAsIndividualAnswer(
+  claimantDetailsAsIndividual: ClaimantDetailsAsIndividual
 )
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+object CompleteClaimantDetailsAsIndividualAnswer {
+  implicit val format: OFormat[CompleteClaimantDetailsAsIndividualAnswer] =
+    Json.format[CompleteClaimantDetailsAsIndividualAnswer]
 }

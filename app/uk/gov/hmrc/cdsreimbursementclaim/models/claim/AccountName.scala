@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import play.api.libs.json.{Json, OFormat}
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
-)
+final case class AccountName(value: String) extends AnyVal
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+object AccountName {
+  implicit val format: OFormat[AccountName] = Json.format[AccountName]
 }

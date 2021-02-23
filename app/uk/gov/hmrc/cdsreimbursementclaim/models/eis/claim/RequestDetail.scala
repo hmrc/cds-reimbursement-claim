@@ -40,7 +40,7 @@ final case class RequestDetailA(
   ClaimantEORI: Option[String],
   claimantEmailAddress: Option[String],
   goodsDetails: Option[GoodsDetails],
-  EORIDetails: Option[EORIDetails]
+  EORIDetails: Option[EoriDetails]
 )
 
 object RequestDetailA {
@@ -48,8 +48,8 @@ object RequestDetailA {
 }
 
 final case class RequestDetailB(
-  MRNDetails: Option[List[MRNDetail]],
-  duplicateMRNDetails: Option[MRNDetail],
+  MRNDetails: Option[List[MrnDetail]],
+  duplicateMRNDetails: Option[MrnDetail],
   entryDetails: Option[List[EntryDetail]],
   duplicateEntryDetails: Option[EntryDetail]
 )

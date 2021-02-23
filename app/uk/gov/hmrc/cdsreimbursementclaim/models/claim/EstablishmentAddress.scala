@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-final case class MRNDetail(
-  MRNNumber: Option[String],
-  acceptanceDate: Option[String],
-  declarantReferenceNumber: Option[String],
-  mainDeclarationReference: Option[Boolean],
-  procedureCode: Option[String],
-  declarantDetails: Option[MRNInformation],
-  accountDetails: Option[List[AccountDetail]],
-  consigneeDetails: Option[MRNInformation],
-  bankDetails: Option[BankDetails],
-  NDRCDetails: Option[List[NdrcDetails]]
+final case class EstablishmentAddress(
+  addressLine1: String,
+  addressLine2: Option[String],
+  addressLine3: Option[String],
+  postalCode: Option[String],
+  countryCode: String
 )
 
-object MRNDetail {
-  implicit val format: OFormat[MRNDetail] = Json.format[MRNDetail]
+object EstablishmentAddress {
+  implicit val format: OFormat[EstablishmentAddress] = derived.oformat[EstablishmentAddress]()
 }

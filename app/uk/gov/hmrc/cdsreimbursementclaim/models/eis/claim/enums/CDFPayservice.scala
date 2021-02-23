@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+sealed trait CDFPayservice extends Product with Serializable
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
-)
+object CDFPayservice {
+  case object NDRC extends CDFPayservice
+  case object SCTY extends CDFPayservice
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+  implicit def cdfPayServiceToString(CDFPayservice: CDFPayservice): String = CDFPayservice match {
+    case NDRC => NDRC.toString
+    case SCTY => SCTY.toString
+  }
 }

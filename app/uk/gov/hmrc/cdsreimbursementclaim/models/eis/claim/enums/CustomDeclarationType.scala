@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+sealed trait CustomDeclarationType extends Product with Serializable
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
-)
+object CustomDeclarationType {
+  case object MRN extends CustomDeclarationType
+  case object Entry extends CustomDeclarationType
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+  implicit def customDeclarationTypeToString(customDeclarationType: CustomDeclarationType): String =
+    customDeclarationType match {
+      case MRN   => MRN.toString
+      case Entry => Entry.toString
+    }
+
 }

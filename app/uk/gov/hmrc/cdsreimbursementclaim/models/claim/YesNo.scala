@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import cats.Eq
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
-)
+sealed trait YesNo extends Product with Serializable
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+object YesNo {
+  final case object No extends YesNo
+  final case object Yes extends YesNo
+
+  implicit val eq: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
+
+  implicit val format: OFormat[YesNo] = derived.oformat[YesNo]()
 }

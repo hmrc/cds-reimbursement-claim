@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import play.api.libs.json.{Json, OFormat}
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
+final case class Claim(
+  paymentMethod: String,
+  paymentReference: String,
+  taxCode: TaxCode,
+  paidAmount: BigDecimal,
+  claimAmount: BigDecimal
 )
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+object Claim {
+  implicit val format: OFormat[Claim] = Json.format[Claim]
+
+  implicit class ClaimOps(private val claims: List[Claim]) {
+    def total: Double = claims.map(c => c.claimAmount.toDouble).sum
+  }
 }

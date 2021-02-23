@@ -52,6 +52,7 @@ trait SubmitClaimService {
 @Singleton
 class SubmitClaimServiceImpl @Inject() (
   claimConnector: ClaimConnector,
+  claimTransformerService: ClaimTransformerService,
   emailService: EmailService,
   auditService: AuditService,
   metrics: Metrics
@@ -61,18 +62,22 @@ class SubmitClaimServiceImpl @Inject() (
     with Logging {
 
   def submitClaim(
-    submitClaimRequest: SubmitClaimRequest
+    claimRequest: SubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse] = {
 
-    val eisSubmitClaimRequest: EisSubmitClaimRequest = EisSubmitClaimRequest("")
-    val emailRequest                                 = EmailRequest(
-      submitClaimRequest.userDetails.email,
-      submitClaimRequest.userDetails.eori,
-      submitClaimRequest.userDetails.contactName
+    val maybeEisSubmitClaimRequest: Either[Error, EisSubmitClaimRequest] =
+      claimTransformerService.toEisSubmitClaimRequest(claimRequest)
+
+    val emailRequest: EmailRequest = EmailRequest(
+      claimRequest.userDetails.email,
+      claimRequest.userDetails.eori,
+      claimRequest.userDetails.contactName
     )
-    val _                                            = for {
-      _                      <- auditClaimBeforeSubmit(submitClaimRequest, eisSubmitClaimRequest)
-      returnHttpResponse     <- submitClaimAndAudit(submitClaimRequest, eisSubmitClaimRequest)
+
+    for {
+      eisSubmitRequest       <- EitherT.fromEither[Future](maybeEisSubmitClaimRequest)
+      _                      <- auditClaimBeforeSubmit(claimRequest, eisSubmitRequest)
+      returnHttpResponse     <- submitClaimAndAudit(claimRequest, eisSubmitRequest)
       eisSubmitClaimResponse <- EitherT.fromEither[Future](
                                   returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                                 )
@@ -82,8 +87,6 @@ class SubmitClaimServiceImpl @Inject() (
                                   EitherT.pure[Future, Error](())
                                 }
     } yield claimResponse
-
-    EitherT.rightT[Future, Error](SubmitClaimResponse("dfsdfs"))
 
   }
 
@@ -107,7 +110,6 @@ class SubmitClaimServiceImpl @Inject() (
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, HttpResponse] = {
     val timer = metrics.submitClaimTimer.time()
-    print(s"${submitClaimRequest.toString}")
     claimConnector
       .submitClaim(
         eisSubmitClaimRequest
@@ -117,6 +119,7 @@ class SubmitClaimServiceImpl @Inject() (
         auditSubmitClaimResponse(
           httpResponse.status,
           httpResponse.body,
+          submitClaimRequest,
           eisSubmitClaimRequest
         )
 
@@ -132,20 +135,20 @@ class SubmitClaimServiceImpl @Inject() (
   private def auditSubmitClaimResponse(
     responseHttpStatus: Int,
     responseBody: String,
+    submitClaimRequest: SubmitClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): Unit = {
     val responseJson =
       Try(Json.parse(responseBody))
         .getOrElse(Json.parse(s"""{ "body" : "could not parse body as JSON: $responseBody" }"""))
     val requestJson  = Json.toJson(eisSubmitClaimRequest)
-
     auditService.sendEvent(
       "submitClaimResponse",
       SubmitClaimResponseEvent(
         responseHttpStatus,
         responseJson,
         requestJson,
-        "submitClaimResponse.caseNumber" //TODO: fix this thread it through
+        submitClaimRequest
       ),
       "submit-claim-response"
     )

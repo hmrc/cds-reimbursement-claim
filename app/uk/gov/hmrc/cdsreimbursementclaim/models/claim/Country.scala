@@ -14,18 +14,28 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import cats.Eq
+import cats.syntax.eq._
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country.CountryCode
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
+final case class Country(
+  code: CountryCode
 )
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+object Country {
+
+  val uk: Country = Country("GB")
+
+  implicit val eq: Eq[Country] = Eq.fromUniversalEquals
+
+  type CountryCode = String
+
+  implicit class CountryOps(private val c: Country) extends AnyVal {
+    def isUk(): Boolean = c === Country.uk
+  }
+
+  implicit val format: OFormat[Country] = Json.format[Country]
 }

@@ -18,9 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankDetails, ConsigneeBankDetails, DeclarantBankDetails, DeclarationResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, MaskedBankAccount, MaskedBankDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationTransformerService.maskBankDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankAccount, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultDeclarationTransformerService.{maskBankDetails, toDisplayResponseDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
 import javax.inject.Singleton
@@ -37,14 +37,10 @@ class DefaultDeclarationTransformerService @Inject() () extends DeclarationTrans
       case Some(responseDetail) =>
         Right(
           DisplayDeclaration(
-            responseDetail.declarationId,
-            TimeUtils
-              .acceptanceDateDisplayFormat(responseDetail.acceptanceDate)
-              .getOrElse("could not convert date"), // Temporary
-            responseDetail.declarantDetails,
-            responseDetail.consigneeDetails,
-            responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails)),
-            responseDetail.ndrcDetails
+            toDisplayResponseDetails(
+              responseDetail,
+              responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails))
+            )
           )
         )
       case None                 => Left(Error("could not find declaration detail"))
@@ -52,7 +48,29 @@ class DefaultDeclarationTransformerService @Inject() () extends DeclarationTrans
 
 }
 
-object DeclarationTransformerService {
+object DefaultDeclarationTransformerService {
+
+  def toDisplayResponseDetails(
+    responseDetail: ResponseDetail,
+    maskedBankDetails: Option[MaskedBankDetails]
+  ): DisplayResponseDetail =
+    DisplayResponseDetail(
+      declarationId = responseDetail.declarationId,
+      acceptanceDate = TimeUtils
+        .acceptanceDateDisplayFormat(responseDetail.acceptanceDate)
+        .getOrElse("could not convert acceptance date"),
+      declarantReferenceNumber = responseDetail.declarantReferenceNumber,
+      securityReason = responseDetail.securityReason,
+      btaDueDate = responseDetail.btaDueDate,
+      procedureCode = responseDetail.procedureCode,
+      btaSource = responseDetail.btaSource,
+      declarantDetails = responseDetail.declarantDetails,
+      consigneeDetails = responseDetail.consigneeDetails,
+      accountDetails = responseDetail.accountDetails,
+      bankDetails = responseDetail.bankDetails,
+      maskedBankDetails = maskedBankDetails,
+      ndrcDetails = responseDetail.ndrcDetails
+    )
 
   def maskBankDetails(bankDetails: BankDetails): MaskedBankDetails = {
     val consigneeBankDetails: Option[ConsigneeBankDetails] =

@@ -16,20 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import play.api.libs.json.{Json, OFormat}
 
-final case class EisClaimDetails(submitClaimRequest: SubmitClaimRequest)
+final case class EoriDetails(
+  agentEORIDetails: EORIInformation,
+  ImporterEORIDetails: EORIInformation
+)
 
-object EisClaimDetails {
-//  def apply(submitClaimRequest: SubmitClaimRequest): PostNewClaimsRequest =
-  //    PostNewClaimsRequest(
-  //      RequestCommon(
-  //        "",
-  //        "",
-  //        submitClaimRequest.userDetails.toString
-  //      ),
-  //      RequestDetail(
-  //        ""
-  //      )
-  //    )
+object EoriDetails {
+  implicit val format: OFormat[EoriDetails] = Json.format[EoriDetails]
 }
