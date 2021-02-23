@@ -30,6 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlaces
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
 import javax.inject.Singleton
@@ -74,12 +75,12 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             customDeclarationType = Some(CustomDeclarationType.Entry),
             declarationMode = Some(DeclarationMode.ParentDeclaration),
             claimDate = Some(TimeUtils.isoLocalDateNow),
-            claimAmountTotal = Some(claimRequest.completeClaim.claims.total.toString), //TODO: format 13,2
+            claimAmountTotal = Some(roundedTwoDecimalPlaces(claimRequest.completeClaim.claims.total)),
             disposalMethod = None,
             reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
             basisOfClaim = Some(basisOfClaim),
-            claimant = Some(claimRequest.completeClaim.declarantType.declarantType.toString), //TODo: checl
-            payeeIndicator = Some(claimRequest.completeClaim.declarantType.declarantType.toString), //TODO: check
+            claimant = Some(claimRequest.completeClaim.declarantType.declarantType.toString), // TODO: CHECK
+            payeeIndicator = Some(claimRequest.completeClaim.declarantType.declarantType.toString), //TODO: CHECK
             newEORI = None,
             newDAN = None,
             authorityTypeProvided = None,
@@ -103,7 +104,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
           EisSubmitClaimRequest(postNewClaimsRequest)
 
         }.toEither
-          .leftMap(errors => Error(s"could not create TPI05 submit claim request: ${errors.toList.mkString("; ")}"))
+          .leftMap(errors => Error(s"could not create TPI05 EIS submit claim request: ${errors.toList.mkString("; ")}"))
     }
   }
 
@@ -113,17 +114,19 @@ object DefaultClaimTransformerService {
 
   def buildEoriDetails(completeClaim: CompleteClaim): Validation[EoriDetails] =
     (
-      setConsigneeCdsEstablishmentAddress(completeClaim.displayDeclaration),
-      setDeclarantCdsEstablishmentAddress(completeClaim.displayDeclaration)
-    ).mapN { case (consignee, declarant) =>
+      buildConsigneeContactInformation(completeClaim.consigneeDetails),
+      buildDeclarantContactInformation(completeClaim.declarantDetails),
+      buildConsigneeCdsEstablishmentAddress(completeClaim.displayDeclaration),
+      buildDeclarantCdsEstablishmentAddress(completeClaim.displayDeclaration)
+    ).mapN { case (consignee, declarant, cdsConsignee, cdsDeclarant) =>
       EoriDetails(
         agentEORIDetails = EORIInformation(
           EORINumber = "None", //todo: check
           CDSFullName = None,
           legalEntityType = None,
           EORIStartDate = None,
-          CDSEstablishmentAddress = consignee,
-          contactInformation = None,
+          CDSEstablishmentAddress = cdsConsignee,
+          contactInformation = Some(consignee),
           VATDetails = None
         ),
         ImporterEORIDetails = EORIInformation(
@@ -131,14 +134,14 @@ object DefaultClaimTransformerService {
           CDSFullName = None,
           legalEntityType = None,
           EORIStartDate = None,
-          CDSEstablishmentAddress = declarant,
-          contactInformation = None,
+          CDSEstablishmentAddress = cdsDeclarant,
+          contactInformation = Some(declarant),
           VATDetails = None
         )
       )
     }
 
-  def setDeclarantCdsEstablishmentAddress(
+  def buildDeclarantCdsEstablishmentAddress(
     maybeDisplayDeclaration: Option[DisplayDeclaration]
   ): Validation[Address] =
     maybeDisplayDeclaration match {
@@ -166,7 +169,7 @@ object DefaultClaimTransformerService {
       case None                     => Invalid(NonEmptyList.one("could not find address"))
     }
 
-  def setConsigneeCdsEstablishmentAddress(
+  def buildConsigneeCdsEstablishmentAddress(
     maybeDisplayDeclaration: Option[DisplayDeclaration]
   ): Validation[Address] =
     maybeDisplayDeclaration match {
@@ -215,7 +218,7 @@ object DefaultClaimTransformerService {
     case None        => Invalid(NonEmptyList.one("could not find basis of claim"))
   }
 
-  def setConsigneeEstablishmentAddress(
+  def buildConsigneeEstablishmentAddress(
     consigneeDetails: declaration.response.ConsigneeDetails
   ): Validation[Address] =
     consigneeDetails.contactDetails match {
@@ -243,7 +246,7 @@ object DefaultClaimTransformerService {
       case None                 => Invalid(NonEmptyList.one("no contact details"))
     }
 
-  def setDeclarantEstablishmentAddress(
+  def buildDeclarantEstablishmentAddress(
     declarantDetails: declaration.response.DeclarantDetails
   ): Validation[Address] =
     declarantDetails.contactDetails match {
@@ -271,56 +274,67 @@ object DefaultClaimTransformerService {
       case None                 => Invalid(NonEmptyList.one("no contact details"))
     }
 
-  def setDeclarantContactInformation(
-    declarantDetails: declaration.response.DeclarantDetails
+  def buildDeclarantContactInformation(
+    maybeDeclarantDetails: Option[declaration.response.DeclarantDetails]
   ): Validation[ContactInformation] =
-    declarantDetails.contactDetails match {
-      case Some(contactDetails) =>
-        Valid(
-          ContactInformation(
-            contactPerson = contactDetails.contactName,
-            addressLine1 = contactDetails.addressLine1,
-            addressLine2 = contactDetails.addressLine2,
-            addressLine3 = contactDetails.addressLine3,
-            street =
-              contactDetails.addressLine1.flatMap(line1 => contactDetails.addressLine2.map(line2 => s"$line1 $line2")),
-            city = contactDetails.addressLine4,
-            countryCode = contactDetails.countryCode,
-            postalCode = contactDetails.postalCode,
-            telephoneNumber = contactDetails.telephone,
-            faxNumber = None,
-            emailAddress = contactDetails.emailAddress
-          )
-        )
-      case None                 => Invalid(NonEmptyList.one("could not find contact information"))
+    maybeDeclarantDetails match {
+      case Some(declarantDetails) =>
+        declarantDetails.contactDetails match {
+          case Some(contactDetails) =>
+            Valid(
+              ContactInformation(
+                contactPerson = contactDetails.contactName,
+                addressLine1 = contactDetails.addressLine1,
+                addressLine2 = contactDetails.addressLine2,
+                addressLine3 = contactDetails.addressLine3,
+                street = contactDetails.addressLine1.flatMap(line1 =>
+                  contactDetails.addressLine2.map(line2 => s"$line1 $line2")
+                ),
+                city = contactDetails.addressLine4,
+                countryCode = contactDetails.countryCode,
+                postalCode = contactDetails.postalCode,
+                telephoneNumber = contactDetails.telephone,
+                faxNumber = None,
+                emailAddress = contactDetails.emailAddress
+              )
+            )
+          case None                 => Invalid(NonEmptyList.one("could not find contact details"))
+        }
+
+      case None => Invalid(NonEmptyList.one("could not find declarant details"))
     }
 
-  def setConsigneeContactInformation(
-    consigneeDetails: declaration.response.ConsigneeDetails
+  def buildConsigneeContactInformation(
+    maybeConsigneeDetails: Option[declaration.response.ConsigneeDetails]
   ): Validation[ContactInformation] =
-    consigneeDetails.contactDetails match {
-      case Some(contactDetails) =>
-        Valid(
-          ContactInformation(
-            contactPerson = contactDetails.contactName,
-            addressLine1 = contactDetails.addressLine1,
-            addressLine2 = contactDetails.addressLine2,
-            addressLine3 = contactDetails.addressLine3,
-            street =
-              contactDetails.addressLine1.flatMap(line1 => contactDetails.addressLine2.map(line2 => s"$line1 $line2")),
-            city = contactDetails.addressLine4,
-            countryCode = contactDetails.countryCode,
-            postalCode = contactDetails.postalCode,
-            telephoneNumber = contactDetails.telephone,
-            faxNumber = None,
-            emailAddress = contactDetails.emailAddress
-          )
-        )
-      case None                 => Invalid(NonEmptyList.one("could not find contact information"))
+    maybeConsigneeDetails match {
+      case Some(consigneeDetails) =>
+        consigneeDetails.contactDetails match {
+          case Some(contactDetails) =>
+            Valid(
+              ContactInformation(
+                contactPerson = contactDetails.contactName,
+                addressLine1 = contactDetails.addressLine1,
+                addressLine2 = contactDetails.addressLine2,
+                addressLine3 = contactDetails.addressLine3,
+                street = contactDetails.addressLine1.flatMap(line1 =>
+                  contactDetails.addressLine2.map(line2 => s"$line1 $line2")
+                ),
+                city = contactDetails.addressLine4,
+                countryCode = contactDetails.countryCode,
+                postalCode = contactDetails.postalCode,
+                telephoneNumber = contactDetails.telephone,
+                faxNumber = None,
+                emailAddress = contactDetails.emailAddress
+              )
+            )
+          case None                 => Invalid(NonEmptyList.one("could not find contact details"))
+        }
+      case None                   => Invalid(NonEmptyList.one("could not find consignee details"))
     }
 
   def setDeclarantDetails(declarantDetails: declaration.response.DeclarantDetails): Validation[MRNInformation] =
-    (setDeclarantEstablishmentAddress(declarantDetails), setDeclarantContactInformation(declarantDetails)).mapN {
+    (buildDeclarantEstablishmentAddress(declarantDetails), buildDeclarantContactInformation(Some(declarantDetails))).mapN {
       case (establishmentAddress, contactInformation) =>
         MRNInformation(
           EORI = declarantDetails.declarantEORI,
@@ -335,22 +349,43 @@ object DefaultClaimTransformerService {
   ): Validation[MRNInformation] =
     maybeConsigneeDetails match {
       case Some(consigneeDetails) =>
-        (setConsigneeEstablishmentAddress(consigneeDetails), setConsigneeContactInformation(consigneeDetails)).mapN {
-          case (establishmentAddress, contactInformation) =>
+        (buildConsigneeEstablishmentAddress(consigneeDetails), buildConsigneeContactInformation(Some(consigneeDetails)))
+          .mapN { case (establishmentAddress, contactInformation) =>
             MRNInformation(
               EORI = consigneeDetails.consigneeEORI,
               legalName = consigneeDetails.legalName,
               establishmentAddress = establishmentAddress,
               contactDetails = contactInformation
             )
-        }
+          }
       case None                   => Invalid(NonEmptyList.one("could not find consignee details"))
     }
 
-  //TODO: check if bank details have been overwrriten
-  def setBankDetails(maybeBankDetails: Option[declaration.response.BankDetails]): Validation[BankDetails] =
-    maybeBankDetails match {
-      case Some(bankDetails) =>
+  def buildBankDetails(
+    maybeBankDetails: Option[declaration.response.BankDetails],
+    completeClaim: CompleteClaim
+  ): Validation[BankDetails] =
+    (maybeBankDetails, completeClaim.enteredBankDetails) match {
+      case (_, Some(CompleteBankAccountDetailAnswer(bankAccountDetails))) =>
+        Valid(
+          BankDetails(
+            consigneeBankDetails = Some(
+              BankDetail(
+                bankAccountDetails.accountName.value,
+                bankAccountDetails.sortCode.value,
+                bankAccountDetails.accountNumber.value
+              )
+            ),
+            declarantBankDetails = Some(
+              BankDetail(
+                bankAccountDetails.accountName.value,
+                bankAccountDetails.sortCode.value,
+                bankAccountDetails.accountNumber.value
+              )
+            )
+          )
+        )
+      case (Some(bankDetails), None)                                      =>
         (bankDetails.consigneeBankDetails, bankDetails.declarantBankDetails) match {
           case (Some(consignee), Some(declarant)) =>
             Valid(
@@ -382,7 +417,7 @@ object DefaultClaimTransformerService {
               BankDetails(consigneeBankDetails = None, declarantBankDetails = None)
             )
         }
-      case None              => Invalid(NonEmptyList.one("no bank details found"))
+      case _                                                              => Invalid(NonEmptyList.one("could not build bank details"))
     }
 
   def setNdrcDetails(claims: List[Claim]): Validation[List[NdrcDetails]] =
@@ -406,7 +441,7 @@ object DefaultClaimTransformerService {
         (
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
-          setBankDetails(displayDeclaration.displayResponseDetail.bankDetails),
+          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           setNdrcDetails(completeClaim.claims)
         ).mapN { case (declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
           MrnDetail(
