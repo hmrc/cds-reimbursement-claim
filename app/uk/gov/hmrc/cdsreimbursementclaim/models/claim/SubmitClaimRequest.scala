@@ -17,10 +17,16 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.UserDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.SignedInUserDetails
 
-final case class SubmitClaimRequest(completeClaim: CompleteClaim, userDetails: UserDetails)
+import java.util.UUID
+
+final case class SubmitClaimRequest(
+  id: UUID,
+  completeClaim: CompleteClaim,
+  signedInUserDetails: SignedInUserDetails
+)
 
 object SubmitClaimRequest {
-  implicit val format: OFormat[SubmitClaimRequest] = Json.format[SubmitClaimRequest]
+  implicit val format: OFormat[SubmitClaimRequest] = Json.format
 }

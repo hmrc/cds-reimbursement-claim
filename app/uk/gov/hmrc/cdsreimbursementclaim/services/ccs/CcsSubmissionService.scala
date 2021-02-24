@@ -131,7 +131,7 @@ object DefaultCcsSubmissionService {
         properties = PropertiesType(
           List(
             PropertyType("CaseReference", submitClaimResponse.caseNumber),
-            PropertyType("Eori", submitClaimRequest.userDetails.eori.value),
+            PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
             PropertyType("DeclarationId", referenceNumber),
             PropertyType(
               "DeclarationType",

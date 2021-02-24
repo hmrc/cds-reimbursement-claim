@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
@@ -36,10 +36,6 @@ class SubmitClaimController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
-
-  def test(): Action[AnyContent] = Action {
-    Ok("sdfsdfs")
-  }
 
   //TODO: auth
   def submitClaim(): Action[JsValue] = Action(parse.json).async { implicit request =>

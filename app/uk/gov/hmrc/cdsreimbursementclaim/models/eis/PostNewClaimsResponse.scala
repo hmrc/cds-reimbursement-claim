@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class UserDetails(
-  email: Email,
-  eori: Eori,
-  contactName: ContactName
+final case class ResponseCommon(
+  status: String,
+  processingDate: String,
+  CDFPayService: String,
+  CDFPayCaseNumber: String,
+  correlationId: String
+)
+object ResponseCommon {
+  implicit val format: OFormat[ResponseCommon] = Json.format[ResponseCommon]
+}
+final case class PostNewClaimsResponse(
+  responseCommon: ResponseCommon
 )
 
-object UserDetails {
-  implicit val format: OFormat[UserDetails] = Json.format[UserDetails]
+object PostNewClaimsResponse {
+  implicit val format: OFormat[PostNewClaimsResponse] = Json.format[PostNewClaimsResponse]
 }

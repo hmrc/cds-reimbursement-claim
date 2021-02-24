@@ -17,20 +17,17 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class Address(
-  contactPerson: Option[String],
-  addressLine1: Option[String],
-  addressLine2: Option[String],
-  AddressLine3: Option[String],
-  street: Option[String],
-  city: Option[String],
-  countryCode: String,
-  postalCode: Option[String],
-  telephone: Option[String],
-  emailAddress: Option[String]
+final case class SignedInUserDetails(
+  email: Option[Email],
+  eori: Eori,
+  verifiedEmail: Email,
+  contactName: ContactName
 )
 
-object Address {
-  implicit val format: OFormat[Address] = Json.format[Address]
+object SignedInUserDetails {
+  implicit val format: OFormat[SignedInUserDetails] = Json.format[SignedInUserDetails]
 }

@@ -69,9 +69,9 @@ class SubmitClaimServiceImpl @Inject() (
       claimTransformerService.toEisSubmitClaimRequest(claimRequest)
 
     val emailRequest: EmailRequest = EmailRequest(
-      claimRequest.userDetails.email,
-      claimRequest.userDetails.eori,
-      claimRequest.userDetails.contactName
+      claimRequest.signedInUserDetails.verifiedEmail,
+      claimRequest.signedInUserDetails.eori,
+      claimRequest.signedInUserDetails.contactName
     )
 
     val _ = maybeEisSubmitClaimRequest match {
@@ -108,7 +108,7 @@ class SubmitClaimServiceImpl @Inject() (
         "submitClaim",
         SubmitClaimEvent(
           eisSubmitClaimRequest,
-          submitClaimRequest.userDetails.eori
+          submitClaimRequest.signedInUserDetails.eori
         ),
         "submit-claim"
       )
@@ -175,7 +175,7 @@ class SubmitClaimServiceImpl @Inject() (
     EitherT.fromEither[Future] {
       Right(
         SubmitClaimResponse(
-          response.caseNumber
+          response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber
         )
       )
     }

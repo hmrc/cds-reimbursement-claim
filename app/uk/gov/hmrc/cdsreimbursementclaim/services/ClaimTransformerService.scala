@@ -31,11 +31,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, UserDetails, Validation}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.{buildEoriDetails, setBasisOfClaim, setGoodsDetails, setMrnDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlaces
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
 
 import javax.inject.Singleton
 
@@ -71,7 +70,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             claimRequest.completeClaim.duplicateDisplayDeclaration,
             claimRequest.completeClaim
           ),
-          buildEoriDetails(claimRequest.completeClaim, claimRequest.userDetails)
+          buildEoriDetails(claimRequest.completeClaim, claimRequest.signedInUserDetails)
         ).mapN { case (goodsDetails, basisOfClaim, mrnDetails, duplicateMrnDetails, eoriDetails) =>
           val requestDetailA = RequestDetailA(
             CDFPayService = CDFPayservice.NDRC,
@@ -94,8 +93,8 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             newEORI = None,
             newDAN = None,
             authorityTypeProvided = None,
-            claimantEORI = Some(claimRequest.userDetails.eori.value),
-            claimantEmailAddress = Some(claimRequest.userDetails.email.value),
+            claimantEORI = Some(claimRequest.signedInUserDetails.eori.value),
+            claimantEmailAddress = claimRequest.signedInUserDetails.email.map(email => email.value),
             goodsDetails = Some(goodsDetails),
             EORIDetails = Some(eoriDetails)
           )
@@ -148,7 +147,10 @@ object DefaultClaimTransformerService {
       CompareContactInformation("", "", "", "", "", "", "", "", "", "")
   }
 
-  def buildEoriDetails(completeClaim: CompleteClaim, userDetails: UserDetails): Validation[EoriDetails] = {
+  def buildEoriDetails(
+    completeClaim: CompleteClaim,
+    signedInUserDetails: SignedInUserDetails
+  ): Validation[EoriDetails] = {
 
     //if the consign contact info has been ovewrriten then we overwir
     val contactInfoFromConsignee: Option[response.ContactDetails] =
@@ -244,7 +246,7 @@ object DefaultClaimTransformerService {
     ).mapN { case (consignee, declarant, cdsConsignee, cdsDeclarant) =>
       EoriDetails(
         agentEORIDetails = EORIInformation(
-          EORINumber = userDetails.eori.value,
+          EORINumber = signedInUserDetails.eori.value,
           CDSFullName = None,
           legalEntityType = None,
           EORIStartDate = None,
@@ -253,7 +255,7 @@ object DefaultClaimTransformerService {
           VATDetails = None
         ),
         importerEORIDetails = EORIInformation(
-          EORINumber = userDetails.eori.value,
+          EORINumber = signedInUserDetails.eori.value,
           CDSFullName = None,
           legalEntityType = None,
           EORIStartDate = None,
@@ -273,12 +275,12 @@ object DefaultClaimTransformerService {
         contactPerson = Some(userInput.name),
         addressLine1 = Some(userInput.line1),
         addressLine2 = Some(userInput.line2),
-        addressLine3 = Some(userInput.line3),
+        AddressLine3 = Some(userInput.line3),
         street = Some(s"${userInput.line1} ${userInput.line2}"),
         city = Some(userInput.line4),
         countryCode = userInput.countryCode,
         postalCode = Some(userInput.postalCode),
-        telphoneNumber = Some(userInput.telephone),
+        telephone = Some(userInput.telephone),
         emailAddress = Some(userInput.email)
       )
     )
@@ -312,7 +314,7 @@ object DefaultClaimTransformerService {
             addressLine1 =
               Some(displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine1),
             addressLine2 = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine2,
-            addressLine3 = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine3,
+            AddressLine3 = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine3,
             street = Some(displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine1)
               .flatMap(line1 =>
                 displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine2.map(line2 =>
@@ -322,7 +324,7 @@ object DefaultClaimTransformerService {
             city = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine3,
             countryCode = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.countryCode,
             postalCode = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.postalCode,
-            telphoneNumber = None,
+            telephone = None,
             emailAddress = None
           )
         )
@@ -341,14 +343,14 @@ object DefaultClaimTransformerService {
                 contactPerson = Some(consigneeDetails.legalName),
                 addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
                 addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
                 street = Some(consigneeDetails.establishmentAddress.addressLine1).flatMap(line1 =>
                   consigneeDetails.establishmentAddress.addressLine2.map(line2 => s"$line1 $line2")
                 ),
                 city = consigneeDetails.establishmentAddress.addressLine3,
                 countryCode = consigneeDetails.establishmentAddress.countryCode,
                 postalCode = consigneeDetails.establishmentAddress.postalCode,
-                telphoneNumber = None,
+                telephone = None,
                 emailAddress = None
               )
             )
@@ -391,14 +393,14 @@ object DefaultClaimTransformerService {
               contactPerson = Some(consigneeDetails.legalName),
               addressLine1 = contactDetails.addressLine1,
               addressLine2 = contactDetails.addressLine2,
-              addressLine3 = None,
+              AddressLine3 = None,
               street = contactDetails.addressLine1.flatMap(line1 =>
                 contactDetails.addressLine2.map(line2 => s"$line1 $line2")
               ),
               city = contactDetails.addressLine3,
               countryCode = countryCode,
               postalCode = contactDetails.postalCode,
-              telphoneNumber = contactDetails.telephone,
+              telephone = contactDetails.telephone,
               emailAddress = contactDetails.emailAddress
             )
           )
@@ -419,14 +421,14 @@ object DefaultClaimTransformerService {
               contactPerson = Some(declarantDetails.legalName),
               addressLine1 = contactDetails.addressLine1,
               addressLine2 = contactDetails.addressLine2,
-              addressLine3 = None,
+              AddressLine3 = None,
               street = contactDetails.addressLine1.flatMap(line1 =>
                 contactDetails.addressLine2.map(line2 => s"$line1 $line2")
               ),
               city = contactDetails.addressLine3,
               countryCode = countryCode,
               postalCode = contactDetails.postalCode,
-              telphoneNumber = contactDetails.telephone,
+              telephone = contactDetails.telephone,
               emailAddress = contactDetails.emailAddress
             )
           )
