@@ -21,7 +21,7 @@ import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
-
+import uk.gov.hmrc.cdsreimbursementclaim.models.EitherUtils._
 import java.util.UUID
 
 sealed trait CompleteClaim
@@ -94,7 +94,7 @@ object CompleteClaim {
         completeClaimantDetailsAsIndividualAnswer.claimantDetailsAsIndividual
     }
 
-    def claimantDetailsAsImporter: ClaimantDetailsAsImporterCompany = completeClaim match {
+    def claimantDetailsAsImporter: Option[ClaimantDetailsAsImporterCompany] = completeClaim match {
       case CompleteC285Claim(
             _,
             _,
@@ -109,7 +109,7 @@ object CompleteClaim {
             _,
             _
           ) =>
-        completeClaimantDetailsAsImporterAnswer.claimantDetailsAsImporterCompany
+        completeClaimantDetailsAsImporterAnswer.maybeClaimantDetailsAsImporterCompany
     }
 
     def displayDeclaration: Option[DisplayDeclaration] = completeClaim match {

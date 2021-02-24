@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits.catsSyntaxTuple2Semigroupal
+import cats.kernel.Eq
 import cats.syntax.apply._
 import cats.syntax.either._
+import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, NdrcDetails => _, _}
@@ -113,22 +116,116 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
 
 object DefaultClaimTransformerService {
 
-  def buildEoriDetails(completeClaim: CompleteClaim): Validation[EoriDetails] = {
-    val claimantAsIndividualDetails = completeClaim.claimantDetailsAsIndividual.
-    val claimantAsImporterDetails = completeClaim.claimantDetailsAsImporter
+  final case class CompareContactInformation(
+    name: String,
+    line1: String,
+    line2: String,
+    line3: String,
+    line4: String,
+    line5: String,
+    postalCode: String,
+    countryCode: String,
+    telephone: String,
+    email: String
+  )
+  object CompareContactInformation {
+    implicit val eq: Eq[CompareContactInformation]                = Eq.fromUniversalEquals[CompareContactInformation]
+    val emptyCompareContactInformation: CompareContactInformation =
+      CompareContactInformation("", "", "", "", "", "", "", "", "", "")
+  }
 
-//    val a = EstablishmentAddress(
-//      addressLine1 = ,
-//      addressLine2 = ,
-//      addressLine3 = ,
-//      postalCode = ,
-//      countryCode =
-//    )
+  def buildEoriDetails(completeClaim: CompleteClaim): Validation[EoriDetails] = {
+
+    //if the consign contact info has been ovewrriten then we overwir
+    val contactInfoFromConsignee: Option[response.ContactDetails] =
+      completeClaim.consigneeDetails.flatMap(consigneeDetails => consigneeDetails.contactDetails)
+    val claimantAsIndividualDetails                               = completeClaim.claimantDetailsAsIndividual //contact info
+
+    val a: CompareContactInformation = contactInfoFromConsignee match {
+      case Some(contactDetails) =>
+        CompareContactInformation(
+          contactDetails.contactName.getOrElse(""),
+          contactDetails.addressLine1.getOrElse(""),
+          contactDetails.addressLine2.getOrElse(""),
+          contactDetails.addressLine3.getOrElse(""),
+          contactDetails.addressLine4.getOrElse(""),
+          "",
+          contactDetails.postalCode.getOrElse(""),
+          contactDetails.countryCode.getOrElse(""),
+          contactDetails.telephone.getOrElse(""),
+          contactDetails.emailAddress.getOrElse("")
+        )
+      case None                 => CompareContactInformation.emptyCompareContactInformation
+    }
+
+    val b: CompareContactInformation = CompareContactInformation(
+      claimantAsIndividualDetails.fullName,
+      claimantAsIndividualDetails.contactAddress.line1,
+      claimantAsIndividualDetails.contactAddress.line2.getOrElse(""),
+      claimantAsIndividualDetails.contactAddress.line3.getOrElse(""),
+      claimantAsIndividualDetails.contactAddress.line4,
+      claimantAsIndividualDetails.contactAddress.line5.getOrElse(""),
+      claimantAsIndividualDetails.contactAddress.postcode.getOrElse(""),
+      claimantAsIndividualDetails.contactAddress.country.code,
+      claimantAsIndividualDetails.phoneNumber.value,
+      claimantAsIndividualDetails.emailAddress.value
+    )
+
+    val buildConsigneeContactInformationWithPossibleUserInpit: Validation[ContactInformation] = if (a === b) {
+      buildConsigneeContactInformation(completeClaim.consigneeDetails)
+    } else {
+      buildConsigneeContactInformationWithUserInput(b)
+    }
+
+    //if the consigne estb has been cahnged then we overwritt
+    val claimantAsImporterDetails                       = completeClaim.claimantDetailsAsImporter //est add
+    val establishmentAddressForConsigneeFromDeclaration =
+      completeClaim.consigneeDetails.map(s => s.establishmentAddress)
+
+    val c: CompareContactInformation = establishmentAddressForConsigneeFromDeclaration match {
+      case Some(establishmentAddress) =>
+        CompareContactInformation(
+          completeClaim.consigneeDetails.map(s => s.legalName).getOrElse(""),
+          establishmentAddress.addressLine1,
+          establishmentAddress.addressLine2.getOrElse(""),
+          establishmentAddress.addressLine3.getOrElse(""),
+          "",
+          "",
+          establishmentAddress.postalCode.getOrElse(""),
+          establishmentAddress.countryCode,
+          "",
+          ""
+        )
+      case None                       => CompareContactInformation.emptyCompareContactInformation
+    }
+
+    val d = claimantAsImporterDetails match {
+      case Some(claimantDetailsAsImporterCompany) =>
+        CompareContactInformation(
+          claimantDetailsAsImporterCompany.companyName,
+          claimantDetailsAsImporterCompany.contactAddress.line1,
+          claimantDetailsAsImporterCompany.contactAddress.line2.getOrElse(""),
+          claimantDetailsAsImporterCompany.contactAddress.line3.getOrElse(""),
+          claimantDetailsAsImporterCompany.contactAddress.line4,
+          claimantDetailsAsImporterCompany.contactAddress.line5.getOrElse(""),
+          claimantDetailsAsImporterCompany.contactAddress.postcode.getOrElse(""),
+          claimantDetailsAsImporterCompany.contactAddress.country.code,
+          claimantDetailsAsImporterCompany.phoneNumber.value,
+          claimantDetailsAsImporterCompany.emailAddress.value
+        )
+      case None                                   => CompareContactInformation.emptyCompareContactInformation
+    }
+
+    val buildConsigneeEstablishmentContactDetails: Validation[Address] = if (c === d) {
+      buildConsigneeCdsEstablishmentAddress(completeClaim.displayDeclaration)
+    } else {
+      buildConsigneeEstablishmentAddressWithUserInput(d)
+    }
 
     (
-      buildConsigneeContactInformation(completeClaim.consigneeDetails),
+      buildConsigneeContactInformationWithPossibleUserInpit,
       buildDeclarantContactInformation(completeClaim.declarantDetails),
-      buildConsigneeCdsEstablishmentAddress(completeClaim.displayDeclaration),
+      buildConsigneeEstablishmentContactDetails,
       buildDeclarantCdsEstablishmentAddress(completeClaim.displayDeclaration)
     ).mapN { case (consignee, declarant, cdsConsignee, cdsDeclarant) =>
       EoriDetails(
@@ -154,9 +251,45 @@ object DefaultClaimTransformerService {
     }
   }
 
+  def buildConsigneeEstablishmentAddressWithUserInput(
+    userInput: CompareContactInformation
+  ): Validation[Address] =
+    Valid(
+      Address(
+        contactPerson = Some(userInput.name),
+        addressLine1 = Some(userInput.line1),
+        addressLine2 = Some(userInput.line2),
+        addressLine3 = Some(userInput.line3),
+        street = Some(s"${userInput.line1} ${userInput.line2}"),
+        city = Some(userInput.line4),
+        countryCode = userInput.countryCode,
+        postalCode = Some(userInput.postalCode),
+        telephoneNumber = Some(userInput.telephone),
+        emailAddress = Some(userInput.email)
+      )
+    )
+
+  def buildConsigneeContactInformationWithUserInput(
+    userInput: CompareContactInformation
+  ): Validation[ContactInformation] =
+    Valid(
+      ContactInformation(
+        contactPerson = Some(userInput.name),
+        addressLine1 = Some(userInput.line1),
+        addressLine2 = Some(userInput.line2),
+        addressLine3 = Some(userInput.line3),
+        street = Some(s"${userInput.line1} ${userInput.line2}"),
+        city = Some(userInput.line4),
+        countryCode = Some(userInput.countryCode),
+        postalCode = Some(userInput.postalCode),
+        telephoneNumber = Some(userInput.telephone),
+        faxNumber = None,
+        emailAddress = Some(userInput.email)
+      )
+    )
   def buildDeclarantCdsEstablishmentAddress(
     maybeDisplayDeclaration: Option[DisplayDeclaration]
-  ): Validation[Address] =
+  ): Validation[Address]            =
     maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
         Valid(
@@ -347,15 +480,15 @@ object DefaultClaimTransformerService {
     }
 
   def setDeclarantDetails(declarantDetails: declaration.response.DeclarantDetails): Validation[MRNInformation] =
-    (buildDeclarantEstablishmentAddress(declarantDetails), buildDeclarantContactInformation(Some(declarantDetails))).mapN {
-      case (establishmentAddress, contactInformation) =>
+    (buildDeclarantEstablishmentAddress(declarantDetails), buildDeclarantContactInformation(Some(declarantDetails)))
+      .mapN { case (establishmentAddress, contactInformation) =>
         MRNInformation(
           EORI = declarantDetails.declarantEORI,
           legalName = declarantDetails.legalName,
           establishmentAddress = establishmentAddress,
           contactDetails = contactInformation
         )
-    }
+      }
 
   def setConsigneeDetails(
     maybeConsigneeDetails: Option[declaration.response.ConsigneeDetails]
