@@ -30,6 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
+import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.{buildEoriDetails, setBasisOfClaim, setGoodsDetails, setMrnDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlaces
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
@@ -55,17 +56,17 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
       case Left(_)  => Left(Error("not implemented"))
       case Right(_) =>
         (
-          DefaultClaimTransformerService.setGoodsDetails(claimRequest.completeClaim),
-          DefaultClaimTransformerService.setBasisOfClaim(claimRequest.completeClaim),
-          DefaultClaimTransformerService.setMrnDetails(
+          setGoodsDetails(claimRequest.completeClaim),
+          setBasisOfClaim(claimRequest.completeClaim),
+          setMrnDetails(
             claimRequest.completeClaim.displayDeclaration,
             claimRequest.completeClaim
           ),
-          DefaultClaimTransformerService.setMrnDetails(
+          setMrnDetails(
             claimRequest.completeClaim.duplicateDisplayDeclaration,
             claimRequest.completeClaim
           ),
-          DefaultClaimTransformerService.buildEoriDetails(claimRequest.completeClaim)
+          buildEoriDetails(claimRequest.completeClaim)
         ).mapN { case (goodsDetails, basisOfClaim, mrnDetails, duplicateMrnDetails, eoriDetails) =>
           val requestDetailA = RequestDetailA(
             CDFPayservice = CDFPayservice.NDRC,
@@ -112,7 +113,18 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
 
 object DefaultClaimTransformerService {
 
-  def buildEoriDetails(completeClaim: CompleteClaim): Validation[EoriDetails] =
+  def buildEoriDetails(completeClaim: CompleteClaim): Validation[EoriDetails] = {
+    val claimantAsIndividualDetails = completeClaim.claimantDetailsAsIndividual.
+    val claimantAsImporterDetails = completeClaim.claimantDetailsAsImporter
+
+//    val a = EstablishmentAddress(
+//      addressLine1 = ,
+//      addressLine2 = ,
+//      addressLine3 = ,
+//      postalCode = ,
+//      countryCode =
+//    )
+
     (
       buildConsigneeContactInformation(completeClaim.consigneeDetails),
       buildDeclarantContactInformation(completeClaim.declarantDetails),
@@ -140,6 +152,7 @@ object DefaultClaimTransformerService {
         )
       )
     }
+  }
 
   def buildDeclarantCdsEstablishmentAddress(
     maybeDisplayDeclaration: Option[DisplayDeclaration]
