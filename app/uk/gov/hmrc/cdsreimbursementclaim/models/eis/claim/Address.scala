@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.OptionUtils._
 
 final case class Address(
   contactPerson: Option[String],
@@ -28,7 +27,7 @@ final case class Address(
   city: Option[String],
   countryCode: String,
   postalCode: Option[String],
-  telephoneNumber: Option[String],
+  telphoneNumber: Option[String],
   emailAddress: Option[String]
 )
 

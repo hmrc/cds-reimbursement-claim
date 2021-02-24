@@ -22,7 +22,7 @@ final case class GoodsDetails(
   placeOfImport: Option[String],
   isPrivateImporter: Option[String],
   groundsForRepaymentApplication: Option[String],
-  DescOfGoods: Option[String]
+  descOfGoods: Option[String]
 )
 
 object GoodsDetails {

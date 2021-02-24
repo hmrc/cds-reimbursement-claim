@@ -74,8 +74,16 @@ class SubmitClaimServiceImpl @Inject() (
       claimRequest.userDetails.contactName
     )
 
+    val _ = maybeEisSubmitClaimRequest match {
+      case Left(value)  => println(s"there is a problem with the mapping: ${value.toString}")
+      case Right(value) => println("mapped fine")
+    }
+
+    println("\n\n\n\n I got out of mapping \n\n\n")
+
     for {
-      eisSubmitRequest       <- EitherT.fromEither[Future](maybeEisSubmitClaimRequest)
+      eisSubmitRequest       <-
+        EitherT.fromEither[Future](maybeEisSubmitClaimRequest).leftMap(e => Error(s"could not make TPIO5 payload: $e"))
       _                      <- auditClaimBeforeSubmit(claimRequest, eisSubmitRequest)
       returnHttpResponse     <- submitClaimAndAudit(claimRequest, eisSubmitRequest)
       eisSubmitClaimResponse <- EitherT.fromEither[Future](
@@ -93,7 +101,8 @@ class SubmitClaimServiceImpl @Inject() (
   private def auditClaimBeforeSubmit(
     submitClaimRequest: SubmitClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] =
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] = {
+    println("\n\n\n I got here in auditing")
     EitherT.pure[Future, Error](
       auditService.sendEvent(
         "submitClaim",
@@ -104,11 +113,15 @@ class SubmitClaimServiceImpl @Inject() (
         "submit-claim"
       )
     )
+  }
 
   private def submitClaimAndAudit(
     submitClaimRequest: SubmitClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, HttpResponse] = {
+
+    println("\n\n\n I got here 2")
+
     val timer = metrics.submitClaimTimer.time()
     claimConnector
       .submitClaim(
@@ -156,7 +169,9 @@ class SubmitClaimServiceImpl @Inject() (
 
   private def prepareSubmitClaimResponse(
     response: EisSubmitClaimResponse
-  ): EitherT[Future, Error, SubmitClaimResponse] =
+  ): EitherT[Future, Error, SubmitClaimResponse] = {
+    println("\n\n\n I got here 3")
+
     EitherT.fromEither[Future] {
       Right(
         SubmitClaimResponse(
@@ -164,4 +179,5 @@ class SubmitClaimServiceImpl @Inject() (
         )
       )
     }
+  }
 }

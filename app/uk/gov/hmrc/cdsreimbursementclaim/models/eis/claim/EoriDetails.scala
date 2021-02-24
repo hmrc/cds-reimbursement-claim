@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class EoriDetails(
   agentEORIDetails: EORIInformation,
-  ImporterEORIDetails: EORIInformation
+  importerEORIDetails: EORIInformation
 )
 
 object EoriDetails {

@@ -24,7 +24,7 @@ final case class NdrcDetails(
   CMAEligible: Option[String],
   taxType: String,
   amount: String,
-  claimantAmount: Option[String]
+  claimAmount: Option[String]
 )
 
 object NdrcDetails {

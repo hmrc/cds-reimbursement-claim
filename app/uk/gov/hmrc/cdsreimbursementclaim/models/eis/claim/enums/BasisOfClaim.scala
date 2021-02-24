@@ -45,7 +45,7 @@ object BasisOfClaim {
     case InwardProcessingReliefFromCustomsDuty  => "IP"
     case OutwardProcessingRelief                => "OPR"
     case Preference                             => "Preference"
-    case ProofOfReturnRefundGiven               => "Proof of Return/Refund"
+    case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
   }
 
   implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()

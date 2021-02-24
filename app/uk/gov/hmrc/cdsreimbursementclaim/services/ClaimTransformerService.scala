@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits.catsSyntaxTuple2Semigroupal
@@ -30,12 +29,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, NdrcDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, UserDetails, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.{buildEoriDetails, setBasisOfClaim, setGoodsDetails, setMrnDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlaces
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
 
 import javax.inject.Singleton
 
@@ -50,6 +50,8 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
     with Logging {
 
   override def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest] = {
+
+    println("\n\n\ni an mapping \n\n\n\n")
     val requestCommon = RequestCommon(
       originatingSystem = Platform.MDTP,
       receiptDate = TimeUtils.iso8601DateTimeNow,
@@ -69,10 +71,10 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             claimRequest.completeClaim.duplicateDisplayDeclaration,
             claimRequest.completeClaim
           ),
-          buildEoriDetails(claimRequest.completeClaim)
+          buildEoriDetails(claimRequest.completeClaim, claimRequest.userDetails)
         ).mapN { case (goodsDetails, basisOfClaim, mrnDetails, duplicateMrnDetails, eoriDetails) =>
           val requestDetailA = RequestDetailA(
-            CDFPayservice = CDFPayservice.NDRC,
+            CDFPayService = CDFPayservice.NDRC,
             dateReceived = Some(TimeUtils.isoLocalDateNow),
             claimType = Some(ClaimType.C285),
             caseType = Some(CaseType.Individual),
@@ -83,12 +85,16 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             disposalMethod = None,
             reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
             basisOfClaim = Some(basisOfClaim),
-            claimant = Some(claimRequest.completeClaim.declarantType.declarantType.toString), // TODO: CHECK
-            payeeIndicator = Some(claimRequest.completeClaim.declarantType.declarantType.toString), //TODO: CHECK
+            claimant = Some(
+              DefaultClaimTransformerService.setPayeeIndicator(claimRequest.completeClaim.declarantType.declarantType)
+            ),
+            payeeIndicator = Some(
+              DefaultClaimTransformerService.setPayeeIndicator(claimRequest.completeClaim.declarantType.declarantType)
+            ),
             newEORI = None,
             newDAN = None,
             authorityTypeProvided = None,
-            ClaimantEORI = Some(claimRequest.userDetails.eori.value),
+            claimantEORI = Some(claimRequest.userDetails.eori.value),
             claimantEmailAddress = Some(claimRequest.userDetails.email.value),
             goodsDetails = Some(goodsDetails),
             EORIDetails = Some(eoriDetails)
@@ -108,13 +114,21 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
           EisSubmitClaimRequest(postNewClaimsRequest)
 
         }.toEither
-          .leftMap(errors => Error(s"could not create TPI05 EIS submit claim request: ${errors.toList.mkString("; ")}"))
+          .leftMap { errors =>
+            Error(s"could not create TPI05 EIS submit claim request: ${errors.toList.mkString("; ")}")
+          }
     }
   }
 
 }
 
 object DefaultClaimTransformerService {
+
+  def setPayeeIndicator(declarantType: DeclarantType): String =
+    declarantType match {
+      case DeclarantType.Importer => "Importer"
+      case _                      => "Representative"
+    }
 
   final case class CompareContactInformation(
     name: String,
@@ -134,7 +148,7 @@ object DefaultClaimTransformerService {
       CompareContactInformation("", "", "", "", "", "", "", "", "", "")
   }
 
-  def buildEoriDetails(completeClaim: CompleteClaim): Validation[EoriDetails] = {
+  def buildEoriDetails(completeClaim: CompleteClaim, userDetails: UserDetails): Validation[EoriDetails] = {
 
     //if the consign contact info has been ovewrriten then we overwir
     val contactInfoFromConsignee: Option[response.ContactDetails] =
@@ -144,16 +158,16 @@ object DefaultClaimTransformerService {
     val a: CompareContactInformation = contactInfoFromConsignee match {
       case Some(contactDetails) =>
         CompareContactInformation(
-          contactDetails.contactName.getOrElse(""),
-          contactDetails.addressLine1.getOrElse(""),
-          contactDetails.addressLine2.getOrElse(""),
-          contactDetails.addressLine3.getOrElse(""),
-          contactDetails.addressLine4.getOrElse(""),
+          contactDetails.contactName.getOrElse("No contact name"),
+          contactDetails.addressLine1.getOrElse("No address line"),
+          contactDetails.addressLine2.getOrElse("No address line"),
+          contactDetails.addressLine3.getOrElse("No address line"),
+          contactDetails.addressLine4.getOrElse("No address line"),
           "",
-          contactDetails.postalCode.getOrElse(""),
-          contactDetails.countryCode.getOrElse(""),
-          contactDetails.telephone.getOrElse(""),
-          contactDetails.emailAddress.getOrElse("")
+          contactDetails.postalCode.getOrElse("No postcode"),
+          contactDetails.countryCode.getOrElse("GB"),
+          contactDetails.telephone.getOrElse("No telephone"),
+          contactDetails.emailAddress.getOrElse("No email")
         )
       case None                 => CompareContactInformation.emptyCompareContactInformation
     }
@@ -161,11 +175,11 @@ object DefaultClaimTransformerService {
     val b: CompareContactInformation = CompareContactInformation(
       claimantAsIndividualDetails.fullName,
       claimantAsIndividualDetails.contactAddress.line1,
-      claimantAsIndividualDetails.contactAddress.line2.getOrElse(""),
-      claimantAsIndividualDetails.contactAddress.line3.getOrElse(""),
+      claimantAsIndividualDetails.contactAddress.line2.getOrElse("No address line"),
+      claimantAsIndividualDetails.contactAddress.line3.getOrElse("No address line"),
       claimantAsIndividualDetails.contactAddress.line4,
-      claimantAsIndividualDetails.contactAddress.line5.getOrElse(""),
-      claimantAsIndividualDetails.contactAddress.postcode.getOrElse(""),
+      claimantAsIndividualDetails.contactAddress.line5.getOrElse("No address line"),
+      claimantAsIndividualDetails.contactAddress.postcode.getOrElse("No postcode"),
       claimantAsIndividualDetails.contactAddress.country.code,
       claimantAsIndividualDetails.phoneNumber.value,
       claimantAsIndividualDetails.emailAddress.value
@@ -230,7 +244,7 @@ object DefaultClaimTransformerService {
     ).mapN { case (consignee, declarant, cdsConsignee, cdsDeclarant) =>
       EoriDetails(
         agentEORIDetails = EORIInformation(
-          EORINumber = "None", //todo: check
+          EORINumber = userDetails.eori.value,
           CDSFullName = None,
           legalEntityType = None,
           EORIStartDate = None,
@@ -238,8 +252,8 @@ object DefaultClaimTransformerService {
           contactInformation = Some(consignee),
           VATDetails = None
         ),
-        ImporterEORIDetails = EORIInformation(
-          EORINumber = "None", //todo: check
+        importerEORIDetails = EORIInformation(
+          EORINumber = userDetails.eori.value,
           CDSFullName = None,
           legalEntityType = None,
           EORIStartDate = None,
@@ -264,7 +278,7 @@ object DefaultClaimTransformerService {
         city = Some(userInput.line4),
         countryCode = userInput.countryCode,
         postalCode = Some(userInput.postalCode),
-        telephoneNumber = Some(userInput.telephone),
+        telphoneNumber = Some(userInput.telephone),
         emailAddress = Some(userInput.email)
       )
     )
@@ -308,7 +322,7 @@ object DefaultClaimTransformerService {
             city = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.addressLine3,
             countryCode = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.countryCode,
             postalCode = displayDeclaration.displayResponseDetail.declarantDetails.establishmentAddress.postalCode,
-            telephoneNumber = None,
+            telphoneNumber = None,
             emailAddress = None
           )
         )
@@ -334,7 +348,7 @@ object DefaultClaimTransformerService {
                 city = consigneeDetails.establishmentAddress.addressLine3,
                 countryCode = consigneeDetails.establishmentAddress.countryCode,
                 postalCode = consigneeDetails.establishmentAddress.postalCode,
-                telephoneNumber = None,
+                telphoneNumber = None,
                 emailAddress = None
               )
             )
@@ -355,7 +369,7 @@ object DefaultClaimTransformerService {
         None,
         Some(isPrivateImporter(completeClaim.declarantType.declarantType)),
         groundsForRepaymentApplication = None,
-        DescOfGoods = Some(completeClaim.commodityDetails)
+        descOfGoods = Some(completeClaim.commodityDetails)
       )
     )
 
@@ -384,7 +398,7 @@ object DefaultClaimTransformerService {
               city = contactDetails.addressLine3,
               countryCode = countryCode,
               postalCode = contactDetails.postalCode,
-              telephoneNumber = contactDetails.telephone,
+              telphoneNumber = contactDetails.telephone,
               emailAddress = contactDetails.emailAddress
             )
           )
@@ -412,7 +426,7 @@ object DefaultClaimTransformerService {
               city = contactDetails.addressLine3,
               countryCode = countryCode,
               postalCode = contactDetails.postalCode,
-              telephoneNumber = contactDetails.telephone,
+              telphoneNumber = contactDetails.telephone,
               emailAddress = contactDetails.emailAddress
             )
           )
@@ -574,7 +588,7 @@ object DefaultClaimTransformerService {
         CMAEligible = None,
         taxType = claim.taxCode.description,
         amount = claim.paidAmount.toString(),
-        claimantAmount = Some(claim.claimAmount.toString())
+        claimAmount = Some(claim.claimAmount.toString())
       )
     })
 

@@ -47,6 +47,9 @@ class CcsSubmissionPoller @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+//  def makeRunnable(f: => Unit): Runnable           =
+//    new Runnable { override def run(): Unit = f }
+
   private val jitteredInitialDelay: FiniteDuration = FiniteDuration(
     servicesConfig.getDuration("ccs.submission-poller.initial-delay").toMillis,
     TimeUnit.MILLISECONDS
@@ -61,7 +64,9 @@ class CcsSubmissionPoller @Inject() (
   private val failureCountLimit: Int = servicesConfig.getInt("ccs.submission-poller.failure-count-limit")
 
   val _: Cancellable =
-    actorSystem.scheduler.schedule(jitteredInitialDelay, pollerInterval)(poller())(ccsSubmissionPollerExecutionContext)
+    actorSystem.scheduler.schedule(jitteredInitialDelay, pollerInterval)(poller())(
+      ccsSubmissionPollerExecutionContext
+    )
 
   def getLogMessage(workItem: WorkItem[CcsSubmissionRequest], stateIndicator: String): String =
     s"CCS File Submission poller: $stateIndicator:  work-item-id: ${workItem.id}, work-item-failure-count: ${workItem.failureCount}, " +

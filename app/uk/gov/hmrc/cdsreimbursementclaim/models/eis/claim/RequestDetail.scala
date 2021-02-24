@@ -21,7 +21,7 @@ import play.api.libs.json.{Format, JsPath, Json, OFormat}
 
 // The root structure for the JSON payload exceed 22 fields. Therefore the type needs to be split.
 final case class RequestDetailA(
-  CDFPayservice: String,
+  CDFPayService: String,
   dateReceived: Option[String],
   claimType: Option[String],
   caseType: Option[String],
@@ -37,7 +37,7 @@ final case class RequestDetailA(
   newEORI: Option[String],
   newDAN: Option[String],
   authorityTypeProvided: Option[String],
-  ClaimantEORI: Option[String],
+  claimantEORI: Option[String],
   claimantEmailAddress: Option[String],
   goodsDetails: Option[GoodsDetails],
   EORIDetails: Option[EoriDetails]
