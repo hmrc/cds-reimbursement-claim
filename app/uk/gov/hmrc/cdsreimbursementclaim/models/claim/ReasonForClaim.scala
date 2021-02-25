@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.dates
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import com.google.inject.{ImplementedBy, Singleton}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-@ImplementedBy(classOf[DateGeneratorImpl])
-trait DateGenerator {
-  def nextAcknowledgementDate: String
-  def nextReceiptDate: String
+sealed trait ReasonForClaim extends Product with Serializable {
+  def repr: String
 }
 
-@Singleton
-class DateGeneratorImpl extends DateGenerator {
-  override def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
-  override def nextReceiptDate: String         = TimeUtils.iso8601DateTimeNow
+object ReasonForClaim {
+  case object MailForOrderGoods extends ReasonForClaim {
+    override def repr = "Mail for Order Goods"
+  }
+  case object Overpayment extends ReasonForClaim {
+    override def repr = "Over payment"
+  }
+  case object SpecialGoods extends ReasonForClaim {
+    override def repr = "Special Goods"
+  }
+
+  implicit val format: OFormat[ReasonForClaim] = derived.oformat[ReasonForClaim]()
+
 }

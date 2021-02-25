@@ -37,7 +37,8 @@ class DeclarationController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def declaration(mrn: MRN): Action[AnyContent] = authenticate.async { implicit request =>
+  //TODO: auth
+  def declaration(mrn: MRN): Action[AnyContent] = Action.async { implicit request =>
     declarationService
       .getDeclaration(mrn)
       .fold(

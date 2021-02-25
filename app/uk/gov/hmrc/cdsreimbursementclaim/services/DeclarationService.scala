@@ -58,7 +58,7 @@ class DeclarationServiceImpl @Inject() (
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
           Platform.MDTP,
-          dateGenerator.nextAcknowledgementDate,
+          dateGenerator.nextReceiptDate,
           uuidGenerator.compactCorrelationId
         ),
         RequestDetail(

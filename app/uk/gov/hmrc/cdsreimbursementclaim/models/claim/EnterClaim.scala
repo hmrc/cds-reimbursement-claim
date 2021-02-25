@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.dates
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import com.google.inject.{ImplementedBy, Singleton}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
+import play.api.libs.json.{Json, OFormat}
 
-@ImplementedBy(classOf[DateGeneratorImpl])
-trait DateGenerator {
-  def nextAcknowledgementDate: String
-  def nextReceiptDate: String
-}
-
-@Singleton
-class DateGeneratorImpl extends DateGenerator {
-  override def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
-  override def nextReceiptDate: String         = TimeUtils.iso8601DateTimeNow
+final case class EnterClaim(
+  dutyAmounts: List[DutyAmount],
+  makeEuDutyClaim: Boolean
+)
+object EnterClaim {
+  implicit val format: OFormat[EnterClaim] = Json.format[EnterClaim]
 }

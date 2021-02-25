@@ -17,11 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class CompleteSupportingEvidenceAnswer(
-  evidences: List[SupportingEvidence]
-)
+final case class DeclarantEoriNumber(value: Eori)
 
-object CompleteSupportingEvidenceAnswer {
-  implicit val format: OFormat[CompleteSupportingEvidenceAnswer] = Json.format[CompleteSupportingEvidenceAnswer]
+object DeclarantEoriNumber {
+  implicit val format: OFormat[DeclarantEoriNumber] = Json.format[DeclarantEoriNumber]
 }

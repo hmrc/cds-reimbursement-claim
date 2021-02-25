@@ -25,11 +25,10 @@ import cats.syntax.either._
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, NdrcDetails => _, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis._
+import uk.gov.hmrc.cdsreimbursementclaim.models
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.{buildEoriDetails, setBasisOfClaim, setGoodsDetails, setMrnDetails}
@@ -49,8 +48,6 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
     with Logging {
 
   override def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest] = {
-
-    println("\n\n\ni an mapping \n\n\n\n")
     val requestCommon = RequestCommon(
       originatingSystem = Platform.MDTP,
       receiptDate = TimeUtils.iso8601DateTimeNow,
@@ -153,9 +150,9 @@ object DefaultClaimTransformerService {
   ): Validation[EoriDetails] = {
 
     //if the consign contact info has been ovewrriten then we overwir
-    val contactInfoFromConsignee: Option[response.ContactDetails] =
+    val contactInfoFromConsignee: Option[models.claim.ContactDetails] =
       completeClaim.consigneeDetails.flatMap(consigneeDetails => consigneeDetails.contactDetails)
-    val claimantAsIndividualDetails                               = completeClaim.claimantDetailsAsIndividual //contact info
+    val claimantAsIndividualDetails                                   = completeClaim.claimantDetailsAsIndividual //contact info
 
     val a: CompareContactInformation = contactInfoFromConsignee match {
       case Some(contactDetails) =>
@@ -304,7 +301,7 @@ object DefaultClaimTransformerService {
       )
     )
   def buildDeclarantCdsEstablishmentAddress(
-    maybeDisplayDeclaration: Option[DisplayDeclaration]
+    maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration]
   ): Validation[Address]            =
     maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
@@ -332,7 +329,7 @@ object DefaultClaimTransformerService {
     }
 
   def buildConsigneeCdsEstablishmentAddress(
-    maybeDisplayDeclaration: Option[DisplayDeclaration]
+    maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration]
   ): Validation[Address] =
     maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
@@ -381,7 +378,7 @@ object DefaultClaimTransformerService {
   }
 
   def buildConsigneeEstablishmentAddress(
-    consigneeDetails: declaration.response.ConsigneeDetails
+    consigneeDetails: models.claim.ConsigneeDetails
   ): Validation[Address] =
     consigneeDetails.contactDetails match {
       case Some(contactDetails) =>
@@ -409,7 +406,7 @@ object DefaultClaimTransformerService {
     }
 
   def buildDeclarantEstablishmentAddress(
-    declarantDetails: declaration.response.DeclarantDetails
+    declarantDetails: models.claim.DeclarantDetails
   ): Validation[Address] =
     declarantDetails.contactDetails match {
       case Some(contactDetails) =>
@@ -437,7 +434,7 @@ object DefaultClaimTransformerService {
     }
 
   def buildDeclarantContactInformation(
-    maybeDeclarantDetails: Option[declaration.response.DeclarantDetails]
+    maybeDeclarantDetails: Option[models.claim.DeclarantDetails]
   ): Validation[ContactInformation] =
     maybeDeclarantDetails match {
       case Some(declarantDetails) =>
@@ -467,7 +464,7 @@ object DefaultClaimTransformerService {
     }
 
   def buildConsigneeContactInformation(
-    maybeConsigneeDetails: Option[declaration.response.ConsigneeDetails]
+    maybeConsigneeDetails: Option[models.claim.ConsigneeDetails]
   ): Validation[ContactInformation] =
     maybeConsigneeDetails match {
       case Some(consigneeDetails) =>
@@ -495,7 +492,7 @@ object DefaultClaimTransformerService {
       case None                   => Invalid(NonEmptyList.one("could not find consignee details"))
     }
 
-  def setDeclarantDetails(declarantDetails: declaration.response.DeclarantDetails): Validation[MRNInformation] =
+  def setDeclarantDetails(declarantDetails: models.claim.DeclarantDetails): Validation[MRNInformation] =
     (buildDeclarantEstablishmentAddress(declarantDetails), buildDeclarantContactInformation(Some(declarantDetails)))
       .mapN { case (establishmentAddress, contactInformation) =>
         MRNInformation(
@@ -507,7 +504,7 @@ object DefaultClaimTransformerService {
       }
 
   def setConsigneeDetails(
-    maybeConsigneeDetails: Option[declaration.response.ConsigneeDetails]
+    maybeConsigneeDetails: Option[models.claim.ConsigneeDetails]
   ): Validation[MRNInformation] =
     maybeConsigneeDetails match {
       case Some(consigneeDetails) =>
@@ -524,7 +521,7 @@ object DefaultClaimTransformerService {
     }
 
   def buildBankDetails(
-    maybeBankDetails: Option[declaration.response.BankDetails],
+    maybeBankDetails: Option[models.claim.BankDetails],
     completeClaim: CompleteClaim
   ): Validation[BankDetails] =
     (maybeBankDetails, completeClaim.enteredBankDetails) match {
@@ -595,7 +592,7 @@ object DefaultClaimTransformerService {
     })
 
   def setMrnDetails(
-    maybeDisplayDeclaration: Option[DisplayDeclaration],
+    maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration],
     completeClaim: CompleteClaim
   ): Validation[MrnDetail] =
     maybeDisplayDeclaration match {
