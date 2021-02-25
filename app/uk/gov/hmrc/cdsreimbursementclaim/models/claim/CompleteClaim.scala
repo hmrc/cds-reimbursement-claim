@@ -18,8 +18,23 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import julienrf.json.derived
 import play.api.libs.json.OFormat
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsImporterCompanyAnswer.CompleteClaimantDetailsAsImporterCompanyAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsIndividualAnswer.CompleteClaimantDetailsAsIndividualAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimsAnswer.CompleteClaimsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CommoditiesDetailsAnswer.CompleteCommodityDetailsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateMovementReferenceNumberAnswer.CompleteDuplicateMovementReferenceNumberAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.EUDutyAmountAnswers.CompleteEUDutyAmountAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.UKDutyAmountAnswers.CompleteUKDutyAmountAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 
@@ -45,7 +60,7 @@ object CompleteClaim {
     supportingEvidenceAnswers: CompleteSupportingEvidenceAnswer,
     maybeCompleteUKDutyAmountAnswer: Option[CompleteUKDutyAmountAnswer],
     maybeCompleteEUDutyAmountAnswer: Option[CompleteEUDutyAmountAnswer],
-    completeClaimAnswers: CompleteClaimsAnswer,
+    completeClaimAnswer: CompleteClaimsAnswer,
     completeCommodityDetailsAnswer: CompleteCommodityDetailsAnswer,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
     maybeDisplayDeclaration: Option[DisplayDeclaration],
@@ -271,7 +286,7 @@ object CompleteClaim {
           ) =>
         maybeClaimantDetailsAsImporterCompanyAnswer match {
           case Some(completeClaimantDetailsAsImporterCompanyAnswer) =>
-            completeClaimantDetailsAsImporterCompanyAnswer.maybeClaimantDetailsAsImporterCompany
+            Some(completeClaimantDetailsAsImporterCompanyAnswer.claimantDetailsAsImporterCompany)
           case None                                                 => None
         }
     }

@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
 
 final case class CommodityDetails(value: String) extends AnyVal
 
 object CommodityDetails {
-  implicit val format: Format[CommodityDetails] =
-    implicitly[Format[String]].inmap(CommodityDetails(_), _.value)
+  implicit val format: OFormat[CommodityDetails] = Json.format[CommodityDetails]
 }

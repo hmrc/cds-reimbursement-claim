@@ -18,7 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteSupportingEvidenceAnswer, SupportingEvidence}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidence
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 

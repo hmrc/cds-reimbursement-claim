@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteDeclarantTypeAnswer, DeclarantType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantType
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 
 sealed trait Claimant extends Product with Serializable
 

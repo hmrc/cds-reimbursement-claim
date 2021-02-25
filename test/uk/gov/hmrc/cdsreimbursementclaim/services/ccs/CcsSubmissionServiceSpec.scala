@@ -34,7 +34,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteSupportingEvidenceAnswer, SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -221,7 +222,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val supportingEvidence               = sample[SupportingEvidence]
         val completeSupportingEvidenceAnswer =
           sample[CompleteSupportingEvidenceAnswer].copy(evidences = List(supportingEvidence))
-        val completeClaim                    = sample[CompleteC285Claim].copy(supportingEvidences = completeSupportingEvidenceAnswer)
+        val completeClaim                    = sample[CompleteC285Claim].copy(supportingEvidenceAnswers = completeSupportingEvidenceAnswer)
         val ccsSubmissionRequest             = sample[CcsSubmissionRequest]
         val workItem                         = sample[WorkItem[CcsSubmissionRequest]]
         val submitClaimRequest               = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)

@@ -16,11 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.toInvariantFunctorOps
+import play.api.libs.json.Format
 
-//TODO: impl
-final case class Eori(value: String)
+final case class Eori(value: String) extends AnyVal
 
 object Eori {
-  implicit val format: OFormat[Eori] = Json.format[Eori]
+
+  def isValid(maybeEori: String): Boolean = {
+    val regex = """\w{17}"""
+    maybeEori.matches(regex)
+  }
+
+  implicit val format: Format[Eori] = implicitly[Format[String]].inmap(Eori(_), _.value)
 }
