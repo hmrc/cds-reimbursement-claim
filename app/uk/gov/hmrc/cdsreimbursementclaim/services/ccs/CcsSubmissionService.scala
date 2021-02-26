@@ -117,40 +117,42 @@ object DefaultCcsSubmissionService {
       referenceNumber: String,
       evidence: SupportingEvidence,
       batchCount: Long
-    ): Envelope = {
-      val c = BatchFileInterfaceMetadata(
-        correlationID = submitClaimRequest.completeClaim.correlationId,
-        batchID = submitClaimRequest.completeClaim.correlationId,
-        batchCount = batchCount,
-        batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-        checksum = evidence.upscanSuccess.uploadDetails.checksum,
-        sourceLocation = evidence.upscanSuccess.downloadUrl,
-        sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
-        sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
-        fileSize = evidence.upscanSuccess.uploadDetails.size,
-        properties = PropertiesType(
-          List(
-            PropertyType("CaseReference", submitClaimResponse.caseNumber),
-            PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
-            PropertyType("DeclarationId", referenceNumber),
-            PropertyType(
-              "DeclarationType",
-              submitClaimRequest.completeClaim.declarantType.declarantType.toString
-            ),
-            PropertyType("ApplicationName", "NDRC"),
-            PropertyType(
-              "DocumentType",
-              evidence.documentType.map(documentType => documentType.toString).getOrElse("")
-            ),
-            PropertyType(
-              "DocumentReceivedDate",
-              TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn)
+    ): Envelope =
+      Envelope(
+        Body(
+          BatchFileInterfaceMetadata(
+            correlationID = submitClaimRequest.completeClaim.correlationId,
+            batchID = submitClaimRequest.completeClaim.correlationId,
+            batchCount = batchCount,
+            batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
+            checksum = evidence.upscanSuccess.uploadDetails.checksum,
+            sourceLocation = evidence.upscanSuccess.downloadUrl,
+            sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
+            sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
+            fileSize = evidence.upscanSuccess.uploadDetails.size,
+            properties = PropertiesType(
+              List(
+                PropertyType("CaseReference", submitClaimResponse.caseNumber),
+                PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
+                PropertyType("DeclarationId", referenceNumber),
+                PropertyType(
+                  "DeclarationType",
+                  submitClaimRequest.completeClaim.declarantType.declarantType.toString
+                ),
+                PropertyType("ApplicationName", "NDRC"),
+                PropertyType(
+                  "DocumentType",
+                  evidence.documentType.map(documentType => documentType.toString).getOrElse("")
+                ),
+                PropertyType(
+                  "DocumentReceivedDate",
+                  TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn)
+                )
+              )
             )
           )
         )
       )
-      Envelope(Body(c))
-    }
 
     submitClaimRequest.completeClaim.movementReferenceNumber match {
       case Left(entryNumber) =>
