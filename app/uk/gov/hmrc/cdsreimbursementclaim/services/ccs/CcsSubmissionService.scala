@@ -85,7 +85,7 @@ class DefaultCcsSubmissionService @Inject() (
         .map(data =>
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
-              XmlEncoder[BatchFileInterfaceMetadata]
+              XmlEncoder[Envelope]
                 .encode(data)
                 .trim
                 .filter(_ >= ' ')
@@ -112,13 +112,13 @@ object DefaultCcsSubmissionService {
   def makeBatchFileInterfaceMetaDataPayload(
     submitClaimRequest: SubmitClaimRequest,
     submitClaimResponse: SubmitClaimResponse
-  ): List[BatchFileInterfaceMetadata] = {
+  ): List[Envelope] = {
     def make(
       referenceNumber: String,
       evidence: SupportingEvidence,
       batchCount: Long
-    ): BatchFileInterfaceMetadata =
-      BatchFileInterfaceMetadata(
+    ): Envelope = {
+      val c = BatchFileInterfaceMetadata(
         correlationID = submitClaimRequest.completeClaim.correlationId,
         batchID = submitClaimRequest.completeClaim.correlationId,
         batchCount = batchCount,
@@ -149,6 +149,8 @@ object DefaultCcsSubmissionService {
           )
         )
       )
+      Envelope(Body(c))
+    }
 
     submitClaimRequest.completeClaim.movementReferenceNumber match {
       case Left(entryNumber) =>
