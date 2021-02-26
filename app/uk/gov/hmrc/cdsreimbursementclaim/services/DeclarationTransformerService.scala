@@ -18,42 +18,61 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.{BankDetails, ConsigneeBankDetails, DeclarantBankDetails, DeclarationResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.{Declaration, MaskedBankAccount, MaskedBankDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationTransformerService.maskBankDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankAccount, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultDeclarationTransformerService.{maskBankDetails, toDisplayResponseDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
 import javax.inject.Singleton
 
 @ImplementedBy(classOf[DefaultDeclarationTransformerService])
 trait DeclarationTransformerService {
-  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Declaration]
+  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[DisplayDeclaration]]
 }
 
 @Singleton
 class DefaultDeclarationTransformerService @Inject() () extends DeclarationTransformerService with Logging {
-  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Declaration] =
+  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[DisplayDeclaration]] =
     declarationResponse.overpaymentDeclarationDisplayResponse.responseDetail match {
       case Some(responseDetail) =>
         Right(
-          Declaration(
-            responseDetail.declarationId,
-            TimeUtils
-              .acceptanceDateDisplayFormat(responseDetail.acceptanceDate)
-              .getOrElse("could not convert date"), // Temporary
-            responseDetail.declarantDetails,
-            responseDetail.consigneeDetails,
-            responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails)),
-            responseDetail.securityDetails,
-            responseDetail.ndrcDetails
+          Some(
+            DisplayDeclaration(
+              toDisplayResponseDetails(
+                responseDetail,
+                responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails))
+              )
+            )
           )
         )
-      case None                 => Left(Error("could not find declaration detail"))
+      case None                 => Right(None)
     }
 
 }
 
-object DeclarationTransformerService {
+object DefaultDeclarationTransformerService {
+
+  def toDisplayResponseDetails(
+    responseDetail: ResponseDetail,
+    maskedBankDetails: Option[MaskedBankDetails]
+  ): DisplayResponseDetail =
+    DisplayResponseDetail(
+      declarationId = responseDetail.declarationId,
+      acceptanceDate = TimeUtils
+        .acceptanceDateDisplayFormat(responseDetail.acceptanceDate)
+        .getOrElse("could not convert acceptance date"),
+      declarantReferenceNumber = responseDetail.declarantReferenceNumber,
+      securityReason = responseDetail.securityReason,
+      btaDueDate = responseDetail.btaDueDate,
+      procedureCode = responseDetail.procedureCode,
+      btaSource = responseDetail.btaSource,
+      declarantDetails = responseDetail.declarantDetails,
+      consigneeDetails = responseDetail.consigneeDetails,
+      accountDetails = responseDetail.accountDetails,
+      bankDetails = responseDetail.bankDetails,
+      maskedBankDetails = maskedBankDetails,
+      ndrcDetails = responseDetail.ndrcDetails
+    )
 
   def maskBankDetails(bankDetails: BankDetails): MaskedBankDetails = {
     val consigneeBankDetails: Option[ConsigneeBankDetails] =

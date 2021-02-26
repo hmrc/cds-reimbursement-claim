@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
 import akka.util.Timeout
+import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class AuthenticatedActionsSpec extends AnyFlatSpec with Matchers with MockFactory {
+class AuthenticatedActionSpec extends AnyFlatSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
 
@@ -45,7 +46,9 @@ class AuthenticatedActionsSpec extends AnyFlatSpec with Matchers with MockFactor
     executionContext
   )
 
-  def mockAuthorise()(response: Future[Option[Credentials]]) =
+  def mockAuthorise()(response: Future[Option[Credentials]]): CallHandler4[Predicate, Retrieval[
+    Option[Credentials]
+  ], HeaderCarrier, ExecutionContext, Future[Option[Credentials]]] =
     (authConnector
       .authorise[Option[Credentials]](_: Predicate, _: Retrieval[Option[Credentials]])(
         _: HeaderCarrier,

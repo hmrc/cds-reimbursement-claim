@@ -19,8 +19,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
 import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.DeclarationRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
@@ -41,6 +42,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: Servi
   ec: ExecutionContext
 ) extends DeclarationConnector
     with EisConnector
+    with JsonHeaders
     with Logging {
 
   private val getDeclarationUrl: String = s"${config.baseUrl("declaration")}/accounts/overpaymentdeclarationdisplay/v1"
@@ -53,7 +55,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: Servi
         .POST[DeclarationRequest, HttpResponse](getDeclarationUrl, declarationRequest)(
           implicitly[Writes[DeclarationRequest]],
           HttpReads[HttpResponse],
-          enrichHC,
+          extraHeaders,
           ec
         )
         .map(Right(_))

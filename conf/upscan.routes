@@ -1,4 +1,4 @@
-GET     /upscan/upload-reference/:ref                       uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan.UpscanController.getUpscanUpload(ref: uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference)
-POST    /upscan                                             uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan.UpscanController.saveUpscanUpload()
-POST    /upscan-call-back/upload-reference/:ref             uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan.UpscanController.callback(ref:  uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference)
-POST    /upscan/uploads                                     uk.gov.hmrc.cdsreimbursementclaim.controllers.upscan.UpscanController.getUpscanUploads()
+GET     /upscan/upload-reference/:ref                       uk.gov.hmrc.cdsreimbursementclaim.controllers.UpscanController.getUpscanUpload(ref: uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference)
+POST    /upscan                                             uk.gov.hmrc.cdsreimbursementclaim.controllers.UpscanController.saveUpscanUpload()
+POST    /upscan-call-back/upload-reference/:ref             uk.gov.hmrc.cdsreimbursementclaim.controllers.UpscanController.callback(ref:  uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference)
+POST    /upscan/uploads                                     uk.gov.hmrc.cdsreimbursementclaim.controllers.UpscanController.getUpscanUploads()

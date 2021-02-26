@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import play.api.libs.json.{JsValue, Json, OFormat}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -26,30 +29,33 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
-final case class SubmitClaimResponse(
-  caseNumber: String,
-  payService: String,
-  processingDate: String
-)
-object SubmitClaimResponse {
-  implicit val format: OFormat[SubmitClaimResponse] = Json.format[SubmitClaimResponse]
-}
-
 @Singleton()
-class SubmitClaimController @Inject() (eisService: SubmitClaimService, cc: ControllerComponents)(implicit
-  ec: ExecutionContext
-) extends BackendController(cc)
+class SubmitClaimController @Inject() (
+  authenticate: AuthenticateActions,
+  claimService: SubmitClaimService,
+  ccsSubmissionService: CcsSubmissionService,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
     with Logging {
 
-  def claim(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    eisService
-      .submitClaim(request.body)
-      .fold(
-        e => {
-          logger.warn(s"could not submit claim", e)
+  def submitClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[SubmitClaimRequest] { claimRequest =>
+      val result =
+        for {
+          submitClaimResponse <- claimService.submitClaim(claimRequest)
+          _                   <- ccsSubmissionService.enqueue(claimRequest, submitClaimResponse)
+          _                    = logger.info(s"enqueued supporting evidences for claim")
+        } yield submitClaimResponse
+
+      result.fold(
+        { e =>
+          logger.warn("could not submit claim", e)
           InternalServerError
         },
-        response => Ok(response)
+        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
       )
+    }
   }
+
 }

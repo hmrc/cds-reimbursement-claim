@@ -22,9 +22,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 @ImplementedBy(classOf[DateGeneratorImpl])
 trait DateGenerator {
   def nextAcknowledgementDate: String
+  def nextReceiptDate: String
 }
 
 @Singleton
 class DateGeneratorImpl extends DateGenerator {
-  def nextAcknowledgementDate: String = TimeUtils.eisDateTimeNow
+  override def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
+  override def nextReceiptDate: String         = TimeUtils.iso8601DateTimeNow
 }

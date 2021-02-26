@@ -18,16 +18,15 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error.{IdKey, IdValue}
 
-final case class Error(message: String, throwable: Option[Throwable], identifiers: Map[IdKey, IdValue])
+final case class Error(value: Either[String, Throwable], identifiers: Map[IdKey, IdValue])
 
 object Error {
 
   type IdKey   = String
   type IdValue = String
 
-  def apply(message: String, identifiers: (IdKey, IdValue)*): Error = Error(message, None, identifiers.toMap)
+  def apply(message: String, identifiers: (IdKey, IdValue)*): Error = Error(Left(message), identifiers.toMap)
 
-  def apply(error: Throwable, identifiers: (IdKey, IdValue)*): Error =
-    Error(error.getMessage, Some(error), identifiers.toMap)
+  def apply(error: Throwable, identifiers: (IdKey, IdValue)*): Error = Error(Right(error), identifiers.toMap)
 
 }

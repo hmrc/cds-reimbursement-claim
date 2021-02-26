@@ -23,13 +23,14 @@ import cats.syntax.either._
 import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import play.api.http.Status
+import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.Declaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.declaration.response.DeclarationResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -39,7 +40,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DeclarationServiceImpl])
 trait DeclarationService {
-  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Declaration]
+  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[DisplayDeclaration]]
 }
 
 @Singleton
@@ -48,17 +49,16 @@ class DeclarationServiceImpl @Inject() (
   uuidGenerator: UUIDGenerator,
   dateGenerator: DateGenerator,
   declarationTransformerService: DeclarationTransformerService
-)(implicit
-  ec: ExecutionContext
-) extends DeclarationService
+)(implicit ec: ExecutionContext)
+    extends DeclarationService
     with Logging {
 
-  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Declaration] = {
+  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[DisplayDeclaration]] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
-          "MDTP",
-          dateGenerator.nextAcknowledgementDate,
+          Platform.MDTP,
+          dateGenerator.nextReceiptDate,
           uuidGenerator.compactCorrelationId
         ),
         RequestDetail(
@@ -73,9 +73,9 @@ class DeclarationServiceImpl @Inject() (
       .subflatMap { response =>
         if (response.status === Status.OK) {
           for {
-            declarationResponse <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
-            displayDeclaration  <- declarationTransformerService.toDeclaration(declarationResponse)
-          } yield displayDeclaration
+            declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
+            maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
+          } yield maybeDisplayDeclaration
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status} | ${response.body}")
           Left(Error(s"call to get declaration failed ${response.status}"))
