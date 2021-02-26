@@ -26,24 +26,40 @@ import play.api.libs.json.JsObject
 import play.api.mvc.Request
 import play.api.test.Helpers._
 import play.api.test._
+import uk.gov.hmrc.cdsreimbursementclaim.Fake
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import java.time.LocalDateTime
 import scala.concurrent.Future
 
 @Ignore
 class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFactory with DefaultAwaitTimeout {
+  implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+  implicit val ec                           = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val hc                           = HeaderCarrier()
+  val httpClient                            = mock[HttpClient]
+  val eisService                            = mock[SubmitClaimService]
+  val ccs                                   = mock[CcsSubmissionService]
+  private val fakeRequest                   = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
 
-  implicit val ec         = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc         = HeaderCarrier()
-  val httpClient          = mock[HttpClient]
-  val eisService          = mock[SubmitClaimService]
-  val ccs                 = mock[CcsSubmissionService]
-  private val fakeRequest = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
-  private val controller  = new SubmitClaimController(eisService, ccs, Helpers.stubControllerComponents())
+  val request = new AuthenticatedRequest(
+    Fake.user,
+    LocalDateTime.now(),
+    headerCarrier,
+    FakeRequest()
+  )
+
+  private val controller = new SubmitClaimController(
+    authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
+    eisService,
+    ccs,
+    Helpers.stubControllerComponents()
+  )
 
   def mockEisResponse(response: EitherT[Future, Error, SubmitClaimResponse]) =
     (eisService
