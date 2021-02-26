@@ -24,7 +24,7 @@ final case class ClaimantDetailsAsIndividual(
   emailAddress: Email,
   phoneNumber: PhoneNumber,
   contactAddress: NonUkAddress,
-  addCompanyDetails: YesNo
+  addCompanyDetails: Boolean
 )
 
 object ClaimantDetailsAsIndividual {

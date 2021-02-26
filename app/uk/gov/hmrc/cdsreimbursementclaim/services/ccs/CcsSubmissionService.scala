@@ -140,7 +140,7 @@ object DefaultCcsSubmissionService {
             PropertyType("ApplicationName", "NDRC"),
             PropertyType(
               "DocumentType",
-              evidence.documentType.map(documentType => documentType.toString).getOrElse("Document Type missing")
+              evidence.documentType.map(documentType => documentType.toString).getOrElse("")
             ),
             PropertyType(
               "DocumentReceivedDate",

@@ -47,9 +47,6 @@ class CcsSubmissionPoller @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-//  def makeRunnable(f: => Unit): Runnable           =
-//    new Runnable { override def run(): Unit = f }
-
   private val jitteredInitialDelay: FiniteDuration = FiniteDuration(
     servicesConfig.getDuration("ccs.submission-poller.initial-delay").toMillis,
     TimeUnit.MILLISECONDS

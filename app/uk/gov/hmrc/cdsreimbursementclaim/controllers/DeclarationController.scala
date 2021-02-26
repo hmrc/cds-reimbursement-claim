@@ -37,8 +37,7 @@ class DeclarationController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  //TODO: auth
-  def declaration(mrn: MRN): Action[AnyContent] = Action.async { implicit request =>
+  def declaration(mrn: MRN): Action[AnyContent] = authenticate.async { implicit request =>
     declarationService
       .getDeclaration(mrn)
       .fold(
@@ -46,7 +45,11 @@ class DeclarationController @Inject() (
           logger.warn(s"could not get declaration", e)
           InternalServerError
         },
-        declaration => Ok(Json.toJson(declaration))
+        maybeDisplayDeclaration =>
+          maybeDisplayDeclaration.fold {
+            logger.info(s"received no declaration information for ${mrn.value}")
+            NoContent
+          }(declaration => Ok(Json.toJson(declaration)))
       )
   }
 }

@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
-import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.{buildEoriDetails, setBasisOfClaim, setGoodsDetails, setMrnDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.{buildEoriDetails, setBasisOfClaim, setDuplicateMrnDetails, setGoodsDetails, setMrnDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlaces
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
@@ -64,7 +64,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             claimRequest.completeClaim.displayDeclaration,
             claimRequest.completeClaim
           ),
-          setMrnDetails(
+          setDuplicateMrnDetails(
             claimRequest.completeClaim.duplicateDisplayDeclaration,
             claimRequest.completeClaim
           ),
@@ -99,7 +99,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
 
           val requestDetailB = RequestDetailB(
             MRNDetails = Some(List(mrnDetails)),
-            duplicateMRNDetails = Some(duplicateMrnDetails),
+            duplicateMRNDetails = duplicateMrnDetails,
             entryDetails = None,
             duplicateEntryDetails = None
           )
@@ -587,8 +587,8 @@ object DefaultClaimTransformerService {
         paymentReference = claim.paymentReference,
         CMAEligible = None,
         taxType = claim.taxCode.description,
-        amount = claim.paidAmount.toString(),
-        claimAmount = Some(claim.claimAmount.toString())
+        amount = claim.paidAmount.setScale(2).toString(),
+        claimAmount = Some(claim.claimAmount.setScale(2).toString())
       )
     })
 
@@ -618,6 +618,36 @@ object DefaultClaimTransformerService {
           )
         }
       case None                     => Invalid(NonEmptyList.one("could not build mrn details"))
+    }
+
+  def setDuplicateMrnDetails(
+    maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration],
+    completeClaim: CompleteClaim
+  ): Validation[Option[MrnDetail]] =
+    maybeDisplayDeclaration match {
+      case Some(displayDeclaration) =>
+        (
+          setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
+          setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
+          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
+          setNdrcDetails(completeClaim.claims)
+        ).mapN { case (declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
+          Some(
+            MrnDetail(
+              MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
+              acceptanceDate = Some(displayDeclaration.displayResponseDetail.acceptanceDate),
+              declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+              mainDeclarationReference = Some(true),
+              procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
+              declarantDetails = Some(declarationDetails),
+              accountDetails = None,
+              consigneeDetails = Some(consigneeDetails),
+              bankDetails = Some(bankDetails),
+              NDRCDetails = Some(ndrcDetails)
+            )
+          )
+        }
+      case None                     => Valid(None)
     }
 
 }

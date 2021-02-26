@@ -74,13 +74,6 @@ class SubmitClaimServiceImpl @Inject() (
       claimRequest.signedInUserDetails.contactName
     )
 
-    val _ = maybeEisSubmitClaimRequest match {
-      case Left(value)  => println(s"there is a problem with the mapping: ${value.toString}")
-      case Right(value) => println("mapped fine")
-    }
-
-    println("\n\n\n\n I got out of mapping \n\n\n")
-
     for {
       eisSubmitRequest       <-
         EitherT.fromEither[Future](maybeEisSubmitClaimRequest).leftMap(e => Error(s"could not make TPIO5 payload: $e"))
@@ -101,8 +94,7 @@ class SubmitClaimServiceImpl @Inject() (
   private def auditClaimBeforeSubmit(
     submitClaimRequest: SubmitClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] = {
-    println("\n\n\n I got here in auditing")
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] =
     EitherT.pure[Future, Error](
       auditService.sendEvent(
         "submitClaim",
@@ -113,14 +105,11 @@ class SubmitClaimServiceImpl @Inject() (
         "submit-claim"
       )
     )
-  }
 
   private def submitClaimAndAudit(
     submitClaimRequest: SubmitClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, HttpResponse] = {
-
-    println("\n\n\n I got here 2")
 
     val timer = metrics.submitClaimTimer.time()
     claimConnector
@@ -169,9 +158,7 @@ class SubmitClaimServiceImpl @Inject() (
 
   private def prepareSubmitClaimResponse(
     response: EisSubmitClaimResponse
-  ): EitherT[Future, Error, SubmitClaimResponse] = {
-    println("\n\n\n I got here 3")
-
+  ): EitherT[Future, Error, SubmitClaimResponse] =
     EitherT.fromEither[Future] {
       Right(
         SubmitClaimResponse(
@@ -179,5 +166,4 @@ class SubmitClaimServiceImpl @Inject() (
         )
       )
     }
-  }
 }

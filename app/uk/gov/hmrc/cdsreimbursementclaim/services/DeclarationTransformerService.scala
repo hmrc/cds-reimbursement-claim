@@ -27,23 +27,25 @@ import javax.inject.Singleton
 
 @ImplementedBy(classOf[DefaultDeclarationTransformerService])
 trait DeclarationTransformerService {
-  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, DisplayDeclaration]
+  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[DisplayDeclaration]]
 }
 
 @Singleton
 class DefaultDeclarationTransformerService @Inject() () extends DeclarationTransformerService with Logging {
-  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, DisplayDeclaration] =
+  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[DisplayDeclaration]] =
     declarationResponse.overpaymentDeclarationDisplayResponse.responseDetail match {
       case Some(responseDetail) =>
         Right(
-          DisplayDeclaration(
-            toDisplayResponseDetails(
-              responseDetail,
-              responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails))
+          Some(
+            DisplayDeclaration(
+              toDisplayResponseDetails(
+                responseDetail,
+                responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails))
+              )
             )
           )
         )
-      case None                 => Left(Error("could not find declaration detail"))
+      case None                 => Right(None)
     }
 
 }

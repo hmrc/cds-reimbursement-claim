@@ -23,10 +23,10 @@ import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -54,8 +54,8 @@ class DeclarationControllerSpec extends ControllerSpec {
   )
 
   def mockDeclarationService(mrn: MRN)(
-    response: Either[Error, DisplayDeclaration]
-  ): CallHandler2[MRN, HeaderCarrier, EitherT[Future, Error, DisplayDeclaration]] =
+    response: Either[Error, Option[DisplayDeclaration]]
+  ): CallHandler2[MRN, HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
     (mockDeclarationService
       .getDeclaration(_: MRN)(_: HeaderCarrier))
       .expects(mrn, *)
@@ -70,7 +70,7 @@ class DeclarationControllerSpec extends ControllerSpec {
         val mrn                  = sample[MRN]
         val expectedResponseBody = sample[DisplayDeclaration]
 
-        mockDeclarationService(mrn)(Right(expectedResponseBody))
+        mockDeclarationService(mrn)(Right(Some(expectedResponseBody)))
 
         val result = controller.declaration(mrn)(request)
         status(result)        shouldBe OK
