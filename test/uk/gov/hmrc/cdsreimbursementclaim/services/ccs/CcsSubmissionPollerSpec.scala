@@ -171,8 +171,8 @@ class CcsSubmissionPollerSpec
             workItem.item.payload,
             workItem.item.headers
           )
-        )(Left(Error("boom!")))
-        mockSetProcessingStatus(workItem.id, Failed)(Right(true))
+        )(Right(HttpResponse(400, "bad request")))
+        mockSetResultStatus(workItem.id, Failed)(Right(true))
       }
 
       val _ =

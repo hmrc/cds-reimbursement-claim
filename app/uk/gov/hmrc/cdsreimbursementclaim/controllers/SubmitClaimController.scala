@@ -18,7 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
@@ -31,7 +30,6 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class SubmitClaimController @Inject() (
-  authenticate: AuthenticateActions,
   claimService: SubmitClaimService,
   ccsSubmissionService: CcsSubmissionService,
   cc: ControllerComponents
@@ -39,18 +37,18 @@ class SubmitClaimController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def submitClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  def submitClaim(): Action[JsValue] = Action(parse.json).async { implicit request =>
     withJsonBody[SubmitClaimRequest] { claimRequest =>
       val result =
         for {
           submitClaimResponse <- claimService.submitClaim(claimRequest)
           _                   <- ccsSubmissionService.enqueue(claimRequest, submitClaimResponse)
-          _                    = logger.info(s"enqueued supporting evidences for claim")
+          _                    = logger.info(s"Enqueued supporting evidences for claim")
         } yield submitClaimResponse
 
       result.fold(
         { e =>
-          logger.warn("could not submit claim", e)
+          logger.warn("Could not submit claim", e)
           InternalServerError
         },
         submitClaimResponse => Ok(Json.toJson(submitClaimResponse))

@@ -20,12 +20,10 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.instances.future._
-import com.typesafe.config.ConfigFactory
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.Configuration
 import play.api.test.Helpers.await
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
@@ -61,26 +59,6 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   val mockUUIDGenerator: UUIDGenerator         = mock[UUIDGenerator]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  val configuration: Configuration = Configuration(
-    ConfigFactory.parseString(
-      """
-        |ccs {
-        |    submission-poller {
-        |        jitter-period = 5 seconds
-        |        initial-delay = 5 seconds
-        |        interval = 5 seconds
-        |        failure-count-limit = 50
-        |        in-progress-retry-after = 5000 # milliseconds
-        |        mongo {
-        |            ttl = 10 days
-        |        }
-        |    }
-        |}
-        |
-        |""".stripMargin
-    )
-  )
 
   def makeDec64XmlPayload(
     correlationId: String,
@@ -209,7 +187,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
     new CcsSubmissionPollerExecutionContext(actorSystem)
 
   val ccsSubmissionService =
-    new DefaultCcsSubmissionService(mockCcsConnector, mockCcsSubmissionRepo, configuration)
+    new DefaultCcsSubmissionService(mockCcsConnector, mockCcsSubmissionRepo)
 
   "Ccs Submission Service" when {
 

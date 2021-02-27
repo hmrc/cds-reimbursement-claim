@@ -63,10 +63,9 @@ class DeclarationControllerSpec extends ControllerSpec {
 
   "Declaration Controller" when {
 
-    "handling request to get a declaration" must {
+    "handling a request to get a declaration" must {
 
-      "return 200 OK with declaration JSON payload for a successful ACC-14 call" in {
-
+      "return 200 OK with a declaration JSON payload for a successful ACC-14 call" in {
         val mrn                  = sample[MRN]
         val expectedResponseBody = sample[DisplayDeclaration]
 
@@ -77,12 +76,22 @@ class DeclarationControllerSpec extends ControllerSpec {
         contentAsJson(result) shouldBe Json.toJson(expectedResponseBody)
       }
 
+      "return 204 NO CONTENT if no declaration information comes back from a successful call to ACC-14 call" in {
+        val mrn = sample[MRN]
+
+        mockDeclarationService(mrn)(Right(None))
+
+        val result = controller.declaration(mrn)(request)
+        status(result) shouldBe NO_CONTENT
+      }
+
       "return 500 when the ACC-14 call fails or is unsuccessful" in {
         val mrn    = sample[MRN]
         mockDeclarationService(mrn)(Left(Error("error while getting declaration")))
         val result = controller.declaration(mrn)(request)
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
+
     }
   }
 }

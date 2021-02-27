@@ -19,9 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import configs.ConfigReader
-import configs.syntax._
-import play.api.Configuration
 import reactivemongo.bson.BSONObjectID
 import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
@@ -58,16 +55,10 @@ trait CcsSubmissionService {
 @Singleton
 class DefaultCcsSubmissionService @Inject() (
   ccsConnector: CcsConnector,
-  ccsSubmissionRepo: CcsSubmissionRepo,
-  configuration: Configuration
+  ccsSubmissionRepo: CcsSubmissionRepo
 )(implicit ec: CcsSubmissionPollerExecutionContext)
     extends CcsSubmissionService
     with Logging {
-
-  def getCcsMetaConfig[A : ConfigReader](key: String): A =
-    configuration.underlying
-      .get[A](s"ccs.$key")
-      .value
 
   override def submitToCcs(
     ccsSubmissionPayload: CcsSubmissionPayload

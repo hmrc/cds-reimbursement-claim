@@ -19,13 +19,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait UKDutyAmountAnswers extends Product with Serializable
+sealed trait UKDutyAmountAnswer extends Product with Serializable
 
-object UKDutyAmountAnswers {
+object UKDutyAmountAnswer {
 
   final case class IncompleteUKDutyAmountAnswer(
     ukDutyAmounts: Option[EnterClaim]
-  ) extends UKDutyAmountAnswers
+  ) extends UKDutyAmountAnswer
 
   object IncompleteUKDutyAmountAnswer {
     val empty: IncompleteUKDutyAmountAnswer = IncompleteUKDutyAmountAnswer(None)
@@ -36,13 +36,13 @@ object UKDutyAmountAnswers {
 
   final case class CompleteUKDutyAmountAnswer(
     ukDutyAmounts: EnterClaim
-  ) extends UKDutyAmountAnswers
+  ) extends UKDutyAmountAnswer
 
   object CompleteUKDutyAmountAnswer {
     implicit val format: OFormat[CompleteUKDutyAmountAnswer] =
       derived.oformat[CompleteUKDutyAmountAnswer]()
   }
 
-  implicit val format: OFormat[UKDutyAmountAnswers] =
-    derived.oformat[UKDutyAmountAnswers]()
+  implicit val format: OFormat[UKDutyAmountAnswer] =
+    derived.oformat[UKDutyAmountAnswer]()
 }

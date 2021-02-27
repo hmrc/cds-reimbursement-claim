@@ -34,7 +34,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.C
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.UKDutyAmountAnswers.CompleteUKDutyAmountAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.UKDutyAmountAnswer.CompleteUKDutyAmountAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 

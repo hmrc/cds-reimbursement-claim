@@ -25,10 +25,18 @@ import scala.util.Try
 
 object TimeUtils {
 
-  def acceptanceDateDisplayFormat(acceptanceDate: String): Option[String] = {
+  def toDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
     val result = for {
       t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("u-M-d")))
       f <- Try(DateTimeFormatter.ofPattern("d MMMM u").format(t))
+    } yield f
+    result.toOption
+  }
+
+  def fromDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
+    val result = for {
+      t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("d MMMM u")))
+      f <- Try(DateTimeFormatter.ofPattern("uMMd").format(t))
     } yield f
     result.toOption
   }
