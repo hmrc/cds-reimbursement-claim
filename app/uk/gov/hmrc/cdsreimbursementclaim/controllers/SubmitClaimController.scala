@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -51,7 +51,7 @@ class SubmitClaimController @Inject() (
           logger.warn("Could not submit claim", e)
           InternalServerError
         },
-        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
+        (submitClaimResponse: SubmitClaimResponse) => Ok(Json.toJson(submitClaimResponse))
       )
     }
   }

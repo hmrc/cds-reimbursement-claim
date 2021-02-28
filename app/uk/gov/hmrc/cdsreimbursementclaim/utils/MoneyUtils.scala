@@ -18,7 +18,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.utils
 
 object MoneyUtils {
 
-  def roundedTwoDecimalPlaces(value: Double): String =
-    BigDecimal(value).setScale(2, BigDecimal.RoundingMode.HALF_UP).toString()
+  def roundedTwoDecimalPlacesToString(value: BigDecimal): String =
+    value.setScale(2, BigDecimal.RoundingMode.HALF_UP).toString()
+
+  def roundedTwoDecimalPlaces(value: BigDecimal): BigDecimal =
+    value.setScale(2, BigDecimal.RoundingMode.HALF_UP)
 
 }

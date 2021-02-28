@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import cats.syntax.traverse._
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits.catsSyntaxTuple2Semigroupal
@@ -34,7 +35,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation, invalid}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlaces
+import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlacesToString
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 
 import javax.inject.Singleton
@@ -80,7 +81,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             customDeclarationType = Some(CustomDeclarationType.Entry),
             declarationMode = Some(DeclarationMode.ParentDeclaration),
             claimDate = Some(TimeUtils.isoLocalDateNow),
-            claimAmountTotal = Some(roundedTwoDecimalPlaces(claimRequest.completeClaim.claims.total)),
+            claimAmountTotal = Some(roundedTwoDecimalPlacesToString(claimRequest.completeClaim.claims.total)),
             disposalMethod = None,
             reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
             basisOfClaim = Some(basisOfClaim),
@@ -622,7 +623,7 @@ object DefaultClaimTransformerService {
     val result: List[Validation[NdrcDetails]] = claims.map { claim =>
       (
         isValidPaymentMethod(claim.paymentMethod),
-        isValidTaxType(claim.taxCode.description),
+        isValidTaxType(claim.taxCode),
         isValidPaymentReference(claim.paymentReference),
         isValidAmount(claim.paidAmount),
         isValidAmount(claim.claimAmount)
@@ -637,13 +638,14 @@ object DefaultClaimTransformerService {
         )
       }
     }
-    val dd: List[NdrcDetails]                 = result.collect { case Valid(value) => value }
-
-    if (claims.size =!= dd.size) {
-      invalid("there is at least one claim which has failed validation")
+    if (result.sequence.isInvalid) {
+      val errors = result.collect { case e: Invalid[NonEmptyList[String]] => e }
+      invalid(s"there is at least one claim which has failed validation: ${errors.map(s => s.e.toList).mkString("|")}")
     } else {
+      val dd: List[NdrcDetails] = result.collect { case Valid(value) => value }
       Valid(dd)
     }
+
   }
 
   def setAcceptanceDate(
