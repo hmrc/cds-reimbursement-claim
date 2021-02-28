@@ -68,6 +68,102 @@ object CompleteClaim {
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
 
+    def reasonAndBasisOfClaim: Option[CompleteReasonAndBasisOfClaimAnswer] = completeClaim match {
+      case CompleteC285Claim(
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            maybeCompleteReasonAndBasisOfClaimAnswer,
+            _,
+            _,
+            _,
+            _,
+            _
+          ) =>
+        maybeCompleteReasonAndBasisOfClaimAnswer
+    }
+
+    def bankDetails: Option[CompleteBankAccountDetailAnswer] = completeClaim match {
+      case CompleteC285Claim(
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            maybeCompleteBankAccountDetailAnswer,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _
+          ) =>
+        maybeCompleteBankAccountDetailAnswer
+    }
+
+    def entryDeclarationDetails: Option[CompleteDeclarationDetailsAnswer] = completeClaim match {
+      case CompleteC285Claim(
+            _,
+            _,
+            _,
+            maybeCompleteDeclarationDetailsAnswer,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _
+          ) =>
+        maybeCompleteDeclarationDetailsAnswer
+    }
+
+    def duplicateEntryDeclarationDetails: Option[CompleteDuplicateDeclarationDetailsAnswer] = completeClaim match {
+      case CompleteC285Claim(
+            _,
+            _,
+            _,
+            _,
+            maybeCompleteDuplicateDeclarationDetailsAnswer,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _
+          ) =>
+        maybeCompleteDuplicateDeclarationDetailsAnswer
+    }
+
     def evidences: List[SupportingEvidence] = completeClaim match {
       case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, supportingEvidenceAnswers, _, _, _, _, _, _, _) =>
         supportingEvidenceAnswers.evidences

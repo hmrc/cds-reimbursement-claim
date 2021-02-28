@@ -41,6 +41,14 @@ object TimeUtils {
     result.toOption
   }
 
+  def fromEntryDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
+    val result = for {
+      t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("u-M-d")))
+      f <- Try(DateTimeFormatter.ofPattern("uMMd").format(t))
+    } yield f
+    result.toOption
+  }
+
   val cdsDateTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
 
