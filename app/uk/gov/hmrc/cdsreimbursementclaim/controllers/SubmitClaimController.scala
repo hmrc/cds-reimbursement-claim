@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
@@ -30,6 +31,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class SubmitClaimController @Inject() (
+  authenticate: AuthenticateActions,
   claimService: SubmitClaimService,
   ccsSubmissionService: CcsSubmissionService,
   cc: ControllerComponents
@@ -37,7 +39,7 @@ class SubmitClaimController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def submitClaim(): Action[JsValue] = Action(parse.json).async { implicit request =>
+  def submitClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[SubmitClaimRequest] { claimRequest =>
       val result =
         for {

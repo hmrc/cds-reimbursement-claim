@@ -39,6 +39,7 @@ import scala.concurrent.Future
 
 @Ignore
 class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFactory with DefaultAwaitTimeout {
+
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   implicit val ec                           = scala.concurrent.ExecutionContext.Implicits.global
   implicit val hc                           = HeaderCarrier()
