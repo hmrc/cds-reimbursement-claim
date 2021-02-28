@@ -972,15 +972,13 @@ object DefaultClaimTransformerService {
 
   def setEntryAcceptanceDate(
     completeDeclarationDetailsAnswer: CompleteDeclarationDetailsAnswer
-  ): Validation[String] = {
-    println(s"\n\n\n\n ${completeDeclarationDetailsAnswer.declarationDetails.dateOfImport.value.toString} \n\n\n\n\n")
+  ): Validation[String] =
     TimeUtils.fromEntryDisplayAcceptanceDateFormat(
       completeDeclarationDetailsAnswer.declarationDetails.dateOfImport.value.toString
     ) match {
       case Some(acceptanceDate) => Valid(acceptanceDate)
       case None                 => invalid("Could not format display acceptance date")
     }
-  }
 
   def setDuplicateEntryAcceptanceDate(
     completeDuplicateDeclarationDetailsAnswer: CompleteDuplicateDeclarationDetailsAnswer
