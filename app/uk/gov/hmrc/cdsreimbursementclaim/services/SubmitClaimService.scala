@@ -72,7 +72,7 @@ class SubmitClaimServiceImpl @Inject() (
       claimRequest.signedInUserDetails.verifiedEmail,
       claimRequest.signedInUserDetails.eori,
       claimRequest.signedInUserDetails.contactName,
-      claimRequest.signedInUserDetails.claimAmount
+      claimRequest.completeClaim.claims.total
     )
 
     for {
