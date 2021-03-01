@@ -23,7 +23,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 final case class EmailRequest(
   email: Email,
   eori: Eori,
-  contactName: ContactName
+  contactName: ContactName,
+  claimAmount: BigDecimal
 )
 
 object EmailRequest {
