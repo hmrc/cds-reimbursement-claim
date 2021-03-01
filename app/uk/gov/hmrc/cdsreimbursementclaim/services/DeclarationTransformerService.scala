@@ -59,7 +59,7 @@ object DefaultDeclarationTransformerService {
     DisplayResponseDetail(
       declarationId = responseDetail.declarationId,
       acceptanceDate = TimeUtils
-        .acceptanceDateDisplayFormat(responseDetail.acceptanceDate)
+        .toDisplayAcceptanceDateFormat(responseDetail.acceptanceDate)
         .getOrElse("could not convert acceptance date"),
       declarantReferenceNumber = responseDetail.declarantReferenceNumber,
       securityReason = responseDetail.securityReason,

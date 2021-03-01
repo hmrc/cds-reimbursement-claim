@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.ccs
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode.EUTaxCode
+import ru.tinkoff.phobos.derivation.semiauto.deriveXmlEncoder
+import ru.tinkoff.phobos.encoding.XmlEncoder
+import ru.tinkoff.phobos.syntax.xmlns
+import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.soap
 
-final case class EuDutyAmount(
-  taxCode: EUTaxCode,
-  paid: Option[BigDecimal],
-  claim: Option[BigDecimal]
+final case class Envelope(
+  @xmlns(soap) Body: Body
 )
 
-object EuDutyAmount {
-  implicit val format: OFormat[EuDutyAmount] = Json.format[EuDutyAmount]
+object Envelope {
+  implicit val envelopeEncoder: XmlEncoder[Envelope] = deriveXmlEncoder("Envelope", Namespaces.soap)
 }

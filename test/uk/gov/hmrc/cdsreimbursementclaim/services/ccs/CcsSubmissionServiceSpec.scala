@@ -20,18 +20,15 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import cats.data.EitherT
 import cats.instances.future._
-import com.typesafe.config.ConfigFactory
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.Configuration
 import play.api.test.Helpers.await
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
@@ -41,6 +38,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SubmitClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -62,26 +60,6 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val configuration: Configuration = Configuration(
-    ConfigFactory.parseString(
-      """
-        |ccs {
-        |    submission-poller {
-        |        jitter-period = 5 seconds
-        |        initial-delay = 5 seconds
-        |        interval = 5 seconds
-        |        failure-count-limit = 50
-        |        in-progress-retry-after = 5000 # milliseconds
-        |        mongo {
-        |            ttl = 10 days
-        |        }
-        |    }
-        |}
-        |
-        |""".stripMargin
-    )
-  )
-
   def makeDec64XmlPayload(
     correlationId: String,
     batchId: String,
@@ -102,60 +80,64 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
     destinationSystem: String
   ): String =
     s"""
-      |<?xml version='1.0' encoding='UTF-8'?>
-      |<ans1:BatchFileInterfaceMetadata xmlns:ans1="http://www.hmrc.gsi.gov.uk/mdg/batchFileInterfaceMetadataSchema">
-      |    <ans1:sourceSystem>TPI</ans1:sourceSystem>
-      |    <ans1:sourceSystemType>AWS</ans1:sourceSystemType>
-      |    <ans1:interfaceName>DEC64</ans1:interfaceName>
-      |    <ans1:interfaceVersion>1.0.0</ans1:interfaceVersion>
-      |    <ans1:correlationID>$correlationId</ans1:correlationID>
-      |    <ans1:batchID>$batchId</ans1:batchID>
-      |    <ans1:batchSize>$batchSize</ans1:batchSize>
-      |    <ans1:batchCount>$batchCount</ans1:batchCount>
-      |    <ans1:checksum>$checksum</ans1:checksum>
-      |    <ans1:checksumAlgorithm>SHA-256</ans1:checksumAlgorithm>
-      |    <ans1:fileSize>$fileSize</ans1:fileSize>
-      |    <ans1:compressed>false</ans1:compressed>
-      |    <ans1:properties>
-      |        <ans1:property>
-      |            <ans1:name>CaseReference</ans1:name>
-      |            <ans1:value>$caseReference</ans1:value>
-      |        </ans1:property>
-      |        <ans1:property>
-      |            <ans1:name>Eori</ans1:name>
-      |            <ans1:value>$eori</ans1:value>
-      |        </ans1:property>
-      |        <ans1:property>
-      |            <ans1:name>DeclarationId</ans1:name>
-      |            <ans1:value>$declarationId</ans1:value>
-      |        </ans1:property>
-      |        <ans1:property>
-      |            <ans1:name>DeclarationType</ans1:name>
-      |            <ans1:value>$declarationType</ans1:value>
-      |        </ans1:property>
-      |        <ans1:property>
-      |            <ans1:name>ApplicationName</ans1:name>
-      |            <ans1:value>$applicationName</ans1:value>
-      |        </ans1:property>
-      |        <ans1:property>
-      |            <ans1:name>DocumentType</ans1:name>
-      |            <ans1:value>$documentType</ans1:value>
-      |        </ans1:property>
-      |        <ans1:property>
-      |            <ans1:name>DocumentReceivedDate</ans1:name>
-      |            <ans1:value>$documentReceivedDate</ans1:value>
-      |        </ans1:property>
-      |    </ans1:properties>
-      |    <ans1:sourceLocation>$sourceLocation</ans1:sourceLocation>
-      |    <ans1:sourceFileName>$sourceFileName</ans1:sourceFileName>
-      |    <ans1:sourceFileMimeType>$sourceFileMimeType</ans1:sourceFileMimeType>
-      |    <ans1:destinations>
-      |        <ans1:destination>
-      |            <ans1:destinationSystem>$destinationSystem</ans1:destinationSystem>
-      |        </ans1:destination>
-      |    </ans1:destinations>
-      |</ans1:BatchFileInterfaceMetadata>
-      |""".stripMargin
+       |<?xml version='1.0' encoding='UTF-8'?>
+       |<ans1:Envelope xmlns:ans1="http://schemas.xmlsoap.org/soap/envelope/">
+       |    <ans1:Body>
+       |        <ans2:BatchFileInterfaceMetadata xmlns:ans2="http://www.hmrc.gsi.gov.uk/mdg/batchFileInterfaceMetadataSchema">
+       |            <ans2:sourceSystem>TPI</ans2:sourceSystem>
+       |            <ans2:sourceSystemType>AWS</ans2:sourceSystemType>
+       |            <ans2:interfaceName>DEC64</ans2:interfaceName>
+       |            <ans2:interfaceVersion>1.0.0</ans2:interfaceVersion>
+       |            <ans2:correlationID>$correlationId</ans2:correlationID>
+       |            <ans2:batchID>$batchId</ans2:batchID>
+       |            <ans2:batchSize>$batchSize</ans2:batchSize>
+       |            <ans2:batchCount>$batchCount</ans2:batchCount>
+       |            <ans2:checksum>$checksum</ans2:checksum>
+       |            <ans2:checksumAlgorithm>SHA-256</ans2:checksumAlgorithm>
+       |            <ans2:fileSize>$fileSize</ans2:fileSize>
+       |            <ans2:compressed>false</ans2:compressed>
+       |            <ans2:properties>
+       |                <ans2:property>
+       |                    <ans2:name>CaseReference</ans2:name>
+       |                    <ans2:value>$caseReference</ans2:value>
+       |                </ans2:property>
+       |                <ans2:property>
+       |                    <ans2:name>Eori</ans2:name>
+       |                    <ans2:value>$eori</ans2:value>
+       |                </ans2:property>
+       |                <ans2:property>
+       |                    <ans2:name>DeclarationId</ans2:name>
+       |                    <ans2:value>$declarationId</ans2:value>
+       |                </ans2:property>
+       |                <ans2:property>
+       |                    <ans2:name>DeclarationType</ans2:name>
+       |                    <ans2:value>$declarationType</ans2:value>
+       |                </ans2:property>
+       |                <ans2:property>
+       |                    <ans2:name>ApplicationName</ans2:name>
+       |                    <ans2:value>$applicationName</ans2:value>
+       |                </ans2:property>
+       |                <ans2:property>
+       |                    <ans2:name>DocumentType</ans2:name>
+       |                    <ans2:value>$documentType</ans2:value>
+       |                </ans2:property>
+       |                <ans2:property>
+       |                    <ans2:name>DocumentReceivedDate</ans2:name>
+       |                    <ans2:value>$documentReceivedDate</ans2:value>
+       |                </ans2:property>
+       |            </ans2:properties>
+       |            <ans2:sourceLocation>$sourceLocation</ans2:sourceLocation>
+       |            <ans2:sourceFileName>$sourceFileName</ans2:sourceFileName>
+       |            <ans2:sourceFileMimeType>$sourceFileMimeType</ans2:sourceFileMimeType>
+       |            <ans2:destinations>
+       |                <ans2:destination>
+       |                    <ans2:destinationSystem>$destinationSystem</ans2:destinationSystem>
+       |                </ans2:destination>
+       |            </ans2:destinations>
+       |        </ans2:BatchFileInterfaceMetadata>
+       |    </ans1:Body>
+       |</ans1:Envelope>
+       |""".stripMargin
       .filter(_ >= ' ')
       .replaceAllLiterally(" ", "")
 
@@ -205,7 +187,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
     new CcsSubmissionPollerExecutionContext(actorSystem)
 
   val ccsSubmissionService =
-    new DefaultCcsSubmissionService(mockCcsConnector, mockCcsSubmissionRepo, configuration)
+    new DefaultCcsSubmissionService(mockCcsConnector, mockCcsSubmissionRepo)
 
   "Ccs Submission Service" when {
 

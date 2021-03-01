@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.ccs
 
-import play.api.libs.json.{Json, OFormat}
+import ru.tinkoff.phobos.derivation.semiauto._
+import ru.tinkoff.phobos.encoding.ElementEncoder
+import ru.tinkoff.phobos.syntax.xmlns
+import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
 
-final case class EnterEuClaim(
-  dutyAmounts: List[EuDutyAmount]
-)
+final case class Body(@xmlns(mdg) BatchFileInterfaceMetadata: BatchFileInterfaceMetadata)
 
-object EnterEuClaim {
-  implicit val format: OFormat[EnterEuClaim] = Json.format[EnterEuClaim]
+object Body {
+  implicit val batchFileInterfaceMetadataEncoder: ElementEncoder[Body] = deriveElementEncoder[Body]
 }

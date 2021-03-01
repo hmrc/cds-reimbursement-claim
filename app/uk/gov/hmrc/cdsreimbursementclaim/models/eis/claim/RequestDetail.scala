@@ -19,7 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 import play.api.libs.functional.syntax.{unlift, _}
 import play.api.libs.json.{Format, JsPath, Json, OFormat}
 
-// The root structure for the JSON payload exceed 22 fields. Therefore the type needs to be split.
+// The root structure for the JSON payload exceed 22 fields.
+// Therefore the type needs to be split.
 final case class RequestDetailA(
   CDFPayService: String,
   dateReceived: Option[String],

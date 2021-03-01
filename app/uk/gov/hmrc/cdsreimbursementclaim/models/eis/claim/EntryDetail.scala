@@ -27,7 +27,7 @@ final case class EntryDetail(
   accountDetails: Option[AccountDetail],
   consigneeDetails: Option[MRNInformation],
   bankDetails: Option[BankDetails],
-  ndrcDetails: Option[List[NdrcDetails]]
+  NDRCDetails: Option[List[NdrcDetails]]
 )
 
 object EntryDetail {

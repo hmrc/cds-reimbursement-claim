@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ccs
 
-import ru.tinkoff.phobos.derivation.semiauto.deriveXmlEncoder
-import ru.tinkoff.phobos.encoding.XmlEncoder
+import ru.tinkoff.phobos.derivation.semiauto._
+import ru.tinkoff.phobos.encoding.ElementEncoder
 import ru.tinkoff.phobos.syntax.xmlns
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
@@ -43,6 +43,6 @@ final case class BatchFileInterfaceMetadata(
 )
 
 object BatchFileInterfaceMetadata {
-  implicit val batchFileInterfaceMetadataEncoder: XmlEncoder[BatchFileInterfaceMetadata] =
-    deriveXmlEncoder("BatchFileInterfaceMetadata", Namespaces.mdg)
+  implicit val batchFileInterfaceMetadataEncoder: ElementEncoder[BatchFileInterfaceMetadata] =
+    deriveElementEncoder[BatchFileInterfaceMetadata]
 }

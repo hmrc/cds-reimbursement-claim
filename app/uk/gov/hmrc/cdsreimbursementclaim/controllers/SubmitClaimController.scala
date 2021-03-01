@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -45,15 +45,15 @@ class SubmitClaimController @Inject() (
         for {
           submitClaimResponse <- claimService.submitClaim(claimRequest)
           _                   <- ccsSubmissionService.enqueue(claimRequest, submitClaimResponse)
-          _                    = logger.info(s"enqueued supporting evidences for claim")
+          _                    = logger.info(s"Enqueued supporting evidences for claim")
         } yield submitClaimResponse
 
       result.fold(
         { e =>
-          logger.warn("could not submit claim", e)
+          logger.warn("Could not submit claim", e)
           InternalServerError
         },
-        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
+        (submitClaimResponse: SubmitClaimResponse) => Ok(Json.toJson(submitClaimResponse))
       )
     }
   }

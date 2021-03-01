@@ -19,9 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import configs.ConfigReader
-import configs.syntax._
-import play.api.Configuration
 import reactivemongo.bson.BSONObjectID
 import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
@@ -58,16 +55,10 @@ trait CcsSubmissionService {
 @Singleton
 class DefaultCcsSubmissionService @Inject() (
   ccsConnector: CcsConnector,
-  ccsSubmissionRepo: CcsSubmissionRepo,
-  configuration: Configuration
+  ccsSubmissionRepo: CcsSubmissionRepo
 )(implicit ec: CcsSubmissionPollerExecutionContext)
     extends CcsSubmissionService
     with Logging {
-
-  def getCcsMetaConfig[A : ConfigReader](key: String): A =
-    configuration.underlying
-      .get[A](s"ccs.$key")
-      .value
 
   override def submitToCcs(
     ccsSubmissionPayload: CcsSubmissionPayload
@@ -85,7 +76,7 @@ class DefaultCcsSubmissionService @Inject() (
         .map(data =>
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
-              XmlEncoder[BatchFileInterfaceMetadata]
+              XmlEncoder[Envelope]
                 .encode(data)
                 .trim
                 .filter(_ >= ' ')
@@ -112,39 +103,43 @@ object DefaultCcsSubmissionService {
   def makeBatchFileInterfaceMetaDataPayload(
     submitClaimRequest: SubmitClaimRequest,
     submitClaimResponse: SubmitClaimResponse
-  ): List[BatchFileInterfaceMetadata] = {
+  ): List[Envelope] = {
     def make(
       referenceNumber: String,
       evidence: SupportingEvidence,
       batchCount: Long
-    ): BatchFileInterfaceMetadata =
-      BatchFileInterfaceMetadata(
-        correlationID = submitClaimRequest.completeClaim.correlationId,
-        batchID = submitClaimRequest.completeClaim.correlationId,
-        batchCount = batchCount,
-        batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-        checksum = evidence.upscanSuccess.uploadDetails.checksum,
-        sourceLocation = evidence.upscanSuccess.downloadUrl,
-        sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
-        sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
-        fileSize = evidence.upscanSuccess.uploadDetails.size,
-        properties = PropertiesType(
-          List(
-            PropertyType("CaseReference", submitClaimResponse.caseNumber),
-            PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
-            PropertyType("DeclarationId", referenceNumber),
-            PropertyType(
-              "DeclarationType",
-              submitClaimRequest.completeClaim.declarantType.declarantType.toString
-            ),
-            PropertyType("ApplicationName", "NDRC"),
-            PropertyType(
-              "DocumentType",
-              evidence.documentType.map(documentType => documentType.toString).getOrElse("")
-            ),
-            PropertyType(
-              "DocumentReceivedDate",
-              TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn)
+    ): Envelope =
+      Envelope(
+        Body(
+          BatchFileInterfaceMetadata(
+            correlationID = submitClaimRequest.completeClaim.correlationId,
+            batchID = submitClaimRequest.completeClaim.correlationId,
+            batchCount = batchCount,
+            batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
+            checksum = evidence.upscanSuccess.uploadDetails.checksum,
+            sourceLocation = evidence.upscanSuccess.downloadUrl,
+            sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
+            sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
+            fileSize = evidence.upscanSuccess.uploadDetails.size,
+            properties = PropertiesType(
+              List(
+                PropertyType("CaseReference", submitClaimResponse.caseNumber),
+                PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
+                PropertyType("DeclarationId", referenceNumber),
+                PropertyType(
+                  "DeclarationType",
+                  submitClaimRequest.completeClaim.declarantType.declarantType.toString
+                ),
+                PropertyType("ApplicationName", "NDRC"),
+                PropertyType(
+                  "DocumentType",
+                  evidence.documentType.map(documentType => documentType.toString).getOrElse("")
+                ),
+                PropertyType(
+                  "DocumentReceivedDate",
+                  TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn)
+                )
+              )
             )
           )
         )

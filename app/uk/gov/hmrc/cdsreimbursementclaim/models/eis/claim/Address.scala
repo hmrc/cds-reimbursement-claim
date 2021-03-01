@@ -32,5 +32,17 @@ final case class Address(
 )
 
 object Address {
+  val empty: Address                    = Address(
+    Some("No contact person"),
+    Some("No line 1"),
+    Some("No line 2"),
+    Some("No line 3"),
+    Some("No street"),
+    Some("No city"),
+    "GB",
+    Some("None"),
+    Some("No telephone"),
+    Some("No email")
+  )
   implicit val format: OFormat[Address] = Json.format[Address]
 }

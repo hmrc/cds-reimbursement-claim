@@ -67,8 +67,6 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
 
     "it receives a request to send a claim submitted confirmation email" must {
 
-      implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "en"))
-
       val submitClaimResponse = sample[SubmitClaimResponse].copy(caseNumber = "case-number")
       val emailRequest        = sample[EmailRequest]
 
@@ -86,6 +84,8 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
       )
 
       "make a http post call and return a result" in {
+        implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "en"))
+
         List(
           HttpResponse(204, emptyJsonBody),
           HttpResponse(401, emptyJsonBody),
@@ -109,6 +109,20 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
       }
 
       "return an error" when {
+        implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "cy"))
+
+        val expectedRequestBody = Json.parse(
+          s"""{
+             |  "to": ["${emailRequest.email.value}"],
+             |  "templateId": "${claimSubmittedTemplateId}_cy",
+             |  "parameters": {
+             |    "name": "${emailRequest.contactName.value}",
+             |    "caseNumber": "${submitClaimResponse.caseNumber}"
+             |  },
+             |  "force": false
+             |}
+             |""".stripMargin
+        )
 
         "the call fails" in {
           mockPost(
@@ -120,6 +134,22 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
           await(
             connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
           ).isLeft shouldBe true
+        }
+
+        "if there is no language specified" in {
+          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq())
+          await(
+            connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
+          ).isLeft shouldBe true
+
+        }
+
+        "if an invalid language is passed" in {
+          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "ru"))
+          await(
+            connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
+          ).isLeft shouldBe true
+
         }
       }
     }
