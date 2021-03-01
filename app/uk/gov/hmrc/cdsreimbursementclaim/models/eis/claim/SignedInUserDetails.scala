@@ -20,12 +20,14 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
+import uk.gov.hmrc.cdsreimbursementclaim.models.Claim
 
 final case class SignedInUserDetails(
   email: Option[Email],
   eori: Eori,
   verifiedEmail: Email,
-  contactName: ContactName
+  contactName: ContactName,
+  claimAmount: Claim
 )
 
 object SignedInUserDetails {
