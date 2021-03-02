@@ -17,12 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.email
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 
 final case class EmailRequest(
   email: Email,
-  eori: Eori,
   contactName: ContactName,
   claimAmount: BigDecimal
 )

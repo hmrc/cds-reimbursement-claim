@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class ClaimConfirmationEmailSentEvent(emailAddress: String, eori: String, caseNumber: String)
+final case class ClaimConfirmationEmailSentEvent(emailAddress: String, caseNumber: String)
 
 object ClaimConfirmationEmailSentEvent {
   implicit val format: OFormat[ClaimConfirmationEmailSentEvent] =

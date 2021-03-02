@@ -79,7 +79,6 @@ class EmailServiceImpl @Inject() (connector: EmailConnector, auditService: Audit
       "claimConfirmationEmailSent",
       ClaimConfirmationEmailSentEvent(
         emailRequest.email.value,
-        emailRequest.eori.value,
         submitClaimResponse.caseNumber
       ),
       "claim-confirmation-email-sent"

@@ -70,7 +70,6 @@ class SubmitClaimServiceImpl @Inject() (
 
     val emailRequest: EmailRequest = EmailRequest(
       claimRequest.signedInUserDetails.verifiedEmail,
-      claimRequest.signedInUserDetails.eori,
       claimRequest.signedInUserDetails.contactName,
       claimRequest.completeClaim.claims.total
     )

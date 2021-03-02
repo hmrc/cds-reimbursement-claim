@@ -73,8 +73,9 @@ class DefaultEmailConnector @Inject() (
                                   List(emailRequest.email.value),
                                   DefaultEmailConnector.getEmailTemplate(acceptLanguage, claimSubmittedTemplateId),
                                   Map(
-                                    "name"       -> emailRequest.contactName.value,
-                                    "caseNumber" -> submitClaimResponse.caseNumber
+                                    "name"        -> emailRequest.contactName.value,
+                                    "caseNumber"  -> submitClaimResponse.caseNumber,
+                                    "claimAmount" -> emailRequest.claimAmount.toString
                                   ),
                                   force = false
                                 )
