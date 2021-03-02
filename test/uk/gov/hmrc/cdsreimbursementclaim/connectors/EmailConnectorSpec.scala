@@ -76,7 +76,8 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
            |  "templateId": "$claimSubmittedTemplateId",
            |  "parameters": {
            |    "name": "${emailRequest.contactName.value}",
-           |    "caseNumber": "${submitClaimResponse.caseNumber}"
+           |    "caseNumber": "${submitClaimResponse.caseNumber}",
+           |    "claimAmount": "${emailRequest.claimAmount.toString}"
            |  },
            |  "force": false
            |}
@@ -117,7 +118,8 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
              |  "templateId": "${claimSubmittedTemplateId}_cy",
              |  "parameters": {
              |    "name": "${emailRequest.contactName.value}",
-             |    "caseNumber": "${submitClaimResponse.caseNumber}"
+             |    "caseNumber": "${submitClaimResponse.caseNumber}",
+             |    "claimAmount": "${emailRequest.claimAmount.toString}"
              |  },
              |  "force": false
              |}
