@@ -162,7 +162,7 @@ class SubmitClaimServiceImpl @Inject() (
     EitherT.fromEither[Future] {
       Right(
         SubmitClaimResponse(
-          response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber
+          response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber.getOrElse("No case number")
         )
       )
     }
