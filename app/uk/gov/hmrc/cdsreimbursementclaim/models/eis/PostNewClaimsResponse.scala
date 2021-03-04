@@ -17,14 +17,18 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ReturnParameters
 
 final case class ResponseCommon(
   status: String,
   processingDate: String,
-  CDFPayService: String,
-  CDFPayCaseNumber: String,
-  correlationId: String
+  CDFPayService: Option[String],
+  CDFPayCaseNumber: Option[String],
+  correlationId: Option[String],
+  errorMessage: Option[String],
+  returnParameters: Option[List[ReturnParameters]]
 )
+
 object ResponseCommon {
   implicit val format: OFormat[ResponseCommon] = Json.format[ResponseCommon]
 }
