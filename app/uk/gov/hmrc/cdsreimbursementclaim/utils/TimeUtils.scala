@@ -36,7 +36,7 @@ object TimeUtils {
   def fromDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
     val result = for {
       t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("d MMMM u")))
-      f <- Try(DateTimeFormatter.ofPattern("uMMd").format(t))
+      f <- Try(DateTimeFormatter.ofPattern("uMMdd").format(t))
     } yield f
     result.toOption
   }
