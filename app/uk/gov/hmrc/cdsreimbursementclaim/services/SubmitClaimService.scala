@@ -160,10 +160,20 @@ class SubmitClaimServiceImpl @Inject() (
     response: EisSubmitClaimResponse
   ): EitherT[Future, Error, SubmitClaimResponse] =
     EitherT.fromEither[Future] {
-      Right(
-        SubmitClaimResponse(
-          response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber.getOrElse("No case number")
-        )
-      )
+      response.postNewClaimsResponse.responseCommon.errorMessage match {
+        case Some(error) =>
+          Left(
+            Error(
+              s"""submission of claim failed : $error | ${response.postNewClaimsResponse.responseCommon.returnParameters
+                .map(e => e.mkString("; "))}"""
+            )
+          )
+        case None        =>
+          Right(
+            SubmitClaimResponse(
+              response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber.getOrElse("No case number")
+            )
+          )
+      }
     }
 }
