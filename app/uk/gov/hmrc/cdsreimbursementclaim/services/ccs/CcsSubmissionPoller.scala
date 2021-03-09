@@ -94,10 +94,10 @@ class CcsSubmissionPoller @Inject() (
               },
               httpResponse =>
                 if (httpResponse.status === Status.NO_CONTENT) {
-                  logger.info(getLogMessage(workItem, s"work-item ccs submission succeeded: $httpResponse"))
+                  logger.info(getLogMessage(workItem, s"work-item ccs submission succeeded: ${httpResponse.status}"))
                   val _ = ccsSubmissionService.setResultStatus(workItem.id, Succeeded)
                 } else {
-                  logger.info(getLogMessage(workItem, s"work-item ccs submission failed: $httpResponse"))
+                  logger.warn(getLogMessage(workItem, s"work-item ccs submission failed: ${httpResponse.status}"))
                   val _ = ccsSubmissionService.setResultStatus(workItem.id, Failed)
                 }
             )

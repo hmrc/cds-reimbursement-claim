@@ -25,8 +25,9 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-
+import cats.syntax.eq._
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultCcsConnector])
@@ -48,7 +49,13 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
 
   override def submitToCcs(ccsSubmissionPayload: CcsSubmissionPayload)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, HttpResponse] =
+  ): EitherT[Future, Error, HttpResponse] = {
+    logger.info(
+      "submitToCcs request CORRELATION_ID: " + ccsSubmissionPayload.headers
+        .find(_._1 === CustomHeaderNames.X_CORRELATION_ID)
+        .map(_._2)
+        .getOrElse("CORRELATION_ID was not found")
+    )
     EitherT[Future, Error, HttpResponse](
       http
         .POSTString[HttpResponse](
@@ -62,7 +69,7 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
         )
         .map { response =>
           if (response.status != 204) {
-            logger.warn(s"submitToCcs status: ${response.status}, body: ${response.body}")
+            logger.warn(s"submitToCcs response status: ${response.status}, body: ${response.body}")
           }
           response
         }
@@ -72,5 +79,6 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
           Left(Error(e))
         }
     )
+  }
 
 }
