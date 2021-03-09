@@ -24,8 +24,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultCcsConnector])
@@ -40,7 +41,8 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
   ec: ExecutionContext
 ) extends CcsConnector
     with EisConnector
-    with XmlHeaders {
+    with XmlHeaders
+    with Logging {
 
   private val ccsSubmissionUrl: String = s"${config.baseUrl("ccs")}/filetransfer/init/v1"
 
@@ -58,8 +60,17 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
           extraHeaders,
           ec
         )
+        .map { response =>
+          if (response.status != 204) {
+            logger.warn(s"submitToCcs status: ${response.status}, body: ${response.body}")
+          }
+          response
+        }
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn(s"submitToCcs failed", e)
+          Left(Error(e))
+        }
     )
 
 }
