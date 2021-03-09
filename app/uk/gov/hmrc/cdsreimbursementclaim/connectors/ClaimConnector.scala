@@ -25,8 +25,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultClaimConnector])
@@ -41,13 +42,15 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
   ec: ExecutionContext
 ) extends ClaimConnector
     with EisConnector
-    with JsonHeaders {
+    with JsonHeaders
+    with Logging {
 
   private val submitClaimUrl: String = s"${config.baseUrl("claim")}/tpi/postoverpaymentclaim/v1"
 
   override def submitClaim(
     submitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] = {
+    logger.info("submitClaim Request TPI05: " + Json.prettyPrint(Json.toJson(submitClaimRequest)))
     EitherT[Future, Error, HttpResponse](
       http
         .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(submitClaimRequest))(
@@ -56,8 +59,10 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
           extraHeaders,
           ec
         )
+        .map { resp => logger.info("submitClaim Response: " + resp.body); resp }
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
+  }
 
 }
