@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class BankAccountDetails(
   accountName: AccountName,
-  isBusinessAccount: List[Int],
+  isBusinessAccount: Option[Boolean],
   sortCode: SortCode,
   accountNumber: AccountNumber
 )
