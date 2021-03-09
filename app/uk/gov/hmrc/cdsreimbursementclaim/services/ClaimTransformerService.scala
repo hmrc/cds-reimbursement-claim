@@ -138,7 +138,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
             dateReceived = Some(TimeUtils.isoLocalDateNow),
             claimType = Some(ClaimType.C285),
             caseType = Some(CaseType.Individual),
-            customDeclarationType = Some(CustomDeclarationType.Entry),
+            customDeclarationType = Some(CustomDeclarationType.MRN),
             declarationMode = Some(DeclarationMode.ParentDeclaration),
             claimDate = Some(TimeUtils.isoLocalDateNow),
             claimAmountTotal = Some(roundedTwoDecimalPlacesToString(claimRequest.completeClaim.claims.total)),
