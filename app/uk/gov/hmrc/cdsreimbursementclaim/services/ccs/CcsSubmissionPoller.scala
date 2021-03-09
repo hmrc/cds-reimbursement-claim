@@ -104,7 +104,6 @@ class CcsSubmissionPoller @Inject() (
         }
 
       case None =>
-        logger.info("CCS File Submission poller: no work items")
         Future.successful(())
     }
 
