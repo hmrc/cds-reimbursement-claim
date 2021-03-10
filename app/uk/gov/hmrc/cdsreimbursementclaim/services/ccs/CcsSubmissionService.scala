@@ -77,10 +77,7 @@ class DefaultCcsSubmissionService @Inject() (
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
               XmlEncoder[Envelope]
-                .encode(data)
-                .trim
-                .filter(_ >= ' ')
-                .replaceAllLiterally(" ", ""),
+                .encode(data),
               hc.headers
             )
           )
