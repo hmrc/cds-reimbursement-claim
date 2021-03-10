@@ -54,8 +54,8 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
 
     logger.info(
       s"Ccs submission request correlation id: ${extraHeaders.extraHeaders
-        .find(p => p._1 === CustomHeaderNames.X_CORRELATION_ID)
-        .fold("No correlation id found")(c => c._2)}"
+        .find(_._1 === CustomHeaderNames.X_CORRELATION_ID)
+        .fold("No correlation id found")(_._2)}"
     )
 
     EitherT[Future, Error, HttpResponse](
