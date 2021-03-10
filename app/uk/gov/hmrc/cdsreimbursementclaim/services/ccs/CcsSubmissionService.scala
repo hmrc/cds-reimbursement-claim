@@ -77,10 +77,7 @@ class DefaultCcsSubmissionService @Inject() (
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
               XmlEncoder[Envelope]
-                .encode(data)
-                .trim
-                .filter(_ >= ' ')
-                .replaceAllLiterally(" ", ""),
+                .encode(data),
               hc.headers
             )
           )
@@ -151,7 +148,7 @@ object DefaultCcsSubmissionService {
           make(
             entryNumber.value,
             evidence,
-            index.toLong
+            index.toLong + 1
           )
         }
       case Right(mrn)        =>
@@ -159,7 +156,7 @@ object DefaultCcsSubmissionService {
           make(
             mrn.value,
             evidence,
-            index.toLong
+            index.toLong + 1
           )
         }
     }

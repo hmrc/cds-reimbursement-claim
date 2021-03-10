@@ -17,17 +17,18 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
+import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, XmlHeaders}
+import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import cats.syntax.eq._
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultCcsConnector])
@@ -50,12 +51,13 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
   override def submitToCcs(ccsSubmissionPayload: CcsSubmissionPayload)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] = {
+
     logger.info(
-      "submitToCcs request CORRELATION_ID: " + ccsSubmissionPayload.headers
+      s"Ccs submission request correlation id: ${extraHeaders.extraHeaders
         .find(_._1 === CustomHeaderNames.X_CORRELATION_ID)
-        .map(_._2)
-        .getOrElse("CORRELATION_ID was not found")
+        .fold("No correlation id found")(_._2)}"
     )
+
     EitherT[Future, Error, HttpResponse](
       http
         .POSTString[HttpResponse](
@@ -67,17 +69,8 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
           extraHeaders,
           ec
         )
-        .map { response =>
-          if (response.status != 204) {
-            logger.warn(s"submitToCcs response status: ${response.status}, body: ${response.body}")
-          }
-          response
-        }
         .map(Right(_))
-        .recover { case e =>
-          logger.warn(s"submitToCcs failed", e)
-          Left(Error(e))
-        }
+        .recover { case e => Left(Error(e)) }
     )
   }
 

@@ -67,8 +67,7 @@ class CcsSubmissionPoller @Inject() (
 
   def getLogMessage(workItem: WorkItem[CcsSubmissionRequest], stateIndicator: String): String =
     s"CCS File Submission poller: $stateIndicator:  work-item-id: ${workItem.id}, work-item-failure-count: ${workItem.failureCount}, " +
-      s"work-item-status: ${workItem.status}, work-item-updatedAt : ${workItem.updatedAt}, " +
-      s"work-item-eori: ${workItem.item} "
+      s"work-item-status: ${workItem.status}, work-item-updatedAt : ${workItem.updatedAt}"
 
   def poller(): Unit = {
     val result: EitherT[Future, Error, Unit] = ccsSubmissionService.dequeue.semiflatMap {
@@ -104,6 +103,7 @@ class CcsSubmissionPoller @Inject() (
         }
 
       case None =>
+        logger.info("CCS File Submission poller: no work items")
         Future.successful(())
     }
 
