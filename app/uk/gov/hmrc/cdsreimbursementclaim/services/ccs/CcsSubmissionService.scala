@@ -148,7 +148,7 @@ object DefaultCcsSubmissionService {
           make(
             entryNumber.value,
             evidence,
-            index.toLong
+            index.toLong + 1
           )
         }
       case Right(mrn)        =>
@@ -156,7 +156,7 @@ object DefaultCcsSubmissionService {
           make(
             mrn.value,
             evidence,
-            index.toLong
+            index.toLong + 1
           )
         }
     }
