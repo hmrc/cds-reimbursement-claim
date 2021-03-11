@@ -52,8 +52,10 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] = {
 
+    val dec64headers = extraHeaders
+
     logger.info(
-      s"Ccs submission request correlation id: ${extraHeaders.extraHeaders
+      s"Ccs submission request correlation id: ${dec64headers.extraHeaders
         .find(_._1 === CustomHeaderNames.X_CORRELATION_ID)
         .fold("No correlation id found")(_._2)}"
     )
@@ -66,7 +68,7 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
           ccsSubmissionPayload.headers
         )(
           HttpReads[HttpResponse],
-          extraHeaders,
+          dec64headers,
           ec
         )
         .map(Right(_))
