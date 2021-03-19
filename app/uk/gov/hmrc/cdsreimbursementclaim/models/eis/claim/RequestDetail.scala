@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.functional.syntax.{unlift, _}
-import play.api.libs.json.{Format, JsPath, Json, OFormat}
+import play.api.libs.json.{JsPath, Json, OWrites, Writes}
 
 // The root structure for the JSON payload exceed 22 fields.
 // Therefore the type needs to be split.
@@ -45,7 +45,7 @@ final case class RequestDetailA(
 )
 
 object RequestDetailA {
-  implicit val format: OFormat[RequestDetailA] = Json.format[RequestDetailA]
+  implicit val format: OWrites[RequestDetailA] = Json.writes[RequestDetailA]
 }
 
 final case class RequestDetailB(
@@ -56,7 +56,7 @@ final case class RequestDetailB(
 )
 
 object RequestDetailB {
-  implicit val format: OFormat[RequestDetailB] = Json.format[RequestDetailB]
+  implicit val format: OWrites[RequestDetailB] = Json.writes[RequestDetailB]
 }
 
 final case class RequestDetail(
@@ -65,8 +65,8 @@ final case class RequestDetail(
 )
 
 object RequestDetail {
-  implicit val format: Format[RequestDetail] = (
-    JsPath.format[RequestDetailA] and
-      JsPath.format[RequestDetailB]
-  )(RequestDetail.apply, unlift(RequestDetail.unapply))
+  implicit val format: Writes[RequestDetail] = (
+    JsPath.write[RequestDetailA] and
+      JsPath.write[RequestDetailB]
+  )(unlift(RequestDetail.unapply))
 }

@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
+package uk.gov.hmrc.cdsreimbursementclaim.metrics
 
-import play.api.libs.json.{Json, OWrites}
+import com.codahale.metrics.{Counter, Timer}
+import com.kenshoo.play.metrics.{Metrics => PlayMetrics}
+import org.scalamock.scalatest.MockFactory
 
-final case class PostNewClaimsRequest(
-  requestCommon: RequestCommon,
-  requestDetail: RequestDetail
-)
+object MockMetrics extends MockFactory {
 
-object PostNewClaimsRequest {
-  implicit val format: OWrites[PostNewClaimsRequest] = Json.writes[PostNewClaimsRequest]
+  val metrics: Metrics = new Metrics(stub[PlayMetrics]) {
+    override def timer(name: String): Timer     = new Timer()
+    override def counter(name: String): Counter = new Counter()
+  }
+
 }

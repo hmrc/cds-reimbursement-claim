@@ -171,7 +171,9 @@ class SubmitClaimServiceImpl @Inject() (
         case None        =>
           Right(
             SubmitClaimResponse(
-              response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber.getOrElse("No case number")
+              response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber.getOrElse(
+                "No case number"
+              ) //TODO: change this - if no case number comes back it is an error - check with Richard
             )
           )
       }

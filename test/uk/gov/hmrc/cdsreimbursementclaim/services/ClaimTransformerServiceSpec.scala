@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
+package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import play.api.libs.json.{Json, OWrites}
-
-final case class PostNewClaimsRequest(
-  requestCommon: RequestCommon,
-  requestDetail: RequestDetail
-)
-
-object PostNewClaimsRequest {
-  implicit val format: OWrites[PostNewClaimsRequest] = Json.writes[PostNewClaimsRequest]
-}
+class ClaimTransformerServiceSpec {}

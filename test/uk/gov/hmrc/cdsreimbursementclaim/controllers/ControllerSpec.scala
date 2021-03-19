@@ -38,6 +38,17 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
             """
               | metrics.jvm = false
               | metrics.logback = false
+              |
+              | auditing {
+              |  enabled = false
+              |  traceRequests = false
+              |  consumer {
+              |    baseUri {
+              |      host = localhost
+              |      port = 8100
+              |    }
+              |  }
+              |}
           """.stripMargin
           )
         )

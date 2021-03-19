@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import akka.stream.Materializer
 import cats.data.EitherT
+import org.scalamock.handlers.{CallHandler1, CallHandler2}
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -43,7 +44,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyChecks {
 
   val mockUpscanService: UpscanService = mock[UpscanService]
-  val fixedTimestamp                   = LocalDateTime.of(2019, 9, 24, 15, 47, 20)
+  val fixedTimestamp: LocalDateTime    = LocalDateTime.of(2019, 9, 24, 15, 47, 20)
 
   val executionContext: ExecutionContextExecutor = ExecutionContext.global
 
@@ -64,11 +65,11 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
   implicit lazy val mat: Materializer = fakeApplication.materializer
 
-  val headerCarrier = HeaderCarrier()
+  val headerCarrier: HeaderCarrier = HeaderCarrier()
 
   def mockStoreUpscanUpload(upscanUpload: UpscanUpload)(
     response: Either[Error, Unit]
-  ) =
+  ): CallHandler1[UpscanUpload, EitherT[Future, Error, Unit]] =
     (mockUpscanService
       .storeUpscanUpload(_: UpscanUpload))
       .expects(upscanUpload)
@@ -79,7 +80,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
     upscanUpload: UpscanUpload
   )(
     response: Either[Error, Unit]
-  ) =
+  ): CallHandler2[UploadReference, UpscanUpload, EitherT[Future, Error, Unit]] =
     (mockUpscanService
       .updateUpscanUpload(_: UploadReference, _: UpscanUpload))
       .expects(uploadReference, upscanUpload)
@@ -87,7 +88,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
   def mockGetUpscanUpload(uploadReference: UploadReference)(
     response: Either[Error, Option[UpscanUpload]]
-  ) =
+  ): CallHandler1[UploadReference, EitherT[Future, Error, Option[UpscanUpload]]] =
     (mockUpscanService
       .readUpscanUpload(_: UploadReference))
       .expects(uploadReference)
@@ -95,7 +96,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
   def mockGetUpscanUploads(uploadReferences: List[UploadReference])(
     response: Either[Error, List[UpscanUpload]]
-  ) =
+  ): CallHandler1[List[UploadReference], EitherT[Future, Error, List[UpscanUpload]]] =
     (mockUpscanService
       .readUpscanUploads(_: List[UploadReference]))
       .expects(uploadReferences)
