@@ -34,7 +34,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.ClaimConfirmationEma
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SubmitClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 

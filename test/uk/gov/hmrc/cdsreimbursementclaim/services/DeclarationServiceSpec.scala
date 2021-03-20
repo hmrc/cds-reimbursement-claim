@@ -44,7 +44,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{OverpaymentDeclarationDisplayResponse, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
@@ -62,7 +62,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
   val mockDeclarationTransformerService: DeclarationTransformerService = mock[DeclarationTransformerService]
   val mockDateGenerator: DateGenerator                                 = mock[DateGenerator]
 
-  val declarationService = new DeclarationServiceImpl(
+  val declarationService = new DefaultDeclarationService(
     mockDeclarationConnector,
     mockUUIDGenerator,
     mockDateGenerator,
@@ -74,8 +74,8 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
   def mockGenerateUUID(uuid: UUID): CallHandler0[String] =
     (mockUUIDGenerator.compactCorrelationId _: () => String).expects().returning(uuid.toString)
 
-  def mockGenerateAcknowledgementDate(acknowledgmentDate: String): CallHandler0[String] =
-    (mockDateGenerator.nextAcknowledgementDate _: () => String).expects().returning(acknowledgmentDate)
+  def mockGenerateReceiptDate(receiptDate: String): CallHandler0[String] =
+    (mockDateGenerator.nextReceiptDate _: () => String).expects().returning(receiptDate)
 
   def mockDeclarationConnector(declarationRequest: DeclarationRequest)(
     response: Either[Error, HttpResponse]
@@ -176,8 +176,8 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
 
     val mrn                                  = sample[MRN]
     val correlationId                        = UUID.randomUUID()
-    val acknowledgementDate                  = TimeUtils.rfc7231DateTimeNow
-    val requestCommon                        = sample[RequestCommon].copy(Platform.MDTP, acknowledgementDate, correlationId)
+    val receiptDate                          = TimeUtils.iso8601DateTimeNow
+    val requestCommon                        = sample[RequestCommon].copy(Platform.MDTP, receiptDate, correlationId)
     val requestDetail                        = sample[RequestDetail].copy(declarationId = mrn.value, securityReason = None)
     val overpaymentDeclarationDisplayRequest = sample[OverpaymentDeclarationDisplayRequest]
       .copy(requestCommon = requestCommon, requestDetail = requestDetail)
@@ -191,7 +191,104 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
       returnParameters = None
     )
 
-    val responseDetail                        = sample[ResponseDetail].copy(
+    val responseDetail = sample[ResponseDetail].copy(
+      declarationId = "94LQRNVJY9FJQO_EI0",
+      acceptanceDate = "2021-02-12",
+      declarantReferenceNumber = None,
+      securityReason = None,
+      btaDueDate = None,
+      procedureCode = "2",
+      btaSource = None,
+      declarantDetails = sample[DeclarantDetails].copy(
+        declarantEORI = "AA12345678901234Z",
+        legalName = "Automation Central LTD",
+        establishmentAddress = EstablishmentAddress(
+          addressLine1 = "10 Automation Road",
+          addressLine2 = None,
+          addressLine3 = Some("Coventry"),
+          postalCode = Some("CV3 6EA"),
+          countryCode = "GB"
+        ),
+        contactDetails = Some(
+          ContactDetails(
+            contactName = Some("Automation Central LTD"),
+            addressLine1 = Some("10 Automation Road"),
+            addressLine2 = None,
+            addressLine3 = Some("Coventry"),
+            addressLine4 = None,
+            postalCode = Some("CV3 6EA"),
+            countryCode = Some("GB"),
+            telephone = None,
+            emailAddress = None
+          )
+        )
+      ),
+      consigneeDetails = Some(
+        ConsigneeDetails(
+          consigneeEORI = "AA12345678901234Z",
+          legalName = "Automation Central LTD",
+          establishmentAddress = EstablishmentAddress(
+            addressLine1 = "10 Automation Road",
+            addressLine2 = None,
+            addressLine3 = Some("Coventry"),
+            postalCode = Some("CV3 6EA"),
+            countryCode = "GB"
+          ),
+          contactDetails = Some(
+            ContactDetails(
+              contactName = Some("Automation Central LTD"),
+              addressLine1 = Some("10 Automation Road"),
+              addressLine2 = None,
+              addressLine3 = Some("Coventry"),
+              addressLine4 = None,
+              postalCode = Some("CV3 6EA"),
+              countryCode = Some("GB"),
+              telephone = Some("+4420723934397"),
+              emailAddress = Some("automation@gmail.com")
+            )
+          )
+        )
+      ),
+      accountDetails = None,
+      bankDetails = Some(
+        BankDetails(
+          consigneeBankDetails = Some(
+            ConsigneeBankDetails(
+              accountHolderName = "CDS E2E To E2E Bank",
+              sortCode = "308844",
+              accountNumber = "12345678"
+            )
+          ),
+          declarantBankDetails = Some(
+            DeclarantBankDetails(
+              accountHolderName = "CDS E2E To E2E Bank",
+              sortCode = "308844",
+              accountNumber = "12345678"
+            )
+          )
+        )
+      ),
+      ndrcDetails = Some(
+        List(
+          NdrcDetails(
+            taxType = "A80",
+            amount = "218.00",
+            paymentMethod = "001",
+            paymentReference = "GB201430007000",
+            cmaEligible = None
+          ),
+          NdrcDetails(
+            taxType = "A95",
+            amount = "211.00",
+            paymentMethod = "001",
+            paymentReference = "GB201430007000",
+            cmaEligible = None
+          )
+        )
+      )
+    )
+
+    val displayResponseDetail                 = sample[DisplayResponseDetail].copy(
       declarationId = "94LQRNVJY9FJQO_EI0",
       acceptanceDate = "2021-02-12",
       declarantReferenceNumber = None,
@@ -294,95 +391,9 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
       sample[DeclarationResponse].copy(overpaymentDeclarationDisplayResponse = overpaymentDeclarationDisplayResponse)
 
     val declaration = sample[DisplayDeclaration].copy(
-      declarantId = "94LQRNVJY9FJQO_EI0",
-      acceptanceDate = "12 February 2021",
-      declarantDetails = sample[DeclarantDetails].copy(
-        declarantEORI = "AA12345678901234Z",
-        legalName = "Automation Central LTD",
-        establishmentAddress = EstablishmentAddress(
-          addressLine1 = "10 Automation Road",
-          addressLine2 = None,
-          addressLine3 = Some("Coventry"),
-          postalCode = Some("CV3 6EA"),
-          countryCode = "GB"
-        ),
-        contactDetails = Some(
-          ContactDetails(
-            contactName = Some("Automation Central LTD"),
-            addressLine1 = Some("10 Automation Road"),
-            addressLine2 = None,
-            addressLine3 = Some("Coventry"),
-            addressLine4 = None,
-            postalCode = Some("CV3 6EA"),
-            countryCode = Some("GB"),
-            telephone = None,
-            emailAddress = None
-          )
-        )
-      ),
-      consigneeDetails = Some(
-        ConsigneeDetails(
-          consigneeEORI = "AA12345678901234Z",
-          legalName = "Automation Central LTD",
-          establishmentAddress = EstablishmentAddress(
-            addressLine1 = "10 Automation Road",
-            addressLine2 = None,
-            addressLine3 = Some("Coventry"),
-            postalCode = Some("CV3 6EA"),
-            countryCode = "GB"
-          ),
-          contactDetails = Some(
-            ContactDetails(
-              contactName = Some("Automation Central LTD"),
-              addressLine1 = Some("10 Automation Road"),
-              addressLine2 = None,
-              addressLine3 = Some("Coventry"),
-              addressLine4 = None,
-              postalCode = Some("CV3 6EA"),
-              countryCode = Some("GB"),
-              telephone = Some("+4420723934397"),
-              emailAddress = Some("automation@gmail.com")
-            )
-          )
-        )
-      ),
-      maskedBankDetails = Some(
-        MaskedBankDetails(
-          consigneeBankDetails = Some(
-            ConsigneeBankDetails(
-              accountHolderName = "CDS E2E To E2E Bank",
-              sortCode = "****44",
-              accountNumber = "******78"
-            )
-          ),
-          declarantBankDetails = Some(
-            DeclarantBankDetails(
-              accountHolderName = "CDS E2E To E2E Bank",
-              sortCode = "****44",
-              accountNumber = "******78"
-            )
-          )
-        )
-      ),
-      ndrcDetails = Some(
-        List(
-          NdrcDetails(
-            taxType = "A80",
-            amount = "218.00",
-            paymentMethod = "001",
-            paymentReference = "GB201430007000",
-            cmaEligible = None
-          ),
-          NdrcDetails(
-            taxType = "A95",
-            amount = "211.00",
-            paymentMethod = "001",
-            paymentReference = "GB201430007000",
-            cmaEligible = None
-          )
-        )
-      )
+      displayResponseDetail = displayResponseDetail
     )
+
     "handling requests to get a declaration" must {
 
       "return a declaration" when {
@@ -390,7 +401,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         "a successful http response is received" in {
 
           inSequence {
-            mockGenerateAcknowledgementDate(acknowledgementDate)
+            mockGenerateReceiptDate(receiptDate)
             mockGenerateUUID(correlationId)
             mockDeclarationConnector(declarationRequest)(
               Right(HttpResponse(200, acc14SuccessPayload, Map.empty[String, Seq[String]]))
@@ -404,9 +415,31 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
 
       "return an error" when {
 
+        "an corrupt/invalid acc14 payload is received" in {
+          inSequence {
+            mockGenerateReceiptDate(receiptDate)
+            mockGenerateUUID(correlationId)
+            mockDeclarationConnector(declarationRequest)(
+              Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
+            )
+          }
+          await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
+        }
+
+        "a http status response other than 200 OK is received" in {
+          inSequence {
+            mockGenerateReceiptDate(receiptDate)
+            mockGenerateUUID(correlationId)
+            mockDeclarationConnector(declarationRequest)(
+              Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
+            )
+          }
+          await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
+        }
+
         "an unsuccessful http response is received" in {
           inSequence {
-            mockGenerateAcknowledgementDate(acknowledgementDate)
+            mockGenerateReceiptDate(receiptDate)
             mockGenerateUUID(correlationId)
             mockDeclarationConnector(declarationRequest)(Left(Error("http bad request")))
           }

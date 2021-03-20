@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
+import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -44,7 +44,7 @@ class SubmitClaimControllerSpec extends AnyWordSpec with Matchers with MockFacto
   implicit val ec                           = scala.concurrent.ExecutionContext.Implicits.global
   implicit val hc                           = HeaderCarrier()
   val httpClient                            = mock[HttpClient]
-  val eisService                            = mock[SubmitClaimService]
+  val eisService                            = mock[ClaimService]
   val ccs                                   = mock[CcsSubmissionService]
   private val fakeRequest                   = FakeRequest("POST", "/", FakeHeaders(Seq(HeaderNames.HOST -> "localhost")), JsObject.empty)
 
