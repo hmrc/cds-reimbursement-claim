@@ -28,10 +28,12 @@ import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisForClaim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BasisForClaim, Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.{DuplicateEntry, DutySuspension, EndUseRelief, IncorrectCommodityCode, IncorrectCpc, IncorrectEoriAndDefermentAccountNumber, IncorrectValue, InwardProcessingReliefFromCustomsDuty, Miscellaneous, OutwardProcessingRelief, PersonalEffects, Preference, ProofOfReturnRefundGiven, RGR}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation, invalid}
@@ -566,21 +568,24 @@ object DefaultClaimTransformerService {
             sys.error("cannot have both reason-basis for claim and basis of claim")
           case (Some(basis), None) =>
             Valid(basis match {
-              case BasisOfClaim.DuplicateMrnEntry                      => "Duplicate Entry"
-              case BasisOfClaim.DutySuspension                         => "Duty Suspension"
-              case BasisOfClaim.EndUseRelief                           => "End Use"
-              case BasisOfClaim.IncorrectCommodityCode                 => "Incorrect Commodity Code"
-              case BasisOfClaim.IncorrectCpc                           => "Incorrect CPC"
-              case BasisOfClaim.IncorrectValue                         => "Incorrect Value"
-              case BasisOfClaim.IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
-              case BasisOfClaim.InwardProcessingReliefFromCustomsDuty  => "IP"
-              case BasisOfClaim.OutwardProcessingRelief                => "OPR"
-              case BasisOfClaim.Preference                             => "Preference"
-              case BasisOfClaim.ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
+              case DuplicateEntry                         => "Duplicate Entry"
+              case DutySuspension                         => "Duty Suspension"
+              case EndUseRelief                           => "End Use"
+              case IncorrectCommodityCode                 => "Incorrect Commodity Code"
+              case IncorrectCpc                           => "Incorrect CPC"
+              case IncorrectValue                         => "Incorrect Value"
+              case IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
+              case InwardProcessingReliefFromCustomsDuty  => "IP"
+              case Miscellaneous                          => "Miscellaneous"
+              case OutwardProcessingRelief                => "OPR"
+              case PersonalEffects                        => "Personal Effects"
+              case Preference                             => "Preference"
+              case RGR                                    => "RGR"
+              case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
             })
           case (None, Some(r))     =>
             Valid(r.selectReasonForBasisAndClaim.basisForClaim match {
-              case BasisForClaim.DuplicateMrnEntry                      => "Duplicate Entry"
+              case BasisForClaim.DuplicateEntry                         => "Duplicate Entry"
               case BasisForClaim.DutySuspension                         => "Duty Suspension"
               case BasisForClaim.EndUseRelief                           => "End Use"
               case BasisForClaim.IncorrectCommodityCode                 => "Incorrect Commodity Code"
@@ -588,8 +593,11 @@ object DefaultClaimTransformerService {
               case BasisForClaim.IncorrectValue                         => "Incorrect Value"
               case BasisForClaim.IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
               case BasisForClaim.InwardProcessingReliefFromCustomsDuty  => "IP"
+              case BasisForClaim.Miscellaneous                          => "Miscellaneous"
               case BasisForClaim.OutwardProcessingRelief                => "OPR"
+              case BasisForClaim.PersonalEffects                        => "Personal Effects"
               case BasisForClaim.Preference                             => "Preference"
+              case BasisForClaim.RGR                                    => "RGR"
               case BasisForClaim.ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
             })
 

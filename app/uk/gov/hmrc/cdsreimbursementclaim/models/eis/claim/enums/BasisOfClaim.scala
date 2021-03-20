@@ -22,7 +22,7 @@ import play.api.libs.json.OFormat
 sealed trait BasisOfClaim extends Product with Serializable
 
 object BasisOfClaim {
-  case object DuplicateMrnEntry extends BasisOfClaim
+  case object DuplicateEntry extends BasisOfClaim
   case object DutySuspension extends BasisOfClaim
   case object EndUseRelief extends BasisOfClaim
   case object IncorrectCommodityCode extends BasisOfClaim
@@ -30,12 +30,15 @@ object BasisOfClaim {
   case object IncorrectValue extends BasisOfClaim
   case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim
   case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim
+  case object Miscellaneous extends BasisOfClaim
   case object OutwardProcessingRelief extends BasisOfClaim
+  case object PersonalEffects extends BasisOfClaim
   case object Preference extends BasisOfClaim
+  case object RGR extends BasisOfClaim
   case object ProofOfReturnRefundGiven extends BasisOfClaim
 
   implicit def basisForClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
-    case DuplicateMrnEntry                      => "Duplicate Entry"
+    case DuplicateEntry                         => "Duplicate Entry"
     case DutySuspension                         => "Duty Suspension"
     case EndUseRelief                           => "End Use"
     case IncorrectCommodityCode                 => "Incorrect Commodity Code"
@@ -43,8 +46,11 @@ object BasisOfClaim {
     case IncorrectValue                         => "Incorrect Value"
     case IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
     case InwardProcessingReliefFromCustomsDuty  => "IP"
+    case Miscellaneous                          => "Miscellaneous"
     case OutwardProcessingRelief                => "OPR"
+    case PersonalEffects                        => "Personal Effects"
     case Preference                             => "Preference"
+    case RGR                                    => "RGR"
     case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
   }
 
