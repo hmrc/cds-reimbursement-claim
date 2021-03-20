@@ -52,6 +52,12 @@ object SupportingEvidenceDocumentType {
   case object AdditionalSupportingDocuments extends SupportingEvidenceDocumentType {
     override def toString: String = "Additional Supporting Documents"
   }
+  case object ImportAndExportDeclaration extends SupportingEvidenceDocumentType {
+    override def toString: String = "Import and Export Declaration"
+  }
+  case object Other extends SupportingEvidenceDocumentType {
+    override def toString: String = "Other"
+  }
 
   implicit val format: OFormat[SupportingEvidenceDocumentType] = derived.oformat[SupportingEvidenceDocumentType]()
 }
