@@ -218,7 +218,7 @@ object DefaultClaimTransformerService {
         "GB",
         None,
         None
-      ) //TODO: check the assumption that the country code can be defaulted to GB - this can happen if the importer details are not filled in
+      )
   }
 
   def buildEntryEoriDetails(
@@ -1107,7 +1107,7 @@ object DefaultClaimTransformerService {
     maybeDuplicateDeclarationDetailsAnswer match {
       case Some(duplicateDeclarationDetailsAnswer) =>
         duplicateDeclarationDetailsAnswer.duplicateDeclaration match {
-          case Some(_) => //FIXME
+          case Some(_) =>
             (
               setEntryReferenceNumber(completeClaim),
               setDuplicateEntryAcceptanceDate(duplicateDeclarationDetailsAnswer),

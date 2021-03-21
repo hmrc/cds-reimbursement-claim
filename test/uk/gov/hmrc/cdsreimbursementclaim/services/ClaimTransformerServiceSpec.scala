@@ -295,6 +295,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       }
 
+      //TODO: we need to confirm the mapping logic - leaving this code here as we will need most of it
       "make an EIS submit claim request for a valid mrn number claim" in {
 
         val displayResponseDetail =
@@ -619,13 +620,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           mockGenerateUUID(correlationId)
         }
 
-        //TODO
-        transformer.toEisSubmitClaimRequest(submitClaimRequest)
-        1 shouldBe 1
-      }
-
-      "must return an error" in {
-        //TODO: need to go through all the different validation failures
+        transformer.toEisSubmitClaimRequest(submitClaimRequest).isRight shouldBe true
       }
 
     }
