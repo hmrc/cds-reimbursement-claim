@@ -634,7 +634,7 @@ object DefaultClaimTransformerService {
             )
           )
         )
-      case None                 => Invalid(NonEmptyList.one("no contact details"))
+      case None                 => Invalid(NonEmptyList.one("no consignee establishment contact details"))
     }
 
   def buildDeclarantEstablishmentAddress(
@@ -662,7 +662,7 @@ object DefaultClaimTransformerService {
             )
           )
         )
-      case None                 => Invalid(NonEmptyList.one("no contact details"))
+      case None                 => Invalid(NonEmptyList.one("no declarant establishment address details"))
     }
 
   def buildDeclarantContactInformation(
