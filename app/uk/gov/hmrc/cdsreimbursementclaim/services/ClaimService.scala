@@ -41,8 +41,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-@ImplementedBy(classOf[SubmitClaimServiceImpl])
-trait SubmitClaimService {
+@ImplementedBy(classOf[DefaultClaimService])
+trait ClaimService {
   def submitClaim(submitClaimRequest: SubmitClaimRequest)(implicit
     hc: HeaderCarrier,
     request: Request[_]
@@ -50,7 +50,7 @@ trait SubmitClaimService {
 }
 
 @Singleton
-class SubmitClaimServiceImpl @Inject() (
+class DefaultClaimService @Inject() (
   claimConnector: ClaimConnector,
   claimTransformerService: ClaimTransformerService,
   emailService: EmailService,
@@ -58,27 +58,27 @@ class SubmitClaimServiceImpl @Inject() (
   metrics: Metrics
 )(implicit
   ec: ExecutionContext
-) extends SubmitClaimService
+) extends ClaimService
     with Logging {
 
   def submitClaim(
-    claimRequest: SubmitClaimRequest
+    submitClaimRequest: SubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse] = {
 
     val maybeEisSubmitClaimRequest: Either[Error, EisSubmitClaimRequest] =
-      claimTransformerService.toEisSubmitClaimRequest(claimRequest)
+      claimTransformerService.toEisSubmitClaimRequest(submitClaimRequest)
 
     val emailRequest: EmailRequest = EmailRequest(
-      claimRequest.signedInUserDetails.verifiedEmail,
-      claimRequest.signedInUserDetails.contactName,
-      claimRequest.completeClaim.claims.total
+      submitClaimRequest.signedInUserDetails.verifiedEmail,
+      submitClaimRequest.signedInUserDetails.contactName,
+      submitClaimRequest.completeClaim.claims.total
     )
 
     for {
       eisSubmitRequest       <-
         EitherT.fromEither[Future](maybeEisSubmitClaimRequest).leftMap(e => Error(s"could not make TPIO5 payload: $e"))
-      _                      <- auditClaimBeforeSubmit(claimRequest, eisSubmitRequest)
-      returnHttpResponse     <- submitClaimAndAudit(claimRequest, eisSubmitRequest)
+      _                      <- auditClaimBeforeSubmit(submitClaimRequest, eisSubmitRequest)
+      returnHttpResponse     <- submitClaimAndAudit(submitClaimRequest, eisSubmitRequest)
       eisSubmitClaimResponse <- EitherT.fromEither[Future](
                                   returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                                 )
@@ -169,11 +169,10 @@ class SubmitClaimServiceImpl @Inject() (
             )
           )
         case None        =>
-          Right(
-            SubmitClaimResponse(
-              response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber.getOrElse("No case number")
-            )
-          )
+          response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber match {
+            case Some(caseNumber) => Right(SubmitClaimResponse(caseNumber))
+            case None             => Left(Error("No case number returned in response"))
+          }
       }
     }
 }

@@ -20,10 +20,11 @@ import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 object DeclarationGen extends GenUtils {
+  implicit val displayDeclarationGen: Gen[DisplayResponseDetail]                                    = gen[DisplayResponseDetail]
   implicit val declarationGen: Gen[DisplayDeclaration]                                              = gen[DisplayDeclaration]
   implicit val declarationRequestGen: Gen[DeclarationRequest]                                       = gen[DeclarationRequest]
   implicit val overpaymentDeclarationDisplayRequestGen: Gen[OverpaymentDeclarationDisplayRequest]   =
@@ -31,7 +32,7 @@ object DeclarationGen extends GenUtils {
   implicit val requestCommonGen: Gen[RequestCommon]                                                 = gen[RequestCommon]
   implicit val requestDetailGen: Gen[RequestDetail]                                                 = gen[RequestDetail]
   implicit val mrnGen: Gen[MRN]                                                                     = gen[MRN]
-  implicit val maskedBankDetails: Gen[MaskedBankDetails]                                            = gen[MaskedBankDetails]
+  implicit val maskedBankDetailsGen: Gen[MaskedBankDetails]                                         = gen[MaskedBankDetails]
   implicit val bankDetailsGen: Gen[BankDetails]                                                     = gen[BankDetails]
   implicit val accountDetailsGen: Gen[AccountDetails]                                               = gen[AccountDetails]
   implicit val declarantDetailsGen: Gen[DeclarantDetails]                                           = gen[DeclarantDetails]

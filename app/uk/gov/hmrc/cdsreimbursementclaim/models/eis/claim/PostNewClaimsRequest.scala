@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Json, OWrites}
 
 final case class PostNewClaimsRequest(
   requestCommon: RequestCommon,
@@ -24,5 +24,5 @@ final case class PostNewClaimsRequest(
 )
 
 object PostNewClaimsRequest {
-  implicit val format: OFormat[PostNewClaimsRequest] = Json.format[PostNewClaimsRequest]
+  implicit val format: OWrites[PostNewClaimsRequest] = Json.writes[PostNewClaimsRequest]
 }

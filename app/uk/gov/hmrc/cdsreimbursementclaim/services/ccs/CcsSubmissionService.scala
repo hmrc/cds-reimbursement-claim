@@ -76,8 +76,7 @@ class DefaultCcsSubmissionService @Inject() (
         .map(data =>
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
-              XmlEncoder[Envelope]
-                .encode(data),
+              XmlEncoder[Envelope].encode(data),
               hc.headers
             )
           )

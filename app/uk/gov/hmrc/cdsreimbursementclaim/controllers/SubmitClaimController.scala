@@ -20,7 +20,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.services.SubmitClaimService
+import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext
 @Singleton()
 class SubmitClaimController @Inject() (
   authenticate: AuthenticateActions,
-  claimService: SubmitClaimService,
+  claimService: ClaimService,
   ccsSubmissionService: CcsSubmissionService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)

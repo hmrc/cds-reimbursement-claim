@@ -38,13 +38,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[DeclarationServiceImpl])
+@ImplementedBy(classOf[DefaultDeclarationService])
 trait DeclarationService {
   def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[DisplayDeclaration]]
 }
 
 @Singleton
-class DeclarationServiceImpl @Inject() (
+class DefaultDeclarationService @Inject() (
   declarationConnector: DeclarationConnector,
   uuidGenerator: UUIDGenerator,
   dateGenerator: DateGenerator,
@@ -78,7 +78,7 @@ class DeclarationServiceImpl @Inject() (
           } yield maybeDisplayDeclaration
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status} | ${response.body}")
-          Left(Error(s"call to get declaration failed ${response.status}"))
+          Left(Error("call to get declaration failed"))
         }
       }
   }

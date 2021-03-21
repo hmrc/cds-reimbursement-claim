@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[EmailServiceImpl])
+@ImplementedBy(classOf[DefaultEmailService])
 trait EmailService {
 
   def sendClaimConfirmationEmail(
@@ -44,7 +44,7 @@ trait EmailService {
 }
 
 @Singleton
-class EmailServiceImpl @Inject() (connector: EmailConnector, auditService: AuditService, metrics: Metrics)(implicit
+class DefaultEmailService @Inject() (connector: EmailConnector, auditService: AuditService, metrics: Metrics)(implicit
   ec: ExecutionContext
 ) extends EmailService
     with Logging {

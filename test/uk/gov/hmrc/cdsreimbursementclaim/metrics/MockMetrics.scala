@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.services
+package uk.gov.hmrc.cdsreimbursementclaim.metrics
 
+import com.codahale.metrics.{Counter, Timer}
+import com.kenshoo.play.metrics.{Metrics => PlayMetrics}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
-class SubmitClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
+object MockMetrics extends MockFactory {
 
-  "Submit Claim Service" when {}
+  val metrics: Metrics = new Metrics(stub[PlayMetrics]) {
+    override def timer(name: String): Timer     = new Timer()
+    override def counter(name: String): Counter = new Counter()
+  }
 
 }

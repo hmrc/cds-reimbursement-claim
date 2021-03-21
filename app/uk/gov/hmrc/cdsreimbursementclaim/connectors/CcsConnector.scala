@@ -17,10 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
-import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, XmlHeaders}
-import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -50,16 +48,7 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
 
   override def submitToCcs(ccsSubmissionPayload: CcsSubmissionPayload)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, HttpResponse] = {
-
-    val dec64headers = extraHeaders
-
-    logger.info(
-      s"Ccs submission request correlation id: ${dec64headers.extraHeaders
-        .find(_._1 === CustomHeaderNames.X_CORRELATION_ID)
-        .fold("No correlation id found")(_._2)}"
-    )
-
+  ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
         .POSTString[HttpResponse](
@@ -68,12 +57,11 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
           ccsSubmissionPayload.headers
         )(
           HttpReads[HttpResponse],
-          dec64headers,
+          extraHeaders,
           ec
         )
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
-  }
 
 }

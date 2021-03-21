@@ -20,7 +20,6 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class AccountNumber(value: String) extends AnyVal
 
-//FIXME we don't need the formatting
 object AccountNumber {
   implicit val format: OFormat[AccountNumber] = Json.format[AccountNumber]
 }

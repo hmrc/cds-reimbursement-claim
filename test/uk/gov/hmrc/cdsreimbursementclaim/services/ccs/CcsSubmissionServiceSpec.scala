@@ -22,7 +22,6 @@ import cats.data.EitherT
 import cats.instances.future._
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.await
@@ -35,9 +34,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SubmitClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
@@ -49,7 +48,6 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-@Ignore
 class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
@@ -141,7 +139,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
        |</ans1:Envelope>
        |""".stripMargin
       .filter(_ >= ' ')
-      .replaceAllLiterally(" ", "")
+      .replaceAll(">[\\s\r\n]*<", "><")
 
   def mockCcsSubmissionRequestGet()(
     response: Either[Error, Option[WorkItem[CcsSubmissionRequest]]]
@@ -221,7 +219,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
                   correlationId = submitClaimRequest.completeClaim.correlationId,
                   batchId = submitClaimRequest.completeClaim.correlationId,
                   batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-                  batchCount = 0L,
+                  batchCount = 1L,
                   checksum = evidence.upscanSuccess.uploadDetails.checksum,
                   fileSize = evidence.upscanSuccess.uploadDetails.size,
                   caseReference = submitClaimResponse.caseNumber,
@@ -242,7 +240,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
                   correlationId = submitClaimRequest.completeClaim.correlationId,
                   batchId = submitClaimRequest.completeClaim.correlationId,
                   batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-                  batchCount = 0L,
+                  batchCount = 1L,
                   checksum = evidence.upscanSuccess.uploadDetails.checksum,
                   fileSize = evidence.upscanSuccess.uploadDetails.size,
                   caseReference = submitClaimResponse.caseNumber,

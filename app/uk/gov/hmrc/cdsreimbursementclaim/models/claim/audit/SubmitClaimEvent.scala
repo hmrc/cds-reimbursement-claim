@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Json, OWrites}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
@@ -26,5 +26,5 @@ final case class SubmitClaimEvent(
 )
 
 object SubmitClaimEvent {
-  implicit val format: OFormat[SubmitClaimEvent] = Json.format[SubmitClaimEvent]
+  implicit val format: OWrites[SubmitClaimEvent] = Json.writes[SubmitClaimEvent]
 }
