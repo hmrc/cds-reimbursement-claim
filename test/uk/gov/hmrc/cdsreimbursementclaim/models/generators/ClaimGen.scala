@@ -19,10 +19,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 
 object ClaimGen extends GenUtils {
 
+  implicit val eisRequestBGen: Gen[RequestDetailB]                    = gen[RequestDetailB]
+  implicit val eisRequestAGen: Gen[RequestDetailA]                    = gen[RequestDetailA]
+  implicit val eisRequestCommonGen: Gen[RequestCommon]                = gen[RequestCommon]
   implicit val eisSubmitClaimResponseGen: Gen[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
   implicit val eisSubmitClaimRequestGen: Gen[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]
   implicit val submitClaimResponseGen: Gen[SubmitClaimResponse]       = gen[SubmitClaimResponse]

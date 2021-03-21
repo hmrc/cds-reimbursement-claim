@@ -41,6 +41,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockClaimConnector: ClaimConnector = mock[ClaimConnector]

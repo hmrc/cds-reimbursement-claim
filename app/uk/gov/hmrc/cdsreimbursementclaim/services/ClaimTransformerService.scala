@@ -28,10 +28,10 @@ import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisForClaim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BasisForClaim, Address => _, BankDetails => _, NdrcDetails => _, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.{DuplicateEntry, DutySuspension, EndUseRelief, IncorrectCommodityCode, IncorrectCpc, IncorrectEoriAndDefermentAccountNumber, IncorrectValue, InwardProcessingReliefFromCustomsDuty, Miscellaneous, OutwardProcessingRelief, PersonalEffects, Preference, ProofOfReturnRefundGiven, RGR}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -50,14 +50,14 @@ trait ClaimTransformerService {
 }
 
 @Singleton
-class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator)
+class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, dateGenerator: DateGenerator)
     extends ClaimTransformerService
     with Logging {
 
   override def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest] = {
     val requestCommon = RequestCommon(
       originatingSystem = Platform.MDTP,
-      receiptDate = TimeUtils.iso8601DateTimeNow,
+      receiptDate = dateGenerator.nextReceiptDate,
       acknowledgementReference = uuidGenerator.compactCorrelationId
     )
     claimRequest.completeClaim.movementReferenceNumber match {
@@ -600,8 +600,7 @@ object DefaultClaimTransformerService {
               case BasisForClaim.RGR                                    => "RGR"
               case BasisForClaim.ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
             })
-
-          case _ => invalid("inconsistent state of basis and reasons for claim")
+          case _                   => invalid("inconsistent state of basis and reasons for claim")
         }
       case Right(_) =>
         completeClaim.basisOfClaim match {
@@ -804,8 +803,7 @@ object DefaultClaimTransformerService {
             )
           )
         )
-
-      case None => invalid("could not find duplication declaration details")
+      case None                          => invalid("Could not find duplication declaration details")
     }
 
   def setEntryDeclarationDetails(
@@ -997,7 +995,7 @@ object DefaultClaimTransformerService {
           value.dateOfImport.value.toString
         ) match {
           case Some(acceptanceDate) => Valid(acceptanceDate)
-          case None                 => invalid("Could not format display acceptance date")
+          case None                 => invalid("Could not format display acceptance date for duplicate entry")
         }
       case None        => invalid("could not find acceptance date")
     }
@@ -1136,7 +1134,7 @@ object DefaultClaimTransformerService {
           case None    => Valid(None)
         }
 
-      case None => Invalid(NonEmptyList.one("could not build entry details"))
+      case None => Valid(None)
     }
   }
 
