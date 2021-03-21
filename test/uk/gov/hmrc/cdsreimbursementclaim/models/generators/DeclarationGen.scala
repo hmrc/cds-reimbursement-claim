@@ -32,7 +32,7 @@ object DeclarationGen extends GenUtils {
   implicit val requestCommonGen: Gen[RequestCommon]                                                 = gen[RequestCommon]
   implicit val requestDetailGen: Gen[RequestDetail]                                                 = gen[RequestDetail]
   implicit val mrnGen: Gen[MRN]                                                                     = gen[MRN]
-  implicit val maskedBankDetails: Gen[MaskedBankDetails]                                            = gen[MaskedBankDetails]
+  implicit val maskedBankDetailsGen: Gen[MaskedBankDetails]                                         = gen[MaskedBankDetails]
   implicit val bankDetailsGen: Gen[BankDetails]                                                     = gen[BankDetails]
   implicit val accountDetailsGen: Gen[AccountDetails]                                               = gen[AccountDetails]
   implicit val declarantDetailsGen: Gen[DeclarantDetails]                                           = gen[DeclarantDetails]
