@@ -18,10 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
-import cats.implicits.catsSyntaxTuple2Semigroupal
+import cats.implicits.{catsSyntaxTuple2Semigroupal, toBifunctorOps}
 import cats.kernel.Eq
 import cats.syntax.apply._
-import cats.syntax.either._
 import cats.syntax.eq._
 import cats.syntax.traverse._
 import com.google.inject.{ImplementedBy, Inject}
@@ -30,12 +29,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BasisForClaim, Address => _, BankDetails => _, NdrcDetails => _, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.{DuplicateEntry, DutySuspension, EndUseRelief, IncorrectCommodityCode, IncorrectCpc, IncorrectEoriAndDefermentAccountNumber, IncorrectValue, InwardProcessingReliefFromCustomsDuty, Miscellaneous, OutwardProcessingRelief, PersonalEffects, Preference, ProofOfReturnRefundGiven, RGR}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation, invalid}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
@@ -54,132 +53,181 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
     extends ClaimTransformerService
     with Logging {
 
-  override def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest] = {
+  private def buildLegacyNumberPayload(
+    entryNumber: EntryNumber,
+    submitClaimRequest: SubmitClaimRequest
+  ): Either[Error, RequestDetail] = {
+    val localDateNow = dateGenerator.nextIsoLocalDate
+
+    val completeClaim = submitClaimRequest.completeClaim
+
+    (
+      makeReasonAndOrBasisOfClaim(completeClaim.basisOfClaim, completeClaim.reasonAndBasisOfClaim),
+      makeEntryDetails(
+        entryNumber,
+        submitClaimRequest.signedInUserDetails,
+        completeClaim
+      ),
+      makeDuplicateEntryDetails(
+        entryNumber,
+        submitClaimRequest.signedInUserDetails,
+        completeClaim
+      ),
+      makeEntryEoriDetails(submitClaimRequest.completeClaim)
+    ).mapN { case (maybeReasonAndOrBasis, entryDetails, duplicateEntryDetails, eoriDetails) =>
+      val requestDetailA = RequestDetailA(
+        CDFPayService = CDFPayservice.NDRC,
+        dateReceived = Some(localDateNow),
+        claimType = Some(ClaimType.C285),
+        caseType = Some(CaseType.Individual),
+        customDeclarationType = Some(CustomDeclarationType.Entry),
+        declarationMode = Some(DeclarationMode.ParentDeclaration),
+        claimDate = Some(localDateNow),
+        claimAmountTotal = Some(roundedTwoDecimalPlacesToString(completeClaim.claims.total)),
+        disposalMethod = None,
+        reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
+        basisOfClaim = maybeReasonAndOrBasis._1,
+        claimant = Some(
+          DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer.declarantType)
+        ),
+        payeeIndicator = Some(
+          DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer.declarantType)
+        ),
+        newEORI = None,
+        newDAN = None,
+        authorityTypeProvided = None,
+        claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori.value),
+        claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
+        goodsDetails = Some(
+          makeGoodsDetails(
+            completeClaim.declarantTypeAnswer.declarantType,
+            completeClaim.commodityDetails,
+            maybeReasonAndOrBasis._2
+          )
+        ),
+        EORIDetails = Some(eoriDetails)
+      )
+
+      val requestDetailB = RequestDetailB(
+        MRNDetails = None,
+        duplicateMRNDetails = None,
+        entryDetails = Some(List(entryDetails)),
+        duplicateEntryDetails = duplicateEntryDetails
+      )
+
+      RequestDetail(requestDetailA, requestDetailB)
+
+    }.toEither
+      .leftMap { errors =>
+        Error(
+          s"Could not create TPI05 EIS submit claim request for legacy number journey: ${errors.toList.mkString("; ")}"
+        )
+      }
+  }
+
+  override def toEisSubmitClaimRequest(submitClaimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest] = {
+
     val requestCommon = RequestCommon(
       originatingSystem = Platform.MDTP,
       receiptDate = dateGenerator.nextReceiptDate,
       acknowledgementReference = uuidGenerator.compactCorrelationId
     )
-    claimRequest.completeClaim.movementReferenceNumber match {
-      case Left(_)  =>
-        val completeClaim = claimRequest.completeClaim
-        (
-          setGoodsDetails(completeClaim),
-          setBasisOfClaim(completeClaim),
-          setEntryDetails(
-            claimRequest.signedInUserDetails,
-            completeClaim
-          ),
-          setDuplicateEntryDetails(
-            claimRequest.signedInUserDetails,
-            completeClaim
-          ),
-          buildEntryEoriDetails(claimRequest.completeClaim, claimRequest.signedInUserDetails)
-        ).mapN { case (goodsDetails, basisOfClaim, entryDetails, duplicateEntryDetails, eoriDetails) =>
-          val requestDetailA = RequestDetailA(
-            CDFPayService = CDFPayservice.NDRC,
-            dateReceived = Some(TimeUtils.isoLocalDateNow),
-            claimType = Some(ClaimType.C285),
-            caseType = Some(CaseType.Individual),
-            customDeclarationType = Some(CustomDeclarationType.Entry),
-            declarationMode = Some(DeclarationMode.ParentDeclaration),
-            claimDate = Some(TimeUtils.isoLocalDateNow),
-            claimAmountTotal = Some(roundedTwoDecimalPlacesToString(claimRequest.completeClaim.claims.total)),
-            disposalMethod = None,
-            reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
-            basisOfClaim = Some(basisOfClaim),
-            claimant = Some(
-              DefaultClaimTransformerService.setPayeeIndicator(claimRequest.completeClaim.declarantType.declarantType)
-            ),
-            payeeIndicator = Some(
-              DefaultClaimTransformerService.setPayeeIndicator(claimRequest.completeClaim.declarantType.declarantType)
-            ),
-            newEORI = None,
-            newDAN = None,
-            authorityTypeProvided = None,
-            claimantEORI = Some(claimRequest.signedInUserDetails.eori.value),
-            claimantEmailAddress = claimRequest.signedInUserDetails.email.map(email => email.value),
-            goodsDetails = Some(goodsDetails),
-            EORIDetails = Some(eoriDetails)
-          )
 
-          val requestDetailB = RequestDetailB(
-            MRNDetails = None,
-            duplicateMRNDetails = None,
-            entryDetails = Some(List(entryDetails)),
-            duplicateEntryDetails = duplicateEntryDetails
-          )
-
-          val postNewClaimsRequest = PostNewClaimsRequest(
-            requestCommon = requestCommon,
-            requestDetail = RequestDetail(requestDetailA, requestDetailB)
-          )
-          EisSubmitClaimRequest(postNewClaimsRequest)
-
-        }.toEither
-          .leftMap { errors =>
-            Error(s"Could not create TPI05 EIS submit claim request for entry journey: ${errors.toList.mkString("; ")}")
-          }
-      case Right(_) =>
-        val completeClaim = claimRequest.completeClaim
-        (
-          setGoodsDetails(completeClaim),
-          setBasisOfClaim(completeClaim),
-          setMrnDetails(
-            completeClaim.displayDeclaration,
-            completeClaim
-          ),
-          setDuplicateMrnDetails(
-            completeClaim.duplicateDisplayDeclaration,
-            completeClaim
-          ),
-          buildEoriDetails(claimRequest.completeClaim, claimRequest.signedInUserDetails)
-        ).mapN { case (goodsDetails, basisOfClaim, mrnDetails, duplicateMrnDetails, eoriDetails) =>
-          val requestDetailA = RequestDetailA(
-            CDFPayService = CDFPayservice.NDRC,
-            dateReceived = Some(TimeUtils.isoLocalDateNow),
-            claimType = Some(ClaimType.C285),
-            caseType = Some(CaseType.Individual),
-            customDeclarationType = Some(CustomDeclarationType.MRN),
-            declarationMode = Some(DeclarationMode.ParentDeclaration),
-            claimDate = Some(TimeUtils.isoLocalDateNow),
-            claimAmountTotal = Some(roundedTwoDecimalPlacesToString(claimRequest.completeClaim.claims.total)),
-            disposalMethod = None,
-            reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
-            basisOfClaim = Some(basisOfClaim),
-            claimant = Some(
-              DefaultClaimTransformerService.setPayeeIndicator(claimRequest.completeClaim.declarantType.declarantType)
-            ),
-            payeeIndicator = Some(
-              DefaultClaimTransformerService.setPayeeIndicator(claimRequest.completeClaim.declarantType.declarantType)
-            ),
-            newEORI = None,
-            newDAN = None,
-            authorityTypeProvided = None,
-            claimantEORI = Some(claimRequest.signedInUserDetails.eori.value),
-            claimantEmailAddress = claimRequest.signedInUserDetails.email.map(email => email.value),
-            goodsDetails = Some(goodsDetails),
-            EORIDetails = Some(eoriDetails)
-          )
-
-          val requestDetailB = RequestDetailB(
-            MRNDetails = Some(List(mrnDetails)),
-            duplicateMRNDetails = duplicateMrnDetails,
-            entryDetails = None,
-            duplicateEntryDetails = None
-          )
-
-          val postNewClaimsRequest = PostNewClaimsRequest(
-            requestCommon = requestCommon,
-            requestDetail = RequestDetail(requestDetailA, requestDetailB)
-          )
-          EisSubmitClaimRequest(postNewClaimsRequest)
-
-        }.toEither
-          .leftMap { errors =>
-            Error(s"Could not create TPI05 EIS submit claim request for mrn journey: ${errors.toList.mkString("; ")}")
-          }
+    submitClaimRequest.completeClaim.referenceNumberType match {
+      case Left(entryNumber) =>
+        buildLegacyNumberPayload(entryNumber, submitClaimRequest).fold(
+          error => Left(Error(s"failed to make legacy request payload: ${error.toString}")),
+          requestDetail =>
+            Right(
+              EisSubmitClaimRequest(
+                PostNewClaimsRequest(
+                  requestCommon = requestCommon,
+                  requestDetail = requestDetail
+                )
+              )
+            )
+        )
+      case Right(_)          =>
+        buildLegacyNumberPayload(EntryNumber(""), submitClaimRequest).fold(
+          error => Left(Error(s"failed to make legacy request payload: ${error.toString}")),
+          _ =>
+            buildLegacyNumberPayload(EntryNumber(""), submitClaimRequest).fold(
+              error => Left(Error(s"failed to make legacy request payload: ${error.toString}")),
+              requestDetail =>
+                Right(
+                  EisSubmitClaimRequest(
+                    PostNewClaimsRequest(
+                      requestCommon = requestCommon,
+                      requestDetail = requestDetail
+                    )
+                  )
+                )
+            )
+        )
+//        val completeClaim = submitClaimRequest.completeClaim
+//        (
+//          makeGoodsDetails(completeClaim),
+//          setBasisOfClaim(completeClaim),
+//          setMrnDetails(
+//            completeClaim.displayDeclaration,
+//            completeClaim
+//          ),
+//          setDuplicateMrnDetails(
+//            completeClaim.duplicateDisplayDeclaration,
+//            completeClaim
+//          ),
+//          buildEoriDetails(submitClaimRequest.completeClaim, submitClaimRequest.signedInUserDetails)
+//        ).mapN { case (goodsDetails, basisOfClaim, mrnDetails, duplicateMrnDetails, eoriDetails) =>
+//          val requestDetailA = RequestDetailA(
+//            CDFPayService = CDFPayservice.NDRC,
+//            dateReceived = Some(TimeUtils.isoLocalDateNow),
+//            claimType = Some(ClaimType.C285),
+//            caseType = Some(CaseType.Individual),
+//            customDeclarationType = Some(CustomDeclarationType.MRN),
+//            declarationMode = Some(DeclarationMode.ParentDeclaration),
+//            claimDate = Some(TimeUtils.isoLocalDateNow),
+//            claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.claims.total)),
+//            disposalMethod = None,
+//            reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
+//            basisOfClaim = Some(basisOfClaim),
+//            claimant = Some(
+//              DefaultClaimTransformerService.setPayeeIndicator(
+//                submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType
+//              )
+//            ),
+//            payeeIndicator = Some(
+//              DefaultClaimTransformerService.setPayeeIndicator(
+//                submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType
+//              )
+//            ),
+//            newEORI = None,
+//            newDAN = None,
+//            authorityTypeProvided = None,
+//            claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori.value),
+//            claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
+//            goodsDetails = Some(goodsDetails),
+//            EORIDetails = Some(eoriDetails)
+//          )
+//
+//          val requestDetailB = RequestDetailB(
+//            MRNDetails = Some(List(mrnDetails)),
+//            duplicateMRNDetails = duplicateMrnDetails,
+//            entryDetails = None,
+//            duplicateEntryDetails = None
+//          )
+//
+//          val postNewClaimsRequest = PostNewClaimsRequest(
+//            requestCommon = requestCommon,
+//            requestDetail = RequestDetail(requestDetailA, requestDetailB)
+//          )
+//          EisSubmitClaimRequest(postNewClaimsRequest)
+//
+//        }.toEither
+//          .leftMap { errors =>
+//            Error(s"Could not create TPI05 EIS submit claim request for mrn journey: ${errors.toList.mkString("; ")}")
+//          }
     }
+
   }
 
 }
@@ -204,6 +252,7 @@ object DefaultClaimTransformerService {
     telephone: Option[String],
     email: Option[String]
   )
+
   object CompareContactInformation {
     implicit val eq: Eq[CompareContactInformation]                = Eq.fromUniversalEquals[CompareContactInformation]
     val emptyCompareContactInformation: CompareContactInformation =
@@ -221,91 +270,99 @@ object DefaultClaimTransformerService {
       )
   }
 
-  def buildEntryEoriDetails(
-    completeClaim: CompleteClaim,
-    signedInUserDetails: SignedInUserDetails
-  ): Validation[EoriDetails] = {
-
-    val claimantAsIndividualDetails = completeClaim.claimantDetailsAsIndividual
-
-    val userProvidedIndividualContactInformation: CompareContactInformation = CompareContactInformation(
-      Some(claimantAsIndividualDetails.fullName),
-      Some(claimantAsIndividualDetails.contactAddress.line1),
-      claimantAsIndividualDetails.contactAddress.line2,
-      claimantAsIndividualDetails.contactAddress.line3,
-      Some(claimantAsIndividualDetails.contactAddress.line4),
-      claimantAsIndividualDetails.contactAddress.line5,
-      claimantAsIndividualDetails.contactAddress.postcode,
-      Some(claimantAsIndividualDetails.contactAddress.country.code).getOrElse("GB"),
-      Some(claimantAsIndividualDetails.phoneNumber.value),
-      Some(claimantAsIndividualDetails.emailAddress.value)
-    )
-
-    val buildConsigneeContactInformationWithPossibleUserInput: Validation[ContactInformation] =
-      buildConsigneeContactInformationWithUserInput(userProvidedIndividualContactInformation)
-
-    val claimantAsImporterDetails = completeClaim.claimantDetailsAsImporter
-
-    val userProvidedCompanyContactInformation = claimantAsImporterDetails match {
-      case Some(claimantDetailsAsImporterCompany) =>
-        CompareContactInformation(
-          Some(claimantDetailsAsImporterCompany.companyName),
-          Some(claimantDetailsAsImporterCompany.contactAddress.line1),
-          claimantDetailsAsImporterCompany.contactAddress.line2,
-          claimantDetailsAsImporterCompany.contactAddress.line3,
-          Some(claimantDetailsAsImporterCompany.contactAddress.line4),
-          claimantDetailsAsImporterCompany.contactAddress.line5,
-          claimantDetailsAsImporterCompany.contactAddress.postcode,
-          claimantDetailsAsImporterCompany.contactAddress.country.code,
-          Some(claimantDetailsAsImporterCompany.phoneNumber.value),
-          Some(claimantDetailsAsImporterCompany.emailAddress.value)
-        )
-      case None                                   => CompareContactInformation.emptyCompareContactInformation
-    }
-
-    val buildConsigneeEstablishmentContactDetails: Validation[Address] =
-      buildConsigneeEstablishmentAddressWithUserInput(userProvidedCompanyContactInformation)
-
-    (
-      buildConsigneeContactInformationWithPossibleUserInput,
-      buildConsigneeEstablishmentContactDetails
-    ).mapN { case (consignee, _) =>
+  def makeEntryEoriDetails(
+    completeClaim: CompleteClaim
+  ): Validation[EoriDetails] =
+    Valid(
       EoriDetails(
         agentEORIDetails = EORIInformation(
-          EORINumber = signedInUserDetails.eori.value,
-          CDSFullName = None,
+          EORINumber = completeClaim.declarantDetails.map(s => s.declarantEORI).getOrElse(""),
+          CDSFullName = completeClaim.declarantDetails.map(s => s.legalName),
           legalEntityType = None,
           EORIStartDate = None,
-          CDSEstablishmentAddress = Address.empty,
-          contactInformation = Some(consignee),
+          CDSEstablishmentAddress = Address(
+            contactPerson = None,
+            addressLine1 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+            addressLine2 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+            AddressLine3 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+            street = Some(
+              s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.declarantDetails
+                .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
+                .getOrElse("")}"
+            ),
+            city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+            countryCode = completeClaim.declarantDetails
+              .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
+              .getOrElse("GB"),
+            postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+            telephone = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+            emailAddress = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+          ),
+          contactInformation = Some(
+            ContactInformation(
+              contactPerson = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
+              addressLine1 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+              addressLine2 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+              addressLine3 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              street = Some(
+                s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.declarantDetails
+                  .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
+              ),
+              city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              countryCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
+              postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+              telephoneNumber = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+              faxNumber = None,
+              emailAddress = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+            )
+          ),
           VATDetails = None
         ),
         importerEORIDetails = EORIInformation(
-          EORINumber = signedInUserDetails.eori.value,
-          CDSFullName = None,
+          EORINumber = completeClaim.consigneeDetails.map(s => s.consigneeEORI).getOrElse(""),
+          CDSFullName = completeClaim.consigneeDetails.map(s => s.legalName),
           legalEntityType = None,
           EORIStartDate = None,
-          CDSEstablishmentAddress = Address.empty,
+          CDSEstablishmentAddress = Address(
+            contactPerson = None,
+            addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+            addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+            AddressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+            street = Some(
+              s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.consigneeDetails
+                .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
+                .getOrElse("")}"
+            ),
+            city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+            countryCode = completeClaim.consigneeDetails
+              .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
+              .getOrElse("GB"),
+            postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+            telephone = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+            emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+          ),
           contactInformation = Some(
             ContactInformation(
-              contactPerson = claimantAsImporterDetails.map(d => d.companyName),
-              addressLine1 = claimantAsImporterDetails.map(d => d.contactAddress.line1),
-              addressLine2 = claimantAsImporterDetails.flatMap(d => d.contactAddress.line2),
-              addressLine3 = claimantAsImporterDetails.flatMap(d => d.contactAddress.line3),
-              street = None,
-              city = claimantAsImporterDetails.flatMap(d => d.contactAddress.line5),
-              countryCode = claimantAsImporterDetails.map(d => d.contactAddress.country.code),
-              postalCode = claimantAsImporterDetails.flatMap(d => d.contactAddress.postcode),
-              telephoneNumber = claimantAsImporterDetails.map(d => d.phoneNumber.value),
+              contactPerson = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
+              addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+              addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+              addressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              street = Some(
+                s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.consigneeDetails
+                  .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
+              ),
+              city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              countryCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
+              postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+              telephoneNumber = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
               faxNumber = None,
-              emailAddress = claimantAsImporterDetails.map(d => d.emailAddress.value)
+              emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
             )
           ),
           VATDetails = None
         )
       )
-    }
-  }
+    )
 
   def buildEoriDetails(
     completeClaim: CompleteClaim,
@@ -544,69 +601,39 @@ object DefaultClaimTransformerService {
       case None                     => Invalid(NonEmptyList.one("could not find address"))
     }
 
-  private def isPrivateImporter(declarantType: DeclarantType): String =
-    declarantType match {
-      case DeclarantType.Importer => "Yes"
-      case _                      => "No"
-    }
-
-  def setGoodsDetails(completeClaim: CompleteClaim): Validation[GoodsDetails] =
-    Valid(
-      GoodsDetails(
-        None,
-        Some(isPrivateImporter(completeClaim.declarantType.declarantType)),
-        groundsForRepaymentApplication = None,
-        descOfGoods = Some(completeClaim.commodityDetails)
-      )
+  def makeGoodsDetails(
+    declarantType: DeclarantType,
+    commodityDetails: CommodityDetails,
+    reasonForClaim: Option[String]
+  ): GoodsDetails =
+    GoodsDetails(
+      placeOfImport = None,
+      isPrivateImporter = Some(declarantType match {
+        case DeclarantType.Importer => "Yes"
+        case _                      => "No"
+      }),
+      groundsForRepaymentApplication = reasonForClaim,
+      descOfGoods = Some(commodityDetails.value)
     )
 
-  def setBasisOfClaim(completeClaim: CompleteClaim): Validation[String] =
-    completeClaim.movementReferenceNumber match {
-      case Left(_)  =>
-        (completeClaim.basisOfClaim, completeClaim.reasonAndBasisOfClaim) match {
-          case (Some(_), Some(_))  =>
-            sys.error("cannot have both reason-basis for claim and basis of claim")
-          case (Some(basis), None) =>
-            Valid(basis match {
-              case DuplicateEntry                         => "Duplicate Entry"
-              case DutySuspension                         => "Duty Suspension"
-              case EndUseRelief                           => "End Use"
-              case IncorrectCommodityCode                 => "Incorrect Commodity Code"
-              case IncorrectCpc                           => "Incorrect CPC"
-              case IncorrectValue                         => "Incorrect Value"
-              case IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
-              case InwardProcessingReliefFromCustomsDuty  => "IP"
-              case Miscellaneous                          => "Miscellaneous"
-              case OutwardProcessingRelief                => "OPR"
-              case PersonalEffects                        => "Personal Effects"
-              case Preference                             => "Preference"
-              case RGR                                    => "RGR"
-              case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
-            })
-          case (None, Some(r))     =>
-            Valid(r.selectReasonForBasisAndClaim.basisForClaim match {
-              case BasisForClaim.DuplicateEntry                         => "Duplicate Entry"
-              case BasisForClaim.DutySuspension                         => "Duty Suspension"
-              case BasisForClaim.EndUseRelief                           => "End Use"
-              case BasisForClaim.IncorrectCommodityCode                 => "Incorrect Commodity Code"
-              case BasisForClaim.IncorrectCpc                           => "Incorrect CPC"
-              case BasisForClaim.IncorrectValue                         => "Incorrect Value"
-              case BasisForClaim.IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
-              case BasisForClaim.InwardProcessingReliefFromCustomsDuty  => "IP"
-              case BasisForClaim.Miscellaneous                          => "Miscellaneous"
-              case BasisForClaim.OutwardProcessingRelief                => "OPR"
-              case BasisForClaim.PersonalEffects                        => "Personal Effects"
-              case BasisForClaim.Preference                             => "Preference"
-              case BasisForClaim.RGR                                    => "RGR"
-              case BasisForClaim.ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
-            })
-          case _                   => invalid("inconsistent state of basis and reasons for claim")
-        }
-      case Right(_) =>
-        completeClaim.basisOfClaim match {
-          case Some(value) => Valid(value)
-          case None        => Invalid(NonEmptyList.one("could not find basis of claim"))
-        }
+  def makeReasonAndOrBasisOfClaim(
+    maybeBasisOfClaim: Option[BasisOfClaim],
+    maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer]
+  ): Validation[(Option[String], Option[String])] =
+    (maybeBasisOfClaim, maybeCompleteReasonAndBasisOfClaimAnswer) match {
+      case (Some(_), Some(_))                  =>
+        invalid("Must not have both basis of claim and reason and basis of claim")
+      case (None, Some(reasonAndBasisOfClaim)) =>
+        Valid(
+          (
+            Some(
+              BasisForClaim.toBasisForClaimToString(reasonAndBasisOfClaim.selectReasonForBasisAndClaim.basisForClaim)
+            ),
+            Some(reasonAndBasisOfClaim.selectReasonForBasisAndClaim.reasonForClaim.repr)
+          )
+        )
+      case (Some(basisOfClaim), None)          => Valid((Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)), None))
+      case (None, None)                        => invalid("Could not find either basis of claim nor reason and basis for claim")
     }
 
   def buildConsigneeEstablishmentAddress(
@@ -752,7 +779,7 @@ object DefaultClaimTransformerService {
       case None                   => Invalid(NonEmptyList.one("could not find consignee details"))
     }
 
-  def setEntryConsigneeDetails(
+  def makeEntryConsigneeDetails(
     signedInUserDetails: SignedInUserDetails,
     completeDeclarationDetailsAnswer: CompleteDeclarationDetailsAnswer
   ): Validation[MRNInformation] =
@@ -806,7 +833,7 @@ object DefaultClaimTransformerService {
       case None                          => invalid("Could not find duplication declaration details")
     }
 
-  def setEntryDeclarationDetails(
+  def makeEntryDeclarantDetails(
     signedInUserDetails: SignedInUserDetails,
     completeDeclarationDetailsAnswer: CompleteDeclarationDetailsAnswer
   ): Validation[MRNInformation] =
@@ -919,7 +946,7 @@ object DefaultClaimTransformerService {
       case _                                                              => invalid("could not build bank details")
     }
 
-  def buildEntryBankDetails(
+  def makeEntryBankDetails(
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer]
   ): Validation[BankDetails] =
     maybeCompleteBankAccountDetailAnswer match {
@@ -939,7 +966,7 @@ object DefaultClaimTransformerService {
       case None                                  => invalid("Could not find entered bank details")
     }
 
-  def setNdrcDetails(claims: List[Claim]): Validation[List[NdrcDetails]] = {
+  def makeNdrcDetails(claims: List[Claim]): Validation[List[NdrcDetails]] = {
     val result: List[Validation[NdrcDetails]] = claims.map { claim =>
       (
         isValidPaymentMethod(claim.paymentMethod),
@@ -976,28 +1003,31 @@ object DefaultClaimTransformerService {
       case None                 => invalid("Could not format display acceptance date")
     }
 
-  def setEntryAcceptanceDate(
-    completeDeclarationDetailsAnswer: CompleteDeclarationDetailsAnswer
+  def makeEntryDate(
+    dateOfImport: DateOfImport
   ): Validation[String] =
-    TimeUtils.fromEntryDisplayAcceptanceDateFormat(
-      completeDeclarationDetailsAnswer.declarationDetails.dateOfImport.value.toString
+    TimeUtils.toEntryDateFormat(
+      dateOfImport.value
     ) match {
-      case Some(acceptanceDate) => Valid(acceptanceDate)
-      case None                 => invalid("Could not format display acceptance date")
+      case Some(entryDate) => Valid(entryDate)
+      case None            => invalid(s"Could not format entry date: ${dateOfImport.value.toString}")
     }
 
   def setDuplicateEntryAcceptanceDate(
     completeDuplicateDeclarationDetailsAnswer: CompleteDuplicateDeclarationDetailsAnswer
   ): Validation[String] =
     completeDuplicateDeclarationDetailsAnswer.duplicateDeclaration match {
-      case Some(value) =>
-        TimeUtils.fromDisplayAcceptanceDateFormat(
-          value.dateOfImport.value.toString
+      case Some(entryDeclarationDetails) =>
+        TimeUtils.toEntryDateFormat(
+          entryDeclarationDetails.dateOfImport.value
         ) match {
-          case Some(acceptanceDate) => Valid(acceptanceDate)
-          case None                 => invalid("Could not format display acceptance date for duplicate entry")
+          case Some(entryDate) => Valid(entryDate)
+          case None            =>
+            invalid(
+              s"Could not format display entry date for duplicate entry: ${entryDeclarationDetails.dateOfImport.value.toString}"
+            )
         }
-      case None        => invalid("could not find acceptance date")
+      case None                          => invalid("could not find acceptance date")
     }
 
   def setMrnDetails(
@@ -1011,7 +1041,7 @@ object DefaultClaimTransformerService {
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
-          setNdrcDetails(completeClaim.claims)
+          makeNdrcDetails(completeClaim.claims)
         ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
           MrnDetail(
             MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
@@ -1039,7 +1069,7 @@ object DefaultClaimTransformerService {
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
-          setNdrcDetails(completeClaim.claims)
+          makeNdrcDetails(completeClaim.claims)
         ).mapN { case (declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
           Some(
             MrnDetail(
@@ -1059,13 +1089,8 @@ object DefaultClaimTransformerService {
       case None                     => Valid(None)
     }
 
-  def setEntryReferenceNumber(completeClaim: CompleteClaim): Validation[String] =
-    completeClaim.movementReferenceNumber match {
-      case Left(value) => Valid(value.value)
-      case _           => invalid("could not find entry reference number")
-    }
-
-  def setEntryDetails(
+  def makeEntryDetails(
+    entryNumber: EntryNumber,
     signedInUserDetails: SignedInUserDetails,
     completeClaim: CompleteClaim
   ): Validation[EntryDetail] = {
@@ -1073,16 +1098,15 @@ object DefaultClaimTransformerService {
     maybeEntryDeclarationDetailsAnswer match {
       case Some(entryDeclarationDetails) =>
         (
-          setEntryReferenceNumber(completeClaim),
-          setEntryAcceptanceDate(entryDeclarationDetails),
-          setEntryDeclarationDetails(signedInUserDetails, entryDeclarationDetails),
-          setEntryConsigneeDetails(signedInUserDetails, entryDeclarationDetails),
-          buildEntryBankDetails(completeClaim.bankDetails),
-          setNdrcDetails(completeClaim.claims)
-        ).mapN { case (entryReferenceNumber, acceptanceDate, declarant, consigneeDetails, bankDetails, ndrcDetails) =>
+          makeEntryDate(entryDeclarationDetails.declarationDetails.dateOfImport),
+          makeEntryDeclarantDetails(signedInUserDetails, entryDeclarationDetails),
+          makeEntryConsigneeDetails(signedInUserDetails, entryDeclarationDetails),
+          makeEntryBankDetails(completeClaim.bankDetails),
+          makeNdrcDetails(completeClaim.claims)
+        ).mapN { case (entryDate, declarant, consigneeDetails, bankDetails, ndrcDetails) =>
           EntryDetail(
-            entryNumber = Some(entryReferenceNumber),
-            entryDate = Some(acceptanceDate),
+            entryNumber = Some(entryNumber.value),
+            entryDate = Some(entryDate),
             declarantReferenceNumber = None,
             mainDeclarationReference = Some(true),
             declarantDetails = Some(declarant),
@@ -1096,7 +1120,8 @@ object DefaultClaimTransformerService {
     }
   }
 
-  def setDuplicateEntryDetails(
+  def makeDuplicateEntryDetails(
+    entryNumber: EntryNumber,
     signedInUserDetails: SignedInUserDetails,
     completeClaim: CompleteClaim
   ): Validation[Option[EntryDetail]] = {
@@ -1109,27 +1134,25 @@ object DefaultClaimTransformerService {
         duplicateDeclarationDetailsAnswer.duplicateDeclaration match {
           case Some(_) =>
             (
-              setEntryReferenceNumber(completeClaim),
               setDuplicateEntryAcceptanceDate(duplicateDeclarationDetailsAnswer),
               setDuplicateEntryDeclarationDetails(signedInUserDetails, duplicateDeclarationDetailsAnswer),
               setDuplicateEntryConsigneeDetails(signedInUserDetails, duplicateDeclarationDetailsAnswer),
-              buildEntryBankDetails(completeClaim.bankDetails),
-              setNdrcDetails(completeClaim.claims)
-            ).mapN {
-              case (entryReferenceNumber, acceptanceDate, declarant, consigneeDetails, bankDetails, ndrcDetails) =>
-                Some(
-                  EntryDetail(
-                    entryNumber = Some(entryReferenceNumber),
-                    entryDate = Some(acceptanceDate),
-                    declarantReferenceNumber = None,
-                    mainDeclarationReference = Some(true),
-                    declarantDetails = Some(declarant),
-                    accountDetails = None,
-                    consigneeDetails = Some(consigneeDetails),
-                    bankDetails = Some(bankDetails),
-                    NDRCDetails = Some(ndrcDetails)
-                  )
+              makeEntryBankDetails(completeClaim.bankDetails),
+              makeNdrcDetails(completeClaim.claims)
+            ).mapN { case (acceptanceDate, declarant, consigneeDetails, bankDetails, ndrcDetails) =>
+              Some(
+                EntryDetail(
+                  entryNumber = Some(entryNumber.value),
+                  entryDate = Some(acceptanceDate),
+                  declarantReferenceNumber = None,
+                  mainDeclarationReference = Some(true),
+                  declarantDetails = Some(declarant),
+                  accountDetails = None,
+                  consigneeDetails = Some(consigneeDetails),
+                  bankDetails = Some(bankDetails),
+                  NDRCDetails = Some(ndrcDetails)
                 )
+              )
             }
           case None    => Valid(None)
         }

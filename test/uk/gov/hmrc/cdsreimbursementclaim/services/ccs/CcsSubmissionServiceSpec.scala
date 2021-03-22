@@ -211,7 +211,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val submitClaimResponse              = sample[SubmitClaimResponse]
         val maybeSupportingEvidence          = submitClaimRequest.completeClaim.evidences.headOption
 
-        (maybeSupportingEvidence, submitClaimRequest.completeClaim.movementReferenceNumber) match {
+        (maybeSupportingEvidence, submitClaimRequest.completeClaim.referenceNumberType) match {
           case (Some(evidence), value) =>
             val dec64payload = value match {
               case Left(value) =>
@@ -225,7 +225,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
                   caseReference = submitClaimResponse.caseNumber,
                   eori = submitClaimRequest.signedInUserDetails.eori.value,
                   declarationId = value.value,
-                  declarationType = submitClaimRequest.completeClaim.declarantType.declarantType.toString,
+                  declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString,
                   applicationName = "NDRC",
                   documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
                   documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),
@@ -246,7 +246,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
                   caseReference = submitClaimResponse.caseNumber,
                   eori = submitClaimRequest.signedInUserDetails.eori.value,
                   declarationId = value.value,
-                  declarationType = submitClaimRequest.completeClaim.declarantType.declarantType.toString,
+                  declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString,
                   applicationName = "NDRC",
                   documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
                   documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),

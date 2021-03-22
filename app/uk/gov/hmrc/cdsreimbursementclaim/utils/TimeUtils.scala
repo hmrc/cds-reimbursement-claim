@@ -41,10 +41,17 @@ object TimeUtils {
     result.toOption
   }
 
-  def fromEntryDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
+  def fromDateOfImportAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
     val result = for {
       t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("u-M-d")))
       f <- Try(DateTimeFormatter.ofPattern("uMMdd").format(t))
+    } yield f
+    result.toOption
+  }
+
+  def toEntryDateFormat(localDate: LocalDate): Option[String] = {
+    val result = for {
+      f <- Try(DateTimeFormatter.ofPattern("uMMdd").format(localDate))
     } yield f
     result.toOption
   }

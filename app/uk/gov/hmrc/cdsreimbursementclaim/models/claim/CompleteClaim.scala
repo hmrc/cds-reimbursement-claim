@@ -169,7 +169,7 @@ object CompleteClaim {
         supportingEvidenceAnswers.evidences
     }
 
-    def movementReferenceNumber: Either[EntryNumber, MRN] = completeClaim match {
+    def referenceNumberType: Either[EntryNumber, MRN] = completeClaim match {
       case CompleteC285Claim(
             _,
             completeMovementReferenceNumberAnswer,
@@ -198,7 +198,7 @@ object CompleteClaim {
         id
     }
 
-    def declarantType: CompleteDeclarantTypeAnswer = completeClaim match {
+    def declarantTypeAnswer: CompleteDeclarantTypeAnswer = completeClaim match {
       case CompleteC285Claim(
             _,
             _,
@@ -243,11 +243,7 @@ object CompleteClaim {
             _,
             _
           ) =>
-        maybeBasisOfClaimAnswer match {
-          case Some(basisOfClaimAnswer) => Some(basisOfClaimAnswer.basisOfClaim)
-          case None                     => None
-        }
-
+        maybeBasisOfClaimAnswer.map(basisOfClaimAnswer => basisOfClaimAnswer.basisOfClaim)
     }
 
     def claims: List[Claim] = completeClaim match {
@@ -279,7 +275,7 @@ object CompleteClaim {
         )
     }
 
-    def commodityDetails: String = completeClaim match {
+    def commodityDetails: CommodityDetails = completeClaim match {
       case CompleteC285Claim(
             _,
             _,
@@ -300,7 +296,7 @@ object CompleteClaim {
             _,
             _
           ) =>
-        completeCommodityDetailsAnswer.commodityDetails.value
+        completeCommodityDetailsAnswer.commodityDetails
     }
 
     def claimantDetailsAsIndividual: ClaimantDetailsAsIndividual = completeClaim match {
