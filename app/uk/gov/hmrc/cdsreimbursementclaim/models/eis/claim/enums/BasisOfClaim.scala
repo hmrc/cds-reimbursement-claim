@@ -37,7 +37,7 @@ object BasisOfClaim {
   case object RGR extends BasisOfClaim
   case object ProofOfReturnRefundGiven extends BasisOfClaim
 
-  implicit def basisForClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
+  def basisOfClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
     case DuplicateEntry                         => "Duplicate Entry"
     case DutySuspension                         => "Duty Suspension"
     case EndUseRelief                           => "End Use"

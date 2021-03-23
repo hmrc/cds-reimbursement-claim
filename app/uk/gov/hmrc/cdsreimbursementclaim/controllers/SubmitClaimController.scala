@@ -40,11 +40,11 @@ class SubmitClaimController @Inject() (
     with Logging {
 
   def submitClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[SubmitClaimRequest] { claimRequest =>
+    withJsonBody[SubmitClaimRequest] { submitClaimRequest =>
       val result =
         for {
-          submitClaimResponse <- claimService.submitClaim(claimRequest)
-          _                   <- ccsSubmissionService.enqueue(claimRequest, submitClaimResponse)
+          submitClaimResponse <- claimService.submitClaim(submitClaimRequest)
+          _                   <- ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse)
           _                    = logger.info(s"Enqueued supporting evidences for claim")
         } yield submitClaimResponse
 

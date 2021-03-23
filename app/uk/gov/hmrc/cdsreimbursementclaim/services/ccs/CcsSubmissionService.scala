@@ -124,7 +124,7 @@ object DefaultCcsSubmissionService {
                 PropertyType("DeclarationId", referenceNumber),
                 PropertyType(
                   "DeclarationType",
-                  submitClaimRequest.completeClaim.declarantType.declarantType.toString
+                  submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString
                 ),
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType(
@@ -141,7 +141,7 @@ object DefaultCcsSubmissionService {
         )
       )
 
-    submitClaimRequest.completeClaim.movementReferenceNumber match {
+    submitClaimRequest.completeClaim.referenceNumberType match {
       case Left(entryNumber) =>
         submitClaimRequest.completeClaim.evidences.zipWithIndex.map { case (evidence, index) =>
           make(
