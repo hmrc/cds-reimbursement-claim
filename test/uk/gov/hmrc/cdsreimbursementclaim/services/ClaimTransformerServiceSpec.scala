@@ -115,108 +115,86 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             maybeCompleteDuplicateDeclarationDetailsAnswer = None
           )
 
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+
         val eoriDetails = EoriDetails(
           agentEORIDetails = EORIInformation(
-            EORINumber = completeClaim.declarantDetails.map(s => s.declarantEORI).getOrElse(""),
-            CDSFullName = completeClaim.declarantDetails.map(s => s.legalName),
+            EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
+            CDSFullName = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantName),
             legalEntityType = None,
             EORIStartDate = None,
             CDSEstablishmentAddress = Address(
               contactPerson = None,
-              addressLine1 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-              addressLine2 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-              AddressLine3 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              street = Some(
-                s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.declarantDetails
-                  .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
-                  .getOrElse("")}"
-              ),
-              city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              countryCode = completeClaim.declarantDetails
-                .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
-                .getOrElse("GB"),
-              postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-              telephone = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-              emailAddress = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+              addressLine1 = None,
+              addressLine2 = None,
+              AddressLine3 = None,
+              street = None,
+              city = None,
+              countryCode = "GB",
+              postalCode = None,
+              telephone =
+                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantPhoneNumber.value),
+              emailAddress =
+                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantEmailAddress.value)
             ),
             contactInformation = Some(
               ContactInformation(
-                contactPerson =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
-                addressLine1 =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-                addressLine2 =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-                addressLine3 =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-                street = Some(
-                  s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.declarantDetails
-                    .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
-                ),
-                city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-                countryCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
-                postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+                contactPerson = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantName),
+                addressLine1 = None,
+                addressLine2 = None,
+                addressLine3 = None,
+                street = None,
+                city = None,
+                countryCode = None,
+                postalCode = None,
                 telephoneNumber =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantPhoneNumber.value),
                 faxNumber = None,
                 emailAddress =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantEmailAddress.value)
               )
             ),
             VATDetails = None
           ),
           importerEORIDetails = EORIInformation(
-            EORINumber = completeClaim.consigneeDetails.map(s => s.consigneeEORI).getOrElse(""),
-            CDSFullName = completeClaim.consigneeDetails.map(s => s.legalName),
+            EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
+            CDSFullName = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerName),
             legalEntityType = None,
             EORIStartDate = None,
             CDSEstablishmentAddress = Address(
               contactPerson = None,
-              addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-              addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-              AddressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              street = Some(
-                s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.consigneeDetails
-                  .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
-                  .getOrElse("")}"
-              ),
-              city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              countryCode = completeClaim.consigneeDetails
-                .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
-                .getOrElse("GB"),
-              postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-              telephone = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-              emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+              addressLine1 = None,
+              addressLine2 = None,
+              AddressLine3 = None,
+              street = None,
+              city = None,
+              countryCode = "GB",
+              postalCode = None,
+              telephone =
+                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerPhoneNumber.value),
+              emailAddress =
+                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerEmailAddress.value)
             ),
             contactInformation = Some(
               ContactInformation(
-                contactPerson =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
-                addressLine1 =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-                addressLine2 =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-                addressLine3 =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-                street = Some(
-                  s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.consigneeDetails
-                    .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
-                ),
-                city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-                countryCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
-                postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+                contactPerson = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerName),
+                addressLine1 = None,
+                addressLine2 = None,
+                addressLine3 = None,
+                street = None,
+                city = None,
+                countryCode = None,
+                postalCode = None,
                 telephoneNumber =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerPhoneNumber.value),
                 faxNumber = None,
                 emailAddress =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerEmailAddress.value)
               )
             ),
             VATDetails = None
           )
         )
-
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
 
         val declarant = sample[MRNInformation].copy(
           EORI = submitClaimRequest.signedInUserDetails.eori.value,
