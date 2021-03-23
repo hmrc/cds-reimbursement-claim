@@ -606,58 +606,42 @@ object DefaultClaimTransformerService {
   def buildConsigneeEstablishmentAddress(
     consigneeDetails: models.claim.ConsigneeDetails
   ): Validation[Address] =
-    consigneeDetails.contactDetails match {
-      case Some(contactDetails) =>
-        contactDetails.countryCode.fold[Validation[Address]](
-          Invalid(NonEmptyList.one("could not find consignee establishment address"))
-        )(countryCode =>
-          Valid(
-            Address(
-              contactPerson = Some(consigneeDetails.legalName),
-              addressLine1 = contactDetails.addressLine1,
-              addressLine2 = contactDetails.addressLine2,
-              AddressLine3 = None,
-              street = contactDetails.addressLine1.flatMap(line1 =>
-                contactDetails.addressLine2.map(line2 => s"$line1 $line2")
-              ),
-              city = contactDetails.addressLine3,
-              countryCode = countryCode,
-              postalCode = contactDetails.postalCode,
-              telephone = contactDetails.telephone,
-              emailAddress = contactDetails.emailAddress
-            )
-          )
-        )
-      case None                 => Invalid(NonEmptyList.one("no consignee establishment contact details"))
-    }
+    Valid(
+      Address(
+        contactPerson = None,
+        addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
+        addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+        AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+        street = Some(consigneeDetails.establishmentAddress.addressLine1).flatMap(line1 =>
+          consigneeDetails.establishmentAddress.addressLine2.map(line2 => s"$line1 $line2")
+        ),
+        city = consigneeDetails.establishmentAddress.addressLine3,
+        countryCode = consigneeDetails.establishmentAddress.countryCode,
+        postalCode = consigneeDetails.establishmentAddress.postalCode,
+        telephone = None,
+        emailAddress = None
+      )
+    )
 
   def buildDeclarantEstablishmentAddress(
     declarantDetails: models.claim.DeclarantDetails
   ): Validation[Address] =
-    declarantDetails.contactDetails match {
-      case Some(contactDetails) =>
-        contactDetails.countryCode.fold[Validation[Address]](
-          Invalid(NonEmptyList.one("could not find declarant establishment address"))
-        )(countryCode =>
-          Valid(
-            Address(
-              contactPerson = Some(declarantDetails.legalName),
-              addressLine1 = contactDetails.addressLine1,
-              addressLine2 = contactDetails.addressLine2,
-              AddressLine3 = None,
-              street = contactDetails.addressLine1.flatMap(line1 =>
-                contactDetails.addressLine2.map(line2 => s"$line1 $line2")
-              ),
-              city = contactDetails.addressLine3,
-              countryCode = countryCode,
-              postalCode = contactDetails.postalCode,
-              telephone = contactDetails.telephone,
-              emailAddress = contactDetails.emailAddress
-            )
-          )
-        )
-      case None                 => Invalid(NonEmptyList.one("no declarant establishment address details"))
-    }
+    Valid(
+      Address(
+        contactPerson = None,
+        addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
+        addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+        AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
+        street = Some(declarantDetails.establishmentAddress.addressLine1).flatMap(line1 =>
+          Some(declarantDetails.establishmentAddress.addressLine1).map(line2 => s"$line1 $line2")
+        ),
+        city = declarantDetails.establishmentAddress.addressLine3,
+        countryCode = declarantDetails.establishmentAddress.countryCode,
+        postalCode = declarantDetails.establishmentAddress.postalCode,
+        telephone = None,
+        emailAddress = None
+      )
+    )
 
   def buildDeclarantContactInformation(
     maybeDeclarantDetails: Option[models.claim.DeclarantDetails]
