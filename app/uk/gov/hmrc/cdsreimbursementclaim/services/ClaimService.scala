@@ -97,7 +97,7 @@ class DefaultClaimService @Inject() (
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] =
     EitherT.pure[Future, Error](
       auditService.sendEvent(
-        "submitClaim",
+        "SubmitClaim",
         SubmitClaimEvent(
           eisSubmitClaimRequest,
           submitClaimRequest.signedInUserDetails.eori
@@ -145,7 +145,7 @@ class DefaultClaimService @Inject() (
         .getOrElse(Json.parse(s"""{ "body" : "could not parse body as JSON: $responseBody" }"""))
     val requestJson  = Json.toJson(eisSubmitClaimRequest)
     auditService.sendEvent(
-      "submitClaimResponse",
+      "SubmitClaimResponse",
       SubmitClaimResponseEvent(
         responseHttpStatus,
         responseJson,

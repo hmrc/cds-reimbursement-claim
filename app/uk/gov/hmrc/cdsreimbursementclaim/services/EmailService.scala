@@ -76,7 +76,7 @@ class DefaultEmailService @Inject() (connector: EmailConnector, auditService: Au
     submitClaimResponse: SubmitClaimResponse
   )(implicit hc: HeaderCarrier, request: Request[_]): Unit =
     auditService.sendEvent(
-      "claimConfirmationEmailSent",
+      "ClaimConfirmationEmailSent",
       ClaimConfirmationEmailSentEvent(
         emailRequest.email.value,
         submitClaimResponse.caseNumber
