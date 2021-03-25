@@ -84,7 +84,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         _: Request[_]
       ))
       .expects(
-        "submitClaim",
+        "SubmitClaim",
         SubmitClaimEvent(eisSubmitClaimRequest, submitClaimRequest.signedInUserDetails.eori),
         "submit-claim",
         *,
@@ -106,7 +106,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         _: Request[_]
       ))
       .expects(
-        "submitClaimResponse",
+        "SubmitClaimResponse",
         SubmitClaimResponseEvent(
           httpStatus,
           responseBody.getOrElse(Json.parse("""{ "body" : "could not parse body as JSON: " }""")),
