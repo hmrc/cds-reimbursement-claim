@@ -76,7 +76,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         )
       )
       .expects(
-        "claimConfirmationEmailSent",
+        "ClaimConfirmationEmailSent",
         ClaimConfirmationEmailSentEvent(
           emailRequest.email.value,
           submitClaimResponse.caseNumber
