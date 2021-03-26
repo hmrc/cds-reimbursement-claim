@@ -5,7 +5,7 @@ object AppDependencies {
   val silencerVersion = "1.7.0"
 
   val compile = Seq(
-    "uk.gov.hmrc"       %% "bootstrap-backend-play-27" % "3.2.0",
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-27" % "3.4.0",
     "uk.gov.hmrc"       %% "simple-reactivemongo"      % "7.31.0-play-27",
     "org.typelevel"     %% "cats-core"                 % "2.3.1",
     "org.julienrf"      %% "play-json-derived-codecs"  % "7.0.0",
