@@ -77,7 +77,7 @@ class DefaultDeclarationService @Inject() (
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
         } else {
-          logger.warn(s"could not get declaration: http status: ${response.status} | ${response.body}")
+          logger.warn(s"could not get declaration: http status: ${response.status}")
           Left(Error("call to get declaration failed"))
         }
       }
