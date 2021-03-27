@@ -117,11 +117,11 @@ class UpscanController @Inject() (
           if (upscanStatus === READY_FOR_DOWNLOAD | upscanStatus === FAILED_UPSCAN)
             callBackHandler(uploadReference, upscanStatus)
           else {
-            logger.warn(s"could not process upscan status : ${request.body.toString}")
+            logger.warn(s"could not process upscan status")
             Future.successful(InternalServerError)
           }
         case None               =>
-          logger.warn(s"could not parse upscan response body : ${request.body.toString}")
+          logger.warn(s"could not parse upscan response body")
           Future.successful(InternalServerError)
       }
     }
@@ -141,14 +141,14 @@ class UpscanController @Inject() (
                              EitherT.fromOption(
                                request.body.asOpt[UpscanSuccess],
                                Error(
-                                 s"could not parse upscan call back response body : ${request.body.toString}"
+                                 s"could not parse upscan call back response body"
                                )
                              )
                            else
                              EitherT.fromOption(
                                request.body.asOpt[UpscanFailure],
                                Error(
-                                 s"could not parse upscan call back response body : ${request.body.toString}"
+                                 s"could not parse upscan call back response body"
                                )
                              )
 
