@@ -1021,13 +1021,14 @@ object DefaultClaimTransformerService {
         (
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
+          setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           makeNdrcDetails(completeClaim.claims)
         ).mapN { case (declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
           Some(
             MrnDetail(
               MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
-              acceptanceDate = Some(displayDeclaration.displayResponseDetail.acceptanceDate),
+              acceptanceDate = Some(acceptanceDate),
               declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
               mainDeclarationReference = Some(true),
               procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
