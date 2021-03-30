@@ -360,7 +360,67 @@ object DefaultClaimTransformerService {
 
   def buildEoriDetails(
     completeClaim: CompleteClaim
-  ): Validation[EoriDetails] =
+  ): Validation[EoriDetails] = {
+
+    val agentContactInfo = completeClaim.claimantDetailsAsImporter match {
+      case Some(claimantDetailsAsImporterCompany) =>
+        ContactInformation(
+          contactPerson = Option(claimantDetailsAsImporterCompany.companyName),
+          addressLine1 = Option(claimantDetailsAsImporterCompany.contactAddress.line1),
+          addressLine2 = claimantDetailsAsImporterCompany.contactAddress.line2,
+          addressLine3 = claimantDetailsAsImporterCompany.contactAddress.line3,
+          street = buildStreet(
+            Some(claimantDetailsAsImporterCompany.contactAddress.line1),
+            claimantDetailsAsImporterCompany.contactAddress.line2
+          ),
+          city = Option(claimantDetailsAsImporterCompany.contactAddress.line4),
+          postalCode = claimantDetailsAsImporterCompany.contactAddress.postcode,
+          countryCode = Option(claimantDetailsAsImporterCompany.contactAddress.country.code),
+          telephoneNumber = Option(claimantDetailsAsImporterCompany.phoneNumber.value),
+          faxNumber = None,
+          emailAddress = Some(claimantDetailsAsImporterCompany.emailAddress.value)
+        )
+      case None                                   =>
+        completeClaim.declarantTypeAnswer.declarantType match {
+          case DeclarantType.Importer | DeclarantType.AssociatedWithImporterCompany =>
+            ContactInformation(
+              contactPerson = completeClaim.consigneeDetails.map(_.legalName),
+              addressLine1 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+              addressLine2 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine2),
+              addressLine3 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              street = buildStreet(
+                completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+                completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine2)
+              ),
+              city = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              postalCode = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.postalCode),
+              countryCode = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.countryCode),
+              telephoneNumber = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.telephone),
+              faxNumber = None,
+              emailAddress = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
+            )
+          case DeclarantType.AssociatedWithRepresentativeCompany                    =>
+            ContactInformation(
+              contactPerson = completeClaim.declarantDetails.map(_.legalName),
+              addressLine1 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+              addressLine2 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine2),
+              addressLine3 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              street = buildStreet(
+                completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+                completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine2)
+              ),
+              city = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              postalCode = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.postalCode),
+              countryCode = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.countryCode),
+              telephoneNumber = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.telephone),
+              faxNumber = None,
+              emailAddress = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
+            )
+
+        }
+
+    }
+
     Valid(
       EoriDetails(
         agentEORIDetails = EORIInformation(
@@ -369,41 +429,21 @@ object DefaultClaimTransformerService {
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
-            contactPerson = None,
-            addressLine1 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-            addressLine2 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-            AddressLine3 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-            street = Some(
-              s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.declarantDetails
-                .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
-                .getOrElse("")}"
+            contactPerson = Option(completeClaim.claimantDetailsAsIndividual.fullName),
+            addressLine1 = Option(completeClaim.claimantDetailsAsIndividual.contactAddress.line1),
+            addressLine2 = completeClaim.claimantDetailsAsIndividual.contactAddress.line2,
+            AddressLine3 = completeClaim.claimantDetailsAsIndividual.contactAddress.line3,
+            street = buildStreet(
+              Option(completeClaim.claimantDetailsAsIndividual.contactAddress.line1),
+              completeClaim.claimantDetailsAsIndividual.contactAddress.line2
             ),
-            city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-            countryCode = completeClaim.declarantDetails
-              .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
-              .getOrElse("GB"),
-            postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-            telephone = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-            emailAddress = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+            city = Some(completeClaim.claimantDetailsAsIndividual.contactAddress.line4),
+            postalCode = completeClaim.claimantDetailsAsIndividual.contactAddress.postcode,
+            countryCode = completeClaim.claimantDetailsAsIndividual.contactAddress.country.code,
+            telephone = Option(completeClaim.claimantDetailsAsIndividual.phoneNumber.value),
+            emailAddress = Option(completeClaim.claimantDetailsAsIndividual.emailAddress.value)
           ),
-          contactInformation = Some(
-            ContactInformation(
-              contactPerson = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
-              addressLine1 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-              addressLine2 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-              addressLine3 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              street = Some(
-                s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.declarantDetails
-                  .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
-              ),
-              city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              countryCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
-              postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-              telephoneNumber = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-              faxNumber = None,
-              emailAddress = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
-            )
-          ),
+          contactInformation = Some(agentContactInfo),
           VATDetails = None
         ),
         importerEORIDetails = EORIInformation(
@@ -413,19 +453,16 @@ object DefaultClaimTransformerService {
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
             contactPerson = None,
-            addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-            addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-            AddressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-            street = Some(
-              s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.consigneeDetails
-                .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
-                .getOrElse("")}"
+            addressLine1 = completeClaim.consigneeDetails.map(_.establishmentAddress.addressLine1),
+            addressLine2 = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2),
+            AddressLine3 = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+            street = buildStreet(
+              completeClaim.consigneeDetails.map(_.establishmentAddress.addressLine1),
+              completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2)
             ),
-            city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-            countryCode = completeClaim.consigneeDetails
-              .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
-              .getOrElse("GB"),
-            postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+            city = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+            countryCode = completeClaim.consigneeDetails.map(_.establishmentAddress.countryCode).getOrElse("GB"),
+            postalCode = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.postalCode),
             telephone = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
             emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
           ),
@@ -435,9 +472,9 @@ object DefaultClaimTransformerService {
               addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
               addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
               addressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              street = Some(
-                s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.consigneeDetails
-                  .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
+              street = buildStreet(
+                completeClaim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
+                completeClaim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2))
               ),
               city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
               countryCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
@@ -451,6 +488,15 @@ object DefaultClaimTransformerService {
         )
       )
     )
+  }
+
+  def buildStreet(lineA: Option[String], lineB: Option[String]): Option[String] =
+    (lineA, lineB) match {
+      case (Some(s1), Some(s2)) => Some(s"$s1 $s2")
+      case (Some(s1), None)     => Some(s1)
+      case (None, Some(s2))     => Some(s2)
+      case _                    => Some("")
+    }
 
   def buildConsigneeEstablishmentAddressWithUserInput(
     userInput: CompareContactInformation
@@ -464,7 +510,7 @@ object DefaultClaimTransformerService {
           addressLine1 = userInput.line1,
           addressLine2 = userInput.line2,
           AddressLine3 = userInput.line3,
-          street = Some(s"${userInput.line1} ${userInput.line2}"),
+          street = buildStreet(userInput.line1, userInput.line2),
           city = userInput.line4,
           countryCode = userInput.countryCode,
           postalCode = userInput.postalCode,
@@ -483,7 +529,7 @@ object DefaultClaimTransformerService {
         addressLine1 = userInput.line1,
         addressLine2 = userInput.line2,
         addressLine3 = userInput.line3,
-        street = Some(s"${userInput.line1} ${userInput.line2}"),
+        street = buildStreet(userInput.line1, userInput.line2),
         city = userInput.line4,
         countryCode = Some(userInput.countryCode),
         postalCode = userInput.postalCode,
@@ -552,8 +598,9 @@ object DefaultClaimTransformerService {
                     addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
                     addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
                     AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-                    street = Some(consigneeDetails.establishmentAddress.addressLine1).flatMap(line1 =>
-                      consigneeDetails.establishmentAddress.addressLine2.map(line2 => s"$line1 $line2")
+                    street = buildStreet(
+                      Option(consigneeDetails.establishmentAddress.addressLine1),
+                      consigneeDetails.establishmentAddress.addressLine2
                     ),
                     city = consigneeDetails.establishmentAddress.addressLine3,
                     countryCode = countryCode,
@@ -612,8 +659,9 @@ object DefaultClaimTransformerService {
         addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
         addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
         AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-        street = Some(consigneeDetails.establishmentAddress.addressLine1).flatMap(line1 =>
-          consigneeDetails.establishmentAddress.addressLine2.map(line2 => s"$line1 $line2")
+        street = buildStreet(
+          Option(consigneeDetails.establishmentAddress.addressLine1),
+          consigneeDetails.establishmentAddress.addressLine2
         ),
         city = consigneeDetails.establishmentAddress.addressLine3,
         countryCode = consigneeDetails.establishmentAddress.countryCode,
@@ -632,8 +680,9 @@ object DefaultClaimTransformerService {
         addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
         addressLine2 = declarantDetails.establishmentAddress.addressLine2,
         AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
-        street = Some(declarantDetails.establishmentAddress.addressLine1).flatMap(line1 =>
-          Some(declarantDetails.establishmentAddress.addressLine1).map(line2 => s"$line1 $line2")
+        street = buildStreet(
+          Option(declarantDetails.establishmentAddress.addressLine1),
+          declarantDetails.establishmentAddress.addressLine2
         ),
         city = declarantDetails.establishmentAddress.addressLine3,
         countryCode = declarantDetails.establishmentAddress.countryCode,
@@ -656,10 +705,8 @@ object DefaultClaimTransformerService {
                 addressLine1 = contactDetails.addressLine1,
                 addressLine2 = contactDetails.addressLine2,
                 addressLine3 = contactDetails.addressLine3,
-                street = contactDetails.addressLine1.flatMap(line1 =>
-                  contactDetails.addressLine2.map(line2 => s"$line1 $line2")
-                ),
-                city = contactDetails.addressLine4,
+                street = buildStreet(contactDetails.addressLine1, contactDetails.addressLine2),
+                city = contactDetails.addressLine3,
                 countryCode = contactDetails.countryCode,
                 postalCode = contactDetails.postalCode,
                 telephoneNumber = contactDetails.telephone,
@@ -687,10 +734,8 @@ object DefaultClaimTransformerService {
                 addressLine1 = contactDetails.addressLine1,
                 addressLine2 = contactDetails.addressLine2,
                 addressLine3 = contactDetails.addressLine3,
-                street = contactDetails.addressLine1.flatMap(line1 =>
-                  contactDetails.addressLine2.map(line2 => s"$line1 $line2")
-                ),
-                city = contactDetails.addressLine4,
+                street = buildStreet(contactDetails.addressLine1, contactDetails.addressLine2),
+                city = contactDetails.addressLine3,
                 countryCode = contactDetails.countryCode,
                 postalCode = contactDetails.postalCode,
                 telephoneNumber = contactDetails.telephone,

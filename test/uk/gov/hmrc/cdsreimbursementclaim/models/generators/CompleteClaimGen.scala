@@ -25,11 +25,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, CompleteClaim, EntryDeclarationDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimantDetailsAsImporterCompany, ClaimantDetailsAsIndividual, CompleteClaim, EntryDeclarationDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 
 object CompleteClaimGen extends GenUtils {
 
+  implicit val claimantDetailsAsIndividualGen: Gen[ClaimantDetailsAsIndividual]                     = gen[ClaimantDetailsAsIndividual]
+  implicit val claimantDetailsAsImporterCompanyGen: Gen[ClaimantDetailsAsImporterCompany]           =
+    gen[ClaimantDetailsAsImporterCompany]
   implicit val claimGen: Gen[Claim]                                                                 = gen[Claim]
   implicit val completeClaimAnswerGen: Gen[CompleteClaimsAnswer]                                    = gen[CompleteClaimsAnswer]
   implicit val completeBankAccountDetailAnswerGen: Gen[CompleteBankAccountDetailAnswer]             =
