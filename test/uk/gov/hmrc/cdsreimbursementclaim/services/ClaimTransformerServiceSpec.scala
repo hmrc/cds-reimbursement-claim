@@ -323,7 +323,6 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         transformer.toEisSubmitClaimRequest(submitClaimRequest) shouldBe Right(eisSubmitClaimRequest)
       }
 
-      //TODO: we need to confirm the mapping logic - leaving this code here as we will need most of it
       "make an EIS submit claim request for a valid mrn number claim" in {
 
         val displayResponseDetail =
@@ -422,13 +421,6 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
         val correlationId      = UUID.randomUUID()
-
-//        val goodsDetails = GoodsDetails(
-//          None,
-//          Some("Yes"),
-//          None,
-//          Some(completeClaim.commodityDetails.value)
-//        )
 
         val bankDetails = uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.BankDetails(
           consigneeBankDetails = None,
@@ -600,80 +592,6 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
               displayDeclaration.displayResponseDetail.declarantDetails.contactDetails.flatMap(s => s.emailAddress)
           )
         )
-
-//        val _a = MRNInformation(
-//          EORI =
-//            displayDeclaration.displayResponseDetail.consigneeDetails.map(s => s.consigneeEORI).getOrElse("No eori"),
-//          legalName =
-//            displayDeclaration.displayResponseDetail.consigneeDetails.map(s => s.legalName).getOrElse("No legal name"),
-//          establishmentAddress = Address(
-//            contactPerson = displayDeclaration.displayResponseDetail.consigneeDetails.map(s => s.legalName),
-//            addressLine1 = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine1)
-//            ),
-//            addressLine2 = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine2)
-//            ),
-//            AddressLine3 = None,
-//            street = displayDeclaration.displayResponseDetail.consigneeDetails
-//              .flatMap(s => s.contactDetails.flatMap(s => s.addressLine1))
-//              .flatMap(line1 =>
-//                displayDeclaration.displayResponseDetail.consigneeDetails
-//                  .flatMap(s => s.contactDetails.flatMap(s => s.addressLine2))
-//                  .map(line2 => s"$line1 $line2")
-//              ),
-//            city = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine3)
-//            ),
-//            countryCode = displayDeclaration.displayResponseDetail.consigneeDetails
-//              .flatMap(s => s.contactDetails.flatMap(s => s.countryCode))
-//              .getOrElse("GB"),
-//            postalCode = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.postalCode)
-//            ),
-//            telephone = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.telephone)
-//            ),
-//            emailAddress = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.emailAddress)
-//            )
-//          ),
-//          contactDetails = ContactInformation(
-//            contactPerson = displayDeclaration.displayResponseDetail.consigneeDetails.map(s => s.legalName),
-//            addressLine1 = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine1)
-//            ),
-//            addressLine2 = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine2)
-//            ),
-//            addressLine3 = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine3)
-//            ),
-//            street = displayDeclaration.displayResponseDetail.consigneeDetails
-//              .flatMap(s => s.contactDetails.flatMap(s => s.addressLine1))
-//              .flatMap(line1 =>
-//                displayDeclaration.displayResponseDetail.consigneeDetails
-//                  .flatMap(s => s.contactDetails.flatMap(s => s.addressLine2))
-//                  .map(line2 => s"$line1 $line2")
-//              ),
-//            city = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.addressLine4)
-//            ),
-//            countryCode = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.countryCode)
-//            ),
-//            postalCode = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.postalCode)
-//            ),
-//            telephoneNumber = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.telephone)
-//            ),
-//            faxNumber = None,
-//            emailAddress = displayDeclaration.displayResponseDetail.consigneeDetails.flatMap(s =>
-//              s.contactDetails.flatMap(s => s.emailAddress)
-//            )
-//          )
-//        )
 
         val mrnDetails = MrnDetail(
           MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
