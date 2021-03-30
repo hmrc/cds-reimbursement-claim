@@ -27,7 +27,7 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
 
   val mockHttp: HttpClient = mock[HttpClient]
 
-  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(result: Option[HttpResponse]): Unit =
+  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(result: Option[HttpResponse]) =
     (mockHttp
       .POST(_: String, _: A, _: Seq[(String, String)])(
         _: Writes[A],
@@ -40,7 +40,7 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
         result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
-  def mockPostString[A](url: String, headers: Seq[(String, String)], body: String)(result: Option[HttpResponse]): Unit =
+  def mockPostString[A](url: String, headers: Seq[(String, String)], body: String)(result: Option[HttpResponse]) =
     (mockHttp
       .POSTString(_: String, _: String, _: Seq[(String, String)])(
         _: HttpReads[HttpResponse],
