@@ -1024,7 +1024,7 @@ object DefaultClaimTransformerService {
           setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           makeNdrcDetails(completeClaim.claims)
-        ).mapN { case (declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
+        ).mapN { case (declarationDetails, consigneeDetails, acceptanceDate, bankDetails, ndrcDetails) =>
           Some(
             MrnDetail(
               MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
