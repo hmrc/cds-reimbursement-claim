@@ -49,7 +49,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(scalaVersion := "2.12.12")
   .settings(
-    majorVersion := 0,
+    majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
   )
   .settings(routesImport := Seq.empty)
