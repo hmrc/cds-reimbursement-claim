@@ -22,7 +22,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 final case class ClaimantDetailsAsIndividual(
   fullName: String,
   emailAddress: Email,
-  phoneNumber: PhoneNumber,
   contactAddress: NonUkAddress,
   addCompanyDetails: Boolean
 )
