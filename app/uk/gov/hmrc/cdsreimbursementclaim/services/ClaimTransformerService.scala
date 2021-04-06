@@ -440,7 +440,7 @@ object DefaultClaimTransformerService {
             city = Some(completeClaim.claimantDetailsAsIndividual.contactAddress.line4),
             postalCode = completeClaim.claimantDetailsAsIndividual.contactAddress.postcode,
             countryCode = completeClaim.claimantDetailsAsIndividual.contactAddress.country.code,
-            telephone = Option(completeClaim.claimantDetailsAsIndividual.phoneNumber.value),
+            telephone = None,
             emailAddress = Option(completeClaim.claimantDetailsAsIndividual.emailAddress.value)
           ),
           contactInformation = Some(agentContactInfo),

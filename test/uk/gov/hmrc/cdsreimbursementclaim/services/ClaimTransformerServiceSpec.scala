@@ -965,7 +965,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         establishmentAddress.postalCode   shouldBe claimantDetailsAsIndividual.contactAddress.postcode
         establishmentAddress.countryCode  shouldBe claimantDetailsAsIndividual.contactAddress.country.code
         establishmentAddress.emailAddress shouldBe Some(claimantDetailsAsIndividual.emailAddress.value)
-        establishmentAddress.telephone    shouldBe Some(claimantDetailsAsIndividual.phoneNumber.value)
+        establishmentAddress.telephone    shouldBe None
         ()
       }
 
