@@ -23,14 +23,14 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsImporterCompanyAnswer.CompleteClaimantDetailsAsImporterCompanyAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsIndividualAnswer.CompleteClaimantDetailsAsIndividualAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimsAnswer.CompleteClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimantDetailsAsImporterCompany, ClaimantDetailsAsIndividual, ConsigneeDetails, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantType, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ContactDetailsFormData, ClaimantDetailsAsIndividual, ConsigneeDetails, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantType, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -972,7 +972,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       "valid mrn number claim, DeclarantType: Importer, with filled out claimantDetailsAsImporterCompanyAnswer" in {
         val declarantType                          = DeclarantType.Importer
         val claimantDetailsAsImporterCompanyAnswer =
-          sample[ClaimantDetailsAsImporterCompany].copy(contactAddress = getNonUkAddress("frontend.company"))
+          sample[ContactDetailsFormData].copy(contactAddress = getNonUkAddress("frontend.company"))
 
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -995,7 +995,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             completeClaimantDetailsAsIndividualAnswer =
               CompleteClaimantDetailsAsIndividualAnswer(claimantDetailsAsIndividual),
             maybeClaimantDetailsAsImporterCompanyAnswer =
-              Some(CompleteClaimantDetailsAsImporterCompanyAnswer(claimantDetailsAsImporterCompanyAnswer)),
+              Some(CompleteContactDetailsAnswer(claimantDetailsAsImporterCompanyAnswer)),
             maybeBasisOfClaimAnswer = Some(completeBasisOfClaimAnswer),
             maybeCompleteBankAccountDetailAnswer = Some(completeBankAccountDetailAnswer),
             completeClaimsAnswer = completeClaimsAnswer,
@@ -1116,7 +1116,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       "valid mrn number claim, DeclarantType: AssociatedWithImporterCompany, with filled out claimantDetailsAsImporterCompanyAnswer" in {
         val declarantType                          = DeclarantType.AssociatedWithImporterCompany
         val claimantDetailsAsImporterCompanyAnswer =
-          sample[ClaimantDetailsAsImporterCompany].copy(contactAddress = getNonUkAddress("frontend.company"))
+          sample[ContactDetailsFormData].copy(contactAddress = getNonUkAddress("frontend.company"))
 
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1139,7 +1139,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             completeClaimantDetailsAsIndividualAnswer =
               CompleteClaimantDetailsAsIndividualAnswer(claimantDetailsAsIndividual),
             maybeClaimantDetailsAsImporterCompanyAnswer =
-              Some(CompleteClaimantDetailsAsImporterCompanyAnswer(claimantDetailsAsImporterCompanyAnswer)),
+              Some(CompleteContactDetailsAnswer(claimantDetailsAsImporterCompanyAnswer)),
             maybeBasisOfClaimAnswer = Some(completeBasisOfClaimAnswer),
             maybeCompleteBankAccountDetailAnswer = Some(completeBankAccountDetailAnswer),
             completeClaimsAnswer = completeClaimsAnswer,
@@ -1260,7 +1260,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       "valid mrn number claim, DeclarantType: AssociatedWithRepresentativeCompany, with filled out claimantDetailsAsImporterCompanyAnswer" in {
         val declarantType                          = DeclarantType.AssociatedWithImporterCompany
         val claimantDetailsAsImporterCompanyAnswer =
-          sample[ClaimantDetailsAsImporterCompany].copy(contactAddress = getNonUkAddress("frontend.company"))
+          sample[ContactDetailsFormData].copy(contactAddress = getNonUkAddress("frontend.company"))
 
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1283,7 +1283,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             completeClaimantDetailsAsIndividualAnswer =
               CompleteClaimantDetailsAsIndividualAnswer(claimantDetailsAsIndividual),
             maybeClaimantDetailsAsImporterCompanyAnswer =
-              Some(CompleteClaimantDetailsAsImporterCompanyAnswer(claimantDetailsAsImporterCompanyAnswer)),
+              Some(CompleteContactDetailsAnswer(claimantDetailsAsImporterCompanyAnswer)),
             maybeBasisOfClaimAnswer = Some(completeBasisOfClaimAnswer),
             maybeCompleteBankAccountDetailAnswer = Some(completeBankAccountDetailAnswer),
             completeClaimsAnswer = completeClaimsAnswer,

@@ -20,7 +20,7 @@ import julienrf.json.derived
 import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsImporterCompanyAnswer.CompleteClaimantDetailsAsImporterCompanyAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsIndividualAnswer.CompleteClaimantDetailsAsIndividualAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimsAnswer.CompleteClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CommoditiesDetailsAnswer.CompleteCommodityDetailsAnswer
@@ -53,7 +53,7 @@ object CompleteClaim {
     maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
     completeDeclarantTypeAnswer: CompleteDeclarantTypeAnswer,
     completeClaimantDetailsAsIndividualAnswer: CompleteClaimantDetailsAsIndividualAnswer,
-    maybeClaimantDetailsAsImporterCompanyAnswer: Option[CompleteClaimantDetailsAsImporterCompanyAnswer],
+    maybeClaimantDetailsAsImporterCompanyAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[CompleteBasisOfClaimAnswer],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
     supportingEvidenceAnswers: CompleteSupportingEvidenceAnswer,
@@ -324,7 +324,7 @@ object CompleteClaim {
 
     }
 
-    def claimantDetailsAsImporter: Option[ClaimantDetailsAsImporterCompany] = completeClaim match {
+    def claimantDetailsAsImporter: Option[ContactDetailsFormData] = completeClaim match {
       case CompleteC285Claim(
             _,
             _,
@@ -347,7 +347,7 @@ object CompleteClaim {
           ) =>
         maybeClaimantDetailsAsImporterCompanyAnswer match {
           case Some(completeClaimantDetailsAsImporterCompanyAnswer) =>
-            Some(completeClaimantDetailsAsImporterCompanyAnswer.claimantDetailsAsImporterCompany)
+            Some(completeClaimantDetailsAsImporterCompanyAnswer.contactDetailsFormData)
           case None                                                 => None
         }
 
