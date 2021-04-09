@@ -21,7 +21,7 @@ import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantDetailsAsIndividualAnswer.CompleteClaimantDetailsAsIndividualAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAnswer.CompleteDetailsRegisteredWithCdsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimsAnswer.CompleteClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CommoditiesDetailsAnswer.CompleteCommodityDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
@@ -52,8 +52,8 @@ object CompleteClaim {
     maybeCompleteDeclarationDetailsAnswer: Option[CompleteDeclarationDetailsAnswer],
     maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
     completeDeclarantTypeAnswer: CompleteDeclarantTypeAnswer,
-    completeClaimantDetailsAsIndividualAnswer: CompleteClaimantDetailsAsIndividualAnswer,
-    maybeClaimantDetailsAsImporterCompanyAnswer: Option[CompleteContactDetailsAnswer],
+    completeDetailsRegisteredWithCdsAnswer: CompleteDetailsRegisteredWithCdsAnswer,
+    maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[CompleteBasisOfClaimAnswer],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
     supportingEvidenceAnswers: CompleteSupportingEvidenceAnswer,
@@ -299,7 +299,7 @@ object CompleteClaim {
         completeCommodityDetailsAnswer.commodityDetails
     }
 
-    def claimantDetailsAsIndividual: ClaimantDetailsAsIndividual = completeClaim match {
+    def detailsRegisteredWithCds: DetailsRegisteredWithCdsFormData = completeClaim match {
       case CompleteC285Claim(
             _,
             _,
@@ -307,7 +307,7 @@ object CompleteClaim {
             _,
             _,
             _,
-            completeClaimantDetailsAsIndividualAnswer,
+            detailsRegisteredWithCdsAnswer,
             _,
             _,
             _,
@@ -320,7 +320,7 @@ object CompleteClaim {
             _,
             _
           ) =>
-        completeClaimantDetailsAsIndividualAnswer.claimantDetailsAsIndividual
+        detailsRegisteredWithCdsAnswer.detailsRegisteredWithCds
 
     }
 
