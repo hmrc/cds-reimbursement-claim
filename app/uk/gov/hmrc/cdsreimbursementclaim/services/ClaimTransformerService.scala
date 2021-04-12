@@ -429,19 +429,19 @@ object DefaultClaimTransformerService {
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
-            contactPerson = Option(completeClaim.claimantDetailsAsIndividual.fullName),
-            addressLine1 = Option(completeClaim.claimantDetailsAsIndividual.contactAddress.line1),
-            addressLine2 = completeClaim.claimantDetailsAsIndividual.contactAddress.line2,
-            AddressLine3 = completeClaim.claimantDetailsAsIndividual.contactAddress.line3,
+            contactPerson = Option(completeClaim.detailsRegisteredWithCds.fullName),
+            addressLine1 = Option(completeClaim.detailsRegisteredWithCds.contactAddress.line1),
+            addressLine2 = completeClaim.detailsRegisteredWithCds.contactAddress.line2,
+            AddressLine3 = completeClaim.detailsRegisteredWithCds.contactAddress.line3,
             street = buildStreet(
-              Option(completeClaim.claimantDetailsAsIndividual.contactAddress.line1),
-              completeClaim.claimantDetailsAsIndividual.contactAddress.line2
+              Option(completeClaim.detailsRegisteredWithCds.contactAddress.line1),
+              completeClaim.detailsRegisteredWithCds.contactAddress.line2
             ),
-            city = Some(completeClaim.claimantDetailsAsIndividual.contactAddress.line4),
-            postalCode = completeClaim.claimantDetailsAsIndividual.contactAddress.postcode,
-            countryCode = completeClaim.claimantDetailsAsIndividual.contactAddress.country.code,
+            city = Some(completeClaim.detailsRegisteredWithCds.contactAddress.line4),
+            postalCode = completeClaim.detailsRegisteredWithCds.contactAddress.postcode,
+            countryCode = completeClaim.detailsRegisteredWithCds.contactAddress.country.code,
             telephone = None,
-            emailAddress = Option(completeClaim.claimantDetailsAsIndividual.emailAddress.value)
+            emailAddress = Option(completeClaim.detailsRegisteredWithCds.emailAddress.value)
           ),
           contactInformation = Some(agentContactInfo),
           VATDetails = None
