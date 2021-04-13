@@ -63,15 +63,15 @@ class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with M
           Some(
             ConsigneeBankDetails(
               accountHolderName = "Test Account",
-              sortCode = "****56",
-              accountNumber = "****5678"
+              sortCode = "Ending with 56",
+              accountNumber = "Ending with 5678"
             )
           ),
           Some(
             DeclarantBankDetails(
               accountHolderName = "Test Account",
-              sortCode = "****56",
-              accountNumber = "****5678"
+              sortCode = "Ending with 56",
+              accountNumber = "Ending with 5678"
             )
           )
         )
