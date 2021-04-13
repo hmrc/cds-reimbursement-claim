@@ -116,7 +116,7 @@ object DefaultDeclarationTransformerService {
   }
 
   def maskBankAccount(accountHolderName: String, sortCode: String, accountNumber: String): MaskedBankAccount = {
-    def maskDigits(digits: String): String = digits.replaceAll("[0-9]", "*")
+    def maskDigits(digits: String): String = digits.replaceAll("([0-9]+)", "Ending with ")
 
     val (toMaskSortCodeComponent, toDisplaySortCodeComponent)           = sortCode.splitAt(4)
     val maskedSortCode                                                  = maskDigits(toMaskSortCodeComponent) + toDisplaySortCodeComponent
