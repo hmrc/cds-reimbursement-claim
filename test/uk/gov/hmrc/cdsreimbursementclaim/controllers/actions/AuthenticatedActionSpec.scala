@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
+import akka.stream.testkit.NoMaterializer
 import akka.util.Timeout
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.mvc.{BodyParsers, Results}
-import play.api.test.{FakeRequest, Helpers, NoMaterializer}
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval}
 import uk.gov.hmrc.auth.core.{AuthConnector, BearerTokenExpired, MissingBearerToken, SessionRecordNotFound}

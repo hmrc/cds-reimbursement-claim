@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import cats.data.EitherT
-import cats.instances.future._
+import cats.implicits._
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -41,7 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.workitem._
 
 import java.util.concurrent.TimeUnit
@@ -59,6 +59,21 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   val mockUUIDGenerator: UUIDGenerator         = mock[UUIDGenerator]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
+    List(
+      headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
+      headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),
+      headerCarrier.forwarded.map(f => headerCarrier.names.xForwardedFor -> f.value),
+      Some(headerCarrier.names.xRequestChain                          -> headerCarrier.requestChain.value),
+      headerCarrier.authorization.map(auth => headerCarrier.names.authorisation -> auth.value),
+      headerCarrier.trueClientIp.map(HeaderNames.trueClientIp         -> _),
+      headerCarrier.trueClientPort.map(HeaderNames.trueClientPort     -> _),
+      headerCarrier.gaToken.map(HeaderNames.googleAnalyticTokenId     -> _),
+      headerCarrier.gaUserId.map(HeaderNames.googleAnalyticUserId     -> _),
+      headerCarrier.deviceID.map(HeaderNames.deviceID                 -> _),
+      headerCarrier.akamaiReputation.map(HeaderNames.akamaiReputation -> _.value)
+    ).flattenOption ++ headerCarrier.extraHeaders ++ headerCarrier.otherHeaders
 
   def makeDec64XmlPayload(
     correlationId: String,
@@ -186,7 +201,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   implicit val ccsSubmissionPollerExecutionContext: CcsSubmissionPollerExecutionContext =
     new CcsSubmissionPollerExecutionContext(actorSystem)
 
-  val ccsSubmissionService =
+  lazy val ccsSubmissionService =
     new DefaultCcsSubmissionService(mockCcsConnector, mockCcsSubmissionRepo)
 
   "Ccs Submission Service" when {
@@ -258,13 +273,13 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
             }
             val updateWorkItem =
-              workItem.copy(item = ccsSubmissionRequest.copy(payload = dec64payload, headers = hc.headers))
+              workItem.copy(item = ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))
 
-            mockCcsSubmissionRequestSet(ccsSubmissionRequest.copy(payload = dec64payload, headers = hc.headers))(
+            mockCcsSubmissionRequestSet(ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))(
               Right(updateWorkItem)
             )
 
-            await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse) value) === Right(
+            await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse).value) shouldBe Right(
               List(updateWorkItem)
             )
 
@@ -297,7 +312,9 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
           val ccsSubmissionPayload = sample[CcsSubmissionPayload]
 
           inSequence {
-            mockDec64Submission(ccsSubmissionPayload.copy(headers = hc.headers))(Left(Error("dec-64 service error")))
+            mockDec64Submission(ccsSubmissionPayload.copy(headers = getHeaders(hc)))(
+              Left(Error("dec-64 service error"))
+            )
           }
 
           await(
@@ -313,7 +330,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val ccsSubmissionPayload = sample[CcsSubmissionPayload]
         val response             = HttpResponse(204, "Success")
         inSequence {
-          mockDec64Submission(ccsSubmissionPayload.copy(headers = hc.headers))(Right(response))
+          mockDec64Submission(ccsSubmissionPayload.copy(headers = getHeaders(hc)))(Right(response))
         }
         await(
           ccsSubmissionService

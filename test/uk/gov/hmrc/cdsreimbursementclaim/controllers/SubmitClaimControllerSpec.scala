@@ -54,7 +54,7 @@ class SubmitClaimControllerSpec extends ControllerSpec {
     FakeRequest()
   )
 
-  private val controller = new SubmitClaimController(
+  private lazy val controller = new SubmitClaimController(
     authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
     mockClaimService,
     mockCcsSubmissionService,

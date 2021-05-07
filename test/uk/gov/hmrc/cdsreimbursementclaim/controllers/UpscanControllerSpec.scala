@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import akka.stream.Materializer
+import akka.stream.testkit.NoMaterializer
 import cats.data.EitherT
 import org.scalamock.handlers.{CallHandler1, CallHandler2}
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
@@ -25,7 +26,7 @@ import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{BodyParsers, Headers, WrappedRequest}
 import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Helpers, NoMaterializer}
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
