@@ -61,13 +61,17 @@ class CcsSubmissionPoller @Inject() (
   private val failureCountLimit: Int = servicesConfig.getInt("ccs.submission-poller.failure-count-limit")
 
   val _: Cancellable =
-    actorSystem.scheduler.schedule(jitteredInitialDelay, pollerInterval)(poller())(
+    actorSystem.scheduler.scheduleAtFixedRate(jitteredInitialDelay, pollerInterval)(run())(
       ccsSubmissionPollerExecutionContext
     )
 
   def getLogMessage(workItem: WorkItem[CcsSubmissionRequest], stateIndicator: String): String =
     s"CCS File Submission poller: $stateIndicator:  work-item-id: ${workItem.id}, work-item-failure-count: ${workItem.failureCount}, " +
       s"work-item-status: ${workItem.status}, work-item-updatedAt : ${workItem.updatedAt}"
+
+  def run(): Runnable = () => {
+    poller()
+  }
 
   def poller(): Unit = {
     val result: EitherT[Future, Error, Unit] = ccsSubmissionService.dequeue.semiflatMap {

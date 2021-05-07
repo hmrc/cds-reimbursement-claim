@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, Submi
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.DefaultCcsSubmissionService.makeBatchFileInterfaceMetaDataPayload
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 
 import scala.concurrent.Future
@@ -63,7 +63,9 @@ class DefaultCcsSubmissionService @Inject() (
   override def submitToCcs(
     ccsSubmissionPayload: CcsSubmissionPayload
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
-    ccsConnector.submitToCcs(CcsSubmissionPayload(ccsSubmissionPayload.dec64Body, hc.headers))
+    ccsConnector.submitToCcs(
+      CcsSubmissionPayload(ccsSubmissionPayload.dec64Body, DefaultCcsSubmissionService.getHeaders(hc))
+    )
 
   @SuppressWarnings(Array("org.wartremover.warts.Any")) // compiler can't infer the type properly on sequence
   override def enqueue(
@@ -77,7 +79,7 @@ class DefaultCcsSubmissionService @Inject() (
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(
               XmlEncoder[Envelope].encode(data),
-              hc.headers
+              DefaultCcsSubmissionService.getHeaders(hc)
             )
           )
         )
@@ -160,5 +162,20 @@ object DefaultCcsSubmissionService {
         }
     }
   }
+
+  def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
+    List(
+      headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
+      headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),
+      headerCarrier.forwarded.map(f => headerCarrier.names.xForwardedFor -> f.value),
+      Some(headerCarrier.names.xRequestChain                          -> headerCarrier.requestChain.value),
+      headerCarrier.authorization.map(auth => headerCarrier.names.authorisation -> auth.value),
+      headerCarrier.trueClientIp.map(HeaderNames.trueClientIp         -> _),
+      headerCarrier.trueClientPort.map(HeaderNames.trueClientPort     -> _),
+      headerCarrier.gaToken.map(HeaderNames.googleAnalyticTokenId     -> _),
+      headerCarrier.gaUserId.map(HeaderNames.googleAnalyticUserId     -> _),
+      headerCarrier.deviceID.map(HeaderNames.deviceID                 -> _),
+      headerCarrier.akamaiReputation.map(HeaderNames.akamaiReputation -> _.value)
+    ).flattenOption ++ headerCarrier.extraHeaders ++ headerCarrier.otherHeaders
 
 }
