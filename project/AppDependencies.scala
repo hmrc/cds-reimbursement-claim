@@ -27,7 +27,7 @@ object AppDependencies {
     "uk.gov.hmrc"                %% "reactivemongo-test"        % "5.0.0-play-28" % Test,
     "com.vladsch.flexmark"        % "flexmark-all"              % "0.36.8"         % "test, it",
     "org.pegdown"                 % "pegdown"                   % "1.6.0"          % "test, it",
-    "com.typesafe.akka"          %% "akka-testkit"              % "2.6.10"         % Test,
+    "com.typesafe.akka"          %% "akka-testkit"              % "2.6.14"         % Test,
     "org.scala-lang.modules"     %% "scala-xml"                 % "1.3.0"          % Test
   )
 }
