@@ -10,7 +10,7 @@ addCommandAlias("fix", "all compile:scalafix test:scalafix")
 
 lazy val wartremoverSettings =
   Seq(
-    Compile / compile / wartremoverErrors ++= Warts.allBut(
+    wartremoverErrors in (Compile, compile) ++= Warts.allBut(
       Wart.DefaultArguments,
       Wart.ImplicitConversion,
       Wart.ImplicitParameter,
@@ -19,11 +19,11 @@ lazy val wartremoverSettings =
       Wart.ToString
     ),
     WartRemover.autoImport.wartremoverExcluded += target.value,
-    Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
-      (Compile / routes).value ++
+    WartRemover.autoImport.wartremoverExcluded in (Compile, compile) ++=
+      routes.in(Compile).value ++
         (baseDirectory.value ** "*.sc").get ++
         Seq(sourceManaged.value / "main" / "sbt-buildinfo" / "BuildInfo.scala"),
-    Test / compile / wartremoverErrors --= Seq(Wart.NonUnitStatements, Wart.Null, Wart.PublicInference, Wart.Any)
+    wartremoverErrors in (Test, compile) --= Seq(Wart.NonUnitStatements, Wart.Null, Wart.PublicInference, Wart.Any)
   )
 
 lazy val scoverageSettings =
@@ -32,7 +32,7 @@ lazy val scoverageSettings =
     ScoverageKeys.coverageMinimum := 73.00,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
-    ThisBuild / Test / test / coverageEnabled := true
+    coverageEnabled.in(ThisBuild, Test, test) := true
   )
 
 lazy val microservice = Project(appName, file("."))
@@ -61,7 +61,7 @@ lazy val microservice = Project(appName, file("."))
       "-language:postfixOps",
       "-Ypartial-unification"
     ),
-    Test / scalacOptions --= Seq("-Ywarn-value-discard"),
+    scalacOptions in Test --= Seq("-Ywarn-value-discard"),
     scalacOptions += "-P:silencer:pathFilters=routes"
   )
   .settings(publishingSettings: _*)
