@@ -40,6 +40,7 @@ object BasisOfClaim {
   case object IncorrectExciseValue extends BasisOfClaim
   case object CorrectionToRiskClassification extends BasisOfClaim
 
+  // $COVERAGE-OFF$
   def basisOfClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
     case DuplicateEntry                         => "Duplicate Entry"
     case DutySuspension                         => "Duty Suspension"
@@ -59,6 +60,7 @@ object BasisOfClaim {
     case IncorrectExciseValue                   => "Incorrect Excise Value"
     case CorrectionToRiskClassification         => "Risk Classification Error"
   }
+  // $COVERAGE-ON$
 
   implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
 

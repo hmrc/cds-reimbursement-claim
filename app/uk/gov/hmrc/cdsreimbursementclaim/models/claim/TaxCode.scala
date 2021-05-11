@@ -102,6 +102,7 @@ object TaxCode {
   case object NI99C extends TaxCode("99C")
   case object NI99D extends TaxCode("99D")
 
+  // $COVERAGE-OFF$
   val allTaxCodes: List[TaxCode] = List(
     A00,
     A20,
@@ -179,6 +180,7 @@ object TaxCode {
     NI99C,
     NI99D
   )
+  // $COVERAGE-ON$
 
   val allTaxCodesPartialFunctions: List[PartialFunction[TaxCode, String]] = allTaxCodes.map(a =>
     new PartialFunction[TaxCode, String]() {
