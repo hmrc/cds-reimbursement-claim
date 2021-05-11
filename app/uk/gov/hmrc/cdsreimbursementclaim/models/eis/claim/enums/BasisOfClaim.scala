@@ -36,7 +36,11 @@ object BasisOfClaim {
   case object Preference extends BasisOfClaim
   case object RGR extends BasisOfClaim
   case object ProofOfReturnRefundGiven extends BasisOfClaim
+  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim
+  case object IncorrectExciseValue extends BasisOfClaim
+  case object CorrectionToRiskClassification extends BasisOfClaim
 
+  // $COVERAGE-OFF$
   def basisOfClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
     case DuplicateEntry                         => "Duplicate Entry"
     case DutySuspension                         => "Duty Suspension"
@@ -52,7 +56,11 @@ object BasisOfClaim {
     case Preference                             => "Preference"
     case RGR                                    => "RGR"
     case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
+    case EvidenceThatGoodsHaveNotEnteredTheEU   => "Evidence That Goods Have Not Entered The EU"
+    case IncorrectExciseValue                   => "Incorrect Excise Value"
+    case CorrectionToRiskClassification         => "Risk Classification Error"
   }
+  // $COVERAGE-ON$
 
   implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
 
