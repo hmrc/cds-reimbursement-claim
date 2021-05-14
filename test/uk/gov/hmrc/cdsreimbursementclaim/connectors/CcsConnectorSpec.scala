@@ -21,7 +21,11 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+import play.api.http.{ContentTypes, HeaderNames, MimeTypes}
+import play.api.mvc.Codec
 import play.api.test.Helpers.{await, _}
+import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
+import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -32,7 +36,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
 
-  "Claim Connector" when {
+  "Ccs Connector" when {
 
     val config: Configuration = Configuration(
       ConfigFactory.parseString(
@@ -57,7 +61,25 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
       )
     )
 
-    val connector = new DefaultCcsConnector(mockHttp, new ServicesConfig(config))
+    val connector = new DefaultCcsConnector(mockHttp, new ServicesConfig(config)) {
+      override def getExtraHeaders: Seq[(String, String)] =
+        Seq(
+          HeaderNames.DATE                   -> "some-date",
+          CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",
+          HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
+          HeaderNames.CONTENT_TYPE           -> ContentTypes.withCharset(MimeTypes.XML)(Codec.utf_8),
+          HeaderNames.ACCEPT                 -> MimeTypes.XML
+        )
+    }
+
+    val explicitHeaders = Seq(
+      ("Date"             -> "some-date"),
+      ("X-Correlation-ID" -> "some-correlation-id"),
+      ("X-Forwarded-Host" -> "MDTP"),
+      ("Content-Type"     -> "application/xml; charset=utf-8"),
+      ("Accept"           -> "application/xml"),
+      ("Authorization"    -> "Bearer test-token")
+    )
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -68,7 +90,7 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
       "do a post http call and get the DEC-64 API response" in {
         val request      = sample[CcsSubmissionPayload]
         val httpResponse = HttpResponse(204, "success response")
-        mockPostString(backEndUrl, request.headers, request.dec64Body)(Some(httpResponse))
+        mockPostString(backEndUrl, request.headers ++ explicitHeaders, request.dec64Body)(Some(httpResponse))
         val response     = await(connector.submitToCcs(request).value)
         response shouldBe Right(httpResponse)
       }
@@ -77,7 +99,7 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
     "return an error" when {
       "the call fails" in {
         val request = sample[CcsSubmissionPayload]
-        mockPostString(backEndUrl, request.headers, request.dec64Body)(None)
+        mockPostString(backEndUrl, request.headers ++ explicitHeaders, request.dec64Body)(None)
         await(connector.submitToCcs(request).value).isLeft shouldBe true
       }
     }

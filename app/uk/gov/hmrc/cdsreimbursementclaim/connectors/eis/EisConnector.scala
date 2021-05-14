@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
 
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+import play.api.http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 trait EisConnector {
@@ -27,10 +27,7 @@ trait EisConnector {
 
   def getExtraHeaders: Seq[(String, String)]
 
-  def extraHeaders(implicit hc: HeaderCarrier): HeaderCarrier =
-    hc.copy(
-      authorization = Some(Authorization(s"Bearer $eisBearerToken")),
-      extraHeaders = hc.extraHeaders ++ getExtraHeaders
-    )
+  def getExplicitHeaders: Seq[(String, String)] =
+    getExtraHeaders ++ Seq(HeaderNames.AUTHORIZATION -> s"Bearer $eisBearerToken")
 
 }

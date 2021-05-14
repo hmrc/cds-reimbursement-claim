@@ -54,10 +54,10 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
         .POSTString[HttpResponse](
           ccsSubmissionUrl,
           ccsSubmissionPayload.dec64Body,
-          ccsSubmissionPayload.headers
+          ccsSubmissionPayload.headers ++ getExplicitHeaders
         )(
           HttpReads[HttpResponse],
-          extraHeaders,
+          hc,
           ec
         )
         .map(Right(_))
