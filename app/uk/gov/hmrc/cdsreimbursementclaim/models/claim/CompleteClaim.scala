@@ -30,7 +30,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.C
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateMovementReferenceNumberAnswer.CompleteDuplicateMovementReferenceNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
@@ -47,7 +46,7 @@ object CompleteClaim {
 
   final case class CompleteC285Claim(
     id: UUID,
-    completeMovementReferenceNumberAnswer: CompleteMovementReferenceNumberAnswer,
+    movementReferenceNumber: MovementReferenceNumber,
     maybeCompleteDuplicateMovementReferenceNumberAnswer: Option[CompleteDuplicateMovementReferenceNumberAnswer],
     maybeCompleteDeclarationDetailsAnswer: Option[CompleteDeclarationDetailsAnswer],
     maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
@@ -169,29 +168,11 @@ object CompleteClaim {
         supportingEvidenceAnswers.evidences
     }
 
-    def referenceNumberType: Either[EntryNumber, MRN] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            completeMovementReferenceNumberAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        completeMovementReferenceNumberAnswer.movementReferenceNumber
-    }
+    def referenceNumberType: Either[EntryNumber, MRN] =
+      completeClaim match {
+        case c: CompleteC285Claim =>
+          c.movementReferenceNumber.value
+      }
 
     def correlationId: UUID = completeClaim match {
       case CompleteC285Claim(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
