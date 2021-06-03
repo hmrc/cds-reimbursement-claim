@@ -25,14 +25,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.C
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAnswer.CompleteDetailsRegisteredWithCdsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimsAnswer.CompleteClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ContactDetailsFormData, DetailsRegisteredWithCdsFormData, ConsigneeDetails, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantType, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimsAnswer, ConsigneeDetails, ContactDetails, ContactDetailsFormData, Country, DateOfImport, DeclarantDetails, DeclarantType, DetailsRegisteredWithCdsFormData, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis
+import uk.gov.hmrc.cdsreimbursementclaim.models.{ClaimsAnswer, eis}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
@@ -74,11 +73,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           paymentReference = "pay-ref"
         )
 
-        val completeClaimsAnswer = sample[CompleteClaimsAnswer].copy(
-          List(
-            claim
-          )
-        )
+        val completeClaimsAnswer = sample[ClaimsAnswer]
 
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
 
@@ -390,11 +385,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           paymentReference = "pay-ref"
         )
 
-        val completeClaimsAnswer = sample[CompleteClaimsAnswer].copy(
-          List(
-            claim
-          )
-        )
+        val completeClaimsAnswer = sample[ClaimsAnswer]
 
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
 
@@ -977,7 +968,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                                            = getClaimAmounts()
-        val completeClaimsAnswer                                             = sample[CompleteClaimsAnswer].copy(List(claim))
+        val completeClaimsAnswer                                             = ClaimsAnswer(claim)
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
         val completeBasisOfClaimAnswer                                       =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
@@ -1046,7 +1037,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                                            = getClaimAmounts()
-        val completeClaimsAnswer                                             = sample[CompleteClaimsAnswer].copy(List(claim))
+        val completeClaimsAnswer                                             = ClaimsAnswer(claim)
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
         val completeBasisOfClaimAnswer                                       =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
@@ -1118,7 +1109,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                                            = getClaimAmounts()
-        val completeClaimsAnswer                                             = sample[CompleteClaimsAnswer].copy(List(claim))
+        val completeClaimsAnswer                                             = ClaimsAnswer(claim)
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
         val completeBasisOfClaimAnswer                                       =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
@@ -1187,7 +1178,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                                            = getClaimAmounts()
-        val completeClaimsAnswer                                             = sample[CompleteClaimsAnswer].copy(List(claim))
+        val completeClaimsAnswer                                             = ClaimsAnswer(claim)
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
         val completeBasisOfClaimAnswer                                       =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
@@ -1259,7 +1250,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                                            = getClaimAmounts()
-        val completeClaimsAnswer                                             = sample[CompleteClaimsAnswer].copy(List(claim))
+        val completeClaimsAnswer                                             = ClaimsAnswer(claim)
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
         val completeBasisOfClaimAnswer                                       =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
@@ -1328,7 +1319,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val acc14                                                            = getAcc14Response()
         val displayDeclaration                                               = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                                            = getClaimAmounts()
-        val completeClaimsAnswer                                             = sample[CompleteClaimsAnswer].copy(List(claim))
+        val completeClaimsAnswer                                             = ClaimsAnswer(claim)
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
         val completeBasisOfClaimAnswer                                       =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)

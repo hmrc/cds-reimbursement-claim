@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.data.NonEmptyList
 import julienrf.json.derived
 import play.api.libs.json.OFormat
+import uk.gov.hmrc.cdsreimbursementclaim.models.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAnswer.CompleteDetailsRegisteredWithCdsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimsAnswer.CompleteClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CommoditiesDetailsAnswer.CompleteCommodityDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
@@ -63,7 +64,7 @@ object CompleteClaim {
     maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
     importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
     declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
-    completeClaimsAnswer: CompleteClaimsAnswer
+    completeClaimsAnswer: ClaimsAnswer
   ) extends CompleteClaim
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
@@ -246,7 +247,7 @@ object CompleteClaim {
         maybeBasisOfClaimAnswer.map(basisOfClaimAnswer => basisOfClaimAnswer.basisOfClaim)
     }
 
-    def claims: List[Claim] = completeClaim match {
+    def claims: NonEmptyList[Claim] = completeClaim match {
       case CompleteC285Claim(
             _,
             _,
@@ -267,7 +268,7 @@ object CompleteClaim {
             _,
             completeClaimsAnswer
           ) =>
-        completeClaimsAnswer.claims.map(claim =>
+        completeClaimsAnswer.map(claim =>
           claim.copy(
             claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
             paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)

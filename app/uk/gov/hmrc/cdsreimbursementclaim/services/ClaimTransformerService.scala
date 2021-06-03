@@ -964,7 +964,7 @@ object DefaultClaimTransformerService {
       case None                                  => invalid("Could not find entered bank details")
     }
 
-  def makeNdrcDetails(claims: List[Claim]): Validation[List[NdrcDetails]] = {
+  def makeNdrcDetails(claims: NonEmptyList[Claim]): Validation[List[NdrcDetails]] = {
     val result: List[Validation[NdrcDetails]] = claims.map { claim =>
       (
         isValidPaymentMethod(claim.paymentMethod),
@@ -982,7 +982,7 @@ object DefaultClaimTransformerService {
           claimAmount = Some(claimAmount)
         )
       }
-    }
+    }.toList
     if (result.sequence.isInvalid) {
       val errors = result.collect { case e: Invalid[NonEmptyList[String]] => e }
       invalid(s"there is at least one claim which has failed validation: ${errors.map(s => s.e.toList).mkString("|")}")

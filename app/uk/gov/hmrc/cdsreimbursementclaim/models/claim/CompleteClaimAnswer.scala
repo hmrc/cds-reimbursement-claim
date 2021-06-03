@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import cats.data.NonEmptyList
 
-final case class CompleteClaimAnswer(
-  claims: List[Claim]
-)
+object ClaimsAnswer {
 
-object CompleteClaimAnswer {
-  implicit val format: OFormat[CompleteClaimAnswer] = Json.format[CompleteClaimAnswer]
+  def apply(head: Claim, tail: Claim*): NonEmptyList[Claim] = NonEmptyList.of(head, tail: _*)
+  def apply(l: List[Claim]): Option[NonEmptyList[Claim]]    = NonEmptyList.fromList(l)
+
 }
