@@ -31,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidenceAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
@@ -215,14 +216,14 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
     "a ccs submission request is made" must {
       "enqueue the request" in {
-        val supportingEvidence               = sample[SupportingEvidence]
-        val completeSupportingEvidenceAnswer = List(supportingEvidence).toNel
-        val completeClaim                    = sample[CompleteC285Claim].copy(supportingEvidenceAnswer = completeSupportingEvidenceAnswer)
-        val ccsSubmissionRequest             = sample[CcsSubmissionRequest]
-        val workItem                         = sample[WorkItem[CcsSubmissionRequest]]
-        val submitClaimRequest               = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
-        val submitClaimResponse              = sample[SubmitClaimResponse]
-        val evidence                         = submitClaimRequest.completeClaim.evidences.head
+        val supportingEvidence       = sample[SupportingEvidence]
+        val supportingEvidenceAnswer = SupportingEvidenceAnswer(supportingEvidence)
+        val completeClaim            = sample[CompleteC285Claim].copy(supportingEvidenceAnswer = supportingEvidenceAnswer)
+        val ccsSubmissionRequest     = sample[CcsSubmissionRequest]
+        val workItem                 = sample[WorkItem[CcsSubmissionRequest]]
+        val submitClaimRequest       = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimResponse      = sample[SubmitClaimResponse]
+        val evidence                 = submitClaimRequest.completeClaim.evidences.head
 
         val dec64payload = submitClaimRequest.completeClaim.referenceNumberType match {
           case Left(value) =>

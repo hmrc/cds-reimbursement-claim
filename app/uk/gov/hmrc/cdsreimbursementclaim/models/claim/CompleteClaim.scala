@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.data.NonEmptyList
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
@@ -32,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateMovementReferenceNumberAnswer.CompleteDuplicateMovementReferenceNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidenceAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -55,7 +55,7 @@ object CompleteClaim {
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[CompleteBasisOfClaimAnswer],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
-    supportingEvidenceAnswer: NonEmptyList[SupportingEvidence],
+    supportingEvidenceAnswer: SupportingEvidenceAnswer,
     completeCommodityDetailsAnswer: CompleteCommodityDetailsAnswer,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
     maybeDisplayDeclaration: Option[DisplayDeclaration],
@@ -163,7 +163,7 @@ object CompleteClaim {
         maybeCompleteDuplicateDeclarationDetailsAnswer
     }
 
-    def evidences: NonEmptyList[SupportingEvidence] = completeClaim match {
+    def evidences: SupportingEvidenceAnswer = completeClaim match {
       case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, supportingEvidenceAnswer, _, _, _, _, _, _, _) =>
         supportingEvidenceAnswer
     }
