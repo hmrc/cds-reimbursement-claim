@@ -24,29 +24,31 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.Complet
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, CompleteClaim, ContactDetailsFormData, DetailsRegisteredWithCdsFormData, EntryDeclarationDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, CompleteClaim, ContactDetailsFormData, DetailsRegisteredWithCdsFormData, EntryDeclarationDetails, MovementReferenceNumber}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 
 object CompleteClaimGen extends GenUtils {
 
-  implicit val claimantDetailsAsIndividualGen: Gen[DetailsRegisteredWithCdsFormData]                =
+  implicit val claimantDetailsAsIndividualGen: Gen[DetailsRegisteredWithCdsFormData]      =
     gen[DetailsRegisteredWithCdsFormData]
-  implicit val claimantDetailsAsImporterCompanyGen: Gen[ContactDetailsFormData]                     =
+  implicit val claimantDetailsAsImporterCompanyGen: Gen[ContactDetailsFormData]           =
     gen[ContactDetailsFormData]
   implicit val claimGen: Gen[Claim]                                                                 = gen[Claim]
   implicit val completeClaimsAnswerGen: Gen[ClaimsAnswer]                                           = gen[ClaimsAnswer]
   implicit val completeBankAccountDetailAnswerGen: Gen[CompleteBankAccountDetailAnswer]             =
+  implicit val claimGen: Gen[Claim]                                                       = gen[Claim]
+  implicit val completeClaimAnswerGen: Gen[CompleteClaimsAnswer]                          = gen[CompleteClaimsAnswer]
+  implicit val completeBankAccountDetailAnswerGen: Gen[CompleteBankAccountDetailAnswer]   =
     gen[CompleteBankAccountDetailAnswer]
-  implicit val mrnInformationGen: Gen[MRNInformation]                                               = gen[MRNInformation]
-  implicit val entryDeclarationDetailsGen: Gen[EntryDeclarationDetails]                             = gen[EntryDeclarationDetails]
-  implicit val completeDeclarationDetailsAnswerGen: Gen[CompleteDeclarationDetailsAnswer]           =
+  implicit val mrnInformationGen: Gen[MRNInformation]                                     = gen[MRNInformation]
+  implicit val entryDeclarationDetailsGen: Gen[EntryDeclarationDetails]                   = gen[EntryDeclarationDetails]
+  implicit val completeDeclarationDetailsAnswerGen: Gen[CompleteDeclarationDetailsAnswer] =
     gen[CompleteDeclarationDetailsAnswer]
-  implicit val completeBasisOfClaimAnswerGen: Gen[CompleteBasisOfClaimAnswer]                       = gen[CompleteBasisOfClaimAnswer]
-  implicit val completeDeclarantTypeAnswerGen: Gen[CompleteDeclarantTypeAnswer]                     = gen[CompleteDeclarantTypeAnswer]
-  implicit val completeMovementReferenceNumberAnswerGen: Gen[CompleteMovementReferenceNumberAnswer] =
-    gen[CompleteMovementReferenceNumberAnswer]
-  implicit val completeClaimGen: Gen[CompleteClaim]                                                 = gen[CompleteClaim]
-  implicit val completeC285ClaimGen: Gen[CompleteC285Claim]                                         = gen[CompleteC285Claim]
+  implicit val completeBasisOfClaimAnswerGen: Gen[CompleteBasisOfClaimAnswer]             = gen[CompleteBasisOfClaimAnswer]
+  implicit val completeDeclarantTypeAnswerGen: Gen[CompleteDeclarantTypeAnswer]           = gen[CompleteDeclarantTypeAnswer]
+  implicit val movementReferenceNumberGen: Gen[MovementReferenceNumber]                   =
+    gen[MovementReferenceNumber]
+  implicit val completeClaimGen: Gen[CompleteClaim]                                       = gen[CompleteClaim]
+  implicit val completeC285ClaimGen: Gen[CompleteC285Claim]                               = gen[CompleteC285Claim]
 
 }

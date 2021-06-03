@@ -28,8 +28,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAn
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumberAnswer.CompleteMovementReferenceNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimsAnswer, ConsigneeDetails, ContactDetails, ContactDetailsFormData, Country, DateOfImport, DeclarantDetails, DeclarantType, DetailsRegisteredWithCdsFormData, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumber
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ContactDetailsFormData, DetailsRegisteredWithCdsFormData, ConsigneeDetails, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantType, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{ClaimsAnswer, eis}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -98,12 +98,12 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           acknowledgementReference = correlationId.toString
         )
 
-        val completeMovementReferenceNumberAnswer = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Left(EntryNumber("666541198B49856762")))
+        val movementReferenceNumber = sample[MovementReferenceNumber]
+          .copy(value = Left(EntryNumber("666541198B49856762")))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = movementReferenceNumber,
             maybeCompleteReasonAndBasisOfClaimAnswer = None,
             completeClaimsAnswer = completeClaimsAnswer,
             maybeBasisOfClaimAnswer = Some(completeBasisOfClaimAnswer),
@@ -392,14 +392,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val completeBasisOfClaimAnswer =
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
 
-        val completeDeclarantTypeAnswer           =
+        val completeDeclarantTypeAnswer =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = DeclarantType.Importer)
-        val completeMovementReferenceNumberAnswer = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val movevementReferenceNumber   = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = movevementReferenceNumber,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             maybeBasisOfClaimAnswer = Some(completeBasisOfClaimAnswer),
             maybeCompleteBankAccountDetailAnswer = Some(completeBankAccountDetailAnswer),
@@ -974,14 +974,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
         val completeDeclarantTypeAnswer                                      =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = declarantType)
-        val completeMovementReferenceNumberAnswer                            = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer                            = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
         val detailsRegisteredWithCds                                         =
           sample[DetailsRegisteredWithCdsFormData].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             completeDetailsRegisteredWithCdsAnswer = CompleteDetailsRegisteredWithCdsAnswer(detailsRegisteredWithCds),
             maybeContactDetailsAnswer = Some(CompleteContactDetailsAnswer(claimantDetailsAsImporterCompanyAnswer)),
@@ -1043,14 +1043,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
         val completeDeclarantTypeAnswer                                      =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = declarantType)
-        val completeMovementReferenceNumberAnswer                            = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer                            = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
         val detailsRegisteredWithCds                                         =
           sample[DetailsRegisteredWithCdsFormData].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             completeDetailsRegisteredWithCdsAnswer = CompleteDetailsRegisteredWithCdsAnswer(detailsRegisteredWithCds),
             maybeContactDetailsAnswer = maybeClaimantDetailsAsImporterCompanyAnswer,
@@ -1115,14 +1115,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
         val completeDeclarantTypeAnswer                                      =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = declarantType)
-        val completeMovementReferenceNumberAnswer                            = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer                            = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
         val detailsRegisteredWithCds                                         =
           sample[DetailsRegisteredWithCdsFormData].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             completeDetailsRegisteredWithCdsAnswer = CompleteDetailsRegisteredWithCdsAnswer(detailsRegisteredWithCds),
             maybeContactDetailsAnswer = Some(CompleteContactDetailsAnswer(claimantDetailsAsImporterCompanyAnswer)),
@@ -1184,14 +1184,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
         val completeDeclarantTypeAnswer                                      =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = declarantType)
-        val completeMovementReferenceNumberAnswer                            = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer                            = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
         val detailsRegisteredWithCds                                         =
           sample[DetailsRegisteredWithCdsFormData].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             completeDetailsRegisteredWithCdsAnswer = CompleteDetailsRegisteredWithCdsAnswer(detailsRegisteredWithCds),
             maybeContactDetailsAnswer = maybeClaimantDetailsAsImporterCompanyAnswer,
@@ -1256,14 +1256,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
         val completeDeclarantTypeAnswer                                      =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = declarantType)
-        val completeMovementReferenceNumberAnswer                            = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer                            = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
         val detailsRegisteredWithCds                                         =
           sample[DetailsRegisteredWithCdsFormData].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             completeDetailsRegisteredWithCdsAnswer = CompleteDetailsRegisteredWithCdsAnswer(detailsRegisteredWithCds),
             maybeContactDetailsAnswer = Some(CompleteContactDetailsAnswer(claimantDetailsAsImporterCompanyAnswer)),
@@ -1325,14 +1325,14 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteBasisOfClaimAnswer].copy(basisOfClaim = BasisOfClaim.DutySuspension)
         val completeDeclarantTypeAnswer                                      =
           sample[CompleteDeclarantTypeAnswer].copy(declarantType = declarantType)
-        val completeMovementReferenceNumberAnswer                            = sample[CompleteMovementReferenceNumberAnswer]
-          .copy(movementReferenceNumber = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer                            = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
         val detailsRegisteredWithCds                                         =
           sample[DetailsRegisteredWithCdsFormData].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
           sample[CompleteC285Claim].copy(
-            completeMovementReferenceNumberAnswer = completeMovementReferenceNumberAnswer,
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
             completeDeclarantTypeAnswer = completeDeclarantTypeAnswer,
             completeDetailsRegisteredWithCdsAnswer = CompleteDetailsRegisteredWithCdsAnswer(detailsRegisteredWithCds),
             maybeContactDetailsAnswer = maybeClaimantDetailsAsImporterCompanyAnswer,

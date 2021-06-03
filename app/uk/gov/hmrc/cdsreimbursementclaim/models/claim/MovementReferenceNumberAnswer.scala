@@ -16,34 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.EitherUtils._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 
-sealed trait MovementReferenceNumberAnswer extends Product with Serializable
+final case class MovementReferenceNumber(value: Either[EntryNumber, MRN]) extends AnyVal
 
-object MovementReferenceNumberAnswer {
-
-  final case class IncompleteMovementReferenceNumberAnswer(
-    movementReferenceNumber: Option[Either[EntryNumber, MRN]]
-  ) extends MovementReferenceNumberAnswer
-
-  object IncompleteMovementReferenceNumberAnswer {
-    val empty: IncompleteMovementReferenceNumberAnswer = IncompleteMovementReferenceNumberAnswer(None)
-
-    implicit val format: OFormat[IncompleteMovementReferenceNumberAnswer] =
-      derived.oformat[IncompleteMovementReferenceNumberAnswer]()
-  }
-
-  final case class CompleteMovementReferenceNumberAnswer(
-    movementReferenceNumber: Either[EntryNumber, MRN]
-  ) extends MovementReferenceNumberAnswer
-
-  object CompleteMovementReferenceNumberAnswer {
-    implicit val format: OFormat[CompleteMovementReferenceNumberAnswer] =
-      derived.oformat[CompleteMovementReferenceNumberAnswer]()
-  }
-
-  implicit val format: OFormat[MovementReferenceNumberAnswer] = derived.oformat[MovementReferenceNumberAnswer]()
+object MovementReferenceNumber {
+  implicit val format: OFormat[MovementReferenceNumber] = Json.format[MovementReferenceNumber]
 }
