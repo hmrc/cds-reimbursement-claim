@@ -222,62 +222,62 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val workItem                         = sample[WorkItem[CcsSubmissionRequest]]
         val submitClaimRequest               = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
         val submitClaimResponse              = sample[SubmitClaimResponse]
-        val evidence          = submitClaimRequest.completeClaim.evidences.head
+        val evidence                         = submitClaimRequest.completeClaim.evidences.head
 
-            val dec64payload = submitClaimRequest.completeClaim.referenceNumberType match {
-              case Left(value) =>
-                makeDec64XmlPayload(
-                  correlationId = submitClaimRequest.completeClaim.correlationId,
-                  batchId = submitClaimRequest.completeClaim.correlationId,
-                  batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-                  batchCount = 1L,
-                  checksum = evidence.upscanSuccess.uploadDetails.checksum,
-                  fileSize = evidence.upscanSuccess.uploadDetails.size,
-                  caseReference = submitClaimResponse.caseNumber,
-                  eori = submitClaimRequest.signedInUserDetails.eori.value,
-                  declarationId = value.value,
-                  declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString,
-                  applicationName = "NDRC",
-                  documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
-                  documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),
-                  sourceLocation = evidence.upscanSuccess.downloadUrl,
-                  sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
-                  sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
-                  destinationSystem = "CDFPay"
-                )
-
-              case Right(value) =>
-                makeDec64XmlPayload(
-                  correlationId = submitClaimRequest.completeClaim.correlationId,
-                  batchId = submitClaimRequest.completeClaim.correlationId,
-                  batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-                  batchCount = 1L,
-                  checksum = evidence.upscanSuccess.uploadDetails.checksum,
-                  fileSize = evidence.upscanSuccess.uploadDetails.size,
-                  caseReference = submitClaimResponse.caseNumber,
-                  eori = submitClaimRequest.signedInUserDetails.eori.value,
-                  declarationId = value.value,
-                  declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString,
-                  applicationName = "NDRC",
-                  documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
-                  documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),
-                  sourceLocation = evidence.upscanSuccess.downloadUrl,
-                  sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
-                  sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
-                  destinationSystem = "CDFPay"
-                )
-
-            }
-            val updateWorkItem =
-              workItem.copy(item = ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))
-
-            mockCcsSubmissionRequestSet(ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))(
-              Right(updateWorkItem)
+        val dec64payload = submitClaimRequest.completeClaim.referenceNumberType match {
+          case Left(value) =>
+            makeDec64XmlPayload(
+              correlationId = submitClaimRequest.completeClaim.correlationId,
+              batchId = submitClaimRequest.completeClaim.correlationId,
+              batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
+              batchCount = 1L,
+              checksum = evidence.upscanSuccess.uploadDetails.checksum,
+              fileSize = evidence.upscanSuccess.uploadDetails.size,
+              caseReference = submitClaimResponse.caseNumber,
+              eori = submitClaimRequest.signedInUserDetails.eori.value,
+              declarationId = value.value,
+              declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString,
+              applicationName = "NDRC",
+              documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
+              documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),
+              sourceLocation = evidence.upscanSuccess.downloadUrl,
+              sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
+              sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
+              destinationSystem = "CDFPay"
             )
 
-            await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse).value) shouldBe Right(
-              List(updateWorkItem)
+          case Right(value) =>
+            makeDec64XmlPayload(
+              correlationId = submitClaimRequest.completeClaim.correlationId,
+              batchId = submitClaimRequest.completeClaim.correlationId,
+              batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
+              batchCount = 1L,
+              checksum = evidence.upscanSuccess.uploadDetails.checksum,
+              fileSize = evidence.upscanSuccess.uploadDetails.size,
+              caseReference = submitClaimResponse.caseNumber,
+              eori = submitClaimRequest.signedInUserDetails.eori.value,
+              declarationId = value.value,
+              declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString,
+              applicationName = "NDRC",
+              documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
+              documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),
+              sourceLocation = evidence.upscanSuccess.downloadUrl,
+              sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
+              sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
+              destinationSystem = "CDFPay"
             )
+
+        }
+        val updateWorkItem =
+          workItem.copy(item = ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))
+
+        mockCcsSubmissionRequestSet(ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))(
+          Right(updateWorkItem)
+        )
+
+        await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse).value) shouldBe Right(
+          List(updateWorkItem)
+        )
       }
     }
 
