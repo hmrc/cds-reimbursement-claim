@@ -28,8 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAn
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MovementReferenceNumber
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ContactDetailsFormData, DetailsRegisteredWithCdsFormData, ConsigneeDetails, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantType, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimsAnswer, ConsigneeDetails, ContactDetails, ContactDetailsFormData, Country, DateOfImport, DeclarantDetails, DeclarantType, DetailsRegisteredWithCdsFormData, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, SubmitClaimRequest, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{ClaimsAnswer, eis}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
