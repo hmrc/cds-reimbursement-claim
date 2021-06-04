@@ -26,4 +26,14 @@ package object answers {
     def apply(evidence: SupportingEvidence): SupportingEvidenceAnswer =
       NonEmptyList.one(evidence)
   }
+
+  type ClaimsAnswer = NonEmptyList[Claim]
+
+  object ClaimsAnswer {
+
+    def apply(head: Claim, tail: Claim*): NonEmptyList[Claim] = NonEmptyList.of(head, tail: _*)
+    def apply(l: List[Claim]): Option[NonEmptyList[Claim]]    = NonEmptyList.fromList(l)
+
+  }
+
 }
