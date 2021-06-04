@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAn
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimsAnswer, ConsigneeDetails, ContactDetails, ContactDetailsFormData, Country, DateOfImport, DeclarantDetails, DeclarantType, DetailsRegisteredWithCdsFormData, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, ClaimsAnswer, ConsigneeDetails, ContactDetails, ContactDetailsFormData, Country, DateOfImport, DeclarantDetails, DeclarantType, DetailsRegisteredWithCdsFormData, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.{ClaimsAnswer, eis}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -66,13 +66,13 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val claim = sample[Claim].copy(
           paymentMethod = "001",
-          taxCode = "A00",
+          taxCode = TaxCode.A00.value,
           paidAmount = BigDecimal(20.00),
           claimAmount = BigDecimal(10.00),
           paymentReference = "pay-ref"
         )
 
-        val completeClaimsAnswer = sample[ClaimsAnswer]
+        val completeClaimsAnswer = ClaimsAnswer(claim)
 
         val completeBankAccountDetailAnswer: CompleteBankAccountDetailAnswer = sample[CompleteBankAccountDetailAnswer]
 
