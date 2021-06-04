@@ -63,7 +63,7 @@ object CompleteClaim {
     maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
     importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
     declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
-    completeClaimsAnswer: ClaimsAnswer
+    claimsAnswer: ClaimsAnswer
   ) extends CompleteClaim
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
@@ -247,9 +247,9 @@ object CompleteClaim {
             _,
             _,
             _,
-            completeClaimsAnswer
+            claimsAnswer
           ) =>
-        completeClaimsAnswer.map(claim =>
+        claimsAnswer.map(claim =>
           claim.copy(
             claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
             paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
