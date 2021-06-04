@@ -31,7 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateMovementReferenceNumberAnswer.CompleteDuplicateMovementReferenceNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidenceAnswer.CompleteSupportingEvidenceAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidenceAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -55,7 +55,7 @@ object CompleteClaim {
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[CompleteBasisOfClaimAnswer],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
-    supportingEvidenceAnswers: CompleteSupportingEvidenceAnswer,
+    supportingEvidenceAnswer: SupportingEvidenceAnswer,
     completeCommodityDetailsAnswer: CompleteCommodityDetailsAnswer,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
     maybeDisplayDeclaration: Option[DisplayDeclaration],
@@ -163,9 +163,9 @@ object CompleteClaim {
         maybeCompleteDuplicateDeclarationDetailsAnswer
     }
 
-    def evidences: List[SupportingEvidence] = completeClaim match {
-      case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, supportingEvidenceAnswers, _, _, _, _, _, _, _) =>
-        supportingEvidenceAnswers.evidences
+    def evidences: SupportingEvidenceAnswer = completeClaim match {
+      case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, supportingEvidenceAnswer, _, _, _, _, _, _, _) =>
+        supportingEvidenceAnswer
     }
 
     def referenceNumberType: Either[EntryNumber, MRN] =

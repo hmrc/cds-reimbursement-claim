@@ -151,7 +151,7 @@ object DefaultCcsSubmissionService {
             evidence,
             index.toLong + 1
           )
-        }
+        }.toList
       case Right(mrn)        =>
         submitClaimRequest.completeClaim.evidences.zipWithIndex.map { case (evidence, index) =>
           make(
@@ -159,7 +159,7 @@ object DefaultCcsSubmissionService {
             evidence,
             index.toLong + 1
           )
-        }
+        }.toList
     }
   }
 
