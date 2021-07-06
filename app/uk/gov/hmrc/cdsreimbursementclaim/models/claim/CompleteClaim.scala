@@ -24,7 +24,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.C
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAnswer.CompleteDetailsRegisteredWithCdsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CommoditiesDetailsAnswer.CompleteCommodityDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
@@ -56,7 +55,7 @@ object CompleteClaim {
     maybeBasisOfClaimAnswer: Option[CompleteBasisOfClaimAnswer],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
     supportingEvidenceAnswer: SupportingEvidenceAnswer,
-    completeCommodityDetailsAnswer: CompleteCommodityDetailsAnswer,
+    commodityDetailsAnswer: CommodityDetails,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
     maybeDisplayDeclaration: Option[DisplayDeclaration],
     maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
@@ -269,7 +268,7 @@ object CompleteClaim {
             _,
             _,
             _,
-            completeCommodityDetailsAnswer,
+            commodityDetails,
             _,
             _,
             _,
@@ -277,7 +276,7 @@ object CompleteClaim {
             _,
             _
           ) =>
-        completeCommodityDetailsAnswer.commodityDetails
+        commodityDetails
     }
 
     def detailsRegisteredWithCds: DetailsRegisteredWithCdsFormData = completeClaim match {
