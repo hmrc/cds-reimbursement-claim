@@ -20,12 +20,12 @@ import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Claim, CompleteClaim, ContactDetailsFormData, DetailsRegisteredWithCdsFormData, EntryDeclarationDetails, MovementReferenceNumber}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 
 object CompleteClaimGen extends GenUtils {
 
@@ -41,7 +41,7 @@ object CompleteClaimGen extends GenUtils {
   implicit val entryDeclarationDetailsGen: Gen[EntryDeclarationDetails]                   = gen[EntryDeclarationDetails]
   implicit val completeDeclarationDetailsAnswerGen: Gen[CompleteDeclarationDetailsAnswer] =
     gen[CompleteDeclarationDetailsAnswer]
-  implicit val completeBasisOfClaimAnswerGen: Gen[CompleteBasisOfClaimAnswer]             = gen[CompleteBasisOfClaimAnswer]
+  implicit val basisOfClaimAnswerGen: Gen[BasisOfClaim]                                   = gen[BasisOfClaim]
   implicit val completeDeclarantTypeAnswerGen: Gen[CompleteDeclarantTypeAnswer]           = gen[CompleteDeclarantTypeAnswer]
   implicit val movementReferenceNumberGen: Gen[MovementReferenceNumber]                   =
     gen[MovementReferenceNumber]
