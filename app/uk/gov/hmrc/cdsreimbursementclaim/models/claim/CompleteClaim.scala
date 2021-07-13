@@ -21,7 +21,6 @@ import julienrf.json.derived
 import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaimAnswer.CompleteBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAnswer.CompleteDetailsRegisteredWithCdsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
@@ -52,7 +51,7 @@ object CompleteClaim {
     completeDeclarantTypeAnswer: CompleteDeclarantTypeAnswer,
     completeDetailsRegisteredWithCdsAnswer: CompleteDetailsRegisteredWithCdsAnswer,
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
-    maybeBasisOfClaimAnswer: Option[CompleteBasisOfClaimAnswer],
+    maybeBasisOfClaimAnswer: Option[BasisOfClaim],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
     supportingEvidenceAnswer: SupportingEvidenceAnswer,
     commodityDetailsAnswer: CommodityDetails,
@@ -223,7 +222,7 @@ object CompleteClaim {
             _,
             _
           ) =>
-        maybeBasisOfClaimAnswer.map(basisOfClaimAnswer => basisOfClaimAnswer.basisOfClaim)
+        maybeBasisOfClaimAnswer
     }
 
     def claims: NonEmptyList[Claim] = completeClaim match {
