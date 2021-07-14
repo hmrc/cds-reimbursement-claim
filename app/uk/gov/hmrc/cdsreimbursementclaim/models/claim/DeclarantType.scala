@@ -22,15 +22,9 @@ import play.api.libs.json.OFormat
 sealed trait DeclarantTypeAnswer extends Product with Serializable
 
 object DeclarantTypeAnswer {
-  case object Importer extends DeclarantTypeAnswer {
-    override def toString = "Importer"
-  }
-  case object AssociatedWithImporterCompany extends DeclarantTypeAnswer {
-    override def toString = "Associated with Importer Company"
-  }
-  case object AssociatedWithRepresentativeCompany extends DeclarantTypeAnswer {
-    override def toString = "Associated Representative Company"
-  }
+  case object Importer extends DeclarantTypeAnswer
+  case object AssociatedWithImporterCompany extends DeclarantTypeAnswer
+  case object AssociatedWithRepresentativeCompany extends DeclarantTypeAnswer
 
   implicit val format: OFormat[DeclarantTypeAnswer] = derived.oformat[DeclarantTypeAnswer]()
 }
