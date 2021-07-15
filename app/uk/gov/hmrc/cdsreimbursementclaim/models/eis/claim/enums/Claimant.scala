@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantType
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer.CompleteDeclarantTypeAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
 
 sealed trait Claimant extends Product with Serializable
 
@@ -30,11 +29,10 @@ object Claimant {
     case Representative => "Representative"
   }
 
-  implicit def completeDeclarantTypeAnswerToClaimant(
-    completeDeclarantTypeAnswer: CompleteDeclarantTypeAnswer
-  ): Claimant = completeDeclarantTypeAnswer.declarantType match {
-    case DeclarantType.Importer                            => Importer
-    case DeclarantType.AssociatedWithImporterCompany       => Representative
-    case DeclarantType.AssociatedWithRepresentativeCompany => Representative
-  }
+  implicit def completeDeclarantTypeAnswerToClaimant(declarantTypeAnswer: DeclarantTypeAnswer): Claimant =
+    declarantTypeAnswer match {
+      case DeclarantTypeAnswer.Importer                            => Importer
+      case DeclarantTypeAnswer.AssociatedWithImporterCompany       => Representative
+      case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany => Representative
+    }
 }

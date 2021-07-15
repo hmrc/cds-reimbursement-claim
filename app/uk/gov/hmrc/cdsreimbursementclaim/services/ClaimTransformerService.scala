@@ -85,12 +85,12 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         basisOfClaim = maybeReasonAndOrBasis._1,
         claimant = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
-            submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType
+            submitClaimRequest.completeClaim.declarantTypeAnswer
           )
         ),
         payeeIndicator = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
-            submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType
+            submitClaimRequest.completeClaim.declarantTypeAnswer
           )
         ),
         newEORI = None,
@@ -100,7 +100,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
         goodsDetails = Some(
           makeGoodsDetails(
-            completeClaim.declarantTypeAnswer.declarantType,
+            completeClaim.declarantTypeAnswer,
             completeClaim.commodityDetails,
             None
           )
@@ -158,10 +158,10 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
         basisOfClaim = maybeReasonAndOrBasis._1,
         claimant = Some(
-          DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer.declarantType)
+          DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer)
         ),
         payeeIndicator = Some(
-          DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer.declarantType)
+          DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer)
         ),
         newEORI = None,
         newDAN = None,
@@ -170,7 +170,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
         goodsDetails = Some(
           makeGoodsDetails(
-            completeClaim.declarantTypeAnswer.declarantType,
+            completeClaim.declarantTypeAnswer,
             completeClaim.commodityDetails,
             maybeReasonAndOrBasis._2
           )
@@ -238,10 +238,10 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
 
 object DefaultClaimTransformerService {
 
-  def setPayeeIndicator(declarantType: DeclarantType): String =
+  def setPayeeIndicator(declarantType: DeclarantTypeAnswer): String =
     declarantType match {
-      case DeclarantType.Importer => "Importer"
-      case _                      => "Representative"
+      case DeclarantTypeAnswer.Importer => "Importer"
+      case _                            => "Representative"
     }
 
   final case class CompareContactInformation(
@@ -381,8 +381,8 @@ object DefaultClaimTransformerService {
           emailAddress = Some(claimantDetailsAsImporterCompany.emailAddress.value)
         )
       case None                                   =>
-        completeClaim.declarantTypeAnswer.declarantType match {
-          case DeclarantType.Importer | DeclarantType.AssociatedWithImporterCompany =>
+        completeClaim.declarantTypeAnswer match {
+          case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
             ContactInformation(
               contactPerson = completeClaim.consigneeDetails.map(_.legalName),
               addressLine1 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
@@ -399,7 +399,7 @@ object DefaultClaimTransformerService {
               faxNumber = None,
               emailAddress = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
             )
-          case DeclarantType.AssociatedWithRepresentativeCompany                    =>
+          case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
             ContactInformation(
               contactPerson = completeClaim.declarantDetails.map(_.legalName),
               addressLine1 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
@@ -616,15 +616,15 @@ object DefaultClaimTransformerService {
     }
 
   def makeGoodsDetails(
-    declarantType: DeclarantType,
+    declarantType: DeclarantTypeAnswer,
     commodityDetails: CommodityDetails,
     reasonForClaim: Option[String]
   ): GoodsDetails =
     GoodsDetails(
       placeOfImport = None,
       isPrivateImporter = Some(declarantType match {
-        case DeclarantType.Importer => "Yes"
-        case _                      => "No"
+        case DeclarantTypeAnswer.Importer => "Yes"
+        case _                            => "No"
       }),
       groundsForRepaymentApplication = reasonForClaim,
       descOfGoods = Some(commodityDetails.value)

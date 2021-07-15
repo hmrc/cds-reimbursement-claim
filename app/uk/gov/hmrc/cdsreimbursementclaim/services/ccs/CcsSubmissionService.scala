@@ -77,10 +77,7 @@ class DefaultCcsSubmissionService @Inject() (
       makeBatchFileInterfaceMetaDataPayload(submitClaimRequest, submitClaimResponse)
         .map(data =>
           ccsSubmissionRepo.set(
-            CcsSubmissionRequest(
-              XmlEncoder[Envelope].encode(data),
-              DefaultCcsSubmissionService.getHeaders(hc)
-            )
+            CcsSubmissionRequest(XmlEncoder[Envelope].encode(data), DefaultCcsSubmissionService.getHeaders(hc))
           )
         )
     queueCcsSubmissions.sequence
@@ -124,19 +121,13 @@ object DefaultCcsSubmissionService {
                 PropertyType("CaseReference", submitClaimResponse.caseNumber),
                 PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
                 PropertyType("DeclarationId", referenceNumber),
-                PropertyType(
-                  "DeclarationType",
-                  submitClaimRequest.completeClaim.declarantTypeAnswer.declarantType.toString
-                ),
+                PropertyType("DeclarationType", submitClaimRequest.completeClaim.declarantTypeAnswer.toString),
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType(
                   "DocumentType",
                   evidence.documentType.map(documentType => documentType.toString).getOrElse("")
                 ),
-                PropertyType(
-                  "DocumentReceivedDate",
-                  TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn)
-                )
+                PropertyType("DocumentReceivedDate", TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn))
               )
             )
           )
