@@ -27,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAn
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, SupportingEvidenceAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, ScheduledDocumentAnswer, SupportingEvidencesAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -51,330 +51,88 @@ object CompleteClaim {
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[BasisOfClaim],
     maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
-    supportingEvidenceAnswer: SupportingEvidenceAnswer,
+    supportingEvidencesAnswer: SupportingEvidencesAnswer,
     commodityDetailsAnswer: CommodityDetails,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
     maybeDisplayDeclaration: Option[DisplayDeclaration],
     maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
     importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
     declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
-    claimsAnswer: ClaimsAnswer
+    claimsAnswer: ClaimsAnswer,
+    scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
   ) extends CompleteClaim
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
 
-    def reasonAndBasisOfClaim: Option[CompleteReasonAndBasisOfClaimAnswer] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            maybeCompleteReasonAndBasisOfClaimAnswer,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeCompleteReasonAndBasisOfClaimAnswer
-    }
+    def reasonAndBasisOfClaim: Option[CompleteReasonAndBasisOfClaimAnswer] =
+      completeClaim.get(_.maybeCompleteReasonAndBasisOfClaimAnswer)
 
-    def bankDetails: Option[CompleteBankAccountDetailAnswer] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            maybeCompleteBankAccountDetailAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeCompleteBankAccountDetailAnswer
-    }
+    def bankDetails: Option[CompleteBankAccountDetailAnswer] =
+      completeClaim.get(_.maybeCompleteBankAccountDetailAnswer)
 
-    def entryDeclarationDetails: Option[CompleteDeclarationDetailsAnswer] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            maybeCompleteDeclarationDetailsAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeCompleteDeclarationDetailsAnswer
-    }
+    def entryDeclarationDetails: Option[CompleteDeclarationDetailsAnswer] =
+      completeClaim.get(_.maybeCompleteDeclarationDetailsAnswer)
 
-    def duplicateEntryDeclarationDetails: Option[CompleteDuplicateDeclarationDetailsAnswer] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            maybeCompleteDuplicateDeclarationDetailsAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeCompleteDuplicateDeclarationDetailsAnswer
-    }
+    def duplicateEntryDeclarationDetails: Option[CompleteDuplicateDeclarationDetailsAnswer] =
+      completeClaim.get(_.maybeCompleteDuplicateDeclarationDetailsAnswer)
 
-    def evidences: SupportingEvidenceAnswer = completeClaim match {
-      case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, supportingEvidenceAnswer, _, _, _, _, _, _, _) =>
-        supportingEvidenceAnswer
+    def documents: NonEmptyList[UploadDocument] = {
+      val evidences         = completeClaim.get(_.supportingEvidencesAnswer)
+      val scheduledDocument =
+        completeClaim
+          .get(_.scheduledDocumentAnswer)
+          .map(_.uploadDocument)
+          .toList
+
+      evidences ++ scheduledDocument
     }
 
     def referenceNumberType: Either[EntryNumber, MRN] =
-      completeClaim match {
-        case c: CompleteC285Claim =>
-          c.movementReferenceNumber.value
-      }
+      completeClaim.get(_.movementReferenceNumber.value)
 
-    def correlationId: UUID = completeClaim match {
-      case CompleteC285Claim(id, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
-        id
-    }
+    def correlationId: UUID = completeClaim.get(_.id)
 
-    def declarantTypeAnswer: DeclarantTypeAnswer = completeClaim match {
-      case cc: CompleteC285Claim => cc.declarantTypeAnswer
-    }
+    def declarantTypeAnswer: DeclarantTypeAnswer =
+      completeClaim.get(_.declarantTypeAnswer)
 
-    def basisOfClaim: Option[BasisOfClaim] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            maybeBasisOfClaimAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeBasisOfClaimAnswer
-    }
+    def basisOfClaim: Option[BasisOfClaim] =
+      completeClaim.get(_.maybeBasisOfClaimAnswer)
 
-    def claims: NonEmptyList[Claim] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            claimsAnswer
-          ) =>
-        claimsAnswer.map(claim =>
-          claim.copy(
-            claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
-            paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
-          )
+    def claims: NonEmptyList[Claim] = completeClaim
+      .get(_.claimsAnswer)
+      .map(claim =>
+        claim.copy(
+          claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
+          paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
         )
-    }
+      )
 
-    def commodityDetails: CommodityDetails = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            commodityDetails,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        commodityDetails
-    }
+    def commodityDetails: CommodityDetails =
+      completeClaim.get(_.commodityDetailsAnswer)
 
-    def detailsRegisteredWithCds: DetailsRegisteredWithCdsFormData = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            detailsRegisteredWithCdsAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        detailsRegisteredWithCdsAnswer.detailsRegisteredWithCds
+    def detailsRegisteredWithCds: DetailsRegisteredWithCdsFormData =
+      completeClaim.get(_.completeDetailsRegisteredWithCdsAnswer.detailsRegisteredWithCds)
 
-    }
+    def claimantDetailsAsImporter: Option[ContactDetailsFormData] =
+      completeClaim.get(_.maybeContactDetailsAnswer).map(_.contactDetailsFormData)
 
-    def claimantDetailsAsImporter: Option[ContactDetailsFormData] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            maybeClaimantDetailsAsImporterCompanyAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeClaimantDetailsAsImporterCompanyAnswer match {
-          case Some(completeClaimantDetailsAsImporterCompanyAnswer) =>
-            Some(completeClaimantDetailsAsImporterCompanyAnswer.contactDetailsFormData)
-          case None                                                 => None
-        }
+    def displayDeclaration: Option[DisplayDeclaration] =
+      completeClaim.get(_.maybeDisplayDeclaration)
 
-    }
+    def duplicateDisplayDeclaration: Option[DisplayDeclaration] =
+      completeClaim.get(_.maybeDuplicateDisplayDeclaration)
 
-    def displayDeclaration: Option[DisplayDeclaration] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            maybeDisplayDeclaration,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeDisplayDeclaration
+    def enteredBankDetails: Option[CompleteBankAccountDetailAnswer] =
+      completeClaim.get(_.maybeCompleteBankAccountDetailAnswer)
 
-    }
+    def consigneeDetails: Option[ConsigneeDetails] =
+      completeClaim.get(_.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails))
 
-    def duplicateDisplayDeclaration: Option[DisplayDeclaration] = completeClaim match {
-      case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, _, _, _, _, maybeDuplicateDisplayDeclaration, _, _, _) =>
-        maybeDuplicateDisplayDeclaration
+    def declarantDetails: Option[DeclarantDetails] =
+      completeClaim.get(_.maybeDisplayDeclaration.map(s => s.displayResponseDetail.declarantDetails))
 
-    }
-
-    def enteredBankDetails: Option[CompleteBankAccountDetailAnswer] = completeClaim match {
-      case CompleteC285Claim(
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            maybeCompleteBankAccountDetailAnswer,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) =>
-        maybeCompleteBankAccountDetailAnswer
-
-    }
-    def consigneeDetails: Option[ConsigneeDetails] = completeClaim match {
-      case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, _, _, _, maybeDisplayDeclaration, _, _, _, _) =>
-        maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
-
-    }
-
-    def declarantDetails: Option[DeclarantDetails] = completeClaim match {
-      case CompleteC285Claim(_, _, _, _, _, _, _, _, _, _, _, _, _, maybeDisplayDeclaration, _, _, _, _) =>
-        maybeDisplayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
-    }
+    def get[A](f: CompleteC285Claim => A): A =
+      f(completeClaim.asInstanceOf[CompleteC285Claim])
   }
 
   implicit val format: OFormat[CompleteClaim] = derived.oformat[CompleteClaim]()

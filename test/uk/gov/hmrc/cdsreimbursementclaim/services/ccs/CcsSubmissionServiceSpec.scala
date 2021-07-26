@@ -31,8 +31,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidenceAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidencesAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
@@ -216,22 +216,24 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
     "a ccs submission request is made" must {
       "enqueue the request" in {
-        val supportingEvidence       = sample[SupportingEvidence]
-        val supportingEvidenceAnswer = SupportingEvidenceAnswer(supportingEvidence)
-        val completeClaim            = sample[CompleteC285Claim].copy(supportingEvidenceAnswer = supportingEvidenceAnswer)
-        val ccsSubmissionRequest     = sample[CcsSubmissionRequest]
-        val workItem                 = sample[WorkItem[CcsSubmissionRequest]]
-        val submitClaimRequest       = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
-        val submitClaimResponse      = sample[SubmitClaimResponse]
-        val evidence                 = submitClaimRequest.completeClaim.evidences.head
-
-        val dec64payload = submitClaimRequest.completeClaim.referenceNumberType match {
+        val supportingEvidence        = sample[UploadDocument]
+        val supportingEvidencesAnswer = SupportingEvidencesAnswer(supportingEvidence)
+        val completeClaim             = sample[CompleteC285Claim].copy(
+          supportingEvidencesAnswer = supportingEvidencesAnswer,
+          scheduledDocumentAnswer = None
+        )
+        val ccsSubmissionRequest      = sample[CcsSubmissionRequest]
+        val workItem                  = sample[WorkItem[CcsSubmissionRequest]]
+        val submitClaimRequest        = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimResponse       = sample[SubmitClaimResponse]
+        val evidence                  = submitClaimRequest.completeClaim.documents.head
+        val dec64payload              = submitClaimRequest.completeClaim.referenceNumberType match {
           case Left(value) =>
             makeDec64XmlPayload(
               correlationId = submitClaimRequest.completeClaim.correlationId,
               batchId = submitClaimRequest.completeClaim.correlationId,
-              batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-              batchCount = 1L,
+              batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
+              batchCount = submitClaimRequest.completeClaim.documents.size.toLong,
               checksum = evidence.upscanSuccess.uploadDetails.checksum,
               fileSize = evidence.upscanSuccess.uploadDetails.size,
               caseReference = submitClaimResponse.caseNumber,
@@ -251,8 +253,8 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
             makeDec64XmlPayload(
               correlationId = submitClaimRequest.completeClaim.correlationId,
               batchId = submitClaimRequest.completeClaim.correlationId,
-              batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
-              batchCount = 1L,
+              batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
+              batchCount = submitClaimRequest.completeClaim.documents.size.toLong,
               checksum = evidence.upscanSuccess.uploadDetails.checksum,
               fileSize = evidence.upscanSuccess.uploadDetails.size,
               caseReference = submitClaimResponse.caseNumber,

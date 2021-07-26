@@ -16,24 +16,21 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.data.NonEmptyList
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUploadMeta}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 
-package object answers {
+import java.time.LocalDateTime
 
-  type SupportingEvidencesAnswer = NonEmptyList[UploadDocument]
+final case class UploadDocument(
+  uploadReference: UploadReference,
+  upscanUploadMeta: UpscanUploadMeta,
+  uploadedOn: LocalDateTime,
+  upscanSuccess: UpscanSuccess,
+  fileName: String,
+  documentType: Option[UploadDocumentType]
+)
 
-  object SupportingEvidencesAnswer {
-    def apply(evidence: UploadDocument): SupportingEvidencesAnswer =
-      NonEmptyList.one(evidence)
-  }
-
-  type ClaimsAnswer = NonEmptyList[Claim]
-
-  object ClaimsAnswer {
-
-    def apply(head: Claim, tail: Claim*): NonEmptyList[Claim] = NonEmptyList.of(head, tail: _*)
-    def apply(l: List[Claim]): Option[NonEmptyList[Claim]]    = NonEmptyList.fromList(l)
-
-  }
-
+object UploadDocument {
+  implicit val format: OFormat[UploadDocument] = Json.format
 }

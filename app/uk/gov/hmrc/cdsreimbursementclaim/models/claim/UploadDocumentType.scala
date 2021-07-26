@@ -19,45 +19,45 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait SupportingEvidenceDocumentType extends Product with Serializable
+sealed trait UploadDocumentType extends Product with Serializable
 
-object SupportingEvidenceDocumentType {
-  case object C88E2 extends SupportingEvidenceDocumentType {
+object UploadDocumentType {
+  case object C88E2 extends UploadDocumentType {
     override def toString: String = "C88E2"
   }
-  case object CommercialInvoice extends SupportingEvidenceDocumentType {
+  case object CommercialInvoice extends UploadDocumentType {
     override def toString: String = "Commercial Invoice"
   }
-  case object PackingList extends SupportingEvidenceDocumentType {
+  case object PackingList extends UploadDocumentType {
     override def toString: String = "Packing List"
   }
-  case object AirWayBill extends SupportingEvidenceDocumentType {
+  case object AirWayBill extends UploadDocumentType {
     override def toString: String = "AirWay Bill"
   }
-  case object BillOfLading extends SupportingEvidenceDocumentType {
+  case object BillOfLading extends UploadDocumentType {
     override def toString: String = "Bill Of Lading"
   }
-  case object SubstituteEntry extends SupportingEvidenceDocumentType {
+  case object SubstituteEntry extends UploadDocumentType {
     override def toString: String = "Substitute Entry"
   }
-  case object ScheduleOfMRNs extends SupportingEvidenceDocumentType {
+  case object ScheduleOfMRNs extends UploadDocumentType {
     override def toString: String = "Schedule Of MRNs"
   }
-  case object ProofOfAuthority extends SupportingEvidenceDocumentType {
+  case object ProofOfAuthority extends UploadDocumentType {
     override def toString: String = "Proof Of Authority"
   }
-  case object CorrespondenceTrader extends SupportingEvidenceDocumentType {
+  case object CorrespondenceTrader extends UploadDocumentType {
     override def toString: String = "Correspondence Trader"
   }
-  case object AdditionalSupportingDocuments extends SupportingEvidenceDocumentType {
+  case object AdditionalSupportingDocuments extends UploadDocumentType {
     override def toString: String = "Additional Supporting Documents"
   }
-  case object ImportAndExportDeclaration extends SupportingEvidenceDocumentType {
+  case object ImportAndExportDeclaration extends UploadDocumentType {
     override def toString: String = "Import and Export Declaration"
   }
-  case object Other extends SupportingEvidenceDocumentType {
+  case object Other extends UploadDocumentType {
     override def toString: String = "Other"
   }
 
-  implicit val format: OFormat[SupportingEvidenceDocumentType] = derived.oformat[SupportingEvidenceDocumentType]()
+  implicit val format: OFormat[UploadDocumentType] = derived.oformat[UploadDocumentType]()
 }
