@@ -24,7 +24,7 @@ import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, SupportingEvidence}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.DefaultCcsSubmissionService.makeBatchFileInterfaceMetaDataPayload
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString}
@@ -101,7 +101,7 @@ object DefaultCcsSubmissionService {
   ): List[Envelope] = {
     def make(
       referenceNumber: String,
-      evidence: SupportingEvidence,
+      evidence: UploadDocument,
       batchCount: Long
     ): Envelope =
       Envelope(
@@ -110,7 +110,7 @@ object DefaultCcsSubmissionService {
             correlationID = submitClaimRequest.completeClaim.correlationId,
             batchID = submitClaimRequest.completeClaim.correlationId,
             batchCount = batchCount,
-            batchSize = submitClaimRequest.completeClaim.evidences.size.toLong,
+            batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
             checksum = evidence.upscanSuccess.uploadDetails.checksum,
             sourceLocation = evidence.upscanSuccess.downloadUrl,
             sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
@@ -136,18 +136,18 @@ object DefaultCcsSubmissionService {
 
     submitClaimRequest.completeClaim.referenceNumberType match {
       case Left(entryNumber) =>
-        submitClaimRequest.completeClaim.evidences.zipWithIndex.map { case (evidence, index) =>
+        submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
           make(
             entryNumber.value,
-            evidence,
+            document,
             index.toLong + 1
           )
         }.toList
       case Right(mrn)        =>
-        submitClaimRequest.completeClaim.evidences.zipWithIndex.map { case (evidence, index) =>
+        submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
           make(
             mrn.value,
-            evidence,
+            document,
             index.toLong + 1
           )
         }.toList

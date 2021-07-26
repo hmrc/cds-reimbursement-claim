@@ -17,19 +17,20 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUploadMeta}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.UpscanSuccess
 
 import java.time.LocalDateTime
 
-final case class ScheduledDocument(
-  fileName: String,
+final case class UploadDocument(
   uploadReference: UploadReference,
-  uploadedOn: LocalDateTime,
   upscanUploadMeta: UpscanUploadMeta,
-  upscanSuccess: UpscanSuccess
+  uploadedOn: LocalDateTime,
+  upscanSuccess: UpscanSuccess,
+  fileName: String,
+  documentType: Option[UploadDocumentType]
 )
 
-object ScheduledDocument {
-  implicit val format: OFormat[ScheduledDocument] = Json.format
+object UploadDocument {
+  implicit val format: OFormat[UploadDocument] = Json.format
 }

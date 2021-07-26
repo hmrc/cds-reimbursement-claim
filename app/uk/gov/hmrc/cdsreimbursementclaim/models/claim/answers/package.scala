@@ -20,10 +20,10 @@ import cats.data.NonEmptyList
 
 package object answers {
 
-  type SupportingEvidencesAnswer = NonEmptyList[SupportingEvidence]
+  type SupportingEvidencesAnswer = NonEmptyList[UploadDocument]
 
   object SupportingEvidencesAnswer {
-    def apply(evidence: SupportingEvidence): SupportingEvidencesAnswer =
+    def apply(evidence: UploadDocument): SupportingEvidencesAnswer =
       NonEmptyList.one(evidence)
   }
 

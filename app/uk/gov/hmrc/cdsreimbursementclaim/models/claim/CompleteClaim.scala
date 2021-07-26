@@ -27,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAn
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, SupportingEvidencesAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, ScheduledDocumentAnswer, SupportingEvidencesAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -59,7 +59,7 @@ object CompleteClaim {
     importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
     declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
     claimsAnswer: ClaimsAnswer,
-    scheduledDocumentAnswer: Option[ScheduledDocument]
+    scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
   ) extends CompleteClaim
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
@@ -76,8 +76,16 @@ object CompleteClaim {
     def duplicateEntryDeclarationDetails: Option[CompleteDuplicateDeclarationDetailsAnswer] =
       completeClaim.get(_.maybeCompleteDuplicateDeclarationDetailsAnswer)
 
-    def evidences: SupportingEvidencesAnswer =
-      completeClaim.get(_.supportingEvidencesAnswer)
+    def documents: NonEmptyList[UploadDocument] = {
+      val evidences         = completeClaim.get(_.supportingEvidencesAnswer)
+      val scheduledDocument =
+        completeClaim
+          .get(_.scheduledDocumentAnswer)
+          .map(_.uploadDocument)
+          .toList
+
+      evidences ++ scheduledDocument
+    }
 
     def referenceNumberType: Either[EntryNumber, MRN] =
       completeClaim.get(_.movementReferenceNumber.value)
