@@ -58,7 +58,7 @@ object BasisOfClaim {
     case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
     case EvidenceThatGoodsHaveNotEnteredTheEU   => "Evidence That Goods Have Not Entered The EU"
     case IncorrectExciseValue                   => "Incorrect Excise Value"
-    case CorrectionToRiskClassification         => "Risk Classification Error"
+    case CorrectionToRiskClassification         => "Incorrect Additional Information Code"
   }
   // $COVERAGE-ON$
 
