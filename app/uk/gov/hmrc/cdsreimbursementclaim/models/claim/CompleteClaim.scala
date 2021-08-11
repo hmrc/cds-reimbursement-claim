@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptyList
 import julienrf.json.derived
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
@@ -50,7 +49,7 @@ object CompleteClaim {
     completeDetailsRegisteredWithCdsAnswer: CompleteDetailsRegisteredWithCdsAnswer,
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[BasisOfClaim],
-    maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer],
+    maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
     supportingEvidencesAnswer: SupportingEvidencesAnswer,
     commodityDetailsAnswer: CommodityDetails,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
@@ -67,8 +66,8 @@ object CompleteClaim {
     def reasonAndBasisOfClaim: Option[CompleteReasonAndBasisOfClaimAnswer] =
       completeClaim.get(_.maybeCompleteReasonAndBasisOfClaimAnswer)
 
-    def bankDetails: Option[CompleteBankAccountDetailAnswer] =
-      completeClaim.get(_.maybeCompleteBankAccountDetailAnswer)
+    def bankDetails: Option[BankAccountDetails] =
+      completeClaim.get(_.maybeBankAccountDetailsAnswer)
 
     def entryDeclarationDetails: Option[CompleteDeclarationDetailsAnswer] =
       completeClaim.get(_.maybeCompleteDeclarationDetailsAnswer)
@@ -122,8 +121,8 @@ object CompleteClaim {
     def duplicateDisplayDeclaration: Option[DisplayDeclaration] =
       completeClaim.get(_.maybeDuplicateDisplayDeclaration)
 
-    def enteredBankDetails: Option[CompleteBankAccountDetailAnswer] =
-      completeClaim.get(_.maybeCompleteBankAccountDetailAnswer)
+    def enteredBankDetails: Option[BankAccountDetails] =
+      completeClaim.get(_.maybeBankAccountDetailsAnswer)
 
     def consigneeDetails: Option[ConsigneeDetails] =
       completeClaim.get(_.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails))
