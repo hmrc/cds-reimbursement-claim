@@ -26,7 +26,6 @@ import cats.syntax.traverse._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetailsAnswer.CompleteBankAccountDetailAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
@@ -890,7 +889,7 @@ object DefaultClaimTransformerService {
     completeClaim: CompleteClaim
   ): Validation[BankDetails] =
     (maybeBankDetails, completeClaim.enteredBankDetails) match {
-      case (_, Some(CompleteBankAccountDetailAnswer(bankAccountDetails))) =>
+      case (_, Some(bankAccountDetails)) =>
         Valid(
           BankDetails(
             consigneeBankDetails = Some(
@@ -909,7 +908,7 @@ object DefaultClaimTransformerService {
             )
           )
         )
-      case (Some(bankDetails), None)                                      =>
+      case (Some(bankDetails), None)     =>
         (bankDetails.consigneeBankDetails, bankDetails.declarantBankDetails) match {
           case (Some(consignee), Some(declarant)) =>
             Valid(
@@ -941,11 +940,11 @@ object DefaultClaimTransformerService {
               BankDetails(consigneeBankDetails = None, declarantBankDetails = None)
             )
         }
-      case _                                                              => invalid("could not build bank details")
+      case _                             => invalid("could not build bank details")
     }
 
   def makeEntryBankDetails(
-    maybeCompleteBankAccountDetailAnswer: Option[CompleteBankAccountDetailAnswer]
+    maybeCompleteBankAccountDetailAnswer: Option[BankAccountDetails]
   ): Validation[BankDetails] =
     maybeCompleteBankAccountDetailAnswer match {
       case Some(completeBankAccountDetailAnswer) =>
@@ -954,9 +953,9 @@ object DefaultClaimTransformerService {
             consigneeBankDetails = None,
             declarantBankDetails = Some(
               BankDetail(
-                completeBankAccountDetailAnswer.bankAccountDetails.accountName.value,
-                completeBankAccountDetailAnswer.bankAccountDetails.sortCode.value,
-                completeBankAccountDetailAnswer.bankAccountDetails.accountNumber.value
+                completeBankAccountDetailAnswer.accountName.value,
+                completeBankAccountDetailAnswer.sortCode.value,
+                completeBankAccountDetailAnswer.accountNumber.value
               )
             )
           )
