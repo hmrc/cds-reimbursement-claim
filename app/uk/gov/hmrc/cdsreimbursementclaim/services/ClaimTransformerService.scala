@@ -944,23 +944,23 @@ object DefaultClaimTransformerService {
     }
 
   def makeEntryBankDetails(
-    maybeCompleteBankAccountDetailAnswer: Option[BankAccountDetails]
+    maybeBankAccountDetailsAnswer: Option[BankAccountDetails]
   ): Validation[BankDetails] =
-    maybeCompleteBankAccountDetailAnswer match {
-      case Some(completeBankAccountDetailAnswer) =>
+    maybeBankAccountDetailsAnswer match {
+      case Some(bankAccountDetailAnswer) =>
         Valid(
           BankDetails(
             consigneeBankDetails = None,
             declarantBankDetails = Some(
               BankDetail(
-                completeBankAccountDetailAnswer.accountName.value,
-                completeBankAccountDetailAnswer.sortCode.value,
-                completeBankAccountDetailAnswer.accountNumber.value
+                bankAccountDetailAnswer.accountName.value,
+                bankAccountDetailAnswer.sortCode.value,
+                bankAccountDetailAnswer.accountNumber.value
               )
             )
           )
         )
-      case None                                  => invalid("Could not find entered bank details")
+      case None                          => invalid("Could not find entered bank details")
     }
 
   def makeNdrcDetails(claims: NonEmptyList[Claim]): Validation[List[NdrcDetails]] = {

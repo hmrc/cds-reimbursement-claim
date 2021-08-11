@@ -49,7 +49,7 @@ object CompleteClaim {
     completeDetailsRegisteredWithCdsAnswer: CompleteDetailsRegisteredWithCdsAnswer,
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[BasisOfClaim],
-    maybeCompleteBankAccountDetailAnswer: Option[BankAccountDetails],
+    maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
     supportingEvidencesAnswer: SupportingEvidencesAnswer,
     commodityDetailsAnswer: CommodityDetails,
     maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
@@ -67,7 +67,7 @@ object CompleteClaim {
       completeClaim.get(_.maybeCompleteReasonAndBasisOfClaimAnswer)
 
     def bankDetails: Option[BankAccountDetails] =
-      completeClaim.get(_.maybeCompleteBankAccountDetailAnswer)
+      completeClaim.get(_.maybeBankAccountDetailsAnswer)
 
     def entryDeclarationDetails: Option[CompleteDeclarationDetailsAnswer] =
       completeClaim.get(_.maybeCompleteDeclarationDetailsAnswer)
@@ -122,7 +122,7 @@ object CompleteClaim {
       completeClaim.get(_.maybeDuplicateDisplayDeclaration)
 
     def enteredBankDetails: Option[BankAccountDetails] =
-      completeClaim.get(_.maybeCompleteBankAccountDetailAnswer)
+      completeClaim.get(_.maybeBankAccountDetailsAnswer)
 
     def consigneeDetails: Option[ConsigneeDetails] =
       completeClaim.get(_.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails))

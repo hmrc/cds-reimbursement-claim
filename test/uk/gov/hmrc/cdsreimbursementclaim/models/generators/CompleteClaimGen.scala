@@ -33,7 +33,7 @@ object CompleteClaimGen extends GenUtils {
     gen[ContactDetailsFormData]
   implicit val claimGen: Gen[Claim]                                                       = gen[Claim]
   implicit val claimsAnswerGen: Gen[ClaimsAnswer]                                         = gen[ClaimsAnswer]
-  implicit val completeBankAccountDetailAnswerGen: Gen[BankAccountDetails]                =
+  implicit val bankAccountDetailsAnswerGen: Gen[BankAccountDetails]                       =
     gen[BankAccountDetails]
   implicit val mrnInformationGen: Gen[MRNInformation]                                     = gen[MRNInformation]
   implicit val entryDeclarationDetailsGen: Gen[EntryDeclarationDetails]                   = gen[EntryDeclarationDetails]
