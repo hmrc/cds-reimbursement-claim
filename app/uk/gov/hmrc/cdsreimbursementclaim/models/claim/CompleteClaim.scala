@@ -22,7 +22,6 @@ import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DetailsRegisteredWithCdsAnswer.CompleteDetailsRegisteredWithCdsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
@@ -46,7 +45,7 @@ object CompleteClaim {
     maybeCompleteDeclarationDetailsAnswer: Option[CompleteDeclarationDetailsAnswer],
     maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
     declarantTypeAnswer: DeclarantTypeAnswer,
-    completeDetailsRegisteredWithCdsAnswer: CompleteDetailsRegisteredWithCdsAnswer,
+    detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
     maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[BasisOfClaim],
     maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
@@ -109,8 +108,8 @@ object CompleteClaim {
     def commodityDetails: CommodityDetails =
       completeClaim.get(_.commodityDetailsAnswer)
 
-    def detailsRegisteredWithCds: DetailsRegisteredWithCdsFormData =
-      completeClaim.get(_.completeDetailsRegisteredWithCdsAnswer.detailsRegisteredWithCds)
+    def detailsRegisteredWithCds: DetailsRegisteredWithCdsAnswer =
+      completeClaim.get(_.detailsRegisteredWithCdsAnswer)
 
     def claimantDetailsAsImporter: Option[ContactDetailsFormData] =
       completeClaim.get(_.maybeContactDetailsAnswer).map(_.contactDetailsFormData)

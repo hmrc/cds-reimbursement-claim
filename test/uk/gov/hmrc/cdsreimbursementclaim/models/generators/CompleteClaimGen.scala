@@ -18,17 +18,17 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ContactDetailsFormData, DeclarantTypeAnswer, DetailsRegisteredWithCdsFormData, EntryDeclarationDetails, MovementReferenceNumber}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 
 object CompleteClaimGen extends GenUtils {
 
-  implicit val claimantDetailsAsIndividualGen: Gen[DetailsRegisteredWithCdsFormData]      =
-    gen[DetailsRegisteredWithCdsFormData]
+  implicit val detailsRegisteredWithCdsAnswerGen: Gen[DetailsRegisteredWithCdsAnswer]     =
+    gen[DetailsRegisteredWithCdsAnswer]
   implicit val claimantDetailsAsImporterCompanyGen: Gen[ContactDetailsFormData]           =
     gen[ContactDetailsFormData]
   implicit val claimGen: Gen[Claim]                                                       = gen[Claim]
