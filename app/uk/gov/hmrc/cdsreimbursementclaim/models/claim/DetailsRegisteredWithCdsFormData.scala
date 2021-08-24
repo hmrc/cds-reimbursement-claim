@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 
-final case class DetailsRegisteredWithCdsFormData(
+final case class DetailsRegisteredWithCdsAnswer(
   fullName: String,
   emailAddress: Email,
   contactAddress: NonUkAddress,
   addCompanyDetails: Boolean
 )
 
-object DetailsRegisteredWithCdsFormData {
-  implicit val format: OFormat[DetailsRegisteredWithCdsFormData] = Json.format[DetailsRegisteredWithCdsFormData]
+object DetailsRegisteredWithCdsAnswer {
+  implicit val format: OFormat[DetailsRegisteredWithCdsAnswer] = derived.oformat[DetailsRegisteredWithCdsAnswer]()
 }
