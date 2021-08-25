@@ -16,33 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 
-sealed trait ContactDetailsAnswer extends Product with Serializable
+final case class ContactDetailsAnswer(
+  companyName: String,
+  emailAddress: Email,
+  phoneNumber: PhoneNumber,
+  contactAddress: NonUkAddress
+)
 
 object ContactDetailsAnswer {
-
-  final case class IncompleteContactDetailsAnswer(
-    contactDetailsFormData: Option[ContactDetailsFormData]
-  ) extends ContactDetailsAnswer
-
-  object IncompleteContactDetailsAnswer {
-    val empty: IncompleteContactDetailsAnswer = IncompleteContactDetailsAnswer(None)
-
-    implicit val format: OFormat[IncompleteContactDetailsAnswer] =
-      derived.oformat[IncompleteContactDetailsAnswer]()
-  }
-
-  final case class CompleteContactDetailsAnswer(
-    contactDetailsFormData: ContactDetailsFormData
-  ) extends ContactDetailsAnswer
-
-  object CompleteContactDetailsAnswer {
-    implicit val format: OFormat[CompleteContactDetailsAnswer] =
-      derived.oformat[CompleteContactDetailsAnswer]()
-  }
-
-  implicit val format: OFormat[ContactDetailsAnswer] =
-    derived.oformat[ContactDetailsAnswer]()
+  implicit val format: OFormat[ContactDetailsAnswer] = Json.format[ContactDetailsAnswer]
 }

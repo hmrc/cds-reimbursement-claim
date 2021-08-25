@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptyList
 import julienrf.json.derived
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ContactDetailsAnswer.CompleteContactDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
@@ -46,7 +45,7 @@ object CompleteClaim {
     maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
     declarantTypeAnswer: DeclarantTypeAnswer,
     detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
-    maybeContactDetailsAnswer: Option[CompleteContactDetailsAnswer],
+    maybeContactDetailsAnswer: Option[ContactDetailsAnswer],
     maybeBasisOfClaimAnswer: Option[BasisOfClaim],
     maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
     supportingEvidencesAnswer: SupportingEvidencesAnswer,
@@ -111,8 +110,8 @@ object CompleteClaim {
     def detailsRegisteredWithCds: DetailsRegisteredWithCdsAnswer =
       completeClaim.get(_.detailsRegisteredWithCdsAnswer)
 
-    def claimantDetailsAsImporter: Option[ContactDetailsFormData] =
-      completeClaim.get(_.maybeContactDetailsAnswer).map(_.contactDetailsFormData)
+    def claimantDetailsAsImporter: Option[ContactDetailsAnswer] =
+      completeClaim.get(_.maybeContactDetailsAnswer)
 
     def displayDeclaration: Option[DisplayDeclaration] =
       completeClaim.get(_.maybeDisplayDeclaration)
