@@ -21,7 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, ConsigneeDetails, ContactDetails, ContactDetailsAnswer, Country, DateOfImport, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, SubmitClaimRequest, TaxCode, Address => _}
@@ -95,7 +95,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           .copy(value = Left(EntryNumber("666541198B49856762")))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = movementReferenceNumber,
             maybeCompleteReasonAndBasisOfClaimAnswer = None,
             claimsAnswer = claimsAnswer,
@@ -111,7 +111,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val eoriDetails = EoriDetails(
           agentEORIDetails = EORIInformation(
             EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
-            CDSFullName = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantName),
+            CDSFullName =
+              completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
             legalEntityType = None,
             EORIStartDate = None,
             CDSEstablishmentAddress = Address(
@@ -123,14 +124,17 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
               city = None,
               countryCode = "GB",
               postalCode = None,
-              telephone =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantPhoneNumber.value),
-              emailAddress =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantEmailAddress.value)
+              telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantPhoneNumber.value
+              ),
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantEmailAddress.value
+              )
             ),
             contactInformation = Some(
               ContactInformation(
-                contactPerson = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantName),
+                contactPerson =
+                  completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
                 addressLine1 = None,
                 addressLine2 = None,
                 addressLine3 = None,
@@ -138,18 +142,21 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
                 city = None,
                 countryCode = None,
                 postalCode = None,
-                telephoneNumber =
-                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantPhoneNumber.value),
+                telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.declarantPhoneNumber.value
+                ),
                 faxNumber = None,
-                emailAddress =
-                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantEmailAddress.value)
+                emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.declarantEmailAddress.value
+                )
               )
             ),
             VATDetails = None
           ),
           importerEORIDetails = EORIInformation(
             EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
-            CDSFullName = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerName),
+            CDSFullName =
+              completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
             legalEntityType = None,
             EORIStartDate = None,
             CDSEstablishmentAddress = Address(
@@ -161,14 +168,17 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
               city = None,
               countryCode = "GB",
               postalCode = None,
-              telephone =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerPhoneNumber.value),
-              emailAddress =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerEmailAddress.value)
+              telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerPhoneNumber.value
+              ),
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerEmailAddress.value
+              )
             ),
             contactInformation = Some(
               ContactInformation(
-                contactPerson = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerName),
+                contactPerson =
+                  completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
                 addressLine1 = None,
                 addressLine2 = None,
                 addressLine3 = None,
@@ -176,11 +186,13 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
                 city = None,
                 countryCode = None,
                 postalCode = None,
-                telephoneNumber =
-                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerPhoneNumber.value),
+                telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.importerPhoneNumber.value
+                ),
                 faxNumber = None,
-                emailAddress =
-                  completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerEmailAddress.value)
+                emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.importerEmailAddress.value
+                )
               )
             ),
             VATDetails = None
@@ -282,7 +294,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
               None,
               Some("Yes"),
               None,
-              Some(completeClaim.commodityDetails.value)
+              Some(completeClaim.commodityDetailsAnswer.value)
             )
           ),
           basisOfClaim = Some("Duty Suspension"),
@@ -389,7 +401,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = movevementReferenceNumber,
             declarantTypeAnswer = declarantTypeAnswer,
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
@@ -658,7 +670,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
               None,
               Some("Yes"),
               None,
-              Some(completeClaim.commodityDetails.value)
+              Some(completeClaim.commodityDetailsAnswer.value)
             )
           ),
           basisOfClaim = Some("Duty Suspension"),
@@ -969,7 +981,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1036,7 +1048,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1106,7 +1118,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1173,7 +1185,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1243,7 +1255,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1310,7 +1322,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
         val completeClaim =
-          sample[CompleteC285Claim].copy(
+          sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,

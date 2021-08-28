@@ -30,9 +30,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidencesAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteClaim, SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
@@ -218,7 +218,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
       "enqueue the request" in {
         val supportingEvidence        = sample[UploadDocument]
         val supportingEvidencesAnswer = SupportingEvidencesAnswer(supportingEvidence)
-        val completeClaim             = sample[CompleteC285Claim].copy(
+        val completeClaim             = sample[CompleteClaim].copy(
           supportingEvidencesAnswer = supportingEvidencesAnswer,
           scheduledDocumentAnswer = None
         )
@@ -227,11 +227,11 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val submitClaimRequest        = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
         val submitClaimResponse       = sample[SubmitClaimResponse]
         val evidence                  = submitClaimRequest.completeClaim.documents.head
-        val dec64payload              = submitClaimRequest.completeClaim.referenceNumberType match {
+        val dec64payload              = submitClaimRequest.completeClaim.movementReferenceNumber.value match {
           case Left(value) =>
             makeDec64XmlPayload(
-              correlationId = submitClaimRequest.completeClaim.correlationId,
-              batchId = submitClaimRequest.completeClaim.correlationId,
+              correlationId = submitClaimRequest.completeClaim.id,
+              batchId = submitClaimRequest.completeClaim.id,
               batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
               batchCount = submitClaimRequest.completeClaim.documents.size.toLong,
               checksum = evidence.upscanSuccess.uploadDetails.checksum,
@@ -251,8 +251,8 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
           case Right(value) =>
             makeDec64XmlPayload(
-              correlationId = submitClaimRequest.completeClaim.correlationId,
-              batchId = submitClaimRequest.completeClaim.correlationId,
+              correlationId = submitClaimRequest.completeClaim.id,
+              batchId = submitClaimRequest.completeClaim.id,
               batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
               batchCount = submitClaimRequest.completeClaim.documents.size.toLong,
               checksum = evidence.upscanSuccess.uploadDetails.checksum,

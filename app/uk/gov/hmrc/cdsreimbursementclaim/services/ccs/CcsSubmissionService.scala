@@ -107,8 +107,8 @@ object DefaultCcsSubmissionService {
       Envelope(
         Body(
           BatchFileInterfaceMetadata(
-            correlationID = submitClaimRequest.completeClaim.correlationId,
-            batchID = submitClaimRequest.completeClaim.correlationId,
+            correlationID = submitClaimRequest.completeClaim.id,
+            batchID = submitClaimRequest.completeClaim.id,
             batchCount = batchCount,
             batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
             checksum = evidence.upscanSuccess.uploadDetails.checksum,
@@ -134,7 +134,7 @@ object DefaultCcsSubmissionService {
         )
       )
 
-    submitClaimRequest.completeClaim.referenceNumberType match {
+    submitClaimRequest.completeClaim.movementReferenceNumber.value match {
       case Left(entryNumber) =>
         submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
           make(
