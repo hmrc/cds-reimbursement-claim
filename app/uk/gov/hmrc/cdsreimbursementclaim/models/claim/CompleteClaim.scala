@@ -26,110 +26,60 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.C
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, ScheduledDocumentAnswer, SupportingEvidencesAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
 
 import java.util.UUID
 
-sealed trait CompleteClaim extends Product with Serializable {
-  val id: UUID
-}
+final case class CompleteClaim(
+  id: UUID,
+  movementReferenceNumber: MovementReferenceNumber,
+  maybeDuplicateMovementReferenceNumberAnswer: Option[MovementReferenceNumber],
+  maybeCompleteDeclarationDetailsAnswer: Option[CompleteDeclarationDetailsAnswer],
+  maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
+  declarantTypeAnswer: DeclarantTypeAnswer,
+  detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
+  maybeContactDetailsAnswer: Option[ContactDetailsAnswer],
+  maybeBasisOfClaimAnswer: Option[BasisOfClaim],
+  maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
+  supportingEvidencesAnswer: SupportingEvidencesAnswer,
+  commodityDetailsAnswer: CommodityDetails,
+  maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
+  maybeDisplayDeclaration: Option[DisplayDeclaration],
+  maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
+  importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
+  declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
+  claimsAnswer: ClaimsAnswer,
+  scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
+)
 
 object CompleteClaim {
 
-  final case class CompleteC285Claim(
-    id: UUID,
-    movementReferenceNumber: MovementReferenceNumber,
-    maybeDuplicateMovementReferenceNumberAnswer: Option[MovementReferenceNumber],
-    maybeCompleteDeclarationDetailsAnswer: Option[CompleteDeclarationDetailsAnswer],
-    maybeCompleteDuplicateDeclarationDetailsAnswer: Option[CompleteDuplicateDeclarationDetailsAnswer],
-    declarantTypeAnswer: DeclarantTypeAnswer,
-    detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
-    maybeContactDetailsAnswer: Option[ContactDetailsAnswer],
-    maybeBasisOfClaimAnswer: Option[BasisOfClaim],
-    maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
-    supportingEvidencesAnswer: SupportingEvidencesAnswer,
-    commodityDetailsAnswer: CommodityDetails,
-    maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer],
-    maybeDisplayDeclaration: Option[DisplayDeclaration],
-    maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
-    importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
-    declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
-    claimsAnswer: ClaimsAnswer,
-    scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
-  ) extends CompleteClaim
-
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
 
-    def reasonAndBasisOfClaim: Option[CompleteReasonAndBasisOfClaimAnswer] =
-      completeClaim.get(_.maybeCompleteReasonAndBasisOfClaimAnswer)
-
-    def bankDetails: Option[BankAccountDetails] =
-      completeClaim.get(_.maybeBankAccountDetailsAnswer)
-
-    def entryDeclarationDetails: Option[CompleteDeclarationDetailsAnswer] =
-      completeClaim.get(_.maybeCompleteDeclarationDetailsAnswer)
-
-    def duplicateEntryDeclarationDetails: Option[CompleteDuplicateDeclarationDetailsAnswer] =
-      completeClaim.get(_.maybeCompleteDuplicateDeclarationDetailsAnswer)
-
     def documents: NonEmptyList[UploadDocument] = {
-      val evidences         = completeClaim.get(_.supportingEvidencesAnswer)
+      val evidences         = completeClaim.supportingEvidencesAnswer
       val scheduledDocument =
-        completeClaim
-          .get(_.scheduledDocumentAnswer)
+        completeClaim.scheduledDocumentAnswer
           .map(_.uploadDocument)
           .toList
 
       evidences ++ scheduledDocument
     }
 
-    def referenceNumberType: Either[EntryNumber, MRN] =
-      completeClaim.get(_.movementReferenceNumber.value)
-
-    def correlationId: UUID = completeClaim.get(_.id)
-
-    def declarantTypeAnswer: DeclarantTypeAnswer =
-      completeClaim.get(_.declarantTypeAnswer)
-
-    def basisOfClaim: Option[BasisOfClaim] =
-      completeClaim.get(_.maybeBasisOfClaimAnswer)
-
-    def claims: NonEmptyList[Claim] = completeClaim
-      .get(_.claimsAnswer)
-      .map(claim =>
-        claim.copy(
-          claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
-          paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
+    def claims: NonEmptyList[Claim] =
+      completeClaim.claimsAnswer
+        .map(claim =>
+          claim.copy(
+            claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
+            paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
+          )
         )
-      )
-
-    def commodityDetails: CommodityDetails =
-      completeClaim.get(_.commodityDetailsAnswer)
-
-    def detailsRegisteredWithCds: DetailsRegisteredWithCdsAnswer =
-      completeClaim.get(_.detailsRegisteredWithCdsAnswer)
-
-    def claimantDetailsAsImporter: Option[ContactDetailsAnswer] =
-      completeClaim.get(_.maybeContactDetailsAnswer)
-
-    def displayDeclaration: Option[DisplayDeclaration] =
-      completeClaim.get(_.maybeDisplayDeclaration)
-
-    def duplicateDisplayDeclaration: Option[DisplayDeclaration] =
-      completeClaim.get(_.maybeDuplicateDisplayDeclaration)
-
-    def enteredBankDetails: Option[BankAccountDetails] =
-      completeClaim.get(_.maybeBankAccountDetailsAnswer)
 
     def consigneeDetails: Option[ConsigneeDetails] =
-      completeClaim.get(_.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails))
+      completeClaim.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
 
     def declarantDetails: Option[DeclarantDetails] =
-      completeClaim.get(_.maybeDisplayDeclaration.map(s => s.displayResponseDetail.declarantDetails))
-
-    def get[A](f: CompleteC285Claim => A): A =
-      f(completeClaim.asInstanceOf[CompleteC285Claim])
+      completeClaim.maybeDisplayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
   }
 
   implicit val format: OFormat[CompleteClaim] = derived.oformat[CompleteClaim]()

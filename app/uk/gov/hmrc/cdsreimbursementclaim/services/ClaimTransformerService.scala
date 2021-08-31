@@ -59,13 +59,13 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
 
     val completeClaim = submitClaimRequest.completeClaim
     (
-      makeReasonAndOrBasisOfClaim(completeClaim.basisOfClaim, None),
+      makeReasonAndOrBasisOfClaim(completeClaim.maybeBasisOfClaimAnswer, None),
       setMrnDetails(
-        completeClaim.displayDeclaration,
+        completeClaim.maybeDisplayDeclaration,
         completeClaim
       ),
       setDuplicateMrnDetails(
-        completeClaim.duplicateDisplayDeclaration,
+        completeClaim.maybeDuplicateDisplayDeclaration,
         completeClaim
       ),
       buildEoriDetails(submitClaimRequest.completeClaim)
@@ -100,7 +100,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         goodsDetails = Some(
           makeGoodsDetails(
             completeClaim.declarantTypeAnswer,
-            completeClaim.commodityDetails,
+            completeClaim.commodityDetailsAnswer,
             None
           )
         ),
@@ -131,7 +131,10 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
     val completeClaim = submitClaimRequest.completeClaim
 
     (
-      makeReasonAndOrBasisOfClaim(completeClaim.basisOfClaim, completeClaim.reasonAndBasisOfClaim),
+      makeReasonAndOrBasisOfClaim(
+        completeClaim.maybeBasisOfClaimAnswer,
+        completeClaim.maybeCompleteReasonAndBasisOfClaimAnswer
+      ),
       makeEntryDetails(
         entryNumber,
         submitClaimRequest.signedInUserDetails,
@@ -170,7 +173,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         goodsDetails = Some(
           makeGoodsDetails(
             completeClaim.declarantTypeAnswer,
-            completeClaim.commodityDetails,
+            completeClaim.commodityDetailsAnswer,
             maybeReasonAndOrBasis._2
           )
         ),
@@ -202,7 +205,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
       acknowledgementReference = uuidGenerator.compactCorrelationId
     )
 
-    submitClaimRequest.completeClaim.referenceNumberType match {
+    submitClaimRequest.completeClaim.movementReferenceNumber.value match {
       case Left(entryNumber) =>
         buildLegacyNumberPayload(entryNumber, submitClaimRequest).fold(
           error => Left(Error(s"validation errors: ${error.toString}")),
@@ -282,7 +285,8 @@ object DefaultClaimTransformerService {
       EoriDetails(
         agentEORIDetails = EORIInformation(
           EORINumber = signedInUserDetails.eori.value,
-          CDSFullName = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantName),
+          CDSFullName =
+            completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
@@ -294,13 +298,17 @@ object DefaultClaimTransformerService {
             city = None,
             countryCode = "GB",
             postalCode = None,
-            telephone = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantPhoneNumber.value),
-            emailAddress =
-              completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantEmailAddress.value)
+            telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+              s.declarationDetails.declarantPhoneNumber.value
+            ),
+            emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+              s.declarationDetails.declarantEmailAddress.value
+            )
           ),
           contactInformation = Some(
             ContactInformation(
-              contactPerson = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantName),
+              contactPerson =
+                completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
               addressLine1 = None,
               addressLine2 = None,
               addressLine3 = None,
@@ -308,18 +316,20 @@ object DefaultClaimTransformerService {
               city = None,
               countryCode = None,
               postalCode = None,
-              telephoneNumber =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantPhoneNumber.value),
+              telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantPhoneNumber.value
+              ),
               faxNumber = None,
-              emailAddress =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.declarantEmailAddress.value)
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantEmailAddress.value
+              )
             )
           ),
           VATDetails = None
         ),
         importerEORIDetails = EORIInformation(
           EORINumber = signedInUserDetails.eori.value,
-          CDSFullName = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerName),
+          CDSFullName = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
@@ -331,13 +341,17 @@ object DefaultClaimTransformerService {
             city = None,
             countryCode = "GB",
             postalCode = None,
-            telephone = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerPhoneNumber.value),
-            emailAddress =
-              completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerEmailAddress.value)
+            telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+              s.declarationDetails.importerPhoneNumber.value
+            ),
+            emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+              s.declarationDetails.importerEmailAddress.value
+            )
           ),
           contactInformation = Some(
             ContactInformation(
-              contactPerson = completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerName),
+              contactPerson =
+                completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
               addressLine1 = None,
               addressLine2 = None,
               addressLine3 = None,
@@ -345,11 +359,13 @@ object DefaultClaimTransformerService {
               city = None,
               countryCode = None,
               postalCode = None,
-              telephoneNumber =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerPhoneNumber.value),
+              telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerPhoneNumber.value
+              ),
               faxNumber = None,
-              emailAddress =
-                completeClaim.entryDeclarationDetails.map(s => s.declarationDetails.importerEmailAddress.value)
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerEmailAddress.value
+              )
             )
           ),
           VATDetails = None
@@ -361,7 +377,7 @@ object DefaultClaimTransformerService {
     completeClaim: CompleteClaim
   ): Validation[EoriDetails] = {
 
-    val agentContactInfo = completeClaim.claimantDetailsAsImporter match {
+    val agentContactInfo = completeClaim.maybeContactDetailsAnswer match {
       case Some(claimantDetailsAsImporterCompany) =>
         ContactInformation(
           contactPerson = Option(claimantDetailsAsImporterCompany.companyName),
@@ -428,19 +444,19 @@ object DefaultClaimTransformerService {
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
-            contactPerson = Option(completeClaim.detailsRegisteredWithCds.fullName),
-            addressLine1 = Option(completeClaim.detailsRegisteredWithCds.contactAddress.line1),
-            addressLine2 = completeClaim.detailsRegisteredWithCds.contactAddress.line2,
-            AddressLine3 = completeClaim.detailsRegisteredWithCds.contactAddress.line3,
+            contactPerson = Option(completeClaim.detailsRegisteredWithCdsAnswer.fullName),
+            addressLine1 = Option(completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
+            addressLine2 = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
+            AddressLine3 = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
             street = buildStreet(
-              Option(completeClaim.detailsRegisteredWithCds.contactAddress.line1),
-              completeClaim.detailsRegisteredWithCds.contactAddress.line2
+              Option(completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
+              completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line2
             ),
-            city = Some(completeClaim.detailsRegisteredWithCds.contactAddress.line4),
-            postalCode = completeClaim.detailsRegisteredWithCds.contactAddress.postcode,
-            countryCode = completeClaim.detailsRegisteredWithCds.contactAddress.country.code,
+            city = Some(completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
+            postalCode = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.postcode,
+            countryCode = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
             telephone = None,
-            emailAddress = Option(completeClaim.detailsRegisteredWithCds.emailAddress.value)
+            emailAddress = Option(completeClaim.detailsRegisteredWithCdsAnswer.emailAddress.value)
           ),
           contactInformation = Some(agentContactInfo),
           VATDetails = None
@@ -888,7 +904,7 @@ object DefaultClaimTransformerService {
     maybeBankDetails: Option[models.claim.BankDetails],
     completeClaim: CompleteClaim
   ): Validation[BankDetails] =
-    (maybeBankDetails, completeClaim.enteredBankDetails) match {
+    (maybeBankDetails, completeClaim.maybeBankAccountDetailsAnswer) match {
       case (_, Some(bankAccountDetails)) =>
         Valid(
           BankDetails(
@@ -1092,14 +1108,14 @@ object DefaultClaimTransformerService {
     signedInUserDetails: SignedInUserDetails,
     completeClaim: CompleteClaim
   ): Validation[EntryDetail] = {
-    val maybeEntryDeclarationDetailsAnswer = completeClaim.entryDeclarationDetails
+    val maybeEntryDeclarationDetailsAnswer = completeClaim.maybeCompleteDeclarationDetailsAnswer
     maybeEntryDeclarationDetailsAnswer match {
       case Some(entryDeclarationDetails) =>
         (
           makeEntryDate(entryDeclarationDetails.declarationDetails.dateOfImport),
           makeEntryDeclarantDetails(signedInUserDetails, entryDeclarationDetails),
           makeEntryConsigneeDetails(signedInUserDetails, entryDeclarationDetails),
-          makeEntryBankDetails(completeClaim.bankDetails),
+          makeEntryBankDetails(completeClaim.maybeBankAccountDetailsAnswer),
           makeNdrcDetails(completeClaim.claims)
         ).mapN { case (entryDate, declarant, consigneeDetails, bankDetails, ndrcDetails) =>
           EntryDetail(
@@ -1125,7 +1141,7 @@ object DefaultClaimTransformerService {
   ): Validation[Option[EntryDetail]] = {
     val maybeDuplicateDeclarationDetailsAnswer
       : Option[DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer] =
-      completeClaim.duplicateEntryDeclarationDetails
+      completeClaim.maybeCompleteDuplicateDeclarationDetailsAnswer
 
     maybeDuplicateDeclarationDetailsAnswer match {
       case Some(duplicateDeclarationDetailsAnswer) =>
@@ -1135,7 +1151,7 @@ object DefaultClaimTransformerService {
               setDuplicateEntryAcceptanceDate(duplicateDeclarationDetailsAnswer),
               setDuplicateEntryDeclarationDetails(signedInUserDetails, duplicateDeclarationDetailsAnswer),
               setDuplicateEntryConsigneeDetails(signedInUserDetails, duplicateDeclarationDetailsAnswer),
-              makeEntryBankDetails(completeClaim.bankDetails),
+              makeEntryBankDetails(completeClaim.maybeBankAccountDetailsAnswer),
               makeNdrcDetails(completeClaim.claims)
             ).mapN { case (acceptanceDate, declarant, consigneeDetails, bankDetails, ndrcDetails) =>
               Some(

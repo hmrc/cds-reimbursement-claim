@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
 import org.scalacheck.ScalacheckShapeless._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim.CompleteC285Claim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
@@ -44,6 +44,4 @@ object CompleteClaimGen extends GenUtils {
   implicit val movementReferenceNumberGen: Gen[MovementReferenceNumber]                   =
     gen[MovementReferenceNumber]
   implicit val completeClaimGen: Gen[CompleteClaim]                                       = gen[CompleteClaim]
-  implicit val completeC285ClaimGen: Gen[CompleteC285Claim]                               = gen[CompleteC285Claim]
-
 }
