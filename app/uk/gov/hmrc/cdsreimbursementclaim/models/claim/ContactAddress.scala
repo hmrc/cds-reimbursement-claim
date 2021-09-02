@@ -17,15 +17,21 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.Eq
-import cats.syntax.eq._
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-final case class PhoneNumber(value: String) extends AnyVal
+final case class ContactAddress(
+  line1: String,
+  line2: Option[String],
+  line3: Option[String],
+  line4: String,
+  postcode: String,
+  country: Country
+)
 
-object PhoneNumber {
-  implicit val format: Format[PhoneNumber] = implicitly[Format[String]].inmap(PhoneNumber(_), _.value)
+object ContactAddress {
+  implicit val addressFormat: OFormat[ContactAddress] = derived.oformat[ContactAddress]()
 
-  implicit val eq: Eq[PhoneNumber] = Eq.instance(_.value === _.value)
+  implicit val eq: Eq[ContactAddress] = Eq.fromUniversalEquals
 
 }

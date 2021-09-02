@@ -21,10 +21,9 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, ConsigneeDetails, ContactDetails, ContactDetailsAnswer, Country, DateOfImport, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, SubmitClaimRequest, TaxCode, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, MrnContactDetails, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -32,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN, UUIDGenerator}
 
 import java.time.LocalDate
@@ -963,10 +963,10 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         ()
       }
 
-      "valid mrn number claim, DeclarantType: Importer, with filled out claimantDetailsAsImporterCompanyAnswer" in {
-        val declarantType                          = DeclarantTypeAnswer.Importer
-        val claimantDetailsAsImporterCompanyAnswer =
-          sample[ContactDetailsAnswer].copy(contactAddress = getNonUkAddress("frontend.company"))
+      "valid mrn number claim, DeclarantType: Importer, with filled out MrnContactDetails and ContactAddress" in {
+        val declarantType  = DeclarantTypeAnswer.Importer
+        val contactDetails = sample[MrnContactDetails].copy(phoneNumber = Some(genPhoneNumber))
+        val contactAddress = sample[ContactAddress].copy(line2 = Some(alphaCharGen(10)), line3 = Some(alphaCharGen(10)))
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -985,7 +985,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            maybeContactDetailsAnswer = Some(claimantDetailsAsImporterCompanyAnswer),
+            mrnContactDetailsAnswer = Some(contactDetails),
+            mrnContactAddressAnswer = Some(contactAddress),
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
@@ -1016,24 +1017,23 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         )
 
         val tpi05ContactInfo = tpi05EoriDetails.contactInformation.getOrElse(fail)
-        tpi05ContactInfo.contactPerson shouldBe Some(claimantDetailsAsImporterCompanyAnswer.companyName)
-        tpi05ContactInfo.addressLine1  shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.line1)
-        tpi05ContactInfo.addressLine2  shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.line2
-        tpi05ContactInfo.addressLine3  shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.line3
-        val street2 =
-          claimantDetailsAsImporterCompanyAnswer.contactAddress.line1 + " " + claimantDetailsAsImporterCompanyAnswer.contactAddress.line2
-            .getOrElse("B")
+        tpi05ContactInfo.contactPerson shouldBe Some(contactDetails.fullName)
+        tpi05ContactInfo.addressLine1  shouldBe Some(contactAddress.line1)
+        tpi05ContactInfo.addressLine2  shouldBe contactAddress.line2
+        tpi05ContactInfo.addressLine3  shouldBe contactAddress.line3
+        val street2 = contactAddress.line1 + " " + contactAddress.line2.getOrElse("B")
         tpi05ContactInfo.street          shouldBe Some(street2)
-        tpi05ContactInfo.city            shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.line4)
-        tpi05ContactInfo.postalCode      shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.postcode
-        tpi05ContactInfo.countryCode     shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.country.code)
-        tpi05ContactInfo.emailAddress    shouldBe Some(claimantDetailsAsImporterCompanyAnswer.emailAddress.value)
-        tpi05ContactInfo.telephoneNumber shouldBe Some(claimantDetailsAsImporterCompanyAnswer.phoneNumber.value)
+        tpi05ContactInfo.city            shouldBe Some(contactAddress.line4)
+        tpi05ContactInfo.postalCode      shouldBe Some(contactAddress.postcode)
+        tpi05ContactInfo.countryCode     shouldBe Some(contactAddress.country.code)
+        tpi05ContactInfo.emailAddress    shouldBe Some(contactDetails.emailAddress.value)
+        tpi05ContactInfo.telephoneNumber shouldBe contactDetails.phoneNumber.map(_.value)
       }
 
-      "valid mrn number claim, DeclarantType: Importer, No claimantDetailsAsImporterCompanyAnswer" in {
-        val declarantType                               = DeclarantTypeAnswer.Importer
-        val maybeClaimantDetailsAsImporterCompanyAnswer = None
+      "valid mrn number claim, DeclarantType: Importer, No ContactDetails or ContactAddress " in {
+        val declarantType  = DeclarantTypeAnswer.Importer
+        val contactDetails = None
+        val contactAddress = None
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1052,144 +1052,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            maybeContactDetailsAnswer = maybeClaimantDetailsAsImporterCompanyAnswer,
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
-            claimsAnswer = claimsAnswer,
-            maybeCompleteReasonAndBasisOfClaimAnswer = None,
-            maybeCompleteDuplicateDeclarationDetailsAnswer = None,
-            maybeCompleteDeclarationDetailsAnswer = None,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
-          )
-
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
-        val correlationId      = UUID.randomUUID()
-
-        inSequence {
-          mockGenerateReceiptDate("2021-03-08T13:57:53Z")
-          mockGenerateUUID(correlationId)
-          mockGenerateIsoLocalDate("2021-03-08T13:57:53Z")
-        }
-        val tpi05Claim       = transformer.toEisSubmitClaimRequest(submitClaimRequest)
-        val tpi05            = tpi05Claim.getOrElse(fail("No Claim")).postNewClaimsRequest.requestDetail
-        val tpi05EoriDetails = tpi05.requestDetailA.EORIDetails.getOrElse(fail("No EoriDetails")).agentEORIDetails
-
-        checkFixedAcc14ToTpi05Mapping(acc14, tpi05)
-
-        checkDetailsRegisteredWithCdsToEstablishmentAddressMapping(
-          tpi05EoriDetails.CDSEstablishmentAddress,
-          detailsRegisteredWithCds
-        )
-
-        val tpi05ContactInfo = tpi05EoriDetails.contactInformation.getOrElse(fail)
-        val acc14Consignee   = acc14.consigneeDetails.getOrElse(fail("No Consignee"))
-        tpi05ContactInfo.contactPerson shouldBe Some(acc14Consignee.legalName)
-        tpi05ContactInfo.addressLine1  shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine1)
-        tpi05ContactInfo.addressLine2  shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine2)
-        tpi05ContactInfo.addressLine3  shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine3)
-        val street2 =
-          acc14Consignee.contactDetails.flatMap(_.addressLine1).getOrElse("Q") + " " + acc14Consignee.contactDetails
-            .flatMap(_.addressLine2)
-            .getOrElse("W")
-        tpi05ContactInfo.street          shouldBe Some(street2)
-        tpi05ContactInfo.city            shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine3)
-        tpi05ContactInfo.postalCode      shouldBe acc14Consignee.contactDetails.flatMap(_.postalCode)
-        tpi05ContactInfo.countryCode     shouldBe acc14Consignee.contactDetails.flatMap(_.countryCode)
-        tpi05ContactInfo.emailAddress    shouldBe acc14Consignee.contactDetails.flatMap(_.emailAddress)
-        tpi05ContactInfo.telephoneNumber shouldBe acc14Consignee.contactDetails.flatMap(_.telephone)
-      }
-
-      "valid mrn number claim, DeclarantType: AssociatedWithImporterCompany, with filled out claimantDetailsAsImporterCompanyAnswer" in {
-        val declarantType                          = DeclarantTypeAnswer.AssociatedWithImporterCompany
-        val claimantDetailsAsImporterCompanyAnswer =
-          sample[ContactDetailsAnswer].copy(contactAddress = getNonUkAddress("frontend.company"))
-
-        val acc14                                        = getAcc14Response()
-        val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
-        val claimsAnswer                                 = ClaimsAnswer(claim)
-        val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
-        val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
-        val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
-
-        val completeClaim =
-          sample[CompleteClaim].copy(
-            movementReferenceNumber = completeMovementReferenceNumberAnswer,
-            declarantTypeAnswer = declarantTypeAnswer,
-            detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            maybeContactDetailsAnswer = Some(claimantDetailsAsImporterCompanyAnswer),
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
-            claimsAnswer = claimsAnswer,
-            maybeCompleteReasonAndBasisOfClaimAnswer = None,
-            maybeCompleteDuplicateDeclarationDetailsAnswer = None,
-            maybeCompleteDeclarationDetailsAnswer = None,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
-          )
-
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
-        val correlationId      = UUID.randomUUID()
-
-        inSequence {
-          mockGenerateReceiptDate("2021-03-08T13:57:53Z")
-          mockGenerateUUID(correlationId)
-          mockGenerateIsoLocalDate("2021-03-08T13:57:53Z")
-        }
-        val tpi05Claim       = transformer.toEisSubmitClaimRequest(submitClaimRequest)
-        val tpi05            = tpi05Claim.getOrElse(fail("No Claim")).postNewClaimsRequest.requestDetail
-        val tpi05EoriDetails = tpi05.requestDetailA.EORIDetails.getOrElse(fail("No EoriDetails")).agentEORIDetails
-
-        checkFixedAcc14ToTpi05Mapping(acc14, tpi05)
-
-        checkDetailsRegisteredWithCdsToEstablishmentAddressMapping(
-          tpi05EoriDetails.CDSEstablishmentAddress,
-          detailsRegisteredWithCds
-        )
-
-        val tpi05ContactInfo = tpi05EoriDetails.contactInformation.getOrElse(fail)
-        tpi05ContactInfo.contactPerson shouldBe Some(claimantDetailsAsImporterCompanyAnswer.companyName)
-        tpi05ContactInfo.addressLine1  shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.line1)
-        tpi05ContactInfo.addressLine2  shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.line2
-        tpi05ContactInfo.addressLine3  shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.line3
-        val street2 =
-          claimantDetailsAsImporterCompanyAnswer.contactAddress.line1 + " " + claimantDetailsAsImporterCompanyAnswer.contactAddress.line2
-            .getOrElse("B")
-        tpi05ContactInfo.street          shouldBe Some(street2)
-        tpi05ContactInfo.city            shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.line4)
-        tpi05ContactInfo.postalCode      shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.postcode
-        tpi05ContactInfo.countryCode     shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.country.code)
-        tpi05ContactInfo.emailAddress    shouldBe Some(claimantDetailsAsImporterCompanyAnswer.emailAddress.value)
-        tpi05ContactInfo.telephoneNumber shouldBe Some(claimantDetailsAsImporterCompanyAnswer.phoneNumber.value)
-      }
-
-      "valid mrn number claim, DeclarantType: AssociatedWithImporterCompany, No claimantDetailsAsImporterCompanyAnswer" in {
-        val declarantType                               = DeclarantTypeAnswer.AssociatedWithImporterCompany
-        val maybeClaimantDetailsAsImporterCompanyAnswer = None
-
-        val acc14                                        = getAcc14Response()
-        val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
-        val claimsAnswer                                 = ClaimsAnswer(claim)
-        val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
-        val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
-        val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
-
-        val completeClaim =
-          sample[CompleteClaim].copy(
-            movementReferenceNumber = completeMovementReferenceNumberAnswer,
-            declarantTypeAnswer = declarantTypeAnswer,
-            detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            maybeContactDetailsAnswer = maybeClaimantDetailsAsImporterCompanyAnswer,
+            mrnContactDetailsAnswer = contactDetails,
+            mrnContactAddressAnswer = contactAddress,
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
@@ -1237,10 +1101,147 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         tpi05ContactInfo.telephoneNumber shouldBe acc14Consignee.contactDetails.flatMap(_.telephone)
       }
 
-      "valid mrn number claim, DeclarantType: AssociatedWithRepresentativeCompany, with filled out claimantDetailsAsImporterCompanyAnswer" in {
-        val declarantType                          = DeclarantTypeAnswer.AssociatedWithImporterCompany
-        val claimantDetailsAsImporterCompanyAnswer =
-          sample[ContactDetailsAnswer].copy(contactAddress = getNonUkAddress("frontend.company"))
+      "valid mrn number claim, DeclarantType: AssociatedWithImporterCompany, with filled out MrnContactDetails and ContactAddress" in {
+        val declarantType  = DeclarantTypeAnswer.AssociatedWithImporterCompany
+        val contactDetails = sample[MrnContactDetails].copy(phoneNumber = Some(genPhoneNumber))
+        val contactAddress = sample[ContactAddress].copy(line2 = Some(alphaCharGen(10)), line3 = Some(alphaCharGen(10)))
+
+        val acc14                                        = getAcc14Response()
+        val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
+        val claim                                        = getClaimAmounts()
+        val claimsAnswer                                 = ClaimsAnswer(claim)
+        val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
+        val declarantTypeAnswer                          = declarantType
+        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val detailsRegisteredWithCds                     =
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+
+        val completeClaim =
+          sample[CompleteClaim].copy(
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
+            declarantTypeAnswer = declarantTypeAnswer,
+            detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
+            mrnContactDetailsAnswer = Some(contactDetails),
+            mrnContactAddressAnswer = Some(contactAddress),
+            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
+            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            claimsAnswer = claimsAnswer,
+            maybeCompleteReasonAndBasisOfClaimAnswer = None,
+            maybeCompleteDuplicateDeclarationDetailsAnswer = None,
+            maybeCompleteDeclarationDetailsAnswer = None,
+            maybeDisplayDeclaration = Some(displayDeclaration),
+            maybeDuplicateDisplayDeclaration = None
+          )
+
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val correlationId      = UUID.randomUUID()
+
+        inSequence {
+          mockGenerateReceiptDate("2021-03-08T13:57:53Z")
+          mockGenerateUUID(correlationId)
+          mockGenerateIsoLocalDate("2021-03-08T13:57:53Z")
+        }
+        val tpi05Claim       = transformer.toEisSubmitClaimRequest(submitClaimRequest)
+        val tpi05            = tpi05Claim.getOrElse(fail("No Claim")).postNewClaimsRequest.requestDetail
+        val tpi05EoriDetails = tpi05.requestDetailA.EORIDetails.getOrElse(fail("No EoriDetails")).agentEORIDetails
+
+        checkFixedAcc14ToTpi05Mapping(acc14, tpi05)
+
+        checkDetailsRegisteredWithCdsToEstablishmentAddressMapping(
+          tpi05EoriDetails.CDSEstablishmentAddress,
+          detailsRegisteredWithCds
+        )
+        val tpi05ContactInfo = tpi05EoriDetails.contactInformation.getOrElse(fail)
+        tpi05ContactInfo.contactPerson shouldBe Some(contactDetails.fullName)
+        tpi05ContactInfo.addressLine1  shouldBe Some(contactAddress.line1)
+        tpi05ContactInfo.addressLine2  shouldBe contactAddress.line2
+        tpi05ContactInfo.addressLine3  shouldBe contactAddress.line3
+        val street2 = contactAddress.line1 + " " + contactAddress.line2.getOrElse("B")
+        tpi05ContactInfo.street          shouldBe Some(street2)
+        tpi05ContactInfo.city            shouldBe Some(contactAddress.line4)
+        tpi05ContactInfo.postalCode      shouldBe Some(contactAddress.postcode)
+        tpi05ContactInfo.countryCode     shouldBe Some(contactAddress.country.code)
+        tpi05ContactInfo.emailAddress    shouldBe Some(contactDetails.emailAddress.value)
+        tpi05ContactInfo.telephoneNumber shouldBe contactDetails.phoneNumber.map(_.value)
+      }
+
+      "valid mrn number claim, DeclarantType: AssociatedWithImporterCompany, No ContactDetails or ContactAddress" in {
+        val declarantType  = DeclarantTypeAnswer.AssociatedWithImporterCompany
+        val contactDetails = None
+        val contactAddress = None
+
+        val acc14                                        = getAcc14Response()
+        val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
+        val claim                                        = getClaimAmounts()
+        val claimsAnswer                                 = ClaimsAnswer(claim)
+        val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
+        val declarantTypeAnswer                          = declarantType
+        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
+          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val detailsRegisteredWithCds                     =
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+
+        val completeClaim =
+          sample[CompleteClaim].copy(
+            movementReferenceNumber = completeMovementReferenceNumberAnswer,
+            declarantTypeAnswer = declarantTypeAnswer,
+            detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
+            mrnContactDetailsAnswer = contactDetails,
+            mrnContactAddressAnswer = contactAddress,
+            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
+            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            claimsAnswer = claimsAnswer,
+            maybeCompleteReasonAndBasisOfClaimAnswer = None,
+            maybeCompleteDuplicateDeclarationDetailsAnswer = None,
+            maybeCompleteDeclarationDetailsAnswer = None,
+            maybeDisplayDeclaration = Some(displayDeclaration),
+            maybeDuplicateDisplayDeclaration = None
+          )
+
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val correlationId      = UUID.randomUUID()
+
+        inSequence {
+          mockGenerateReceiptDate("2021-03-08T13:57:53Z")
+          mockGenerateUUID(correlationId)
+          mockGenerateIsoLocalDate("2021-03-08T13:57:53Z")
+        }
+        val tpi05Claim       = transformer.toEisSubmitClaimRequest(submitClaimRequest)
+        val tpi05            = tpi05Claim.getOrElse(fail("No Claim")).postNewClaimsRequest.requestDetail
+        val tpi05EoriDetails = tpi05.requestDetailA.EORIDetails.getOrElse(fail("No EoriDetails")).agentEORIDetails
+
+        checkFixedAcc14ToTpi05Mapping(acc14, tpi05)
+
+        checkDetailsRegisteredWithCdsToEstablishmentAddressMapping(
+          tpi05EoriDetails.CDSEstablishmentAddress,
+          detailsRegisteredWithCds
+        )
+
+        val tpi05ContactInfo = tpi05EoriDetails.contactInformation.getOrElse(fail)
+        val acc14Consignee   = acc14.consigneeDetails.getOrElse(fail("No Consignee"))
+        tpi05ContactInfo.contactPerson shouldBe Some(acc14Consignee.legalName)
+        tpi05ContactInfo.addressLine1  shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine1)
+        tpi05ContactInfo.addressLine2  shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine2)
+        tpi05ContactInfo.addressLine3  shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine3)
+        val street2 =
+          acc14Consignee.contactDetails.flatMap(_.addressLine1).getOrElse("Q") + " " + acc14Consignee.contactDetails
+            .flatMap(_.addressLine2)
+            .getOrElse("W")
+        tpi05ContactInfo.street          shouldBe Some(street2)
+        tpi05ContactInfo.city            shouldBe acc14Consignee.contactDetails.flatMap(_.addressLine3)
+        tpi05ContactInfo.postalCode      shouldBe acc14Consignee.contactDetails.flatMap(_.postalCode)
+        tpi05ContactInfo.countryCode     shouldBe acc14Consignee.contactDetails.flatMap(_.countryCode)
+        tpi05ContactInfo.emailAddress    shouldBe acc14Consignee.contactDetails.flatMap(_.emailAddress)
+        tpi05ContactInfo.telephoneNumber shouldBe acc14Consignee.contactDetails.flatMap(_.telephone)
+      }
+
+      "valid mrn number claim, DeclarantType: AssociatedWithRepresentativeCompany, with filled out MrnContactDetails and ContactAddress" in {
+        val declarantType  = DeclarantTypeAnswer.AssociatedWithImporterCompany
+        val contactDetails = sample[MrnContactDetails].copy(phoneNumber = Some(genPhoneNumber))
+        val contactAddress = sample[ContactAddress].copy(line2 = Some(alphaCharGen(10)), line3 = Some(alphaCharGen(10)))
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1259,7 +1260,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            maybeContactDetailsAnswer = Some(claimantDetailsAsImporterCompanyAnswer),
+            mrnContactDetailsAnswer = Some(contactDetails),
+            mrnContactAddressAnswer = Some(contactAddress),
             maybeBasisOfClaimAnswer = Some(basisOfClaim),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
@@ -1290,24 +1292,23 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         )
 
         val tpi05ContactInfo = tpi05EoriDetails.contactInformation.getOrElse(fail)
-        tpi05ContactInfo.contactPerson shouldBe Some(claimantDetailsAsImporterCompanyAnswer.companyName)
-        tpi05ContactInfo.addressLine1  shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.line1)
-        tpi05ContactInfo.addressLine2  shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.line2
-        tpi05ContactInfo.addressLine3  shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.line3
-        val street2 =
-          claimantDetailsAsImporterCompanyAnswer.contactAddress.line1 + " " + claimantDetailsAsImporterCompanyAnswer.contactAddress.line2
-            .getOrElse("B")
+        tpi05ContactInfo.contactPerson shouldBe Some(contactDetails.fullName)
+        tpi05ContactInfo.addressLine1  shouldBe Some(contactAddress.line1)
+        tpi05ContactInfo.addressLine2  shouldBe contactAddress.line2
+        tpi05ContactInfo.addressLine3  shouldBe contactAddress.line3
+        val street2 = contactAddress.line1 + " " + contactAddress.line2.getOrElse("B")
         tpi05ContactInfo.street          shouldBe Some(street2)
-        tpi05ContactInfo.city            shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.line4)
-        tpi05ContactInfo.postalCode      shouldBe claimantDetailsAsImporterCompanyAnswer.contactAddress.postcode
-        tpi05ContactInfo.countryCode     shouldBe Some(claimantDetailsAsImporterCompanyAnswer.contactAddress.country.code)
-        tpi05ContactInfo.emailAddress    shouldBe Some(claimantDetailsAsImporterCompanyAnswer.emailAddress.value)
-        tpi05ContactInfo.telephoneNumber shouldBe Some(claimantDetailsAsImporterCompanyAnswer.phoneNumber.value)
+        tpi05ContactInfo.city            shouldBe Some(contactAddress.line4)
+        tpi05ContactInfo.postalCode      shouldBe Some(contactAddress.postcode)
+        tpi05ContactInfo.countryCode     shouldBe Some(contactAddress.country.code)
+        tpi05ContactInfo.emailAddress    shouldBe Some(contactDetails.emailAddress.value)
+        tpi05ContactInfo.telephoneNumber shouldBe contactDetails.phoneNumber.map(_.value)
       }
 
-      "valid mrn number claim, DeclarantType: AssociatedWithRepresentativeCompany, No claimantDetailsAsImporterCompanyAnswer" in {
-        val declarantType                               = DeclarantTypeAnswer.AssociatedWithRepresentativeCompany
-        val maybeClaimantDetailsAsImporterCompanyAnswer = None
+      "valid mrn number claim, DeclarantType: AssociatedWithRepresentativeCompany, No ContactDetails or ContactAddress" in {
+        val declarantType  = DeclarantTypeAnswer.AssociatedWithRepresentativeCompany
+        val contactDetails = None
+        val contactAddress = None
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1326,7 +1327,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            maybeContactDetailsAnswer = maybeClaimantDetailsAsImporterCompanyAnswer,
+            mrnContactDetailsAnswer = contactDetails,
+            mrnContactAddressAnswer = contactAddress,
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
@@ -1363,9 +1365,9 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         tpi05ContactInfo.addressLine2  shouldBe acc14Declarant.contactDetails.flatMap(_.addressLine2)
         tpi05ContactInfo.addressLine3  shouldBe acc14Declarant.contactDetails.flatMap(_.addressLine3)
         val street2 =
-          acc14Declarant.contactDetails.flatMap(_.addressLine1).getOrElse("Q") + " " + acc14Declarant.contactDetails
+          acc14Declarant.contactDetails.flatMap(_.addressLine1).getOrElse(fail) + " " + acc14Declarant.contactDetails
             .flatMap(_.addressLine2)
-            .getOrElse("W")
+            .getOrElse(fail)
         tpi05ContactInfo.street          shouldBe Some(street2)
         tpi05ContactInfo.city            shouldBe acc14Declarant.contactDetails.flatMap(_.addressLine3)
         tpi05ContactInfo.postalCode      shouldBe acc14Declarant.contactDetails.flatMap(_.postalCode)
