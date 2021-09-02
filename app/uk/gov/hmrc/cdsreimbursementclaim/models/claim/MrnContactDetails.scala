@@ -17,15 +17,13 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 
-final case class ContactDetailsAnswer(
-  companyName: String,
+final case class MrnContactDetails(
+  fullName: String,
   emailAddress: Email,
-  phoneNumber: PhoneNumber,
-  contactAddress: NonUkAddress
+  phoneNumber: Option[PhoneNumber]
 )
 
-object ContactDetailsAnswer {
-  implicit val format: OFormat[ContactDetailsAnswer] = Json.format[ContactDetailsAnswer]
+object MrnContactDetails {
+  implicit val format: OFormat[MrnContactDetails] = Json.format[MrnContactDetails]
 }

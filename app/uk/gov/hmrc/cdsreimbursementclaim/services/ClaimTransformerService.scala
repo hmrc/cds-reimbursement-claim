@@ -377,25 +377,23 @@ object DefaultClaimTransformerService {
     completeClaim: CompleteClaim
   ): Validation[EoriDetails] = {
 
-    val agentContactInfo = completeClaim.maybeContactDetailsAnswer match {
-      case Some(claimantDetailsAsImporterCompany) =>
+    val agentContactInfo = (completeClaim.mrnContactDetailsAnswer, completeClaim.mrnContactAddressAnswer)
+      .mapN { (contactDetails, contactAddress) =>
         ContactInformation(
-          contactPerson = Option(claimantDetailsAsImporterCompany.companyName),
-          addressLine1 = Option(claimantDetailsAsImporterCompany.contactAddress.line1),
-          addressLine2 = claimantDetailsAsImporterCompany.contactAddress.line2,
-          addressLine3 = claimantDetailsAsImporterCompany.contactAddress.line3,
-          street = buildStreet(
-            Some(claimantDetailsAsImporterCompany.contactAddress.line1),
-            claimantDetailsAsImporterCompany.contactAddress.line2
-          ),
-          city = Option(claimantDetailsAsImporterCompany.contactAddress.line4),
-          postalCode = claimantDetailsAsImporterCompany.contactAddress.postcode,
-          countryCode = Option(claimantDetailsAsImporterCompany.contactAddress.country.code),
-          telephoneNumber = Option(claimantDetailsAsImporterCompany.phoneNumber.value),
+          contactPerson = Option(contactDetails.fullName),
+          addressLine1 = Option(contactAddress.line1),
+          addressLine2 = contactAddress.line2,
+          addressLine3 = contactAddress.line3,
+          street = buildStreet(Option(contactAddress.line1), contactAddress.line2),
+          city = Option(contactAddress.line4),
+          countryCode = Option(contactAddress.country.code),
+          postalCode = Option(contactAddress.postcode),
+          telephoneNumber = contactDetails.phoneNumber.map(_.value),
           faxNumber = None,
-          emailAddress = Some(claimantDetailsAsImporterCompany.emailAddress.value)
+          emailAddress = Option(contactDetails.emailAddress.value)
         )
-      case None                                   =>
+      }
+      .getOrElse(
         completeClaim.declarantTypeAnswer match {
           case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
             ContactInformation(
@@ -431,10 +429,8 @@ object DefaultClaimTransformerService {
               faxNumber = None,
               emailAddress = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
             )
-
         }
-
-    }
+      )
 
     Valid(
       EoriDetails(
