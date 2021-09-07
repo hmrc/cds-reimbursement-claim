@@ -28,7 +28,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReasonAndBasisOfClaimAnswer.CompleteReasonAndBasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
@@ -59,7 +58,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
 
     val completeClaim = submitClaimRequest.completeClaim
     (
-      makeReasonAndOrBasisOfClaim(completeClaim.maybeBasisOfClaimAnswer, None),
+      makeReasonAndOrBasisOfClaim(completeClaim.maybeBasisOfClaimAnswer),
       setMrnDetails(
         completeClaim.maybeDisplayDeclaration,
         completeClaim
@@ -132,8 +131,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
 
     (
       makeReasonAndOrBasisOfClaim(
-        completeClaim.maybeBasisOfClaimAnswer,
-        completeClaim.maybeCompleteReasonAndBasisOfClaimAnswer
+        completeClaim.maybeBasisOfClaimAnswer
       ),
       makeEntryDetails(
         entryNumber,
@@ -642,23 +640,11 @@ object DefaultClaimTransformerService {
     )
 
   def makeReasonAndOrBasisOfClaim(
-    maybeBasisOfClaim: Option[BasisOfClaim],
-    maybeCompleteReasonAndBasisOfClaimAnswer: Option[CompleteReasonAndBasisOfClaimAnswer]
+    maybeBasisOfClaim: Option[BasisOfClaim]
   ): Validation[(Option[String], Option[String])] =
-    (maybeBasisOfClaim, maybeCompleteReasonAndBasisOfClaimAnswer) match {
-      case (Some(_), Some(_))                  =>
-        invalid("Must not have both basis of claim and reason and basis of claim")
-      case (None, Some(reasonAndBasisOfClaim)) =>
-        Valid(
-          (
-            Some(
-              BasisForClaim.toBasisForClaimToString(reasonAndBasisOfClaim.selectReasonForBasisAndClaim.basisForClaim)
-            ),
-            Some(reasonAndBasisOfClaim.selectReasonForBasisAndClaim.reasonForClaim.repr)
-          )
-        )
-      case (Some(basisOfClaim), None)          => Valid((Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)), None))
-      case (None, None)                        => invalid("Could not find either basis of claim nor reason and basis for claim")
+    maybeBasisOfClaim match {
+      case Some(basisOfClaim) => Valid((Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)), None))
+      case None               => invalid("Could not find basis of claim")
     }
 
   def buildConsigneeEstablishmentAddress(
