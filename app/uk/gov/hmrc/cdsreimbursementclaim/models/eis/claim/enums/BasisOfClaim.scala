@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
 sealed trait BasisOfClaim extends Product with Serializable
 
 object BasisOfClaim {
+
   case object DuplicateEntry extends BasisOfClaim
   case object DutySuspension extends BasisOfClaim
   case object EndUseRelief extends BasisOfClaim
@@ -38,7 +40,7 @@ object BasisOfClaim {
   case object ProofOfReturnRefundGiven extends BasisOfClaim
   case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim
   case object IncorrectExciseValue extends BasisOfClaim
-  case object CorrectionToRiskClassification extends BasisOfClaim
+  case object IncorrectAdditionalInformationCode extends BasisOfClaim
 
   // $COVERAGE-OFF$
   def basisOfClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
@@ -58,9 +60,11 @@ object BasisOfClaim {
     case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
     case EvidenceThatGoodsHaveNotEnteredTheEU   => "Evidence That Goods Have Not Entered The EU"
     case IncorrectExciseValue                   => "Incorrect Excise Value"
-    case CorrectionToRiskClassification         => "Risk Classification Error"
+    case IncorrectAdditionalInformationCode     => "Incorrect Additional Information Code"
   }
   // $COVERAGE-ON$
+
+  implicit val eq: Eq[BasisOfClaim] = Eq.fromUniversalEquals
 
   implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
 

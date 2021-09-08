@@ -9,7 +9,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "simple-reactivemongo"      % "8.0.0-play-28",
     "org.typelevel"     %% "cats-core"                 % "2.3.1",
     "org.julienrf"      %% "play-json-derived-codecs"  % "7.0.0",
-    "com.github.kxbmap" %% "configs"                   % "0.5.0",
+    "com.github.kxbmap" %% "configs"                   % "0.6.1",
     "uk.gov.hmrc"       %% "work-item-repo"            % "8.0.0-play-28",
     "ru.tinkoff"        %% "phobos-core"               % "0.9.2",
     "ai.x"              %% "play-json-extensions"      % "0.42.0",
