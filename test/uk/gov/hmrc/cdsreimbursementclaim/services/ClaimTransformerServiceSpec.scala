@@ -62,7 +62,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val claim = sample[Claim].copy(
           paymentMethod = "001",
-          taxCode = TaxCode.A00.value,
+          taxCode = TaxCode.A00,
           paidAmount = BigDecimal(20.00),
           claimAmount = BigDecimal(10.00),
           paymentReference = "pay-ref"
@@ -383,7 +383,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val claim = sample[Claim].copy(
           paymentMethod = "001",
-          taxCode = "A00",
+          taxCode = TaxCode.A00,
           paidAmount = BigDecimal(20.00),
           claimAmount = BigDecimal(10.00),
           paymentReference = "pay-ref"
@@ -756,7 +756,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       def getClaimAmounts(): Claim =
         sample[Claim].copy(
           paymentMethod = "001",
-          taxCode = "A00",
+          taxCode = TaxCode.A00,
           paidAmount = BigDecimal(20.00),
           claimAmount = BigDecimal(10.00),
           paymentReference = "pay-ref"

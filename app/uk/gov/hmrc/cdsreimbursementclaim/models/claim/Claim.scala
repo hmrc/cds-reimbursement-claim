@@ -19,13 +19,11 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptyList
 import play.api.libs.json.{Json, OFormat}
 
-import java.util.UUID
-
 final case class Claim(
-  id: UUID,
   paymentMethod: String,
   paymentReference: String,
-  taxCode: String,
+  taxCategory: TaxCategory,
+  taxCode: TaxCode,
   paidAmount: BigDecimal,
   claimAmount: BigDecimal,
   isFilled: Boolean
