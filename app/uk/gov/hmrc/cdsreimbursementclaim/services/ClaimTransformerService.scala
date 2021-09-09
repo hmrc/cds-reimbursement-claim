@@ -57,6 +57,9 @@ class DefaultClaimTransformerService @Inject() (
 ) extends ClaimTransformerService
     with Logging {
 
+  private val enableCorrectAdditionalInformationCodeMappingFlag: String =
+    "enable-correct-additional-information-code-mapping"
+
   def getFeatureFlag[A : configs.ConfigReader](key: String): A =
     configuration.underlying
       .get[A](s"feature.$key")
@@ -71,7 +74,7 @@ class DefaultClaimTransformerService @Inject() (
     (
       makeReasonAndOrBasisOfClaim(
         completeClaim.maybeBasisOfClaimAnswer,
-        getFeatureFlag[Boolean]("enable-correct-additional-information-code-mapping")
+        getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
       ),
       setMrnDetails(
         completeClaim.maybeDisplayDeclaration,
@@ -145,7 +148,7 @@ class DefaultClaimTransformerService @Inject() (
     (
       makeReasonAndOrBasisOfClaim(
         completeClaim.maybeBasisOfClaimAnswer,
-        getFeatureFlag[Boolean]("enable-correct-additional-information-code-mapping")
+        getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
       ),
       makeEntryDetails(
         entryNumber,

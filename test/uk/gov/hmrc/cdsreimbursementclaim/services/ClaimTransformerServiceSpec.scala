@@ -42,16 +42,17 @@ import java.util.UUID
 
 class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
-  val configuration: Configuration = Configuration(
-    ConfigFactory.parseString(
-      """
-        |feature {
-        |    enable-correct-additional-information-code-mapping = true
-        |}
-        |
-        |""".stripMargin
+  def makeFeatureFlagConfiguration(flagState: Boolean): Configuration =
+    Configuration(
+      ConfigFactory.parseString(
+        s"""
+          |feature {
+          |    enable-correct-additional-information-code-mapping = $flagState
+          |}
+          |
+          |""".stripMargin
+      )
     )
-  )
 
   val mockUuidGenerator: UUIDGenerator = mock[UUIDGenerator]
   val mockDateGenerator: DateGenerator = mock[DateGenerator]
@@ -65,7 +66,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
   def mockGenerateIsoLocalDate(isoLocalDate: String): CallHandler0[String] =
     (mockDateGenerator.nextIsoLocalDate _: () => String).expects().returning(isoLocalDate)
 
-  val transformer = new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator, configuration)
+  val transformer =
+    new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator, makeFeatureFlagConfiguration(true))
 
   "Claim transformer" when {
 
@@ -73,18 +75,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "make an EIS submit claim request with basis of claim set to Incorrect Additional Code and enable-correct-additional-information-code-mapping flag is false" in {
 
-        val configuration: Configuration = Configuration(
-          ConfigFactory.parseString(
-            """
-              |feature {
-              |    enable-correct-additional-information-code-mapping = false
-              |}
-              |
-              |""".stripMargin
-          )
-        )
-
-        val transformer = new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator, configuration)
+        val transformer =
+          new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator, makeFeatureFlagConfiguration(false))
 
         val claim = sample[Claim].copy(
           paymentMethod = "001",
