@@ -24,6 +24,8 @@ import cats.syntax.apply._
 import cats.syntax.eq._
 import cats.syntax.traverse._
 import com.google.inject.{ImplementedBy, Inject}
+import configs.syntax._
+import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
@@ -31,6 +33,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.IncorrectAdditionalInformationCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation, invalid}
@@ -47,9 +50,20 @@ trait ClaimTransformerService {
 }
 
 @Singleton
-class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, dateGenerator: DateGenerator)
-    extends ClaimTransformerService
+class DefaultClaimTransformerService @Inject() (
+  uuidGenerator: UUIDGenerator,
+  dateGenerator: DateGenerator,
+  configuration: Configuration
+) extends ClaimTransformerService
     with Logging {
+
+  private val enableCorrectAdditionalInformationCodeMappingFlag: String =
+    "enable-correct-additional-information-code-mapping"
+
+  def getFeatureFlag[A : configs.ConfigReader](key: String): A =
+    configuration.underlying
+      .get[A](s"feature.$key")
+      .value
 
   private def buildMrnNumberPayload(
     submitClaimRequest: SubmitClaimRequest
@@ -58,7 +72,10 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
 
     val completeClaim = submitClaimRequest.completeClaim
     (
-      makeReasonAndOrBasisOfClaim(completeClaim.maybeBasisOfClaimAnswer),
+      makeReasonAndOrBasisOfClaim(
+        completeClaim.maybeBasisOfClaimAnswer,
+        getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
+      ),
       setMrnDetails(
         completeClaim.maybeDisplayDeclaration,
         completeClaim
@@ -80,7 +97,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.claims.total)),
         disposalMethod = None,
         reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
-        basisOfClaim = maybeReasonAndOrBasis._1,
+        basisOfClaim = maybeReasonAndOrBasis,
         claimant = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
             submitClaimRequest.completeClaim.declarantTypeAnswer
@@ -99,8 +116,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         goodsDetails = Some(
           makeGoodsDetails(
             completeClaim.declarantTypeAnswer,
-            completeClaim.commodityDetailsAnswer,
-            None
+            completeClaim.commodityDetailsAnswer
           )
         ),
         EORIDetails = Some(eoriDetails)
@@ -131,7 +147,8 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
 
     (
       makeReasonAndOrBasisOfClaim(
-        completeClaim.maybeBasisOfClaimAnswer
+        completeClaim.maybeBasisOfClaimAnswer,
+        getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
       ),
       makeEntryDetails(
         entryNumber,
@@ -156,7 +173,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         claimAmountTotal = Some(roundedTwoDecimalPlacesToString(completeClaim.claims.total)),
         disposalMethod = None,
         reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
-        basisOfClaim = maybeReasonAndOrBasis._1,
+        basisOfClaim = maybeReasonAndOrBasis,
         claimant = Some(
           DefaultClaimTransformerService.setPayeeIndicator(completeClaim.declarantTypeAnswer)
         ),
@@ -171,8 +188,7 @@ class DefaultClaimTransformerService @Inject() (uuidGenerator: UUIDGenerator, da
         goodsDetails = Some(
           makeGoodsDetails(
             completeClaim.declarantTypeAnswer,
-            completeClaim.commodityDetailsAnswer,
-            maybeReasonAndOrBasis._2
+            completeClaim.commodityDetailsAnswer
           )
         ),
         EORIDetails = Some(eoriDetails)
@@ -626,8 +642,7 @@ object DefaultClaimTransformerService {
 
   def makeGoodsDetails(
     declarantType: DeclarantTypeAnswer,
-    commodityDetails: CommodityDetails,
-    reasonForClaim: Option[String]
+    commodityDetails: CommodityDetails
   ): GoodsDetails =
     GoodsDetails(
       placeOfImport = None,
@@ -635,15 +650,23 @@ object DefaultClaimTransformerService {
         case DeclarantTypeAnswer.Importer => "Yes"
         case _                            => "No"
       }),
-      groundsForRepaymentApplication = reasonForClaim,
+      groundsForRepaymentApplication = None,
       descOfGoods = Some(commodityDetails.value)
     )
 
   def makeReasonAndOrBasisOfClaim(
-    maybeBasisOfClaim: Option[BasisOfClaim]
-  ): Validation[(Option[String], Option[String])] =
+    maybeBasisOfClaim: Option[BasisOfClaim],
+    enableCorrectAdditionalInformationCodeMapping: Boolean
+  ): Validation[Option[String]] =
     maybeBasisOfClaim match {
-      case Some(basisOfClaim) => Valid((Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)), None))
+      case Some(basisOfClaim) =>
+        if (enableCorrectAdditionalInformationCodeMapping && basisOfClaim === IncorrectAdditionalInformationCode) {
+          Valid(Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)))
+        } else if (basisOfClaim === IncorrectAdditionalInformationCode) {
+          Valid(Some("Risk Classification Error"))
+        } else {
+          Valid(Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)))
+        }
       case None               => invalid("Could not find basis of claim")
     }
 
