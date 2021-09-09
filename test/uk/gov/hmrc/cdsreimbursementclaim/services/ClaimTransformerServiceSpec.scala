@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import com.typesafe.config.ConfigFactory
 import org.scalamock.handlers.CallHandler0
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
@@ -40,6 +42,17 @@ import java.util.UUID
 
 class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
+  val configuration: Configuration = Configuration(
+    ConfigFactory.parseString(
+      """
+        |feature {
+        |    enable-correct-additional-information-code-mapping = true
+        |}
+        |
+        |""".stripMargin
+    )
+  )
+
   val mockUuidGenerator: UUIDGenerator = mock[UUIDGenerator]
   val mockDateGenerator: DateGenerator = mock[DateGenerator]
 
@@ -52,11 +65,552 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
   def mockGenerateIsoLocalDate(isoLocalDate: String): CallHandler0[String] =
     (mockDateGenerator.nextIsoLocalDate _: () => String).expects().returning(isoLocalDate)
 
-  val transformer = new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator)
+  val transformer = new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator, configuration)
 
   "Claim transformer" when {
 
     "passed a claim request" must {
+
+      "make an EIS submit claim request with basis of claim set to Incorrect Additional Code and enable-correct-additional-information-code-mapping flag is false" in {
+
+        val configuration: Configuration = Configuration(
+          ConfigFactory.parseString(
+            """
+              |feature {
+              |    enable-correct-additional-information-code-mapping = false
+              |}
+              |
+              |""".stripMargin
+          )
+        )
+
+        val transformer = new DefaultClaimTransformerService(mockUuidGenerator, mockDateGenerator, configuration)
+
+        val claim = sample[Claim].copy(
+          paymentMethod = "001",
+          taxCode = TaxCode.A00.value,
+          paidAmount = BigDecimal(20.00),
+          claimAmount = BigDecimal(10.00),
+          paymentReference = "pay-ref"
+        )
+
+        val claimsAnswer = ClaimsAnswer(claim)
+
+        val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
+
+        val entryDeclarationDetails = sample[EntryDeclarationDetails].copy(
+          dateOfImport = DateOfImport(LocalDate.parse("2020-12-06", DateTimeFormatter.ofPattern("u-M-d")))
+        )
+
+        val completeDeclarationDetailsAnswer = sample[CompleteDeclarationDetailsAnswer].copy(
+          declarationDetails = entryDeclarationDetails
+        )
+        val basisOfClaimAnswer               = BasisOfClaim.IncorrectAdditionalInformationCode
+
+        val declarantTypeAnswer = DeclarantTypeAnswer.Importer
+
+        val correlationId = UUID.randomUUID()
+
+        val requestCommon = RequestCommon(
+          originatingSystem = "MDTP",
+          receiptDate = "2021-03-08T13:57:53Z",
+          acknowledgementReference = correlationId.toString
+        )
+
+        val movementReferenceNumber = sample[MovementReferenceNumber]
+          .copy(value = Left(EntryNumber("666541198B49856762")))
+
+        val completeClaim =
+          sample[CompleteClaim].copy(
+            movementReferenceNumber = movementReferenceNumber,
+            claimsAnswer = claimsAnswer,
+            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
+            declarantTypeAnswer = declarantTypeAnswer,
+            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            maybeCompleteDeclarationDetailsAnswer = Some(completeDeclarationDetailsAnswer),
+            maybeCompleteDuplicateDeclarationDetailsAnswer = None
+          )
+
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+
+        val eoriDetails = EoriDetails(
+          agentEORIDetails = EORIInformation(
+            EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
+            CDSFullName =
+              completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
+            legalEntityType = None,
+            EORIStartDate = None,
+            CDSEstablishmentAddress = Address(
+              contactPerson = None,
+              addressLine1 = None,
+              addressLine2 = None,
+              AddressLine3 = None,
+              street = None,
+              city = None,
+              countryCode = "GB",
+              postalCode = None,
+              telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantPhoneNumber.value
+              ),
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantEmailAddress.value
+              )
+            ),
+            contactInformation = Some(
+              ContactInformation(
+                contactPerson =
+                  completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
+                addressLine1 = None,
+                addressLine2 = None,
+                addressLine3 = None,
+                street = None,
+                city = None,
+                countryCode = None,
+                postalCode = None,
+                telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.declarantPhoneNumber.value
+                ),
+                faxNumber = None,
+                emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.declarantEmailAddress.value
+                )
+              )
+            ),
+            VATDetails = None
+          ),
+          importerEORIDetails = EORIInformation(
+            EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
+            CDSFullName =
+              completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
+            legalEntityType = None,
+            EORIStartDate = None,
+            CDSEstablishmentAddress = Address(
+              contactPerson = None,
+              addressLine1 = None,
+              addressLine2 = None,
+              AddressLine3 = None,
+              street = None,
+              city = None,
+              countryCode = "GB",
+              postalCode = None,
+              telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerPhoneNumber.value
+              ),
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerEmailAddress.value
+              )
+            ),
+            contactInformation = Some(
+              ContactInformation(
+                contactPerson =
+                  completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
+                addressLine1 = None,
+                addressLine2 = None,
+                addressLine3 = None,
+                street = None,
+                city = None,
+                countryCode = None,
+                postalCode = None,
+                telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.importerPhoneNumber.value
+                ),
+                faxNumber = None,
+                emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.importerEmailAddress.value
+                )
+              )
+            ),
+            VATDetails = None
+          )
+        )
+
+        val declarant = sample[MRNInformation].copy(
+          EORI = submitClaimRequest.signedInUserDetails.eori.value,
+          legalName = completeDeclarationDetailsAnswer.declarationDetails.declarantName,
+          establishmentAddress = Address.empty,
+          contactDetails = ContactInformation(
+            contactPerson = Some(completeDeclarationDetailsAnswer.declarationDetails.declarantName),
+            addressLine1 = None,
+            addressLine2 = None,
+            addressLine3 = None,
+            street = None,
+            city = None,
+            countryCode = None,
+            postalCode = None,
+            telephoneNumber = Some(completeDeclarationDetailsAnswer.declarationDetails.declarantPhoneNumber.value),
+            faxNumber = None,
+            emailAddress = Some(completeDeclarationDetailsAnswer.declarationDetails.declarantEmailAddress.value)
+          )
+        )
+
+        val consignee = sample[MRNInformation].copy(
+          EORI = submitClaimRequest.signedInUserDetails.eori.value,
+          legalName = completeDeclarationDetailsAnswer.declarationDetails.declarantName,
+          establishmentAddress = Address.empty,
+          contactDetails = ContactInformation(
+            contactPerson = Some(completeDeclarationDetailsAnswer.declarationDetails.importerName),
+            addressLine1 = None,
+            addressLine2 = None,
+            addressLine3 = None,
+            street = None,
+            city = None,
+            countryCode = None,
+            postalCode = None,
+            telephoneNumber = Some(completeDeclarationDetailsAnswer.declarationDetails.importerPhoneNumber.value),
+            faxNumber = None,
+            emailAddress = Some(completeDeclarationDetailsAnswer.declarationDetails.importerEmailAddress.value)
+          )
+        )
+
+        val bankDetails = uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.BankDetails(
+          consigneeBankDetails = None,
+          declarantBankDetails = Some(
+            BankDetail(
+              bankAccountDetailsAnswer.accountName.value,
+              bankAccountDetailsAnswer.sortCode.value,
+              bankAccountDetailsAnswer.accountNumber.value
+            )
+          )
+        )
+
+        val entryDetails = EntryDetail(
+          Some("666541198B49856762"),
+          Some("20201206"),
+          None,
+          Some(true),
+          Some(declarant),
+          None,
+          Some(consignee),
+          Some(bankDetails),
+          Some(
+            List(
+              eis.claim.NdrcDetails(
+                claim.paymentMethod,
+                claim.paymentReference,
+                None,
+                claim.taxCode,
+                "20.00",
+                Some("10.00")
+              )
+            )
+          )
+        )
+
+        val requestDetailA = RequestDetailA(
+          CDFPayService = "NDRC",
+          dateReceived = Some("2021-03-08T13:57:53Z"),
+          claimType = Some("C285"),
+          caseType = Some("Individual"),
+          customDeclarationType = Some("Entry"),
+          declarationMode = Some("Parent Declaration"),
+          claimDate = Some("2021-03-08T13:57:53Z"),
+          claimAmountTotal = Some("10.00"),
+          disposalMethod = None,
+          reimbursementMethod = Some("Bank Transfer"),
+          claimant = Some("Importer"),
+          payeeIndicator = Some("Importer"),
+          newEORI = None,
+          newDAN = None,
+          authorityTypeProvided = None,
+          claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori.value),
+          claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
+          goodsDetails = Some(
+            GoodsDetails(
+              None,
+              Some("Yes"),
+              None,
+              Some(completeClaim.commodityDetailsAnswer.value)
+            )
+          ),
+          basisOfClaim = Some("Risk Classification Error"),
+          EORIDetails = Some(eoriDetails)
+        )
+
+        val requestDetailB       = sample[RequestDetailB].copy(
+          MRNDetails = None,
+          duplicateMRNDetails = None,
+          entryDetails = Some(List(entryDetails)),
+          duplicateEntryDetails = None
+        )
+        val postNewClaimsRequest = PostNewClaimsRequest(
+          requestCommon = requestCommon,
+          requestDetail = RequestDetail(requestDetailA, requestDetailB)
+        )
+
+        val eisSubmitClaimRequest = EisSubmitClaimRequest(postNewClaimsRequest)
+
+        inSequence {
+          mockGenerateReceiptDate("2021-03-08T13:57:53Z")
+          mockGenerateUUID(correlationId)
+          mockGenerateIsoLocalDate("2021-03-08T13:57:53Z")
+        }
+
+        transformer.toEisSubmitClaimRequest(submitClaimRequest) shouldBe Right(eisSubmitClaimRequest)
+      }
+
+      "make an EIS submit claim request with basis of claim set to Incorrect Additional Code and enable-correct-additional-information-code-mapping flag is true" in {
+
+        val claim = sample[Claim].copy(
+          paymentMethod = "001",
+          taxCode = TaxCode.A00.value,
+          paidAmount = BigDecimal(20.00),
+          claimAmount = BigDecimal(10.00),
+          paymentReference = "pay-ref"
+        )
+
+        val claimsAnswer = ClaimsAnswer(claim)
+
+        val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
+
+        val entryDeclarationDetails = sample[EntryDeclarationDetails].copy(
+          dateOfImport = DateOfImport(LocalDate.parse("2020-12-06", DateTimeFormatter.ofPattern("u-M-d")))
+        )
+
+        val completeDeclarationDetailsAnswer = sample[CompleteDeclarationDetailsAnswer].copy(
+          declarationDetails = entryDeclarationDetails
+        )
+        val basisOfClaimAnswer               = BasisOfClaim.IncorrectAdditionalInformationCode
+
+        val declarantTypeAnswer = DeclarantTypeAnswer.Importer
+
+        val correlationId = UUID.randomUUID()
+
+        val requestCommon = RequestCommon(
+          originatingSystem = "MDTP",
+          receiptDate = "2021-03-08T13:57:53Z",
+          acknowledgementReference = correlationId.toString
+        )
+
+        val movementReferenceNumber = sample[MovementReferenceNumber]
+          .copy(value = Left(EntryNumber("666541198B49856762")))
+
+        val completeClaim =
+          sample[CompleteClaim].copy(
+            movementReferenceNumber = movementReferenceNumber,
+            claimsAnswer = claimsAnswer,
+            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
+            declarantTypeAnswer = declarantTypeAnswer,
+            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            maybeCompleteDeclarationDetailsAnswer = Some(completeDeclarationDetailsAnswer),
+            maybeCompleteDuplicateDeclarationDetailsAnswer = None
+          )
+
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+
+        val eoriDetails = EoriDetails(
+          agentEORIDetails = EORIInformation(
+            EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
+            CDSFullName =
+              completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
+            legalEntityType = None,
+            EORIStartDate = None,
+            CDSEstablishmentAddress = Address(
+              contactPerson = None,
+              addressLine1 = None,
+              addressLine2 = None,
+              AddressLine3 = None,
+              street = None,
+              city = None,
+              countryCode = "GB",
+              postalCode = None,
+              telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantPhoneNumber.value
+              ),
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.declarantEmailAddress.value
+              )
+            ),
+            contactInformation = Some(
+              ContactInformation(
+                contactPerson =
+                  completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.declarantName),
+                addressLine1 = None,
+                addressLine2 = None,
+                addressLine3 = None,
+                street = None,
+                city = None,
+                countryCode = None,
+                postalCode = None,
+                telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.declarantPhoneNumber.value
+                ),
+                faxNumber = None,
+                emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.declarantEmailAddress.value
+                )
+              )
+            ),
+            VATDetails = None
+          ),
+          importerEORIDetails = EORIInformation(
+            EORINumber = submitClaimRequest.signedInUserDetails.eori.value,
+            CDSFullName =
+              completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
+            legalEntityType = None,
+            EORIStartDate = None,
+            CDSEstablishmentAddress = Address(
+              contactPerson = None,
+              addressLine1 = None,
+              addressLine2 = None,
+              AddressLine3 = None,
+              street = None,
+              city = None,
+              countryCode = "GB",
+              postalCode = None,
+              telephone = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerPhoneNumber.value
+              ),
+              emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                s.declarationDetails.importerEmailAddress.value
+              )
+            ),
+            contactInformation = Some(
+              ContactInformation(
+                contactPerson =
+                  completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s => s.declarationDetails.importerName),
+                addressLine1 = None,
+                addressLine2 = None,
+                addressLine3 = None,
+                street = None,
+                city = None,
+                countryCode = None,
+                postalCode = None,
+                telephoneNumber = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.importerPhoneNumber.value
+                ),
+                faxNumber = None,
+                emailAddress = completeClaim.maybeCompleteDeclarationDetailsAnswer.map(s =>
+                  s.declarationDetails.importerEmailAddress.value
+                )
+              )
+            ),
+            VATDetails = None
+          )
+        )
+
+        val declarant = sample[MRNInformation].copy(
+          EORI = submitClaimRequest.signedInUserDetails.eori.value,
+          legalName = completeDeclarationDetailsAnswer.declarationDetails.declarantName,
+          establishmentAddress = Address.empty,
+          contactDetails = ContactInformation(
+            contactPerson = Some(completeDeclarationDetailsAnswer.declarationDetails.declarantName),
+            addressLine1 = None,
+            addressLine2 = None,
+            addressLine3 = None,
+            street = None,
+            city = None,
+            countryCode = None,
+            postalCode = None,
+            telephoneNumber = Some(completeDeclarationDetailsAnswer.declarationDetails.declarantPhoneNumber.value),
+            faxNumber = None,
+            emailAddress = Some(completeDeclarationDetailsAnswer.declarationDetails.declarantEmailAddress.value)
+          )
+        )
+
+        val consignee = sample[MRNInformation].copy(
+          EORI = submitClaimRequest.signedInUserDetails.eori.value,
+          legalName = completeDeclarationDetailsAnswer.declarationDetails.declarantName,
+          establishmentAddress = Address.empty,
+          contactDetails = ContactInformation(
+            contactPerson = Some(completeDeclarationDetailsAnswer.declarationDetails.importerName),
+            addressLine1 = None,
+            addressLine2 = None,
+            addressLine3 = None,
+            street = None,
+            city = None,
+            countryCode = None,
+            postalCode = None,
+            telephoneNumber = Some(completeDeclarationDetailsAnswer.declarationDetails.importerPhoneNumber.value),
+            faxNumber = None,
+            emailAddress = Some(completeDeclarationDetailsAnswer.declarationDetails.importerEmailAddress.value)
+          )
+        )
+
+        val bankDetails = uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.BankDetails(
+          consigneeBankDetails = None,
+          declarantBankDetails = Some(
+            BankDetail(
+              bankAccountDetailsAnswer.accountName.value,
+              bankAccountDetailsAnswer.sortCode.value,
+              bankAccountDetailsAnswer.accountNumber.value
+            )
+          )
+        )
+
+        val entryDetails = EntryDetail(
+          Some("666541198B49856762"),
+          Some("20201206"),
+          None,
+          Some(true),
+          Some(declarant),
+          None,
+          Some(consignee),
+          Some(bankDetails),
+          Some(
+            List(
+              eis.claim.NdrcDetails(
+                claim.paymentMethod,
+                claim.paymentReference,
+                None,
+                claim.taxCode,
+                "20.00",
+                Some("10.00")
+              )
+            )
+          )
+        )
+
+        val requestDetailA = RequestDetailA(
+          CDFPayService = "NDRC",
+          dateReceived = Some("2021-03-08T13:57:53Z"),
+          claimType = Some("C285"),
+          caseType = Some("Individual"),
+          customDeclarationType = Some("Entry"),
+          declarationMode = Some("Parent Declaration"),
+          claimDate = Some("2021-03-08T13:57:53Z"),
+          claimAmountTotal = Some("10.00"),
+          disposalMethod = None,
+          reimbursementMethod = Some("Bank Transfer"),
+          claimant = Some("Importer"),
+          payeeIndicator = Some("Importer"),
+          newEORI = None,
+          newDAN = None,
+          authorityTypeProvided = None,
+          claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori.value),
+          claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
+          goodsDetails = Some(
+            GoodsDetails(
+              None,
+              Some("Yes"),
+              None,
+              Some(completeClaim.commodityDetailsAnswer.value)
+            )
+          ),
+          basisOfClaim = Some("Incorrect Additional Information Code"),
+          EORIDetails = Some(eoriDetails)
+        )
+
+        val requestDetailB       = sample[RequestDetailB].copy(
+          MRNDetails = None,
+          duplicateMRNDetails = None,
+          entryDetails = Some(List(entryDetails)),
+          duplicateEntryDetails = None
+        )
+        val postNewClaimsRequest = PostNewClaimsRequest(
+          requestCommon = requestCommon,
+          requestDetail = RequestDetail(requestDetailA, requestDetailB)
+        )
+
+        val eisSubmitClaimRequest = EisSubmitClaimRequest(postNewClaimsRequest)
+
+        inSequence {
+          mockGenerateReceiptDate("2021-03-08T13:57:53Z")
+          mockGenerateUUID(correlationId)
+          mockGenerateIsoLocalDate("2021-03-08T13:57:53Z")
+        }
+
+        transformer.toEisSubmitClaimRequest(submitClaimRequest) shouldBe Right(eisSubmitClaimRequest)
+      }
 
       "make an EIS submit claim request for a valid legacy number claim" in {
 

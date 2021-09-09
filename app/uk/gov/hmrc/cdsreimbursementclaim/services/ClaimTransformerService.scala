@@ -145,7 +145,7 @@ class DefaultClaimTransformerService @Inject() (
     (
       makeReasonAndOrBasisOfClaim(
         completeClaim.maybeBasisOfClaimAnswer,
-        enableCorrectAdditionalInformationCodeMapping = true
+        getFeatureFlag[Boolean]("enable-correct-additional-information-code-mapping")
       ),
       makeEntryDetails(
         entryNumber,
