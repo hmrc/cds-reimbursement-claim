@@ -104,5 +104,10 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
       }
     }
 
+    "Have the correct Headers" in {
+      val connector = new DefaultCcsConnector(mockHttp, new ServicesConfig(config))
+      connector.getExtraHeaders.find(_._1 === HeaderNames.CONTENT_TYPE).getOrElse(fail)._2 should include(MimeTypes.XML)
+    }
+
   }
 }

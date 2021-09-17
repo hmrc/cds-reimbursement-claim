@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.Gen
-import org.scalacheck.ScalacheckShapeless._
+import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 
-object EmailRequestGen extends GenUtils {
-  implicit val emailRequestGen: Gen[EmailRequest] = gen[EmailRequest]
+object EmailRequestGen {
+  implicit val emailRequestGen: Typeclass[EmailRequest] = gen[EmailRequest]
 }

@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import org.scalacheck.magnolia._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.SignedInUserDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 
-final case class Email(value: String) extends AnyVal
-
-object Email {
-  implicit val format: Format[Email] =
-    implicitly[Format[String]].inmap(Email(_), _.value)
+object SignedInUserDetailsGen {
+  implicit val arbitrarySignedInUserDetails: Typeclass[SignedInUserDetails] = gen[SignedInUserDetails]
 }

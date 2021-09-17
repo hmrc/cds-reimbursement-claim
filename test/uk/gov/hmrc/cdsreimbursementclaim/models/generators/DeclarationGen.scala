@@ -16,37 +16,36 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.Gen
-import org.scalacheck.ScalacheckShapeless._
+import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
-object DeclarationGen extends GenUtils {
-  implicit val displayDeclarationGen: Gen[DisplayResponseDetail]                                    = gen[DisplayResponseDetail]
-  implicit val declarationGen: Gen[DisplayDeclaration]                                              = gen[DisplayDeclaration]
-  implicit val declarationRequestGen: Gen[DeclarationRequest]                                       = gen[DeclarationRequest]
-  implicit val overpaymentDeclarationDisplayRequestGen: Gen[OverpaymentDeclarationDisplayRequest]   =
+object DeclarationGen {
+  implicit val mrnGen: Typeclass[MRN]                                                                     = gen[MRN]
+  implicit val requestCommonGen: Typeclass[RequestCommon]                                                 = gen[RequestCommon]
+  implicit val requestDetailGen: Typeclass[RequestDetail]                                                 = gen[RequestDetail]
+  implicit val overpaymentDeclarationDisplayRequestGen: Typeclass[OverpaymentDeclarationDisplayRequest]   =
     gen[OverpaymentDeclarationDisplayRequest]
-  implicit val requestCommonGen: Gen[RequestCommon]                                                 = gen[RequestCommon]
-  implicit val requestDetailGen: Gen[RequestDetail]                                                 = gen[RequestDetail]
-  implicit val mrnGen: Gen[MRN]                                                                     = gen[MRN]
-  implicit val maskedBankDetailsGen: Gen[MaskedBankDetails]                                         = gen[MaskedBankDetails]
-  implicit val bankDetailsGen: Gen[BankDetails]                                                     = gen[BankDetails]
-  implicit val accountDetailsGen: Gen[AccountDetails]                                               = gen[AccountDetails]
-  implicit val declarantDetailsGen: Gen[DeclarantDetails]                                           = gen[DeclarantDetails]
-  implicit val contactDetailsGen: Gen[ContactDetails]                                               = gen[ContactDetails]
-  implicit val consigneeDetailsGen: Gen[ConsigneeDetails]                                           = gen[ConsigneeDetails]
-  implicit val establishmentAddressGen: Gen[EstablishmentAddress]                                   = gen[EstablishmentAddress]
-  implicit val consigneeBankDetailsGen: Gen[ConsigneeBankDetails]                                   = gen[ConsigneeBankDetails]
-  implicit val declarantBankDetailsGen: Gen[DeclarantBankDetails]                                   = gen[DeclarantBankDetails]
-  implicit val securityDetailsGen: Gen[SecurityDetails]                                             = gen[SecurityDetails]
-  implicit val taxDetailsGen: Gen[TaxDetails]                                                       = gen[TaxDetails]
-  implicit val ndrcDetailsGen: Gen[NdrcDetails]                                                     = gen[NdrcDetails]
-  implicit val declarationInfoResponseGen: Gen[DeclarationResponse]                                 = gen[DeclarationResponse]
-  implicit val responseCommonGen: Gen[ResponseCommon]                                               = gen[ResponseCommon]
-  implicit val responseDetailGen: Gen[ResponseDetail]                                               = gen[ResponseDetail]
-  implicit val overpaymentDeclarationDisplayResponseGen: Gen[OverpaymentDeclarationDisplayResponse] =
+  implicit val declarationRequestGen: Typeclass[DeclarationRequest]                                       = gen[DeclarationRequest]
+  implicit val establishmentAddressGen: Typeclass[EstablishmentAddress]                                   = gen[EstablishmentAddress]
+  implicit val contactDetailsGen: Typeclass[ContactDetails]                                               = gen[ContactDetails]
+  implicit val declarantDetailsGen: Typeclass[DeclarantDetails]                                           = gen[DeclarantDetails]
+  implicit val accountDetailsGen: Typeclass[AccountDetails]                                               = gen[AccountDetails]
+  implicit val consigneeDetailsGen: Typeclass[ConsigneeDetails]                                           = gen[ConsigneeDetails]
+  implicit val consigneeBankDetailsGen: Typeclass[ConsigneeBankDetails]                                   = gen[ConsigneeBankDetails]
+  implicit val declarantBankDetailsGen: Typeclass[DeclarantBankDetails]                                   = gen[DeclarantBankDetails]
+  implicit val bankDetailsGen: Typeclass[BankDetails]                                                     = gen[BankDetails]
+  implicit val maskedBankDetailsGen: Typeclass[MaskedBankDetails]                                         = gen[MaskedBankDetails]
+  implicit val taxDetailsGen: Typeclass[TaxDetails]                                                       = gen[TaxDetails]
+  implicit val securityDetailsGen: Typeclass[SecurityDetails]                                             = gen[SecurityDetails]
+  implicit val ndrcDetailsGen: Typeclass[NdrcDetails]                                                     = gen[NdrcDetails]
+  implicit val responseCommonGen: Typeclass[ResponseCommon]                                               = gen[ResponseCommon]
+  implicit val responseDetailGen: Typeclass[ResponseDetail]                                               = gen[ResponseDetail]
+  implicit val overpaymentDeclarationDisplayResponseGen: Typeclass[OverpaymentDeclarationDisplayResponse] =
     gen[OverpaymentDeclarationDisplayResponse]
+  implicit val declarationInfoResponseGen: Typeclass[DeclarationResponse]                                 = gen[DeclarationResponse]
+  implicit val displayDeclarationGen: Typeclass[DisplayResponseDetail]                                    = gen[DisplayResponseDetail]
+  implicit val declarationGen: Typeclass[DisplayDeclaration]                                              = gen[DisplayDeclaration]
 }
