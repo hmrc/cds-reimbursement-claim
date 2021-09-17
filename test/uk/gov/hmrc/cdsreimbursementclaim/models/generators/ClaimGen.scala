@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.Gen
-import org.scalacheck.ScalacheckShapeless._
+import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{DisplayDeclaration, DisplayResponseDetail, SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 
-object ClaimGen extends GenUtils {
+object ClaimGen {
 
-  implicit val displayResponseGen: Gen[DisplayResponseDetail]         = gen[DisplayResponseDetail]
-  implicit val displayDeclarationGen: Gen[DisplayDeclaration]         = gen[DisplayDeclaration]
-  implicit val eisRequestBGen: Gen[RequestDetailB]                    = gen[RequestDetailB]
-  implicit val eisRequestAGen: Gen[RequestDetailA]                    = gen[RequestDetailA]
-  implicit val eisRequestCommonGen: Gen[RequestCommon]                = gen[RequestCommon]
-  implicit val eisSubmitClaimResponseGen: Gen[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
-  implicit val eisSubmitClaimRequestGen: Gen[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]
-  implicit val submitClaimResponseGen: Gen[SubmitClaimResponse]       = gen[SubmitClaimResponse]
-  implicit val submitClaimRequestGen: Gen[SubmitClaimRequest]         = gen[SubmitClaimRequest]
+  implicit val displayResponseGen: Typeclass[DisplayResponseDetail]         = gen[DisplayResponseDetail]
+  implicit val displayDeclarationGen: Typeclass[DisplayDeclaration]         = gen[DisplayDeclaration]
+  implicit val eisRequestBGen: Typeclass[RequestDetailB]                    = gen[RequestDetailB]
+  implicit val eisRequestAGen: Typeclass[RequestDetailA]                    = gen[RequestDetailA]
+  implicit val eisRequestCommonGen: Typeclass[RequestCommon]                = gen[RequestCommon]
+  implicit val eisSubmitClaimResponseGen: Typeclass[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
+  implicit val eisSubmitClaimRequestGen: Typeclass[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]
+  implicit val submitClaimResponseGen: Typeclass[SubmitClaimResponse]       = gen[SubmitClaimResponse]
+  implicit val submitClaimRequestGen: Typeclass[SubmitClaimRequest]         = gen[SubmitClaimRequest]
 
 }

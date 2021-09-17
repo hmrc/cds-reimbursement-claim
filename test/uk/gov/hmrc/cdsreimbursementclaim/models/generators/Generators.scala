@@ -30,7 +30,10 @@ object Generators {
   implicit def listGen[A](g: Gen[A]): Gen[List[A]]   = Gen.listOf(g)
   implicit def someGen[A](g: Gen[A]): Gen[Option[A]] = Gen.some(g)
 
-  def sample[A](implicit gen: Gen[A]): A =
+  def sample[A](implicit anItem: Arbitrary[A]): A =
+    sample(anItem.arbitrary)
+
+  def sample[A](gen: Gen[A]): A =
     gen.sample.getOrElse(sys.error(s"Could not generate instance with $gen"))
 
   implicit def arb[A](implicit g: Gen[A]): Arbitrary[A] = Arbitrary(g)

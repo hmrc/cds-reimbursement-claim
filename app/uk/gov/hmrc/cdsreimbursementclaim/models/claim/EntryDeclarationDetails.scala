@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 
 final case class EntryDeclarationDetails(
   dateOfImport: DateOfImport,

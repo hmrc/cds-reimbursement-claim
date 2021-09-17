@@ -24,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DuplicateDeclarationDetailsAnswer.CompleteDuplicateDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DateOfImport, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EntryDeclarationDetails, EstablishmentAddress, MovementReferenceNumber, MrnContactDetails, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
@@ -34,7 +35,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SignedInUserDetailsGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EnterDeclarationDetailsGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, MRN, UUIDGenerator}
+import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.CompareContactInformation
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -1915,6 +1919,38 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       }
 
+    }
+
+    "Utility Methods" must {
+      "CompareContactInformation" in {
+        CompareContactInformation.emptyCompareContactInformation.countryCode shouldBe "GB"
+      }
+
+      "setDuplicateEntryConsigneeDetails method" in {
+        val signedInUserDetails  = sample[SignedInUserDetails]
+        val duplicateDeclaration = sample[EntryDeclarationDetails]
+        val mrnInfo              = DefaultClaimTransformerService
+          .setDuplicateEntryConsigneeDetails(
+            signedInUserDetails,
+            CompleteDuplicateDeclarationDetailsAnswer(Some(duplicateDeclaration))
+          )
+          .getOrElse(fail)
+        mrnInfo.EORI                                         shouldBe signedInUserDetails.eori.value
+        mrnInfo.contactDetails.contactPerson.getOrElse(fail) shouldBe duplicateDeclaration.importerName
+      }
+
+      "setDuplicateEntryDeclarationDetails method" in {
+        val signedInUserDetails  = sample[SignedInUserDetails]
+        val duplicateDeclaration = sample[EntryDeclarationDetails]
+        val mrnInfo              = DefaultClaimTransformerService
+          .setDuplicateEntryDeclarationDetails(
+            signedInUserDetails,
+            CompleteDuplicateDeclarationDetailsAnswer(Some(duplicateDeclaration))
+          )
+          .getOrElse(fail)
+        mrnInfo.EORI                                         shouldBe signedInUserDetails.eori.value
+        mrnInfo.contactDetails.contactPerson.getOrElse(fail) shouldBe duplicateDeclaration.declarantName
+      }
     }
   }
 

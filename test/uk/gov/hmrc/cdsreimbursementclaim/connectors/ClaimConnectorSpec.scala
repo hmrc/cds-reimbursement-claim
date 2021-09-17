@@ -108,5 +108,10 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
       }
     }
 
+    "Have the correct Headers" in {
+      val connector = new DefaultClaimConnector(mockHttp, new ServicesConfig(config))
+      connector.getExtraHeaders.find(_._1 === HeaderNames.CONTENT_TYPE).getOrElse(fail)._2 shouldBe MimeTypes.JSON
+    }
+
   }
 }

@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.Gen
-import org.scalacheck.ScalacheckShapeless._
+import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
 import uk.gov.hmrc.workitem.WorkItem
 
-object CcsSubmissionGen extends GenUtils {
+object CcsSubmissionGen {
 
-  implicit val ccsSubmissionPayloadGen: Gen[CcsSubmissionPayload] = gen[CcsSubmissionPayload]
-  implicit val ccsSubmissionRequestGen: Gen[CcsSubmissionRequest] = gen[CcsSubmissionRequest]
-  implicit val workItemGen: Gen[WorkItem[CcsSubmissionRequest]]   = gen[WorkItem[CcsSubmissionRequest]]
+  implicit val ccsSubmissionPayloadGen: Typeclass[CcsSubmissionPayload] = gen[CcsSubmissionPayload]
+  implicit val ccsSubmissionRequestGen: Typeclass[CcsSubmissionRequest] = gen[CcsSubmissionRequest]
+  implicit val workItemGen: Typeclass[WorkItem[CcsSubmissionRequest]]   = gen[WorkItem[CcsSubmissionRequest]]
 
 }

@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
+import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 
-final case class DetailsRegisteredWithCdsAnswer(
-  fullName: String,
-  emailAddress: Email,
-  contactAddress: NonUkAddress,
-  addCompanyDetails: Boolean
-)
+import java.util.Locale
 
-object DetailsRegisteredWithCdsAnswer {
-  implicit val format: OFormat[DetailsRegisteredWithCdsAnswer] = derived.oformat[DetailsRegisteredWithCdsAnswer]()
+object EmailGen {
+
+  def genEmail: Gen[Email] =
+    for {
+      name   <- genStringWithMaxSizeOfN(max = 15).map(_.toLowerCase(Locale.UK))
+      at      = "@"
+      domain <- genStringWithMaxSizeOfN(max = 10).map(_.toLowerCase(Locale.UK))
+      dotCom  = ".com"
+    } yield Email(Seq(name, at, domain, dotCom).mkString)
+
+  implicit val arbitraryEmail: Typeclass[Email] = Arbitrary(genEmail)
 }

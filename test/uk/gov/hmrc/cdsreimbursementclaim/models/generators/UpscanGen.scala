@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.Gen
-import org.scalacheck.ScalacheckShapeless._
+import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.UploadDocument
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 
-object UpscanGen extends GenUtils {
-  implicit val upscanUploadGen: Gen[UpscanUpload]       = gen[UpscanUpload]
-  implicit val uploadReferenceGen: Gen[UploadReference] = gen[UploadReference]
-  implicit val upscanSuccessGen: Gen[UpscanSuccess]     = gen[UpscanSuccess]
-  implicit val uploadDetailsGen: Gen[UploadDetails]     = gen[UploadDetails]
-  implicit val uploadDocumentGen: Gen[UploadDocument]   = gen[UploadDocument]
+object UpscanGen {
+  implicit val uploadReferenceGen: Typeclass[UploadReference] = gen[UploadReference]
+  implicit val uploadDetailsGen: Typeclass[UploadDetails]     = gen[UploadDetails]
+  implicit val upscanSuccessGen: Typeclass[UpscanSuccess]     = gen[UpscanSuccess]
+  implicit val uploadDocumentGen: Typeclass[UploadDocument]   = gen[UploadDocument]
+  implicit val upscanUploadGen: Typeclass[UpscanUpload]       = gen[UpscanUpload]
 }
