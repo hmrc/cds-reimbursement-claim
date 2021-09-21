@@ -19,26 +19,22 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.magnolia._
 import org.scalacheck.magnolia.Typeclass
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarationDetailsAnswer.CompleteDeclarationDetailsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EnterDeclarationDetailsGen._
 object CompleteClaimGen {
 
-  implicit val detailsRegisteredWithCdsAnswerGen: Typeclass[DetailsRegisteredWithCdsAnswer]     =
+  implicit val detailsRegisteredWithCdsAnswerGen: Typeclass[DetailsRegisteredWithCdsAnswer] =
     gen[DetailsRegisteredWithCdsAnswer]
-  implicit val contactAddressGen: Typeclass[ContactAddress]                                     = gen[ContactAddress]
-  implicit val mrnContactDetailsGen: Typeclass[MrnContactDetails]                               = gen[MrnContactDetails]
-  implicit val claimGen: Typeclass[Claim]                                                       = gen[Claim]
-  implicit val claimsAnswerGen: Typeclass[ClaimsAnswer]                                         = gen[ClaimsAnswer]
-  implicit val bankAccountDetailsAnswerGen: Typeclass[BankAccountDetails]                       =
+  implicit val contactAddressGen: Typeclass[ContactAddress]                                 = gen[ContactAddress]
+  implicit val mrnContactDetailsGen: Typeclass[MrnContactDetails]                           = gen[MrnContactDetails]
+  implicit val claimGen: Typeclass[Claim]                                                   = gen[Claim]
+  implicit val claimsAnswerGen: Typeclass[ClaimsAnswer]                                     = gen[ClaimsAnswer]
+  implicit val bankAccountDetailsAnswerGen: Typeclass[BankAccountDetails]                   =
     gen[BankAccountDetails]
-  implicit val mrnInformationGen: Typeclass[MRNInformation]                                     = gen[MRNInformation]
-  implicit val completeDeclarationDetailsAnswerGen: Typeclass[CompleteDeclarationDetailsAnswer] =
-    gen[CompleteDeclarationDetailsAnswer]
-  implicit val basisOfClaimAnswerGen: Typeclass[BasisOfClaim]                                   = gen[BasisOfClaim]
-  implicit val declarantTypeAnswerGen: Typeclass[DeclarantTypeAnswer]                           = gen[DeclarantTypeAnswer]
-  implicit val completeClaimGen: Typeclass[CompleteClaim]                                       = gen[CompleteClaim]
+  implicit val mrnInformationGen: Typeclass[MRNInformation]                                 = gen[MRNInformation]
+  implicit val basisOfClaimAnswerGen: Typeclass[BasisOfClaim]                               = gen[BasisOfClaim]
+  implicit val declarantTypeAnswerGen: Typeclass[DeclarantTypeAnswer]                       = gen[DeclarantTypeAnswer]
+  implicit val completeClaimGen: Typeclass[CompleteClaim]                                   = gen[CompleteClaim]
 }

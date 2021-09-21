@@ -50,9 +50,7 @@ object RequestDetailA {
 
 final case class RequestDetailB(
   MRNDetails: Option[List[MrnDetail]],
-  duplicateMRNDetails: Option[MrnDetail],
-  entryDetails: Option[List[EntryDetail]],
-  duplicateEntryDetails: Option[EntryDetail]
+  duplicateMRNDetails: Option[MrnDetail]
 )
 
 object RequestDetailB {

@@ -16,15 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim
 
-import cats.data.Validated.Invalid
 import cats.data.{NonEmptyList, ValidatedNel}
 import play.api.libs.json.{Format, JsonValidationError, Reads, Writes}
 
 package object models {
 
   type Validation[A] = ValidatedNel[String, A]
-
-  def invalid[A](error: String): Validation[A] = Invalid(NonEmptyList.one(error))
 
   def nelReads[A : Reads]: Reads[NonEmptyList[A]] =
     Reads.of[List[A]].collect(JsonValidationError("Expected a non empty list but got an empty list")) { case x :: xs =>
