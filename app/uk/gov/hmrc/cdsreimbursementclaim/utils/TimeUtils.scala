@@ -49,13 +49,6 @@ object TimeUtils {
     result.toOption
   }
 
-  def toEntryDateFormat(localDate: LocalDate): Option[String] = {
-    val result = for {
-      f <- Try(DateTimeFormatter.ofPattern("uMMdd").format(localDate))
-    } yield f
-    result.toOption
-  }
-
   val cdsDateTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
 
