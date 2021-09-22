@@ -17,5 +17,5 @@
 package uk.gov.hmrc.cdsreimbursementclaim.http
 
 object CustomHeaderNames {
-  val X_CORRELATION_ID = "X-Correlation-ID"
+  val X_CORRELATION_ID: String = "X-Correlation-ID"
 }
