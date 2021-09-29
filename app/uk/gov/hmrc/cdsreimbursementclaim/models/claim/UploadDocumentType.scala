@@ -22,9 +22,6 @@ import play.api.libs.json.OFormat
 sealed trait UploadDocumentType extends Product with Serializable
 
 object UploadDocumentType {
-  case object C88E2 extends UploadDocumentType {
-    override def toString: String = "C88E2"
-  }
   case object CommercialInvoice extends UploadDocumentType {
     override def toString: String = "Commercial Invoice"
   }
