@@ -30,7 +30,7 @@ lazy val scoverageSettings =
   Seq(
     ScoverageKeys.coverageExcludedFiles := (Compile / managedSourceDirectories).value.map(d => s"${d.getPath}/.*").mkString(";"),
     ScoverageKeys.coverageExcludedPackages := "<empty>;.*(config|views).*",
-    ScoverageKeys.coverageMinimumStmtTotal := 82,
+    ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageMinimumBranchTotal := 73,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
