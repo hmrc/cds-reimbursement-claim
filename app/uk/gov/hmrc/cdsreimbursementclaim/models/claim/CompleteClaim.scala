@@ -20,7 +20,6 @@ import cats.data.NonEmptyList
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantEoriNumberAnswer.CompleteDeclarantEoriNumberAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ImporterEoriNumberAnswer.CompleteImporterEoriNumberAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, ScheduledDocumentAnswer, SupportingEvidencesAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -41,7 +40,7 @@ final case class CompleteClaim(
   commodityDetailsAnswer: CommodityDetails,
   maybeDisplayDeclaration: Option[DisplayDeclaration],
   maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
-  importerEoriNumber: Option[CompleteImporterEoriNumberAnswer],
+  importerEoriNumber: Option[ImporterEoriNumber],
   declarantEoriNumber: Option[CompleteDeclarantEoriNumberAnswer],
   claimsAnswer: ClaimsAnswer,
   scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
