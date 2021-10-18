@@ -141,18 +141,14 @@ class DefaultClaimTransformerService @Inject() (
       acknowledgementReference = uuidGenerator.compactCorrelationId
     )
 
-    submitClaimRequest.completeClaim.movementReferenceNumber.value.fold(
-      _ => Left(Error("The legacy journey is not supported")),
-      _ =>
-        buildMrnNumberPayload(submitClaimRequest).bimap(
-          error => Error(s"validation errors: ${error.toString}"),
-          requestDetail =>
-            EisSubmitClaimRequest(
-              PostNewClaimsRequest(
-                requestCommon = requestCommon,
-                requestDetail = requestDetail
-              )
-            )
+    buildMrnNumberPayload(submitClaimRequest).bimap(
+      error => Error(s"validation errors: ${error.toString}"),
+      requestDetail =>
+        EisSubmitClaimRequest(
+          PostNewClaimsRequest(
+            requestCommon = requestCommon,
+            requestDetail = requestDetail
+          )
         )
     )
   }

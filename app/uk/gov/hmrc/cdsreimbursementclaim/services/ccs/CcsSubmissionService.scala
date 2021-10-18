@@ -134,24 +134,13 @@ object DefaultCcsSubmissionService {
         )
       )
 
-    submitClaimRequest.completeClaim.movementReferenceNumber.value match {
-      case Left(entryNumber) =>
-        submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
-          make(
-            entryNumber.value,
-            document,
-            index.toLong + 1
-          )
-        }.toList
-      case Right(mrn)        =>
-        submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
-          make(
-            mrn.value,
-            document,
-            index.toLong + 1
-          )
-        }.toList
-    }
+    submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
+      make(
+        submitClaimRequest.completeClaim.movementReferenceNumber.value,
+        document,
+        index.toLong + 1
+      )
+    }.toList
   }
 
   def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =

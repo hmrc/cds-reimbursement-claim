@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MovementReferenceNumber, MrnContactDetails, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, SubmitClaimRequest, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -145,8 +145,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val basisOfClaimAnswer = BasisOfClaim.DutySuspension
 
         val declarantTypeAnswer       = DeclarantTypeAnswer.Importer
-        val movevementReferenceNumber = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val movevementReferenceNumber = MRN("10ABCDEFGHIJKLMNO0")
 
         val completeClaim =
           sample[CompleteClaim].copy(
@@ -718,8 +717,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
@@ -782,8 +780,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
@@ -850,8 +847,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
@@ -913,8 +909,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
@@ -981,8 +976,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaim                                 = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
@@ -1045,8 +1039,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
-        val completeMovementReferenceNumberAnswer        = sample[MovementReferenceNumber]
-          .copy(value = Right(MRN("10ABCDEFGHIJKLMNO0")))
+        val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
 
