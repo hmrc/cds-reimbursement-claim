@@ -18,9 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MovementReferenceNumber, PhoneNumber}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{EntryNumber, Eori, MRN}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.PhoneNumber
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
 
 object IdGen {
 
@@ -56,27 +55,4 @@ object IdGen {
   } yield MRN((d1 ++ letter2 ++ word ++ d2).mkString)
 
   implicit val arbitraryMrn: Typeclass[MRN] = Arbitrary(genMRN)
-
-  def sampleMrnAnswer(mrn: MRN = sample[MRN]): Option[MovementReferenceNumber] =
-    Some(MovementReferenceNumber(Right(mrn)))
-
-  def genEntryNumber: Gen[EntryNumber] = for {
-    prefix <- Gen.listOfN(9, Gen.numChar)
-    letter <- Gen.listOfN(1, Gen.alphaUpperChar)
-    suffix <- Gen.listOfN(8, Gen.numChar)
-  } yield EntryNumber((prefix ++ letter ++ suffix).mkString)
-
-  implicit val entryNumberGen: Typeclass[EntryNumber] = Arbitrary(genEntryNumber)
-
-  def sampleEntryNumberAnswer(entryNumber: EntryNumber = sample[EntryNumber]): Option[MovementReferenceNumber] =
-    Some(MovementReferenceNumber(Left(entryNumber)))
-
-  def genMovementReferenceNumber: Gen[MovementReferenceNumber] = Gen.oneOf(
-    genMRN.map(mrn => MovementReferenceNumber(Right(mrn))),
-    genEntryNumber.map(entry => MovementReferenceNumber(Left(entry)))
-  )
-
-  implicit val arbitraryMovementReferenceNumber: Typeclass[MovementReferenceNumber] =
-    Arbitrary(genMovementReferenceNumber)
-
 }
