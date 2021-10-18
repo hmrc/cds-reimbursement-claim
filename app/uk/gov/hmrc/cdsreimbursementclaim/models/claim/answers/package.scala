@@ -17,8 +17,13 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 package object answers {
+
+  type AssociatedMrn = MRN
+
+  type AssociatedMRNsAnswer = NonEmptyList[AssociatedMrn]
 
   type SupportingEvidencesAnswer = NonEmptyList[UploadDocument]
 
@@ -30,10 +35,8 @@ package object answers {
   type ClaimsAnswer = NonEmptyList[Claim]
 
   object ClaimsAnswer {
-
     def apply(head: Claim, tail: Claim*): NonEmptyList[Claim] = NonEmptyList.of(head, tail: _*)
     def apply(l: List[Claim]): Option[NonEmptyList[Claim]]    = NonEmptyList.fromList(l)
-
   }
 
 }

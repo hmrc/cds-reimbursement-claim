@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptyList
 import julienrf.json.derived
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.{ClaimsAnswer, ScheduledDocumentAnswer, SupportingEvidencesAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -43,7 +43,8 @@ final case class CompleteClaim(
   importerEoriNumber: Option[ImporterEoriNumber],
   declarantEoriNumber: Option[DeclarantEoriNumber],
   claimsAnswer: ClaimsAnswer,
-  scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
+  scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
+  associatedMRNsAnswer: Option[AssociatedMRNsAnswer]
 )
 
 object CompleteClaim {
