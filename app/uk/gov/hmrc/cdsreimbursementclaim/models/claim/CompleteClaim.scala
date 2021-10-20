@@ -17,8 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -43,8 +42,7 @@ final case class CompleteClaim(
   importerEoriNumber: Option[ImporterEoriNumber],
   declarantEoriNumber: Option[DeclarantEoriNumber],
   claimsAnswer: ClaimsAnswer,
-  scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
-  associatedMRNsAnswer: Option[AssociatedMRNsAnswer]
+  scheduledDocumentAnswer: Option[ScheduledDocumentAnswer]
 )
 
 object CompleteClaim {
@@ -77,5 +75,5 @@ object CompleteClaim {
       completeClaim.maybeDisplayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
   }
 
-  implicit val format: OFormat[CompleteClaim] = derived.oformat[CompleteClaim]()
+  implicit val format: Format[CompleteClaim] = Json.format[CompleteClaim]
 }

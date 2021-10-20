@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, SubmitClaimRequest, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -132,7 +132,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val claim = sample[Claim].copy(
           paymentMethod = "001",
-          taxCode = "A00",
+          taxCode = TaxCode.A00,
           paidAmount = BigDecimal(20.00),
           claimAmount = BigDecimal(10.00),
           paymentReference = "pay-ref"
@@ -497,10 +497,10 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           )
         )
 
-      def getClaimAmounts(): Claim =
+      def getClaimAmounts: Claim =
         sample[Claim].copy(
           paymentMethod = "001",
-          taxCode = "A00",
+          taxCode = TaxCode.A00,
           paidAmount = BigDecimal(20.00),
           claimAmount = BigDecimal(10.00),
           paymentReference = "pay-ref"
@@ -712,7 +712,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
+        val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
@@ -775,7 +775,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
+        val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
@@ -842,7 +842,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
+        val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
@@ -904,7 +904,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
+        val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
@@ -971,7 +971,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
+        val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaim                                 = BasisOfClaim.DutySuspension
@@ -1034,7 +1034,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val acc14                                        = getAcc14Response()
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
-        val claim                                        = getClaimAmounts()
+        val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
         val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension

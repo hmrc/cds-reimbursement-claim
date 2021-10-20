@@ -25,7 +25,7 @@ final case class Claim(
   id: UUID,
   paymentMethod: String,
   paymentReference: String,
-  taxCode: String,
+  taxCode: TaxCode,
   paidAmount: BigDecimal,
   claimAmount: BigDecimal,
   isFilled: Boolean
