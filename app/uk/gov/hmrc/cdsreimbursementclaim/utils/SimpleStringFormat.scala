@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import cats.data.NonEmptyList
-package object answers {
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
-  type SupportingEvidencesAnswer = NonEmptyList[UploadDocument]
+object SimpleStringFormat {
 
-  object SupportingEvidencesAnswer {
-    def apply(evidence: UploadDocument): SupportingEvidencesAnswer =
-      NonEmptyList.one(evidence)
-  }
-
-  type ClaimsAnswer = NonEmptyList[Claim]
-
-  object ClaimsAnswer {
-    def apply(head: Claim, tail: Claim*): NonEmptyList[Claim] = NonEmptyList.of(head, tail: _*)
-    def apply(l: List[Claim]): Option[NonEmptyList[Claim]]    = NonEmptyList.fromList(l)
-  }
-
+  def apply[A](fromString: String => A, toString: A => String): Format[A] =
+    Format(
+      Reads {
+        case JsString(value) => JsSuccess(fromString(value))
+        case json            => JsError(s"Expected json string but got ${json.getClass.getSimpleName}")
+      },
+      Writes.apply(entity => JsString(toString(entity)))
+    )
 }

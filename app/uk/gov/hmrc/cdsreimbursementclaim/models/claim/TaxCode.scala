@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import cats.Eq
+import play.api.libs.json.Format
+import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
 
 sealed abstract class TaxCode(val value: String) extends Product with Serializable {
-  override def toString() = value
+  override def toString: String = value
 }
 
 object TaxCode {
@@ -182,6 +183,8 @@ object TaxCode {
   )
   // $COVERAGE-ON$
 
+  private val taxCodesMap: Map[String, TaxCode] = allTaxCodes.map(a => a.value -> a).toMap
+
   val allTaxCodesPartialFunctions: List[PartialFunction[TaxCode, String]] = allTaxCodes.map(a =>
     new PartialFunction[TaxCode, String]() {
       def apply(v1: TaxCode): String       = a.value
@@ -192,6 +195,7 @@ object TaxCode {
   implicit def classToNameString(in: TaxCode): String =
     allTaxCodesPartialFunctions.drop(1).foldLeft(allTaxCodesPartialFunctions(0))(_ orElse _)(in)
 
-  implicit val taxCodeFormat: OFormat[TaxCode] = derived.oformat[TaxCode]()
+  implicit val taxCodeEq: Eq[TaxCode] = Eq.fromUniversalEquals[TaxCode]
 
+  implicit val taxCodeFormat: Format[TaxCode] = SimpleStringFormat(taxCodesMap, _.value)
 }
