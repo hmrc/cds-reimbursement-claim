@@ -39,8 +39,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlacesToString
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
-
 import javax.inject.Singleton
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 
 @ImplementedBy(classOf[DefaultClaimTransformerService])
 trait ClaimTransformerService {
@@ -88,13 +88,13 @@ class DefaultClaimTransformerService @Inject() (
         CDFPayService = CDFPayservice.NDRC,
         dateReceived = Some(localDateNow),
         claimType = Some(ClaimType.C285),
-        caseType = Some(CaseType.Individual),
+        caseType = setCaseType(completeClaim),
         customDeclarationType = Some(CustomDeclarationType.MRN),
         declarationMode = Some(DeclarationMode.ParentDeclaration),
         claimDate = Some(localDateNow),
         claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.claims.total)),
         disposalMethod = None,
-        reimbursementMethod = Some(ReimbursementMethod.BankTransfer),
+        reimbursementMethod = setReimbursementMethod(completeClaim),
         basisOfClaim = maybeReasonAndOrBasis,
         claimant = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
@@ -641,5 +641,17 @@ object DefaultClaimTransformerService {
           )
         }
       case None                     => Valid(None)
+    }
+
+  def setCaseType(completeClaim: CompleteClaim): Option[String] =
+    completeClaim.reimbursementMethodAnswer match {
+      case Some(CurrentMonthAdjustment) => Some(CaseType.CMA)
+      case _                            => Some(CaseType.Individual)
+    }
+
+  def setReimbursementMethod(completeClaim: CompleteClaim): Option[String] =
+    completeClaim.reimbursementMethodAnswer match {
+      case Some(CurrentMonthAdjustment) => Some(ReimbursementMethod.Deferment)
+      case _                            => Some(ReimbursementMethod.BankTransfer)
     }
 }
