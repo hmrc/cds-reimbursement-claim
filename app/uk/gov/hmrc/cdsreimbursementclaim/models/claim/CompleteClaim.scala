@@ -43,7 +43,8 @@ final case class CompleteClaim(
   declarantEoriNumber: Option[DeclarantEoriNumber],
   claimsAnswer: ClaimsAnswer,
   scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
-  reimbursementMethodAnswer: Option[ReimbursementMethodAnswer]
+  reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
+  typeOfClaim: Option[SelectNumberOfClaimsAnswer]
 )
 
 object CompleteClaim {

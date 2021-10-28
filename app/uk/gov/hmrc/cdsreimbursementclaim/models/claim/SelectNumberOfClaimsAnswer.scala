@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-sealed trait DeclarationMode extends Product with Serializable
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-object DeclarationMode {
-  case object ParentDeclaration extends DeclarationMode
-  case object AllDeclaration extends DeclarationMode
+sealed trait SelectNumberOfClaimsAnswer extends Product with Serializable
 
-  implicit def declarationModeToString(declarationMode: DeclarationMode): String = declarationMode match {
-    case ParentDeclaration => "Parent Declaration"
-    case AllDeclaration    => "All Declarations"
-  }
+object SelectNumberOfClaimsAnswer {
+  case object Individual extends SelectNumberOfClaimsAnswer
+  case object Multiple extends SelectNumberOfClaimsAnswer
+  case object Scheduled extends SelectNumberOfClaimsAnswer
+
+  implicit val selectNumberOfClaimsAnswerFormat: OFormat[SelectNumberOfClaimsAnswer] =
+    derived.oformat[SelectNumberOfClaimsAnswer]()
 }

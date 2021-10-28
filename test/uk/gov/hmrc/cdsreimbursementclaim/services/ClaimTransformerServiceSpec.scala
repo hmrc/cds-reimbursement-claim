@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, ReimbursementMethodAnswer, SubmitClaimRequest, TaxCode, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, ReimbursementMethodAnswer, SelectNumberOfClaimsAnswer, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -704,20 +704,73 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         ()
       }
 
-      "Case type on complete claim with no reimbursement method specified is Individual" in {
-        val completeClaim = sample[CompleteClaim].copy(reimbursementMethodAnswer = None)
+      "Declaration mode on Individual complete claim is 'Parent Declaration'" in {
+        val completeClaim = sample[CompleteClaim].copy(
+          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual)
+        )
+
+        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("Parent Declaration")
+      }
+
+      "Declaration mode on Scheduled complete claim is 'All Declarations'" in {
+        val completeClaim = sample[CompleteClaim].copy(
+          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Scheduled)
+        )
+
+        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("All Declarations")
+      }
+
+      "Declaration mode on Multiple complete claim is 'All Declarations'" in {
+        val completeClaim = sample[CompleteClaim].copy(
+          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Multiple)
+        )
+
+        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("All Declarations")
+      }
+
+      "Case type on Scheduled complete claim with no reimbursement method specified is Individual" in {
+        val completeClaim = sample[CompleteClaim].copy(
+          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Scheduled),
+          reimbursementMethodAnswer = None
+        )
+
+        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Bulk")
+      }
+
+      "Case type on Multiple complete claim with no reimbursement method specified is Individual" in {
+        val completeClaim = sample[CompleteClaim].copy(
+          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Multiple),
+          reimbursementMethodAnswer = None
+        )
+
+        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Bulk")
+      }
+
+      "Case type on Individual complete claim with no reimbursement method specified is Individual" in {
+        val completeClaim = sample[CompleteClaim].copy(
+          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual),
+          reimbursementMethodAnswer = None
+        )
 
         DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Individual")
       }
 
-      "Case type on complete claim with reimbursement method of Current Month Adjustment is CMA" in {
-        val completeClaim = sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment))
+      "Case type on Individual complete claim with reimbursement method of Current Month Adjustment is CMA" in {
+        val completeClaim =
+          sample[CompleteClaim].copy(
+            typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual),
+            reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment)
+          )
 
         DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("CMA")
       }
 
-      "Case type on complete claim with reimbursement method of Bank Transfer is Individual" in {
-        val completeClaim = sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer))
+      "Case type on Individual complete claim with reimbursement method of Bank Transfer is Individual" in {
+        val completeClaim =
+          sample[CompleteClaim].copy(
+            typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual),
+            reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer)
+          )
 
         DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Individual")
       }
@@ -729,13 +782,15 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       }
 
       "Reimbursement Method on complete claim with reimbursement method of Current Month Adjustment is CMA" in {
-        val completeClaim = sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment))
+        val completeClaim =
+          sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment))
 
         DefaultClaimTransformerService.setReimbursementMethod(completeClaim) shouldBe Some("Deferment")
       }
 
       "Reimbursement Method on complete claim with reimbursement method of Bank Transfer is Bank Transfer" in {
-        val completeClaim = sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer))
+        val completeClaim =
+          sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer))
 
         DefaultClaimTransformerService.setReimbursementMethod(completeClaim) shouldBe Some("Bank Transfer")
       }
@@ -770,16 +825,30 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             maybeDuplicateDisplayDeclaration = None
           )
 
-        val expectedCaseType = completeClaim.reimbursementMethodAnswer match {
-          case Some(ReimbursementMethodAnswer.CurrentMonthAdjustment) => "CMA"
-          case Some(ReimbursementMethodAnswer.BankAccountTransfer) => "Individual"
-          case None => "Individual"
-        }
+        val expectedCaseType =
+          if (
+            completeClaim.typeOfClaim.contains(SelectNumberOfClaimsAnswer.Scheduled) || completeClaim.typeOfClaim
+              .contains(SelectNumberOfClaimsAnswer.Multiple)
+          )
+            "Bulk"
+          else
+            completeClaim.reimbursementMethodAnswer match {
+              case Some(ReimbursementMethodAnswer.CurrentMonthAdjustment) => "CMA"
+              case Some(ReimbursementMethodAnswer.BankAccountTransfer)    => "Individual"
+              case None                                                   => "Individual"
+            }
 
         val expectedReimbursementMethod = completeClaim.reimbursementMethodAnswer match {
           case Some(ReimbursementMethodAnswer.CurrentMonthAdjustment) => "Deferment"
-          case Some(ReimbursementMethodAnswer.BankAccountTransfer) => "Bank Transfer"
-          case None => "Bank Transfer"
+          case Some(ReimbursementMethodAnswer.BankAccountTransfer)    => "Bank Transfer"
+          case None                                                   => "Bank Transfer"
+        }
+
+        val expectedDeclarationMode = completeClaim.typeOfClaim match {
+          case Some(SelectNumberOfClaimsAnswer.Individual) => "Parent Declaration"
+          case Some(SelectNumberOfClaimsAnswer.Scheduled)  => "All Declarations"
+          case Some(SelectNumberOfClaimsAnswer.Multiple)   => "All Declarations"
+          case _                                           => "Parent Declaration"
         }
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -796,8 +865,9 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         checkFixedAcc14ToTpi05Mapping(acc14, tpi05)
 
-        tpi05.requestDetailA.caseType shouldBe Some(expectedCaseType)
+        tpi05.requestDetailA.caseType            shouldBe Some(expectedCaseType)
         tpi05.requestDetailA.reimbursementMethod shouldBe Some(expectedReimbursementMethod)
+        tpi05.requestDetailA.declarationMode     shouldBe Some(expectedDeclarationMode)
 
         checkDetailsRegisteredWithCdsToEstablishmentAddressMapping(
           tpi05EoriDetails.CDSEstablishmentAddress,
