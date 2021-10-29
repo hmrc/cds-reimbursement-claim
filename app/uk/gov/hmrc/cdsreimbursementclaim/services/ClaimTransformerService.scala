@@ -659,7 +659,7 @@ object DefaultClaimTransformerService {
 
   def setDeclarationMode(completeClaim: CompleteClaim): Option[String] =
     completeClaim.typeOfClaim match {
-      case Some(SelectNumberOfClaimsAnswer.Scheduled) => Some(DeclarationMode.AllDeclaration)
+      case Some(SelectNumberOfClaimsAnswer.Scheduled) => Some(DeclarationMode.ParentDeclaration)
       case Some(SelectNumberOfClaimsAnswer.Multiple)  => Some(DeclarationMode.AllDeclaration)
       case _                                          => Some(DeclarationMode.ParentDeclaration)
     }

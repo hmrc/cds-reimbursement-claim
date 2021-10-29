@@ -717,7 +717,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           typeOfClaim = Some(SelectNumberOfClaimsAnswer.Scheduled)
         )
 
-        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("All Declarations")
+        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("Parent Declaration")
       }
 
       "Declaration mode on Multiple complete claim is 'All Declarations'" in {
@@ -846,7 +846,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val expectedDeclarationMode = completeClaim.typeOfClaim match {
           case Some(SelectNumberOfClaimsAnswer.Individual) => "Parent Declaration"
-          case Some(SelectNumberOfClaimsAnswer.Scheduled)  => "All Declarations"
+          case Some(SelectNumberOfClaimsAnswer.Scheduled)  => "Parent Declaration"
           case Some(SelectNumberOfClaimsAnswer.Multiple)   => "All Declarations"
           case _                                           => "Parent Declaration"
         }
