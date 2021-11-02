@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.typesafe.config.ConfigFactory
+import org.scalacheck.magnolia._
 import org.scalamock.handlers.CallHandler0
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -24,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, ReimbursementMethodAnswer, SelectNumberOfClaimsAnswer, SubmitClaimRequest, TaxCode, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountDetails, BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, ReimbursementMethodAnswer, SelectNumberOfClaimsAnswer, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -893,7 +894,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val contactDetails = None
         val contactAddress = None
 
-        val acc14                                        = getAcc14Response
+        val accountDetails                               = gen[AccountDetails].arbitrary.sample.map(List(_))
+        val acc14                                        = getAcc14Response.copy(accountDetails = accountDetails)
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)

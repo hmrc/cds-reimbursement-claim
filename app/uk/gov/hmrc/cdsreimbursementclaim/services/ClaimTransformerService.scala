@@ -74,10 +74,7 @@ class DefaultClaimTransformerService @Inject() (
         completeClaim.maybeBasisOfClaimAnswer,
         getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
       ),
-      setMrnDetails(
-        completeClaim.maybeDisplayDeclaration,
-        completeClaim
-      ),
+      setMrnDetails(completeClaim),
       setDuplicateMrnDetails(
         completeClaim.maybeDuplicateDisplayDeclaration,
         completeClaim
@@ -485,6 +482,36 @@ object DefaultClaimTransformerService {
       case None                   => Invalid(NonEmptyList.one("could not find consignee details"))
     }
 
+  def makeAccountDetails(maybeAccountDetails: Option[List[AccountDetails]]): Validation[List[AccountDetail]] =
+    maybeAccountDetails match {
+      case Some(accountDetails: Seq[AccountDetails]) =>
+        Valid(accountDetails.map { details =>
+          AccountDetail(
+            accountType = details.accountType,
+            accountNumber = details.accountNumber,
+            EORI = details.eori,
+            legalName = details.legalName,
+            contactDetails = details.contactDetails.map { cd =>
+              ContactInformation(
+                contactPerson = cd.contactName,
+                addressLine1 = cd.addressLine1,
+                addressLine2 = cd.addressLine2,
+                addressLine3 = cd.addressLine3,
+                street = cd.addressLine4,
+                city = None,
+                countryCode = cd.countryCode,
+                postalCode = cd.postalCode,
+                telephoneNumber = cd.telephone,
+                faxNumber = None,
+                emailAddress = cd.emailAddress
+              )
+            }
+          )
+        })
+      case None                                      =>
+        Invalid(NonEmptyList.one("could not find account details"))
+    }
+
   def buildBankDetails(
     maybeBankDetails: Option[models.claim.BankDetails],
     completeClaim: CompleteClaim
@@ -583,31 +610,30 @@ object DefaultClaimTransformerService {
       case None                 => invalidNel("Could not format display acceptance date")
     }
 
-  def setMrnDetails(
-    maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration],
-    completeClaim: CompleteClaim
-  ): Validation[MrnDetail] =
-    maybeDisplayDeclaration match {
+  def setMrnDetails(completeClaim: CompleteClaim): Validation[MrnDetail] =
+    completeClaim.maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
         (
           setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
+          makeAccountDetails(displayDeclaration.displayResponseDetail.accountDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           makeNdrcDetails(completeClaim.claims)
-        ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
-          MrnDetail(
-            MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
-            acceptanceDate = Some(acceptanceDate),
-            declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-            mainDeclarationReference = Some(true),
-            procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
-            declarantDetails = Some(declarationDetails),
-            accountDetails = None,
-            consigneeDetails = Some(consigneeDetails),
-            bankDetails = Some(bankDetails),
-            NDRCDetails = Some(ndrcDetails)
-          )
+        ).mapN {
+          case (acceptanceDate, declarationDetails, accountDetails, consigneeDetails, bankDetails, ndrcDetails) =>
+            MrnDetail(
+              MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
+              acceptanceDate = Some(acceptanceDate),
+              declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+              mainDeclarationReference = Some(true),
+              procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
+              declarantDetails = Some(declarationDetails),
+              accountDetails = Some(accountDetails),
+              consigneeDetails = Some(consigneeDetails),
+              bankDetails = Some(bankDetails),
+              NDRCDetails = Some(ndrcDetails)
+            )
         }
       case None                     => invalidNel("could not build mrn details")
     }
