@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.typesafe.config.ConfigFactory
+import org.scalacheck.magnolia._
 import org.scalamock.handlers.CallHandler0
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -24,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimsAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, ReimbursementMethodAnswer, SelectNumberOfClaimsAnswer, SubmitClaimRequest, TaxCode, Address => _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountDetails, BankAccountDetails, Claim, CompleteClaim, ConsigneeDetails, ContactAddress, ContactDetails, Country, DeclarantDetails, DeclarantTypeAnswer, DetailsRegisteredWithCdsAnswer, DisplayDeclaration, DisplayResponseDetail, EstablishmentAddress, MrnContactDetails, ReimbursementMethodAnswer, SelectNumberOfClaimsAnswer, SubmitClaimRequest, TaxCode, Address => _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -35,6 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService.CompareContactInformation
+
 import java.util.UUID
 
 class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFactory {
@@ -704,6 +706,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         ()
       }
 
+      val acc14WithAccountDetails = getAcc14Response.copy(accountDetails = Some(List(sample[AccountDetails])))
+
       "Declaration mode on Individual complete claim is 'Parent Declaration'" in {
         val completeClaim = sample[CompleteClaim].copy(
           typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual)
@@ -800,7 +804,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val contactDetails = sample[MrnContactDetails].copy(phoneNumber = Some(genPhoneNumber))
         val contactAddress = sample[ContactAddress].copy(line2 = Some(alphaCharGen(10)), line3 = Some(alphaCharGen(10)))
 
-        val acc14                                        = getAcc14Response
+        val acc14                                        = acc14WithAccountDetails
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
@@ -809,7 +813,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
         val completeClaim =
           sample[CompleteClaim].copy(
@@ -890,10 +894,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "valid mrn number claim, DeclarantType: Importer, No ContactDetails or ContactAddress " in {
         val declarantType  = DeclarantTypeAnswer.Importer
-        val contactDetails = None
-        val contactAddress = None
 
-        val acc14                                        = getAcc14Response
+        val acc14                                        = acc14WithAccountDetails
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
         val claim                                        = getClaimAmounts
         val claimsAnswer                                 = ClaimsAnswer(claim)
@@ -902,15 +904,15 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
         val completeClaim =
           sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            mrnContactDetailsAnswer = contactDetails,
-            mrnContactAddressAnswer = contactAddress,
+            mrnContactDetailsAnswer = None,
+            mrnContactAddressAnswer = None,
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
@@ -969,7 +971,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
         val completeClaim =
           sample[CompleteClaim].copy(
@@ -1019,8 +1021,6 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "valid mrn number claim, DeclarantType: AssociatedWithImporterCompany, No ContactDetails or ContactAddress" in {
         val declarantType  = DeclarantTypeAnswer.AssociatedWithImporterCompany
-        val contactDetails = None
-        val contactAddress = None
 
         val acc14                                        = getAcc14Response
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1031,15 +1031,15 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
         val completeClaim =
           sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            mrnContactDetailsAnswer = contactDetails,
-            mrnContactAddressAnswer = contactAddress,
+            mrnContactDetailsAnswer = None,
+            mrnContactAddressAnswer = None,
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
@@ -1098,7 +1098,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
         val completeClaim =
           sample[CompleteClaim].copy(
@@ -1149,8 +1149,6 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "valid mrn number claim, DeclarantType: AssociatedWithRepresentativeCompany, No ContactDetails or ContactAddress" in {
         val declarantType  = DeclarantTypeAnswer.AssociatedWithRepresentativeCompany
-        val contactDetails = None
-        val contactAddress = None
 
         val acc14                                        = getAcc14Response
         val displayDeclaration                           = sample[DisplayDeclaration].copy(displayResponseDetail = acc14)
@@ -1161,15 +1159,15 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
-          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.induvidual"))
+          sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
         val completeClaim =
           sample[CompleteClaim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-            mrnContactDetailsAnswer = contactDetails,
-            mrnContactAddressAnswer = contactAddress,
+            mrnContactDetailsAnswer = None,
+            mrnContactAddressAnswer = None,
             maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
             maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimsAnswer = claimsAnswer,
