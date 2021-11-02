@@ -420,7 +420,7 @@ object DefaultClaimTransformerService {
               )
             )
           case None                 =>
-            Invalid(NonEmptyList.one("could not find contact details to buidl declarant contact information"))
+            Invalid(NonEmptyList.one("could not find contact details to build declarant contact information"))
         }
 
       case None => Invalid(NonEmptyList.one("could not find declarant details"))
@@ -482,35 +482,31 @@ object DefaultClaimTransformerService {
       case None                   => Invalid(NonEmptyList.one("could not find consignee details"))
     }
 
-  def makeAccountDetails(maybeAccountDetails: Option[List[AccountDetails]]): Validation[List[AccountDetail]] =
-    maybeAccountDetails match {
-      case Some(accountDetails: Seq[AccountDetails]) =>
-        Valid(accountDetails.map { details =>
-          AccountDetail(
-            accountType = details.accountType,
-            accountNumber = details.accountNumber,
-            EORI = details.eori,
-            legalName = details.legalName,
-            contactDetails = details.contactDetails.map { cd =>
-              ContactInformation(
-                contactPerson = cd.contactName,
-                addressLine1 = cd.addressLine1,
-                addressLine2 = cd.addressLine2,
-                addressLine3 = cd.addressLine3,
-                street = cd.addressLine4,
-                city = None,
-                countryCode = cd.countryCode,
-                postalCode = cd.postalCode,
-                telephoneNumber = cd.telephone,
-                faxNumber = None,
-                emailAddress = cd.emailAddress
-              )
-            }
+  def transformToMaybeAccountDetail(maybeAccountDetails: Option[List[AccountDetails]]): Option[List[AccountDetail]] = {
+    maybeAccountDetails.map((adl: List[AccountDetails]) => adl.map { ad: AccountDetails =>
+      AccountDetail(
+        accountType = ad.accountType,
+        accountNumber = ad.accountNumber,
+        EORI = ad.eori,
+        legalName = ad.legalName,
+        contactDetails = ad.contactDetails.map { cd =>
+          ContactInformation(
+            contactPerson = cd.contactName,
+            addressLine1 = cd.addressLine1,
+            addressLine2 = cd.addressLine2,
+            addressLine3 = cd.addressLine3,
+            street = cd.addressLine4,
+            city = None,
+            countryCode = cd.countryCode,
+            postalCode = cd.postalCode,
+            telephoneNumber = cd.telephone,
+            faxNumber = None,
+            emailAddress = cd.emailAddress
           )
-        })
-      case None                                      =>
-        Invalid(NonEmptyList.one("could not find account details"))
-    }
+        }
+      )
+    })
+  }
 
   def buildBankDetails(
     maybeBankDetails: Option[models.claim.BankDetails],
@@ -616,12 +612,11 @@ object DefaultClaimTransformerService {
         (
           setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
-          makeAccountDetails(displayDeclaration.displayResponseDetail.accountDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           makeNdrcDetails(completeClaim.claims)
         ).mapN {
-          case (acceptanceDate, declarationDetails, accountDetails, consigneeDetails, bankDetails, ndrcDetails) =>
+          case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
             MrnDetail(
               MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
               acceptanceDate = Some(acceptanceDate),
@@ -629,7 +624,7 @@ object DefaultClaimTransformerService {
               mainDeclarationReference = Some(true),
               procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
               declarantDetails = Some(declarationDetails),
-              accountDetails = Some(accountDetails),
+              accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
               consigneeDetails = Some(consigneeDetails),
               bankDetails = Some(bankDetails),
               NDRCDetails = Some(ndrcDetails)
