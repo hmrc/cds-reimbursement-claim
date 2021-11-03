@@ -32,7 +32,7 @@ lazy val scoverageSettings =
     ScoverageKeys.coverageExcludedPackages := "<empty>;.*(config|views).*",
     ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageMinimumBranchTotal := 73,
-    ScoverageKeys.coverageFailOnMinimum := true,
+    ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true,
     ThisBuild / Test / test / coverageEnabled := true
   )
