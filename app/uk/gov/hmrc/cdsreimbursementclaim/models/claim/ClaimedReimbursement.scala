@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.util.UUID
 
-final case class Claim(
+final case class ClaimedReimbursement(
   id: UUID,
   paymentMethod: String,
   paymentReference: String,
@@ -31,9 +31,11 @@ final case class Claim(
   isFilled: Boolean
 )
 
-object Claim {
-  implicit class ListClaimOps(private val claims: NonEmptyList[Claim]) {
+object ClaimedReimbursement {
+
+  implicit class ClaimReimbursementsOps(private val claims: NonEmptyList[ClaimedReimbursement]) {
     def total: BigDecimal = claims.map(c => c.claimAmount).toList.sum
   }
-  implicit val format: OFormat[Claim] = Json.format[Claim]
+
+  implicit val format: OFormat[ClaimedReimbursement] = Json.format[ClaimedReimbursement]
 }

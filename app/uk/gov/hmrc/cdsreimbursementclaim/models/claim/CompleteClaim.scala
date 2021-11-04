@@ -41,7 +41,7 @@ final case class CompleteClaim(
   maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
   importerEoriNumber: Option[ImporterEoriNumber],
   declarantEoriNumber: Option[DeclarantEoriNumber],
-  claimsAnswer: ClaimsAnswer,
+  claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
   scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
   reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
   typeOfClaim: Option[SelectNumberOfClaimsAnswer]
@@ -61,8 +61,8 @@ object CompleteClaim {
       evidences ++ scheduledDocument
     }
 
-    def claims: NonEmptyList[Claim] =
-      completeClaim.claimsAnswer
+    def claims: NonEmptyList[ClaimedReimbursement] =
+      completeClaim.claimedReimbursementsAnswer
         .map(claim =>
           claim.copy(
             claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
