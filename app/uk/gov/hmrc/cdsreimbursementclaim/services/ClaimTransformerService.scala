@@ -33,7 +33,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.IncorrectAdditionalInformationCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
@@ -118,7 +118,7 @@ class DefaultClaimTransformerService @Inject() (
       )
 
       val requestDetailB = RequestDetailB(
-        MRNDetails = Some(List(mrnDetails)),
+        MRNDetails = Some(mrnDetails),
         duplicateMRNDetails = duplicateMrnDetails
       )
 
@@ -607,7 +607,7 @@ object DefaultClaimTransformerService {
       case None                 => invalidNel("Could not format display acceptance date")
     }
 
-  def setMrnDetails(completeClaim: CompleteClaim): Validation[MrnDetail] =
+  def setMrnDetails(completeClaim: CompleteClaim): Validation[List[MrnDetail]] =
     completeClaim.maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
         (
@@ -617,18 +617,21 @@ object DefaultClaimTransformerService {
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           makeNdrcDetails(completeClaim.claims)
         ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
-          MrnDetail(
-            MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
-            acceptanceDate = Some(acceptanceDate),
-            declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-            mainDeclarationReference = Some(true),
-            procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
-            declarantDetails = Some(declarationDetails),
-            accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
-            consigneeDetails = Some(consigneeDetails),
-            bankDetails = Some(bankDetails),
-            NDRCDetails = Some(ndrcDetails)
-          )
+          (MRN(displayDeclaration.displayResponseDetail.declarationId) :: completeClaim.associatedMRNsAnswer).map {
+            mrn =>
+              MrnDetail(
+                MRNNumber = Some(mrn.value),
+                acceptanceDate = Some(acceptanceDate),
+                declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+                mainDeclarationReference = Some(true),
+                procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
+                declarantDetails = Some(declarationDetails),
+                accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
+                consigneeDetails = Some(consigneeDetails),
+                bankDetails = Some(bankDetails),
+                NDRCDetails = Some(ndrcDetails)
+              )
+          }
         }
       case None                     => invalidNel("could not build mrn details")
     }
