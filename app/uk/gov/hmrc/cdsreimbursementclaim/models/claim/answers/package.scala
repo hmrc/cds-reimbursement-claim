@@ -26,11 +26,15 @@ package object answers {
       NonEmptyList.one(evidence)
   }
 
-  type ClaimsAnswer = NonEmptyList[Claim]
+  type ClaimedReimbursementsAnswer = NonEmptyList[ClaimedReimbursement]
 
-  object ClaimsAnswer {
-    def apply(head: Claim, tail: Claim*): NonEmptyList[Claim] = NonEmptyList.of(head, tail: _*)
-    def apply(l: List[Claim]): Option[NonEmptyList[Claim]]    = NonEmptyList.fromList(l)
+  object ClaimedReimbursementsAnswer {
+
+    def apply(head: ClaimedReimbursement, tail: ClaimedReimbursement*): NonEmptyList[ClaimedReimbursement] =
+      NonEmptyList.of(head, tail: _*)
+
+    def apply(items: List[ClaimedReimbursement]): Option[NonEmptyList[ClaimedReimbursement]] =
+      NonEmptyList.fromList(items)
   }
 
 }
