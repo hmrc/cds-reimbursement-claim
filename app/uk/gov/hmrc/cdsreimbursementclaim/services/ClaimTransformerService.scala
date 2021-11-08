@@ -617,20 +617,21 @@ object DefaultClaimTransformerService {
           buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
           makeNdrcDetails(completeClaim.claims)
         ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
-          (MRN(displayDeclaration.displayResponseDetail.declarationId) :: completeClaim.associatedMRNsAnswer).map {
-            mrn =>
-              MrnDetail(
-                MRNNumber = Some(mrn.value),
-                acceptanceDate = Some(acceptanceDate),
-                declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-                mainDeclarationReference = Some(true),
-                procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
-                declarantDetails = Some(declarationDetails),
-                accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
-                consigneeDetails = Some(consigneeDetails),
-                bankDetails = Some(bankDetails),
-                NDRCDetails = Some(ndrcDetails)
-              )
+          (MRN(displayDeclaration.displayResponseDetail.declarationId) :: completeClaim.associatedMRNsAnswer.getOrElse(
+            List()
+          )).map { mrn =>
+            MrnDetail(
+              MRNNumber = Some(mrn.value),
+              acceptanceDate = Some(acceptanceDate),
+              declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+              mainDeclarationReference = Some(true),
+              procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
+              declarantDetails = Some(declarationDetails),
+              accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
+              consigneeDetails = Some(consigneeDetails),
+              bankDetails = Some(bankDetails),
+              NDRCDetails = Some(ndrcDetails)
+            )
           }
         }
       case None                     => invalidNel("could not build mrn details")

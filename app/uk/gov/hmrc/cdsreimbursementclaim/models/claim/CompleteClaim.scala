@@ -45,7 +45,7 @@ final case class CompleteClaim(
   scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
   reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
   typeOfClaim: Option[SelectNumberOfClaimsAnswer],
-  associatedMRNsAnswer: List[MRN]
+  associatedMRNsAnswer: Option[List[MRN]]
 )
 
 object CompleteClaim {
