@@ -37,10 +37,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.roundedTwoDecimalPlacesToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.{roundedTwoDecimalPlaces, roundedTwoDecimalPlacesToString}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
 import javax.inject.Singleton
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimedReimbursementsAnswer
 
 @ImplementedBy(classOf[DefaultClaimTransformerService])
 trait ClaimTransformerService {
@@ -574,8 +575,8 @@ object DefaultClaimTransformerService {
         isValidPaymentMethod(claim.paymentMethod),
         isValidTaxType(claim.taxCode),
         isValidPaymentReference(claim.paymentReference),
-        isValidAmount(claim.paidAmount),
-        isValidAmount(claim.claimAmount)
+        isValidAmount(roundedTwoDecimalPlaces(claim.paidAmount)),
+        isValidAmount(roundedTwoDecimalPlaces(claim.claimAmount))
       ).mapN { case (paymentMethod, taxType, paymentReference, paidAmount, claimAmount) =>
         NdrcDetails(
           paymentMethod = paymentMethod,
@@ -607,19 +608,24 @@ object DefaultClaimTransformerService {
       case None                 => invalidNel("Could not format display acceptance date")
     }
 
-  def setMrnDetails(completeClaim: CompleteClaim): Validation[List[MrnDetail]] =
-    completeClaim.maybeDisplayDeclaration match {
+  def multipleClaimsAnswer(completeClaim: CompleteClaim): List[(MRN, ClaimedReimbursementsAnswer)] = {
+    val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.getOrElse(List())
+    val claims =
+      completeClaim.claimedReimbursementsAnswer :: completeClaim.maybeAssociatedMRNsClaimsAnswer.getOrElse((List()))
+    mrns.zip(claims)
+  }
+
+  def setMrnDetails(completeClaim: CompleteClaim): Validation[List[MrnDetail]] = {
+    val details = completeClaim.maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
-        (
-          setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
-          setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
-          setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
-          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
-          makeNdrcDetails(completeClaim.claims)
-        ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
-          (MRN(displayDeclaration.displayResponseDetail.declarationId) :: completeClaim.associatedMRNsAnswer.getOrElse(
-            List()
-          )).map { mrn =>
+        multipleClaimsAnswer(completeClaim).map { case (mrn, claim) =>
+          (
+            setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
+            setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
+            setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
+            buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
+            makeNdrcDetails(claim)
+          ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
             MrnDetail(
               MRNNumber = Some(mrn.value),
               acceptanceDate = Some(acceptanceDate),
@@ -634,8 +640,23 @@ object DefaultClaimTransformerService {
             )
           }
         }
-      case None                     => invalidNel("could not build mrn details")
+      case None                     => List()
     }
+    if (details.isEmpty) {
+      invalidNel("could not obtain any MRN details")
+    } else {
+      val (valid, invalid) = details.partition(_.isValid)
+      if (!invalid.isEmpty) {
+        val errors = invalid.collect { case e: Invalid[NonEmptyList[String]] => e }
+        invalidNel(
+          s"there is at least one claim which has failed validation: ${errors.map(s => s.e.toList).mkString("|")}"
+        )
+      } else {
+        val mrnDetail: List[MrnDetail] = valid.collect { case Valid(value) => value }
+        Valid(mrnDetail)
+      }
+    }
+  }
 
   def setDuplicateMrnDetails(
     maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration],
