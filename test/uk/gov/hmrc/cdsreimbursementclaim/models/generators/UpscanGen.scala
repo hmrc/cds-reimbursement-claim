@@ -22,9 +22,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDet
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 
 object UpscanGen {
-  implicit val uploadReferenceGen: Typeclass[UploadReference] = gen[UploadReference]
-  implicit val uploadDetailsGen: Typeclass[UploadDetails]     = gen[UploadDetails]
-  implicit val upscanSuccessGen: Typeclass[UpscanSuccess]     = gen[UpscanSuccess]
-  implicit val uploadDocumentGen: Typeclass[UploadDocument]   = gen[UploadDocument]
-  implicit val upscanUploadGen: Typeclass[UpscanUpload]       = gen[UpscanUpload]
+  implicit lazy val uploadReferenceGen: Typeclass[UploadReference] = gen[UploadReference]
+  implicit lazy val uploadDetailsGen: Typeclass[UploadDetails]     = gen[UploadDetails]
+  implicit lazy val upscanSuccessGen: Typeclass[UpscanSuccess]     = gen[UpscanSuccess]
+  implicit lazy val uploadDocumentGen: Typeclass[UploadDocument]   = gen[UploadDocument]
+  implicit lazy val upscanUploadGen: Typeclass[UpscanUpload]       = gen[UpscanUpload]
 }

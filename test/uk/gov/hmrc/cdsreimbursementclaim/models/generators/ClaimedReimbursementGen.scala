@@ -22,7 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursement, Tax
 
 object ClaimedReimbursementGen {
 
-  def genClaimedReimbursement: Gen[ClaimedReimbursement] = for {
+  lazy val genClaimedReimbursement: Gen[ClaimedReimbursement] = for {
     id               <- arbitraryUuid.arbitrary
     paymentMethod    <- Gen.listOfN(3, Gen.alphaUpperChar).map(_.mkString(""))
     paymentReference <- genStringWithMaxSizeOfN(max = 18)
@@ -40,5 +40,5 @@ object ClaimedReimbursementGen {
     isFilled
   )
 
-  implicit val arbitraryClaimedReimbursement: Typeclass[ClaimedReimbursement] = Arbitrary(genClaimedReimbursement)
+  implicit lazy val arbitraryClaimedReimbursement: Typeclass[ClaimedReimbursement] = Arbitrary(genClaimedReimbursement)
 }

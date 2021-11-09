@@ -29,30 +29,30 @@ object IdGen {
   def alphaCharGen(n: Int): String =
     Gen.listOfN(n, Gen.alphaChar).map(_.mkString).sample.getOrElse(sys.error(s"Could not generate instance"))
 
-  def genPhoneNumber: PhoneNumber =
+  lazy val genPhoneNumber: PhoneNumber =
     Gen
       .listOfN(10, Gen.numChar)
       .map(numbers => PhoneNumber(numbers.foldLeft("0")((s, ch) => s"$s$ch")))
       .sample
       .getOrElse(sys.error(s"Could not generate instance"))
 
-  implicit val arbitraryPhoneNumber: Typeclass[PhoneNumber] = Arbitrary(genPhoneNumber)
+  implicit lazy val arbitraryPhoneNumber: Typeclass[PhoneNumber] = Arbitrary(genPhoneNumber)
 
-  def genEori: Gen[Eori] =
+  lazy val genEori: Gen[Eori] =
     for {
       c <- Gen.listOfN(2, Gen.alphaUpperChar)
       n <- Gen.listOfN(12, Gen.numChar)
       s <- Gen.const((c ++ n).mkString(""))
     } yield Eori(s)
 
-  implicit val arbitraryEori: Typeclass[Eori] = Arbitrary(genEori)
+  implicit lazy val arbitraryEori: Typeclass[Eori] = Arbitrary(genEori)
 
-  def genMRN: Gen[MRN] = for {
+  lazy val genMRN: Gen[MRN] = for {
     d1      <- Gen.listOfN(2, Gen.numChar)
     letter2 <- Gen.listOfN(2, Gen.alphaUpperChar)
     word    <- Gen.listOfN(13, Gen.numChar)
     d2      <- Gen.listOfN(1, Gen.numChar)
   } yield MRN((d1 ++ letter2 ++ word ++ d2).mkString)
 
-  implicit val arbitraryMrn: Typeclass[MRN] = Arbitrary(genMRN)
+  implicit lazy val arbitraryMrn: Typeclass[MRN] = Arbitrary(genMRN)
 }

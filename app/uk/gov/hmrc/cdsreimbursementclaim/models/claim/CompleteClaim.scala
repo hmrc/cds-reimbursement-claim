@@ -18,7 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -27,26 +26,26 @@ import java.util.UUID
 
 final case class CompleteClaim(
   id: UUID,
+  typeOfClaim: TypeOfClaimAnswer,
   movementReferenceNumber: MRN,
-  maybeDuplicateMovementReferenceNumberAnswer: Option[MRN],
+  duplicateMovementReferenceNumberAnswer: Option[MRN],
   declarantTypeAnswer: DeclarantTypeAnswer,
   detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
   mrnContactDetailsAnswer: Option[MrnContactDetails],
   mrnContactAddressAnswer: Option[ContactAddress],
-  maybeBasisOfClaimAnswer: Option[BasisOfClaim],
-  maybeBankAccountDetailsAnswer: Option[BankAccountDetails],
+  basisOfClaimAnswer: Option[BasisOfClaim],
+  bankAccountDetailsAnswer: Option[BankAccountDetails],
   supportingEvidencesAnswer: SupportingEvidencesAnswer,
-  commodityDetailsAnswer: CommodityDetails,
-  maybeDisplayDeclaration: Option[DisplayDeclaration],
-  maybeDuplicateDisplayDeclaration: Option[DisplayDeclaration],
-  importerEoriNumber: Option[ImporterEoriNumber],
-  declarantEoriNumber: Option[DeclarantEoriNumber],
+  commodityDetailsAnswer: CommodityDetailsAnswer,
+  displayDeclaration: Option[DisplayDeclaration],
+  duplicateDisplayDeclaration: Option[DisplayDeclaration],
+  importerEoriNumber: Option[ImporterEoriNumberAnswer],
+  declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
   claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
   scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
   reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
-  typeOfClaim: Option[SelectNumberOfClaimsAnswer],
-  associatedMRNsAnswer: Option[List[MRN]],
-  maybeAssociatedMRNsClaimsAnswer: Option[List[ClaimedReimbursementsAnswer]]
+  associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
+  associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
 )
 
 object CompleteClaim {
@@ -73,10 +72,10 @@ object CompleteClaim {
         )
 
     def consigneeDetails: Option[ConsigneeDetails] =
-      completeClaim.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
+      completeClaim.displayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
 
     def declarantDetails: Option[DeclarantDetails] =
-      completeClaim.maybeDisplayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
+      completeClaim.displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
   }
 
   implicit val format: Format[CompleteClaim] = Json.format[CompleteClaim]

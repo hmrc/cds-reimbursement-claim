@@ -17,10 +17,9 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class ImporterEoriNumber(value: Eori)
+final case class CommodityDetailsAnswer(value: String) extends AnyVal
 
-object ImporterEoriNumber {
-  implicit val format: OFormat[ImporterEoriNumber] = Json.format[ImporterEoriNumber]
+object CommodityDetailsAnswer {
+  implicit val format: OFormat[CommodityDetailsAnswer] = Json.format[CommodityDetailsAnswer]
 }
