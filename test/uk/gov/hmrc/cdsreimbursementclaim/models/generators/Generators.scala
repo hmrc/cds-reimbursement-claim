@@ -20,15 +20,12 @@ import org.scalacheck.{Arbitrary, Gen}
 
 object Generators {
 
-  implicit val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
+  implicit lazy val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
 
-  implicit val stringGen: Gen[String] = Gen.nonEmptyListOf(Gen.alphaUpperChar).map(_.mkString(""))
+  implicit lazy val stringGen: Gen[String] = Gen.nonEmptyListOf(Gen.alphaUpperChar).map(_.mkString(""))
 
-  implicit val longGen: Gen[Long] =
+  implicit lazy val longGen: Gen[Long] =
     Gen.choose(-5e13.toLong, 5e13.toLong)
-
-  implicit def listGen[A](g: Gen[A]): Gen[List[A]]   = Gen.listOf(g)
-  implicit def someGen[A](g: Gen[A]): Gen[Option[A]] = Gen.some(g)
 
   def sample[A](implicit anItem: Arbitrary[A]): A =
     sample(anItem.arbitrary)

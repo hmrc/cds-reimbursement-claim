@@ -22,14 +22,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 
 object ClaimGen {
 
-  implicit val displayResponseGen: Typeclass[DisplayResponseDetail]         = gen[DisplayResponseDetail]
-  implicit val displayDeclarationGen: Typeclass[DisplayDeclaration]         = gen[DisplayDeclaration]
-  implicit val eisRequestBGen: Typeclass[RequestDetailB]                    = gen[RequestDetailB]
-  implicit val eisRequestAGen: Typeclass[RequestDetailA]                    = gen[RequestDetailA]
-  implicit val eisRequestCommonGen: Typeclass[RequestCommon]                = gen[RequestCommon]
-  implicit val eisSubmitClaimResponseGen: Typeclass[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
-  implicit val eisSubmitClaimRequestGen: Typeclass[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]
-  implicit val submitClaimResponseGen: Typeclass[SubmitClaimResponse]       = gen[SubmitClaimResponse]
-  implicit val submitClaimRequestGen: Typeclass[SubmitClaimRequest]         = gen[SubmitClaimRequest]
+  implicit lazy val displayResponseGen: Typeclass[DisplayResponseDetail]         = gen[DisplayResponseDetail]
+  implicit lazy val displayDeclarationGen: Typeclass[DisplayDeclaration]         = gen[DisplayDeclaration]
+  implicit lazy val eisRequestBGen: Typeclass[RequestDetailB]                    = gen[RequestDetailB]
+  implicit lazy val eisRequestAGen: Typeclass[RequestDetailA]                    = gen[RequestDetailA]
+  implicit lazy val eisRequestCommonGen: Typeclass[RequestCommon]                = gen[RequestCommon]
+  implicit lazy val eisSubmitClaimResponseGen: Typeclass[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
+  implicit lazy val eisSubmitClaimRequestGen: Typeclass[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]
+  implicit lazy val submitClaimResponseGen: Typeclass[SubmitClaimResponse]       = gen[SubmitClaimResponse]
+  implicit lazy val submitClaimRequestGen: Typeclass[SubmitClaimRequest]         = gen[SubmitClaimRequest]
 
 }

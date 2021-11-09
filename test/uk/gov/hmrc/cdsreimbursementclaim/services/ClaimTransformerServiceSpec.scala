@@ -24,7 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimedReimbursementsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimedReimbursementsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.Address
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
@@ -153,10 +153,10 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           sample[CompleteClaim].copy(
             movementReferenceNumber = movevementReferenceNumber,
             declarantTypeAnswer = declarantTypeAnswer,
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaimAnswer),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration)
+            displayDeclaration = Some(displayDeclaration)
           )
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -711,7 +711,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "Declaration mode on Individual complete claim is 'Parent Declaration'" in {
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual)
+          typeOfClaim = TypeOfClaimAnswer.Individual
         )
 
         DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("Parent Declaration")
@@ -719,7 +719,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "Declaration mode on Scheduled complete claim is 'All Declarations'" in {
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Scheduled)
+          typeOfClaim = TypeOfClaimAnswer.Scheduled
         )
 
         DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("Parent Declaration")
@@ -727,7 +727,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "Declaration mode on Multiple complete claim is 'All Declarations'" in {
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Multiple)
+          typeOfClaim = TypeOfClaimAnswer.Multiple
         )
 
         DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("All Declarations")
@@ -735,7 +735,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "Case type on Scheduled complete claim with no reimbursement method specified is Individual" in {
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Scheduled),
+          typeOfClaim = TypeOfClaimAnswer.Scheduled,
           reimbursementMethodAnswer = None
         )
 
@@ -744,7 +744,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "Case type on Multiple complete claim with no reimbursement method specified is Individual" in {
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Multiple),
+          typeOfClaim = TypeOfClaimAnswer.Multiple,
           reimbursementMethodAnswer = None
         )
 
@@ -753,7 +753,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
       "Case type on Individual complete claim with no reimbursement method specified is Individual" in {
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual),
+          typeOfClaim = TypeOfClaimAnswer.Individual,
           reimbursementMethodAnswer = None
         )
 
@@ -763,7 +763,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       "Case type on Individual complete claim with reimbursement method of Current Month Adjustment is CMA" in {
         val completeClaim =
           sample[CompleteClaim].copy(
-            typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual),
+            typeOfClaim = TypeOfClaimAnswer.Individual,
             reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment)
           )
 
@@ -773,7 +773,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       "Case type on Individual complete claim with reimbursement method of Bank Transfer is Individual" in {
         val completeClaim =
           sample[CompleteClaim].copy(
-            typeOfClaim = Some(SelectNumberOfClaimsAnswer.Individual),
+            typeOfClaim = TypeOfClaimAnswer.Individual,
             reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer)
           )
 
@@ -823,17 +823,16 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
             mrnContactDetailsAnswer = Some(contactDetails),
             mrnContactAddressAnswer = Some(contactAddress),
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaimAnswer),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
+            displayDeclaration = Some(displayDeclaration),
+            duplicateDisplayDeclaration = None
           )
 
         val expectedCaseType =
           if (
-            completeClaim.typeOfClaim.contains(SelectNumberOfClaimsAnswer.Scheduled) || completeClaim.typeOfClaim
-              .contains(SelectNumberOfClaimsAnswer.Multiple)
+            completeClaim.typeOfClaim === TypeOfClaimAnswer.Scheduled || completeClaim.typeOfClaim === TypeOfClaimAnswer.Multiple
           )
             "Bulk"
           else
@@ -850,10 +849,9 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         }
 
         val expectedDeclarationMode = completeClaim.typeOfClaim match {
-          case Some(SelectNumberOfClaimsAnswer.Individual) => "Parent Declaration"
-          case Some(SelectNumberOfClaimsAnswer.Scheduled)  => "Parent Declaration"
-          case Some(SelectNumberOfClaimsAnswer.Multiple)   => "All Declarations"
-          case _                                           => "Parent Declaration"
+          case TypeOfClaimAnswer.Scheduled => "Parent Declaration"
+          case TypeOfClaimAnswer.Multiple  => "All Declarations"
+          case _                           => "Parent Declaration"
         }
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -914,11 +912,11 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
             mrnContactDetailsAnswer = None,
             mrnContactAddressAnswer = None,
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaimAnswer),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
+            displayDeclaration = Some(displayDeclaration),
+            duplicateDisplayDeclaration = None
           )
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -981,11 +979,11 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
             mrnContactDetailsAnswer = Some(contactDetails),
             mrnContactAddressAnswer = Some(contactAddress),
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaimAnswer),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
+            displayDeclaration = Some(displayDeclaration),
+            duplicateDisplayDeclaration = None
           )
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -1041,11 +1039,11 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
             mrnContactDetailsAnswer = None,
             mrnContactAddressAnswer = None,
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaimAnswer),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
+            displayDeclaration = Some(displayDeclaration),
+            duplicateDisplayDeclaration = None
           )
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -1108,11 +1106,11 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
             mrnContactDetailsAnswer = Some(contactDetails),
             mrnContactAddressAnswer = Some(contactAddress),
-            maybeBasisOfClaimAnswer = Some(basisOfClaim),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaim),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
+            displayDeclaration = Some(displayDeclaration),
+            duplicateDisplayDeclaration = None
           )
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
@@ -1169,11 +1167,11 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
             mrnContactDetailsAnswer = None,
             mrnContactAddressAnswer = None,
-            maybeBasisOfClaimAnswer = Some(basisOfClaimAnswer),
-            maybeBankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
+            basisOfClaimAnswer = Some(basisOfClaimAnswer),
+            bankAccountDetailsAnswer = Some(bankAccountDetailsAnswer),
             claimedReimbursementsAnswer = claimedReimbursementsAnswer,
-            maybeDisplayDeclaration = Some(displayDeclaration),
-            maybeDuplicateDisplayDeclaration = None
+            displayDeclaration = Some(displayDeclaration),
+            duplicateDisplayDeclaration = None
           )
 
         val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)

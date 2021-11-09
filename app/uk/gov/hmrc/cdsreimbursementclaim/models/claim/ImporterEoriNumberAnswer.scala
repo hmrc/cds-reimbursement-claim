@@ -16,25 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.data.NonEmptyList
-package object answers {
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-  type SupportingEvidencesAnswer = NonEmptyList[UploadDocument]
+final case class ImporterEoriNumberAnswer(value: Eori)
 
-  object SupportingEvidencesAnswer {
-    def apply(evidence: UploadDocument): SupportingEvidencesAnswer =
-      NonEmptyList.one(evidence)
-  }
-
-  type ClaimedReimbursementsAnswer = NonEmptyList[ClaimedReimbursement]
-
-  object ClaimedReimbursementsAnswer {
-
-    def apply(head: ClaimedReimbursement, tail: ClaimedReimbursement*): NonEmptyList[ClaimedReimbursement] =
-      NonEmptyList.of(head, tail: _*)
-
-    def apply(items: List[ClaimedReimbursement]): Option[NonEmptyList[ClaimedReimbursement]] =
-      NonEmptyList.fromList(items)
-  }
-
+object ImporterEoriNumberAnswer {
+  implicit val format: OFormat[ImporterEoriNumberAnswer] = Json.format[ImporterEoriNumberAnswer]
 }

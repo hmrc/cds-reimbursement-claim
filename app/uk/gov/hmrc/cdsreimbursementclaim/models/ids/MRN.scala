@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.Format
 import play.api.mvc.PathBindable
+import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
 
 final case class MRN(value: String)
 
@@ -42,5 +43,5 @@ object MRN {
 
   }
 
-  implicit val format: OFormat[MRN] = Json.format[MRN]
+  implicit val format: Format[MRN] = SimpleStringFormat(MRN(_), _.value)
 }
