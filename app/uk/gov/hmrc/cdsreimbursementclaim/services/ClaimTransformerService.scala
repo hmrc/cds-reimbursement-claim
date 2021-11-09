@@ -90,7 +90,8 @@ class DefaultClaimTransformerService @Inject() (
         customDeclarationType = Some(CustomDeclarationType.MRN),
         declarationMode = setDeclarationMode(completeClaim),
         claimDate = Some(localDateNow),
-        claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.claims.total)),
+        claimAmountTotal =
+          Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.totalReimbursementAmount)),
         disposalMethod = None,
         reimbursementMethod = setReimbursementMethod(completeClaim),
         basisOfClaim = maybeReasonAndOrBasis,
@@ -611,7 +612,7 @@ object DefaultClaimTransformerService {
   def multipleClaimsAnswer(completeClaim: CompleteClaim): List[(MRN, ClaimedReimbursementsAnswer)] = {
     val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.getOrElse(List())
     val claims =
-      completeClaim.claimedReimbursementsAnswer :: completeClaim.maybeAssociatedMRNsClaimsAnswer.getOrElse((List()))
+      completeClaim.claimedReimbursementsAnswer :: completeClaim.maybeAssociatedMRNsClaimsAnswer.getOrElse(List())
     mrns.zip(claims)
   }
 
@@ -646,7 +647,7 @@ object DefaultClaimTransformerService {
       invalidNel("could not obtain any MRN details")
     } else {
       val (valid, invalid) = details.partition(_.isValid)
-      if (!invalid.isEmpty) {
+      if (invalid.nonEmpty) {
         val errors = invalid.collect { case e: Invalid[NonEmptyList[String]] => e }
         invalidNel(
           s"there is at least one claim which has failed validation: ${errors.map(s => s.e.toList).mkString("|")}"

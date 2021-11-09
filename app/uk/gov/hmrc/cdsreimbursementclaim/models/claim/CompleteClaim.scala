@@ -19,6 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SelectNumberOfClaimsAnswer._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -71,6 +72,21 @@ object CompleteClaim {
             paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
           )
         )
+
+    def totalReimbursementAmount: BigDecimal = completeClaim.typeOfClaim match {
+      case Some(Multiple) =>
+        completeClaim.maybeAssociatedMRNsClaimsAnswer
+          .getOrElse(List())
+          .foldLeft(totalClaimedDuty(completeClaim.claimedReimbursementsAnswer))(
+            (accumulator, claimedReimbursementsAnswer) => accumulator + totalClaimedDuty(claimedReimbursementsAnswer)
+          )
+      case _              => totalClaimedDuty(completeClaim.claimedReimbursementsAnswer)
+    }
+
+    private def totalClaimedDuty(claimedReimbursementsAnswer: ClaimedReimbursementsAnswer): BigDecimal =
+      claimedReimbursementsAnswer.foldLeft(BigDecimal(0)) { (accumulator, claim) =>
+        accumulator + claim.claimAmount
+      }
 
     def consigneeDetails: Option[ConsigneeDetails] =
       completeClaim.maybeDisplayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)

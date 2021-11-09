@@ -93,7 +93,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
       )
       .returning(())
 
-  def mockAuditSubmitClaimResponseEvent(
+  private def mockAuditSubmitClaimResponseEvent(
     httpStatus: Int,
     responseBody: Option[JsValue],
     submitClaimRequest: SubmitClaimRequest,
@@ -153,7 +153,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         val emailRequest = sample[EmailRequest].copy(
           email = submitClaimRequest.signedInUserDetails.verifiedEmail,
           contactName = submitClaimRequest.signedInUserDetails.contactName,
-          claimAmount = submitClaimRequest.completeClaim.claims.total
+          claimAmount = submitClaimRequest.completeClaim.totalReimbursementAmount
         )
 
         val responseJsonBody = Json.parse(
@@ -199,7 +199,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         val emailRequest = sample[EmailRequest].copy(
           email = submitClaimRequest.signedInUserDetails.verifiedEmail,
           contactName = submitClaimRequest.signedInUserDetails.contactName,
-          claimAmount = submitClaimRequest.completeClaim.claims.total
+          claimAmount = submitClaimRequest.completeClaim.totalReimbursementAmount
         )
 
         val responseJsonBody = Json.parse(
@@ -231,7 +231,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
             submitClaimRequest,
             eisSubmitClaimRequest
           )
-          mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left((Error("some error"))))
+          mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left(Error("some error")))
         }
 
         await(claimService.submitClaim(submitClaimRequest).value) shouldBe Right(submitClaimResponse)

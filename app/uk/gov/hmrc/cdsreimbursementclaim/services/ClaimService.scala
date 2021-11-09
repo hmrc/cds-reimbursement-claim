@@ -71,7 +71,7 @@ class DefaultClaimService @Inject() (
     val emailRequest: EmailRequest = EmailRequest(
       submitClaimRequest.signedInUserDetails.verifiedEmail,
       submitClaimRequest.signedInUserDetails.contactName,
-      submitClaimRequest.completeClaim.claims.total
+      submitClaimRequest.completeClaim.totalReimbursementAmount
     )
 
     for {
