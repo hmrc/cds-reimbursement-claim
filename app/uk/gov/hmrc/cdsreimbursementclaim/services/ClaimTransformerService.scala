@@ -28,7 +28,8 @@ import configs.syntax._
 import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursementsAnswer, Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.IncorrectAdditionalInformationCode
@@ -39,9 +40,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.{roundedTwoDecimalPlaces, roundedTwoDecimalPlacesToString}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
+
 import javax.inject.Singleton
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimedReimbursementsAnswer
 
 @ImplementedBy(classOf[DefaultClaimTransformerService])
 trait ClaimTransformerService {
@@ -72,12 +72,12 @@ class DefaultClaimTransformerService @Inject() (
     val completeClaim = submitClaimRequest.completeClaim
     (
       makeReasonAndOrBasisOfClaim(
-        completeClaim.maybeBasisOfClaimAnswer,
+        completeClaim.basisOfClaimAnswer,
         getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
       ),
       setMrnDetails(completeClaim),
       setDuplicateMrnDetails(
-        completeClaim.maybeDuplicateDisplayDeclaration,
+        completeClaim.duplicateDisplayDeclaration,
         completeClaim
       ),
       buildEoriDetails(submitClaimRequest.completeClaim)
@@ -329,7 +329,7 @@ object DefaultClaimTransformerService {
 
   def makeGoodsDetails(
     declarantType: DeclarantTypeAnswer,
-    commodityDetails: CommodityDetails
+    commodityDetails: CommodityDetailsAnswer
   ): GoodsDetails =
     GoodsDetails(
       placeOfImport = None,
@@ -515,7 +515,7 @@ object DefaultClaimTransformerService {
     maybeBankDetails: Option[models.claim.BankDetails],
     completeClaim: CompleteClaim
   ): Validation[BankDetails] =
-    (maybeBankDetails, completeClaim.maybeBankAccountDetailsAnswer) match {
+    (maybeBankDetails, completeClaim.bankAccountDetailsAnswer) match {
       case (_, Some(bankAccountDetails)) =>
         Valid(
           BankDetails(
@@ -589,16 +589,10 @@ object DefaultClaimTransformerService {
         )
       }
     }.toList
-    if (result.sequence.isInvalid) {
-      val errors = result.collect { case e: Invalid[NonEmptyList[String]] => e }
-      invalidNel(
-        s"there is at least one claim which has failed validation: ${errors.map(s => s.e.toList).mkString("|")}"
-      )
-    } else {
-      val dd: List[NdrcDetails] = result.collect { case Valid(value) => value }
-      Valid(dd)
-    }
 
+    result.sequence.leftMap(errors =>
+      NonEmptyList.one(s"there is at least one claim which has failed validation: ${errors.toList.mkString("|")}")
+    )
   }
 
   def setAcceptanceDate(
@@ -612,51 +606,43 @@ object DefaultClaimTransformerService {
   def multipleClaimsAnswer(completeClaim: CompleteClaim): List[(MRN, ClaimedReimbursementsAnswer)] = {
     val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.getOrElse(List())
     val claims =
-      completeClaim.claimedReimbursementsAnswer :: completeClaim.maybeAssociatedMRNsClaimsAnswer.getOrElse(List())
+      completeClaim.claimedReimbursementsAnswer :: completeClaim.associatedMRNsClaimsAnswer.getOrElse(List())
     mrns.zip(claims)
   }
 
   def setMrnDetails(completeClaim: CompleteClaim): Validation[List[MrnDetail]] = {
-    val details = completeClaim.maybeDisplayDeclaration match {
-      case Some(displayDeclaration) =>
-        multipleClaimsAnswer(completeClaim).map { case (mrn, claim) =>
-          (
-            setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
-            setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
-            setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
-            buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
-            makeNdrcDetails(claim)
-          ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
-            MrnDetail(
-              MRNNumber = Some(mrn.value),
-              acceptanceDate = Some(acceptanceDate),
-              declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-              mainDeclarationReference = Some(true),
-              procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
-              declarantDetails = Some(declarationDetails),
-              accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
-              consigneeDetails = Some(consigneeDetails),
-              bankDetails = Some(bankDetails),
-              NDRCDetails = Some(ndrcDetails)
-            )
-          }
+
+    val details = completeClaim.displayDeclaration.toList.flatMap(displayDeclaration =>
+      multipleClaimsAnswer(completeClaim).map { case (mrn, claim) =>
+        (
+          setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
+          setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
+          setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
+          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
+          makeNdrcDetails(claim)
+        ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
+          MrnDetail(
+            MRNNumber = Some(mrn.value),
+            acceptanceDate = Some(acceptanceDate),
+            declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+            mainDeclarationReference = Some(true),
+            procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
+            declarantDetails = Some(declarationDetails),
+            accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
+            consigneeDetails = Some(consigneeDetails),
+            bankDetails = Some(bankDetails),
+            NDRCDetails = Some(ndrcDetails)
+          )
         }
-      case None                     => List()
-    }
-    if (details.isEmpty) {
-      invalidNel("could not obtain any MRN details")
-    } else {
-      val (valid, invalid) = details.partition(_.isValid)
-      if (invalid.nonEmpty) {
-        val errors = invalid.collect { case e: Invalid[NonEmptyList[String]] => e }
-        invalidNel(
-          s"there is at least one claim which has failed validation: ${errors.map(s => s.e.toList).mkString("|")}"
-        )
-      } else {
-        val mrnDetail: List[MrnDetail] = valid.collect { case Valid(value) => value }
-        Valid(mrnDetail)
       }
-    }
+    )
+
+    details
+      .ensuring(_.nonEmpty)
+      .sequence
+      .leftMap(errors =>
+        NonEmptyList.one(s"there is at least one claim which has failed validation: ${errors.toList.mkString("|")}")
+      )
   }
 
   def setDuplicateMrnDetails(
@@ -692,10 +678,10 @@ object DefaultClaimTransformerService {
 
   def setCaseType(completeClaim: CompleteClaim): Option[String] =
     (completeClaim.reimbursementMethodAnswer, completeClaim.typeOfClaim) match {
-      case (_, Some(SelectNumberOfClaimsAnswer.Multiple))  => Some(CaseType.Bulk)
-      case (_, Some(SelectNumberOfClaimsAnswer.Scheduled)) => Some(CaseType.Bulk)
-      case (Some(CurrentMonthAdjustment), _)               => Some(CaseType.CMA)
-      case _                                               => Some(CaseType.Individual)
+      case (_, TypeOfClaimAnswer.Multiple)   => Some(CaseType.Bulk)
+      case (_, TypeOfClaimAnswer.Scheduled)  => Some(CaseType.Bulk)
+      case (Some(CurrentMonthAdjustment), _) => Some(CaseType.CMA)
+      case _                                 => Some(CaseType.Individual)
     }
 
   def setReimbursementMethod(completeClaim: CompleteClaim): Option[String] =
@@ -706,8 +692,8 @@ object DefaultClaimTransformerService {
 
   def setDeclarationMode(completeClaim: CompleteClaim): Option[String] =
     completeClaim.typeOfClaim match {
-      case Some(SelectNumberOfClaimsAnswer.Scheduled) => Some(DeclarationMode.ParentDeclaration)
-      case Some(SelectNumberOfClaimsAnswer.Multiple)  => Some(DeclarationMode.AllDeclaration)
-      case _                                          => Some(DeclarationMode.ParentDeclaration)
+      case TypeOfClaimAnswer.Scheduled => Some(DeclarationMode.ParentDeclaration)
+      case TypeOfClaimAnswer.Multiple  => Some(DeclarationMode.AllDeclaration)
+      case _                           => Some(DeclarationMode.ParentDeclaration)
     }
 }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.magnolia._
 import org.scalacheck.magnolia.Typeclass
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimedReimbursementsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimedReimbursementsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim

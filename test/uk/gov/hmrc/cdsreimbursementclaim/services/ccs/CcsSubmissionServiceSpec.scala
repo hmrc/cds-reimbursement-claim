@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.SupportingEvidencesAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidencesAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteClaim, SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._

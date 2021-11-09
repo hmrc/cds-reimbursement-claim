@@ -20,5 +20,5 @@ import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 
 object EmailRequestGen {
-  implicit val emailRequestGen: Typeclass[EmailRequest] = gen[EmailRequest]
+  implicit lazy val emailRequestGen: Typeclass[EmailRequest] = gen[EmailRequest]
 }

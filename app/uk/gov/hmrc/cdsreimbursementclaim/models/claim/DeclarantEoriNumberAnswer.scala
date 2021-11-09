@@ -16,16 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-sealed trait SelectNumberOfClaimsAnswer extends Product with Serializable
+final case class DeclarantEoriNumberAnswer(value: Eori)
 
-object SelectNumberOfClaimsAnswer {
-  case object Individual extends SelectNumberOfClaimsAnswer
-  case object Multiple extends SelectNumberOfClaimsAnswer
-  case object Scheduled extends SelectNumberOfClaimsAnswer
-
-  implicit val selectNumberOfClaimsAnswerFormat: OFormat[SelectNumberOfClaimsAnswer] =
-    derived.oformat[SelectNumberOfClaimsAnswer]()
+object DeclarantEoriNumberAnswer {
+  implicit val format: OFormat[DeclarantEoriNumberAnswer] = Json.format[DeclarantEoriNumberAnswer]
 }
