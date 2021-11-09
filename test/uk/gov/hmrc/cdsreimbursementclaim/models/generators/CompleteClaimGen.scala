@@ -23,13 +23,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimedReimburseme
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
+
 object CompleteClaimGen {
 
   implicit val detailsRegisteredWithCdsAnswerGen: Typeclass[DetailsRegisteredWithCdsAnswer] =
     gen[DetailsRegisteredWithCdsAnswer]
   implicit val contactAddressGen: Typeclass[ContactAddress]                                 = gen[ContactAddress]
   implicit val mrnContactDetailsGen: Typeclass[MrnContactDetails]                           = gen[MrnContactDetails]
-  implicit val claimGen: Typeclass[ClaimedReimbursement]                                    = gen[ClaimedReimbursement]
+  implicit val claimGen: Typeclass[ClaimedReimbursement]                                    = ClaimedReimbursementGen.arbitraryClaimedReimbursement
   implicit val claimedReimbursementAnswerGen: Typeclass[ClaimedReimbursementsAnswer]        = gen[ClaimedReimbursementsAnswer]
   implicit val bankAccountDetailsAnswerGen: Typeclass[BankAccountDetails]                   =
     gen[BankAccountDetails]
