@@ -90,7 +90,8 @@ class DefaultClaimTransformerService @Inject() (
         customDeclarationType = Some(CustomDeclarationType.MRN),
         declarationMode = setDeclarationMode(completeClaim),
         claimDate = Some(localDateNow),
-        claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.claims.total)),
+        claimAmountTotal =
+          Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.totalReimbursementAmount)),
         disposalMethod = None,
         reimbursementMethod = setReimbursementMethod(completeClaim),
         basisOfClaim = maybeReasonAndOrBasis,
@@ -603,9 +604,9 @@ object DefaultClaimTransformerService {
     }
 
   def multipleClaimsAnswer(completeClaim: CompleteClaim): List[(MRN, ClaimedReimbursementsAnswer)] = {
-    val mrns   = completeClaim.movementReferenceNumber +: completeClaim.associatedMRNsAnswer.toList.flatMap(_.toList)
+    val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.toList.flatMap(_.toList)
     val claims =
-      completeClaim.claimedReimbursementsAnswer +: completeClaim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
+      completeClaim.claimedReimbursementsAnswer :: completeClaim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
     mrns.zip(claims)
   }
 
