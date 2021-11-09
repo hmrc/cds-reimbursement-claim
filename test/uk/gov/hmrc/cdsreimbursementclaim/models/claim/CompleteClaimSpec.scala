@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.data.NonEmptyList
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SelectNumberOfClaimsAnswer._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers.ClaimedReimbursementsAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genAssociatedMRNs, genClaims}
@@ -38,10 +38,10 @@ class CompleteClaimSpec extends AnyWordSpec with Matchers with MockFactory {
         )
         val claimedReimbursementAnswers = ClaimedReimbursementsAnswer(claims).get
         val completeClaim               = sample[CompleteClaim].copy(
-          typeOfClaim = Some(Individual),
+          typeOfClaim = Individual,
           claimedReimbursementsAnswer = claimedReimbursementAnswers,
           associatedMRNsAnswer = None,
-          maybeAssociatedMRNsClaimsAnswer = None
+          associatedMRNsClaimsAnswer = None
         )
 
         val expectedClaimAmount = claims.size * 10
@@ -68,10 +68,10 @@ class CompleteClaimSpec extends AnyWordSpec with Matchers with MockFactory {
         })
 
         val completeClaim = sample[CompleteClaim].copy(
-          typeOfClaim = Some(Multiple),
+          typeOfClaim = Multiple,
           claimedReimbursementsAnswer = claimedReimbursementAnswers,
-          associatedMRNsAnswer = associatedMrns,
-          maybeAssociatedMRNsClaimsAnswer = maybeAssociatedMRNsClaimsAnswer
+          associatedMRNsAnswer = associatedMrns.flatMap(NonEmptyList.fromList),
+          associatedMRNsClaimsAnswer = maybeAssociatedMRNsClaimsAnswer.flatMap(NonEmptyList.fromList)
         )
 
         val expectedClaimAmount = maybeAssociatedMRNsClaimsAnswer.get.foldLeft(claims.size) { (a, b) =>

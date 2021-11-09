@@ -604,9 +604,9 @@ object DefaultClaimTransformerService {
     }
 
   def multipleClaimsAnswer(completeClaim: CompleteClaim): List[(MRN, ClaimedReimbursementsAnswer)] = {
-    val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.getOrElse(List())
+    val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.toList.flatMap(_.toList)
     val claims =
-      completeClaim.claimedReimbursementsAnswer :: completeClaim.associatedMRNsClaimsAnswer.getOrElse(List())
+      completeClaim.claimedReimbursementsAnswer :: completeClaim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
     mrns.zip(claims)
   }
 

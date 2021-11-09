@@ -18,8 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.answers._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SelectNumberOfClaimsAnswer._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
@@ -74,13 +73,13 @@ object CompleteClaim {
         )
 
     def totalReimbursementAmount: BigDecimal = completeClaim.typeOfClaim match {
-      case Some(Multiple) =>
-        completeClaim.associatedMRNsClaimsAnswer
-          .getOrElse(List())
+      case TypeOfClaimAnswer.Multiple =>
+        completeClaim.associatedMRNsClaimsAnswer.toList
+          .flatMap(_.toList)
           .foldLeft(totalClaimedDuty(completeClaim.claimedReimbursementsAnswer))(
             (accumulator, claimedReimbursementsAnswer) => accumulator + totalClaimedDuty(claimedReimbursementsAnswer)
           )
-      case _              => totalClaimedDuty(completeClaim.claimedReimbursementsAnswer)
+      case _                          => totalClaimedDuty(completeClaim.claimedReimbursementsAnswer)
     }
 
     private def totalClaimedDuty(claimedReimbursementsAnswer: ClaimedReimbursementsAnswer): BigDecimal =
