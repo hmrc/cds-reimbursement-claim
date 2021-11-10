@@ -29,25 +29,25 @@ object UploadDocumentType {
     override def toString: String = "Packing List"
   }
   case object AirWayBill extends UploadDocumentType {
-    override def toString: String = "AirWay Bill"
+    override def toString: String = "Air Waybill"
   }
   case object BillOfLading extends UploadDocumentType {
-    override def toString: String = "Bill Of Lading"
+    override def toString: String = "Bill of Lading"
   }
   case object SubstituteEntry extends UploadDocumentType {
     override def toString: String = "Substitute Entry"
   }
   case object ScheduleOfMRNs extends UploadDocumentType {
-    override def toString: String = "Schedule Of MRNs"
+    override def toString: String = "Schedule of MRNs"
   }
   case object ProofOfAuthority extends UploadDocumentType {
-    override def toString: String = "Proof Of Authority"
+    override def toString: String = "Proof of Authority (to be repaid)"
   }
   case object CorrespondenceTrader extends UploadDocumentType {
     override def toString: String = "Correspondence Trader"
   }
   case object AdditionalSupportingDocuments extends UploadDocumentType {
-    override def toString: String = "Additional Supporting Documents"
+    override def toString: String = "Additional Supporting Documentation"
   }
   case object ImportAndExportDeclaration extends UploadDocumentType {
     override def toString: String = "Import and Export Declaration"
