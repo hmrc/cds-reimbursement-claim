@@ -625,12 +625,12 @@ object DefaultClaimTransformerService {
             MRNNumber = Some(mrn.value),
             acceptanceDate = Some(acceptanceDate),
             declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-            mainDeclarationReference = Some(completeClaim.movementReferenceNumber == mrn),
+            mainDeclarationReference = Some(completeClaim.movementReferenceNumber.value === mrn.value),
             procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
             declarantDetails = Some(declarationDetails),
             accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
             consigneeDetails = Some(consigneeDetails),
-            bankDetails = if (completeClaim.movementReferenceNumber == mrn) Some(bankDetails) else None,
+            bankDetails = if (completeClaim.movementReferenceNumber.value === mrn.value) Some(bankDetails) else None,
             NDRCDetails = Some(ndrcDetails)
           )
         }
