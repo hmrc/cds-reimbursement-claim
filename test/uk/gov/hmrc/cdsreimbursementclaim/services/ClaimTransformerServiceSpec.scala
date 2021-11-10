@@ -379,7 +379,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
                 reimbursement.paymentMethod,
                 reimbursement.paymentReference,
                 None,
-                reimbursement.taxCode,
+                reimbursement.taxCode.value,
                 "20.00",
                 Some("10.00")
               )

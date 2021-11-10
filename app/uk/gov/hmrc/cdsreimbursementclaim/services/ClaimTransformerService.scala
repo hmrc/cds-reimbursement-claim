@@ -574,7 +574,7 @@ object DefaultClaimTransformerService {
     val result: List[Validation[NdrcDetails]] = claims.map { claim =>
       (
         isValidPaymentMethod(claim.paymentMethod),
-        isValidTaxType(claim.taxCode),
+        isValidTaxType(claim.taxCode.value),
         isValidPaymentReference(claim.paymentReference),
         isValidAmount(roundedTwoDecimalPlaces(claim.paidAmount)),
         isValidAmount(roundedTwoDecimalPlaces(claim.claimAmount))

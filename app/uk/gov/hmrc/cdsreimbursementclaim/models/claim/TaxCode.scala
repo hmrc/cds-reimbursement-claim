@@ -185,16 +185,6 @@ object TaxCode {
 
   private val taxCodesMap: Map[String, TaxCode] = allTaxCodes.map(a => a.value -> a).toMap
 
-  val allTaxCodesPartialFunctions: List[PartialFunction[TaxCode, String]] = allTaxCodes.map(a =>
-    new PartialFunction[TaxCode, String]() {
-      def apply(v1: TaxCode): String       = a.value
-      def isDefinedAt(x: TaxCode): Boolean = true
-    }
-  )
-
-  implicit def classToNameString(in: TaxCode): String =
-    allTaxCodesPartialFunctions.drop(1).foldLeft(allTaxCodesPartialFunctions(0))(_ orElse _)(in)
-
   implicit val taxCodeEq: Eq[TaxCode] = Eq.fromUniversalEquals[TaxCode]
 
   implicit val taxCodeFormat: Format[TaxCode] = SimpleStringFormat(taxCodesMap, _.value)
