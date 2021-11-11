@@ -22,6 +22,7 @@ import cats.data.EitherT
 import cats.syntax.all._
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.EitherValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.await
@@ -30,8 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SupportingEvidencesAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{CompleteClaim, SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
@@ -43,11 +43,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.workitem._
 
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFactory {
+class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFactory with EitherValues {
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
 
@@ -162,14 +163,12 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
       .expects()
       .returning(EitherT.fromEither[Future](response))
 
-  def mockCcsSubmissionRequestSet(
-    ccsSubmissionRequest: CcsSubmissionRequest
-  )(
+  def mockCcsSubmissionRequest()(
     response: Either[Error, WorkItem[CcsSubmissionRequest]]
   ): CallHandler1[CcsSubmissionRequest, EitherT[Future, models.Error, WorkItem[CcsSubmissionRequest]]] =
     (mockCcsSubmissionRepo
       .set(_: CcsSubmissionRequest))
-      .expects(ccsSubmissionRequest)
+      .expects(*)
       .returning(EitherT.fromEither[Future](response))
 
   def mockSetProcessingStatus(id: BSONObjectID, status: ProcessingStatus)(
@@ -226,8 +225,9 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val submitClaimRequest        = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
         val submitClaimResponse       = sample[SubmitClaimResponse]
         val evidence                  = submitClaimRequest.completeClaim.documents.head
-        val dec64payload              = makeDec64XmlPayload(
-          correlationId = submitClaimRequest.completeClaim.id,
+
+        val dec64payload = makeDec64XmlPayload(
+          correlationId = UUID.randomUUID().toString,
           batchId = submitClaimRequest.completeClaim.id,
           batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
           batchCount = submitClaimRequest.completeClaim.documents.size.toLong,
@@ -249,13 +249,11 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         val updateWorkItem =
           workItem.copy(item = ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))
 
-        mockCcsSubmissionRequestSet(ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))(
-          Right(updateWorkItem)
-        )
+        mockCcsSubmissionRequest()(Right(updateWorkItem))
 
-        await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse).value) shouldBe Right(
-          List(updateWorkItem)
-        )
+        val response = await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse).value)
+
+        response.isRight should be(true)
       }
     }
 
