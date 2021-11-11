@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
+import cats.Eq
 import play.api.libs.json.Format
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
@@ -44,4 +45,6 @@ object MRN {
   }
 
   implicit val format: Format[MRN] = SimpleStringFormat(MRN(_), _.value)
+
+  implicit val eq: Eq[MRN] = Eq.fromUniversalEquals
 }

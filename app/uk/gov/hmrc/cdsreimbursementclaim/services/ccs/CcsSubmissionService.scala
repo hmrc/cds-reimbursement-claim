@@ -31,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
@@ -107,7 +108,7 @@ object DefaultCcsSubmissionService {
       Envelope(
         Body(
           BatchFileInterfaceMetadata(
-            correlationID = submitClaimRequest.completeClaim.id,
+            correlationID = UUID.randomUUID().toString,
             batchID = submitClaimRequest.completeClaim.id,
             batchCount = batchCount,
             batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
