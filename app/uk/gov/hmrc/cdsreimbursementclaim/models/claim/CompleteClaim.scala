@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
 
@@ -33,7 +33,7 @@ final case class CompleteClaim(
   detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
   mrnContactDetailsAnswer: Option[MrnContactDetails],
   mrnContactAddressAnswer: Option[ContactAddress],
-  basisOfClaimAnswer: Option[BasisOfClaim],
+  basisOfClaimAnswer: BasisOfClaimAnswer,
   bankAccountDetailsAnswer: Option[BankAccountDetails],
   supportingEvidencesAnswer: SupportingEvidencesAnswer,
   commodityDetailsAnswer: CommodityDetailsAnswer,

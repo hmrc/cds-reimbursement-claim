@@ -22,7 +22,6 @@ import cats.data.EitherT
 import cats.syntax.all._
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.EitherValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.await
@@ -48,7 +47,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFactory with EitherValues {
+class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
 
