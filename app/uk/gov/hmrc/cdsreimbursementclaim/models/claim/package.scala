@@ -24,13 +24,6 @@ package object claim {
   type AssociatedMRNsAnswer       = NonEmptyList[MRN]
   type AssociatedMRNsClaimsAnswer = NonEmptyList[ClaimedReimbursementsAnswer]
 
-  type SupportingEvidencesAnswer = NonEmptyList[UploadDocument]
-
-  object SupportingEvidencesAnswer {
-    def apply(evidence: UploadDocument): SupportingEvidencesAnswer =
-      NonEmptyList.one(evidence)
-  }
-
   type ClaimedReimbursementsAnswer = NonEmptyList[ClaimedReimbursement]
 
   object ClaimedReimbursementsAnswer {

@@ -35,14 +35,13 @@ final case class CompleteClaim(
   mrnContactAddressAnswer: Option[ContactAddress],
   basisOfClaimAnswer: BasisOfClaimAnswer,
   bankAccountDetailsAnswer: Option[BankAccountDetails],
-  supportingEvidencesAnswer: SupportingEvidencesAnswer,
+  documents: NonEmptyList[UploadDocument],
   commodityDetailsAnswer: CommodityDetailsAnswer,
   displayDeclaration: Option[DisplayDeclaration],
   duplicateDisplayDeclaration: Option[DisplayDeclaration],
   importerEoriNumber: Option[ImporterEoriNumberAnswer],
   declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
   claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
-  scheduledDocumentAnswer: Option[ScheduledDocumentAnswer],
   reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
   associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
   associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
@@ -51,16 +50,6 @@ final case class CompleteClaim(
 object CompleteClaim {
 
   implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
-
-    def documents: NonEmptyList[UploadDocument] = {
-      val evidences         = completeClaim.supportingEvidencesAnswer
-      val scheduledDocument =
-        completeClaim.scheduledDocumentAnswer
-          .map(_.uploadDocument)
-          .toList
-
-      evidences ++ scheduledDocument
-    }
 
     def claims: NonEmptyList[ClaimedReimbursement] =
       completeClaim.claimedReimbursementsAnswer
