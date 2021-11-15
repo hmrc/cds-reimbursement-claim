@@ -20,30 +20,30 @@ import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait BasisOfClaim extends Product with Serializable
+sealed trait BasisOfClaimAnswer extends Product with Serializable
 
-object BasisOfClaim {
+object BasisOfClaimAnswer {
 
-  case object DuplicateEntry extends BasisOfClaim
-  case object DutySuspension extends BasisOfClaim
-  case object EndUseRelief extends BasisOfClaim
-  case object IncorrectCommodityCode extends BasisOfClaim
-  case object IncorrectCpc extends BasisOfClaim
-  case object IncorrectValue extends BasisOfClaim
-  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim
-  case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim
-  case object Miscellaneous extends BasisOfClaim
-  case object OutwardProcessingRelief extends BasisOfClaim
-  case object PersonalEffects extends BasisOfClaim
-  case object Preference extends BasisOfClaim
-  case object RGR extends BasisOfClaim
-  case object ProofOfReturnRefundGiven extends BasisOfClaim
-  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim
-  case object IncorrectExciseValue extends BasisOfClaim
-  case object IncorrectAdditionalInformationCode extends BasisOfClaim
+  case object DuplicateEntry extends BasisOfClaimAnswer
+  case object DutySuspension extends BasisOfClaimAnswer
+  case object EndUseRelief extends BasisOfClaimAnswer
+  case object IncorrectCommodityCode extends BasisOfClaimAnswer
+  case object IncorrectCpc extends BasisOfClaimAnswer
+  case object IncorrectValue extends BasisOfClaimAnswer
+  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaimAnswer
+  case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaimAnswer
+  case object Miscellaneous extends BasisOfClaimAnswer
+  case object OutwardProcessingRelief extends BasisOfClaimAnswer
+  case object PersonalEffects extends BasisOfClaimAnswer
+  case object Preference extends BasisOfClaimAnswer
+  case object RGR extends BasisOfClaimAnswer
+  case object ProofOfReturnRefundGiven extends BasisOfClaimAnswer
+  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaimAnswer
+  case object IncorrectExciseValue extends BasisOfClaimAnswer
+  case object IncorrectAdditionalInformationCode extends BasisOfClaimAnswer
 
   // $COVERAGE-OFF$
-  def basisOfClaimToString(basisForClaim: BasisOfClaim): String = basisForClaim match {
+  def basisOfClaimToString(basisForClaim: BasisOfClaimAnswer): String = basisForClaim match {
     case DuplicateEntry                         => "Duplicate Entry"
     case DutySuspension                         => "Duty Suspension"
     case EndUseRelief                           => "End Use"
@@ -64,8 +64,8 @@ object BasisOfClaim {
   }
   // $COVERAGE-ON$
 
-  implicit val eq: Eq[BasisOfClaim] = Eq.fromUniversalEquals
+  implicit val eq: Eq[BasisOfClaimAnswer] = Eq.fromUniversalEquals
 
-  implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
+  implicit val format: OFormat[BasisOfClaimAnswer] = derived.oformat[BasisOfClaimAnswer]()
 
 }

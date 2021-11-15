@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursementsAnswer, Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim.IncorrectAdditionalInformationCode
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer.IncorrectAdditionalInformationCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
@@ -342,19 +342,15 @@ object DefaultClaimTransformerService {
     )
 
   def makeReasonAndOrBasisOfClaim(
-    maybeBasisOfClaim: Option[BasisOfClaim],
+    basisOfClaim: BasisOfClaimAnswer,
     enableCorrectAdditionalInformationCodeMapping: Boolean
   ): Validation[Option[String]] =
-    maybeBasisOfClaim match {
-      case Some(basisOfClaim) =>
-        if (enableCorrectAdditionalInformationCodeMapping && basisOfClaim === IncorrectAdditionalInformationCode) {
-          Valid(Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)))
-        } else if (basisOfClaim === IncorrectAdditionalInformationCode) {
-          Valid(Some("Risk Classification Error"))
-        } else {
-          Valid(Some(BasisOfClaim.basisOfClaimToString(basisOfClaim)))
-        }
-      case None               => invalidNel("Could not find basis of claim")
+    if (enableCorrectAdditionalInformationCodeMapping && basisOfClaim === IncorrectAdditionalInformationCode) {
+      Valid(Some(BasisOfClaimAnswer.basisOfClaimToString(basisOfClaim)))
+    } else if (basisOfClaim === IncorrectAdditionalInformationCode) {
+      Valid(Some("Risk Classification Error"))
+    } else {
+      Valid(Some(BasisOfClaimAnswer.basisOfClaimToString(basisOfClaim)))
     }
 
   def buildConsigneeEstablishmentAddress(
