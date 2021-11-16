@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.syntax.all._
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
@@ -213,17 +213,15 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
     "a ccs submission request is made" must {
       "enqueue the request" in {
-        val supportingEvidence        = sample[UploadDocument]
-        val supportingEvidencesAnswer = SupportingEvidencesAnswer(supportingEvidence)
-        val completeClaim             = sample[CompleteClaim].copy(
-          supportingEvidencesAnswer = supportingEvidencesAnswer,
-          scheduledDocumentAnswer = None
+        val document             = sample[UploadDocument]
+        val completeClaim        = sample[CompleteClaim].copy(
+          documents = NonEmptyList.one(document)
         )
-        val ccsSubmissionRequest      = sample[CcsSubmissionRequest]
-        val workItem                  = sample[WorkItem[CcsSubmissionRequest]]
-        val submitClaimRequest        = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
-        val submitClaimResponse       = sample[SubmitClaimResponse]
-        val evidence                  = submitClaimRequest.completeClaim.documents.head
+        val ccsSubmissionRequest = sample[CcsSubmissionRequest]
+        val workItem             = sample[WorkItem[CcsSubmissionRequest]]
+        val submitClaimRequest   = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimResponse  = sample[SubmitClaimResponse]
+        val evidence             = submitClaimRequest.completeClaim.documents.head
 
         val dec64payload = makeDec64XmlPayload(
           correlationId = UUID.randomUUID().toString,
