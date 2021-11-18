@@ -17,12 +17,20 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.BankDetail
 
 final case class BankAccountDetails(
   accountName: AccountName,
   sortCode: SortCode,
   accountNumber: AccountNumber
-)
+) {
+
+  def toBankDetail: BankDetail = BankDetail(
+    accountName.value,
+    sortCode.value,
+    accountNumber.value
+  )
+}
 
 object BankAccountDetails {
   implicit val format: OFormat[BankAccountDetails] = Json.format[BankAccountDetails]

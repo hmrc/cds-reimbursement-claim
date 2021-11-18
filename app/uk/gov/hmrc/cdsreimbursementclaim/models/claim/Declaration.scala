@@ -23,7 +23,7 @@ final case class Declaration(
   acceptanceDate: String,
   declarantDetails: DeclarantDetails,
   consigneeDetails: Option[ConsigneeDetails],
-  maskedBankDetails: Option[MaskedBankDetails],
+  maskedBankDetails: Option[BankDetails],
   securityDetails: Option[List[SecurityDetails]],
   ndrcDetails: Option[List[NdrcDetails]]
 )
