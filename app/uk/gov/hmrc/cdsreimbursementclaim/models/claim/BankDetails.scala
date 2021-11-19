@@ -16,13 +16,37 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, JsPath, Reads, Writes}
 
 final case class BankDetails(
-  consigneeBankDetails: Option[ConsigneeBankDetails],
-  declarantBankDetails: Option[DeclarantBankDetails]
+  consigneeBankDetails: Option[BankAccountDetails],
+  declarantBankDetails: Option[BankAccountDetails]
 )
 
 object BankDetails {
-  implicit val format: OFormat[BankDetails] = Json.format[BankDetails]
+
+  private val bankAccountDetailsReads: Reads[BankAccountDetails] = (
+    (JsPath \ "accountHolderName").read[String].map(AccountName(_)) and
+      (JsPath \ "sortCode").read[String].map(SortCode(_)) and
+      (JsPath \ "accountNumber").read[String].map(AccountNumber(_))
+  )(BankAccountDetails(_, _, _))
+
+  private val bankAccountDetailsWrites: Writes[BankAccountDetails] = (
+    (JsPath \ "accountHolderName").write[AccountName] and
+      (JsPath \ "sortCode").write[SortCode] and
+      (JsPath \ "accountNumber").write[AccountNumber]
+  )(unlift(BankAccountDetails.unapply))
+
+  implicit val maskedBankDetailsFormat: Format[BankDetails] =
+    Format(
+      (
+        (JsPath \ "consigneeBankDetails").readNullable[BankAccountDetails](bankAccountDetailsReads) and
+          (JsPath \ "declarantBankDetails").readNullable[BankAccountDetails](bankAccountDetailsReads)
+      )(BankDetails(_, _)),
+      (
+        (JsPath \ "consigneeBankDetails").writeNullable[BankAccountDetails](bankAccountDetailsWrites) and
+          (JsPath \ "declarantBankDetails").writeNullable[BankAccountDetails](bankAccountDetailsWrites)
+      )(unlift(BankDetails.unapply))
+    )
 }

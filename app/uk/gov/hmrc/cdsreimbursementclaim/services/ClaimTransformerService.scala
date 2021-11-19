@@ -532,37 +532,12 @@ object DefaultClaimTransformerService {
           )
         )
       case (Some(bankDetails), None)     =>
-        (bankDetails.consigneeBankDetails, bankDetails.declarantBankDetails) match {
-          case (Some(consignee), Some(declarant)) =>
-            Valid(
-              BankDetails(
-                consigneeBankDetails =
-                  Some(BankDetail(consignee.accountHolderName, consignee.sortCode, consignee.accountNumber)),
-                declarantBankDetails =
-                  Some(BankDetail(declarant.accountHolderName, declarant.sortCode, declarant.accountNumber))
-              )
-            )
-          case (Some(consignee), None)            =>
-            Valid(
-              BankDetails(
-                consigneeBankDetails =
-                  Some(BankDetail(consignee.accountHolderName, consignee.sortCode, consignee.accountNumber)),
-                declarantBankDetails = None
-              )
-            )
-          case (None, Some(declarant))            =>
-            Valid(
-              BankDetails(
-                consigneeBankDetails = None,
-                declarantBankDetails =
-                  Some(BankDetail(declarant.accountHolderName, declarant.sortCode, declarant.accountNumber))
-              )
-            )
-          case (None, None)                       =>
-            Valid(
-              BankDetails(consigneeBankDetails = None, declarantBankDetails = None)
-            )
-        }
+        Valid(
+          BankDetails(
+            consigneeBankDetails = bankDetails.consigneeBankDetails.map(_.toBankDetail),
+            declarantBankDetails = bankDetails.declarantBankDetails.map(_.toBankDetail)
+          )
+        )
       case _                             => invalidNel("could not build bank details")
     }
 

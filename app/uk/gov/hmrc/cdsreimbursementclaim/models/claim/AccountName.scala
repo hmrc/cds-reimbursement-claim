@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.Format
+import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
 
 final case class AccountName(value: String) extends AnyVal
 
 object AccountName {
-  implicit val format: OFormat[AccountName] = Json.format[AccountName]
+
+  implicit val accountNameFormat: Format[AccountName] =
+    SimpleStringFormat(AccountName(_), _.value)
 }
