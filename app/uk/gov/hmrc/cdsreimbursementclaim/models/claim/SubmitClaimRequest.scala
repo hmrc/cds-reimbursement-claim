@@ -23,7 +23,7 @@ import java.util.UUID
 
 final case class SubmitClaimRequest(
   id: UUID,
-  completeClaim: CompleteClaim,
+  claim: C285Claim,
   signedInUserDetails: SignedInUserDetails
 )
 

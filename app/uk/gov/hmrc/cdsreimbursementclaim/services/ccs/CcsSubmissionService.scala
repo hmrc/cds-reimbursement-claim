@@ -109,9 +109,9 @@ object DefaultCcsSubmissionService {
         Body(
           BatchFileInterfaceMetadata(
             correlationID = UUID.randomUUID().toString,
-            batchID = submitClaimRequest.completeClaim.id,
+            batchID = submitClaimRequest.claim.id,
             batchCount = batchCount,
-            batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
+            batchSize = submitClaimRequest.claim.documents.size.toLong,
             checksum = evidence.upscanSuccess.uploadDetails.checksum,
             sourceLocation = evidence.upscanSuccess.downloadUrl,
             sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
@@ -122,7 +122,7 @@ object DefaultCcsSubmissionService {
                 PropertyType("CaseReference", submitClaimResponse.caseNumber),
                 PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
                 PropertyType("DeclarationId", referenceNumber),
-                PropertyType("DeclarationType", submitClaimRequest.completeClaim.declarantTypeAnswer.toString),
+                PropertyType("DeclarationType", submitClaimRequest.claim.declarantTypeAnswer.toString),
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType(
                   "DocumentType",
@@ -135,9 +135,9 @@ object DefaultCcsSubmissionService {
         )
       )
 
-    submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
+    submitClaimRequest.claim.documents.zipWithIndex.map { case (document, index) =>
       make(
-        submitClaimRequest.completeClaim.movementReferenceNumber.value,
+        submitClaimRequest.claim.movementReferenceNumber.value,
         document,
         index.toLong + 1
       )

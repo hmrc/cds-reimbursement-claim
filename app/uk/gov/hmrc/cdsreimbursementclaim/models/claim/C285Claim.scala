@@ -24,7 +24,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
 
 import java.util.UUID
 
-final case class CompleteClaim(
+final case class C285Claim(
   id: UUID,
   typeOfClaim: TypeOfClaimAnswer,
   movementReferenceNumber: MRN,
@@ -47,12 +47,12 @@ final case class CompleteClaim(
   associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
 )
 
-object CompleteClaim {
+object C285Claim {
 
-  implicit class CompleteClaimOps(private val completeClaim: CompleteClaim) {
+  implicit class C285ClaimOps(val claim: C285Claim) extends AnyVal {
 
     def claims: NonEmptyList[ClaimedReimbursement] =
-      completeClaim.claimedReimbursementsAnswer
+      claim.claimedReimbursementsAnswer
         .map(claim =>
           claim.copy(
             claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
@@ -60,14 +60,14 @@ object CompleteClaim {
           )
         )
 
-    def totalReimbursementAmount: BigDecimal = completeClaim.typeOfClaim match {
+    def totalReimbursementAmount: BigDecimal = claim.typeOfClaim match {
       case TypeOfClaimAnswer.Multiple =>
-        completeClaim.associatedMRNsClaimsAnswer.toList
+        claim.associatedMRNsClaimsAnswer.toList
           .flatMap(_.toList)
-          .foldLeft(totalClaimedDuty(completeClaim.claimedReimbursementsAnswer))(
-            (accumulator, claimedReimbursementsAnswer) => accumulator + totalClaimedDuty(claimedReimbursementsAnswer)
+          .foldLeft(totalClaimedDuty(claim.claimedReimbursementsAnswer))((accumulator, claimedReimbursementsAnswer) =>
+            accumulator + totalClaimedDuty(claimedReimbursementsAnswer)
           )
-      case _                          => totalClaimedDuty(completeClaim.claimedReimbursementsAnswer)
+      case _                          => totalClaimedDuty(claim.claimedReimbursementsAnswer)
     }
 
     private def totalClaimedDuty(claimedReimbursementsAnswer: ClaimedReimbursementsAnswer): BigDecimal =
@@ -76,11 +76,11 @@ object CompleteClaim {
       }
 
     def consigneeDetails: Option[ConsigneeDetails] =
-      completeClaim.displayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
+      claim.displayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
 
     def declarantDetails: Option[DeclarantDetails] =
-      completeClaim.displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
+      claim.displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
   }
 
-  implicit val format: Format[CompleteClaim] = Json.format[CompleteClaim]
+  implicit val format: Format[C285Claim] = Json.format[C285Claim]
 }

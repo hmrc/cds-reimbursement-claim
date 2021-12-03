@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
@@ -149,8 +149,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val declarantTypeAnswer       = DeclarantTypeAnswer.Importer
         val movevementReferenceNumber = MRN("10ABCDEFGHIJKLMNO0")
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = movevementReferenceNumber,
             declarantTypeAnswer = declarantTypeAnswer,
             basisOfClaimAnswer = basisOfClaimAnswer,
@@ -159,7 +159,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             displayDeclaration = Some(displayDeclaration)
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         val bankDetails = uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.BankDetails(
@@ -175,99 +175,87 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val entryEoriDetails = EoriDetails(
           agentEORIDetails = EORIInformation(
-            EORINumber = completeClaim.declarantDetails.map(s => s.declarantEORI).getOrElse(""),
-            CDSFullName = completeClaim.declarantDetails.map(s => s.legalName),
+            EORINumber = c285Claim.declarantDetails.map(s => s.declarantEORI).getOrElse(""),
+            CDSFullName = c285Claim.declarantDetails.map(s => s.legalName),
             legalEntityType = None,
             EORIStartDate = None,
             CDSEstablishmentAddress = Address(
               contactPerson = None,
-              addressLine1 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-              addressLine2 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-              AddressLine3 = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              addressLine1 = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+              addressLine2 = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+              AddressLine3 = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
               street = Some(
-                s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.declarantDetails
+                s"${c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${c285Claim.declarantDetails
                   .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
                   .getOrElse("")}"
               ),
-              city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              countryCode = completeClaim.declarantDetails
+              city = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              countryCode = c285Claim.declarantDetails
                 .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
                 .getOrElse("GB"),
-              postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-              telephone = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-              emailAddress = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+              postalCode = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+              telephone = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+              emailAddress = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
             ),
             contactInformation = Some(
               ContactInformation(
-                contactPerson =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
-                addressLine1 =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-                addressLine2 =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-                addressLine3 =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+                contactPerson = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
+                addressLine1 = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+                addressLine2 = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+                addressLine3 = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
                 street = Some(
-                  s"${completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.declarantDetails
+                  s"${c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${c285Claim.declarantDetails
                     .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
                 ),
-                city = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-                countryCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
-                postalCode = completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-                telephoneNumber =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+                city = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+                countryCode = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
+                postalCode = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+                telephoneNumber = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
                 faxNumber = None,
-                emailAddress =
-                  completeClaim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+                emailAddress = c285Claim.declarantDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
               )
             ),
             VATDetails = None
           ),
           importerEORIDetails = EORIInformation(
-            EORINumber = completeClaim.consigneeDetails.map(s => s.consigneeEORI).getOrElse(""),
-            CDSFullName = completeClaim.consigneeDetails.map(s => s.legalName),
+            EORINumber = c285Claim.consigneeDetails.map(s => s.consigneeEORI).getOrElse(""),
+            CDSFullName = c285Claim.consigneeDetails.map(s => s.legalName),
             legalEntityType = None,
             EORIStartDate = None,
             CDSEstablishmentAddress = Address(
               contactPerson = None,
-              addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-              addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-              AddressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              addressLine1 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+              addressLine2 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+              AddressLine3 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
               street = Some(
-                s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${completeClaim.consigneeDetails
+                s"${c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)).getOrElse("")} ${c285Claim.consigneeDetails
                   .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))
                   .getOrElse("")}"
               ),
-              city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              countryCode = completeClaim.consigneeDetails
+              city = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              countryCode = c285Claim.consigneeDetails
                 .flatMap(s => s.contactDetails.flatMap(f => f.countryCode))
                 .getOrElse("GB"),
-              postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-              telephone = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-              emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+              postalCode = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+              telephone = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+              emailAddress = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
             ),
             contactInformation = Some(
               ContactInformation(
-                contactPerson =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
-                addressLine1 =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-                addressLine2 =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-                addressLine3 =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+                contactPerson = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
+                addressLine1 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+                addressLine2 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+                addressLine3 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
                 street = Some(
-                  s"${completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${completeClaim.consigneeDetails
+                  s"${c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1))} ${c285Claim.consigneeDetails
                     .flatMap(s => s.contactDetails.flatMap(f => f.addressLine2))}"
                 ),
-                city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-                countryCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
-                postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-                telephoneNumber =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+                city = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+                countryCode = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
+                postalCode = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+                telephoneNumber = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
                 faxNumber = None,
-                emailAddress =
-                  completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+                emailAddress = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
               )
             ),
             VATDetails = None
@@ -416,7 +404,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
               None,
               Some("Yes"),
               None,
-              Some(completeClaim.commodityDetailsAnswer.value)
+              Some(c285Claim.commodityDetailsAnswer.value)
             )
           ),
           basisOfClaim = Some("Duty Suspension"),
@@ -710,94 +698,94 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
       val acc14WithAccountDetails = getAcc14Response.copy(accountDetails = Some(List(sample[AccountDetails])))
 
       "Declaration mode on Individual complete claim is 'Parent Declaration'" in {
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = TypeOfClaimAnswer.Individual
         )
 
-        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("Parent Declaration")
+        DefaultClaimTransformerService.setDeclarationMode(c285Claim) shouldBe Some("Parent Declaration")
       }
 
       "Declaration mode on Scheduled complete claim is 'All Declarations'" in {
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = TypeOfClaimAnswer.Scheduled
         )
 
-        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("Parent Declaration")
+        DefaultClaimTransformerService.setDeclarationMode(c285Claim) shouldBe Some("Parent Declaration")
       }
 
       "Declaration mode on Multiple complete claim is 'All Declarations'" in {
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = TypeOfClaimAnswer.Multiple
         )
 
-        DefaultClaimTransformerService.setDeclarationMode(completeClaim) shouldBe Some("All Declarations")
+        DefaultClaimTransformerService.setDeclarationMode(c285Claim) shouldBe Some("All Declarations")
       }
 
       "Case type on Scheduled complete claim with no reimbursement method specified is Individual" in {
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = TypeOfClaimAnswer.Scheduled,
           reimbursementMethodAnswer = None
         )
 
-        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Bulk")
+        DefaultClaimTransformerService.setCaseType(c285Claim) shouldBe Some("Bulk")
       }
 
       "Case type on Multiple complete claim with no reimbursement method specified is Individual" in {
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = TypeOfClaimAnswer.Multiple,
           reimbursementMethodAnswer = None
         )
 
-        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Bulk")
+        DefaultClaimTransformerService.setCaseType(c285Claim) shouldBe Some("Bulk")
       }
 
       "Case type on Individual complete claim with no reimbursement method specified is Individual" in {
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = TypeOfClaimAnswer.Individual,
           reimbursementMethodAnswer = None
         )
 
-        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Individual")
+        DefaultClaimTransformerService.setCaseType(c285Claim) shouldBe Some("Individual")
       }
 
       "Case type on Individual complete claim with reimbursement method of Current Month Adjustment is CMA" in {
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             typeOfClaim = TypeOfClaimAnswer.Individual,
             reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment)
           )
 
-        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("CMA")
+        DefaultClaimTransformerService.setCaseType(c285Claim) shouldBe Some("CMA")
       }
 
       "Case type on Individual complete claim with reimbursement method of Bank Transfer is Individual" in {
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             typeOfClaim = TypeOfClaimAnswer.Individual,
             reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer)
           )
 
-        DefaultClaimTransformerService.setCaseType(completeClaim) shouldBe Some("Individual")
+        DefaultClaimTransformerService.setCaseType(c285Claim) shouldBe Some("Individual")
       }
 
       "Reimbursement Method on complete claim with no reimbursement method specified is Bank Transfer" in {
-        val completeClaim = sample[CompleteClaim].copy(reimbursementMethodAnswer = None)
+        val c285Claim = sample[C285Claim].copy(reimbursementMethodAnswer = None)
 
-        DefaultClaimTransformerService.setReimbursementMethod(completeClaim) shouldBe Some("Bank Transfer")
+        DefaultClaimTransformerService.setReimbursementMethod(c285Claim) shouldBe Some("Bank Transfer")
       }
 
       "Reimbursement Method on complete claim with reimbursement method of Current Month Adjustment is CMA" in {
-        val completeClaim =
-          sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment))
+        val c285Claim =
+          sample[C285Claim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.CurrentMonthAdjustment))
 
-        DefaultClaimTransformerService.setReimbursementMethod(completeClaim) shouldBe Some("Deferment")
+        DefaultClaimTransformerService.setReimbursementMethod(c285Claim) shouldBe Some("Deferment")
       }
 
       "Reimbursement Method on complete claim with reimbursement method of Bank Transfer is Bank Transfer" in {
-        val completeClaim =
-          sample[CompleteClaim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer))
+        val c285Claim =
+          sample[C285Claim].copy(reimbursementMethodAnswer = Some(ReimbursementMethodAnswer.BankAccountTransfer))
 
-        DefaultClaimTransformerService.setReimbursementMethod(completeClaim) shouldBe Some("Bank Transfer")
+        DefaultClaimTransformerService.setReimbursementMethod(c285Claim) shouldBe Some("Bank Transfer")
       }
 
       "valid mrn number claim, DeclarantType: Importer, with filled out MrnContactDetails and ContactAddress" in {
@@ -816,8 +804,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -832,29 +820,29 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val expectedCaseType =
           if (
-            completeClaim.typeOfClaim === TypeOfClaimAnswer.Scheduled || completeClaim.typeOfClaim === TypeOfClaimAnswer.Multiple
+            c285Claim.typeOfClaim === TypeOfClaimAnswer.Scheduled || c285Claim.typeOfClaim === TypeOfClaimAnswer.Multiple
           )
             "Bulk"
           else
-            completeClaim.reimbursementMethodAnswer match {
+            c285Claim.reimbursementMethodAnswer match {
               case Some(ReimbursementMethodAnswer.CurrentMonthAdjustment) => "CMA"
               case Some(ReimbursementMethodAnswer.BankAccountTransfer)    => "Individual"
               case None                                                   => "Individual"
             }
 
-        val expectedReimbursementMethod = completeClaim.reimbursementMethodAnswer match {
+        val expectedReimbursementMethod = c285Claim.reimbursementMethodAnswer match {
           case Some(ReimbursementMethodAnswer.CurrentMonthAdjustment) => "Deferment"
           case Some(ReimbursementMethodAnswer.BankAccountTransfer)    => "Bank Transfer"
           case None                                                   => "Bank Transfer"
         }
 
-        val expectedDeclarationMode = completeClaim.typeOfClaim match {
+        val expectedDeclarationMode = c285Claim.typeOfClaim match {
           case TypeOfClaimAnswer.Scheduled => "Parent Declaration"
           case TypeOfClaimAnswer.Multiple  => "All Declarations"
           case _                           => "Parent Declaration"
         }
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -905,8 +893,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -919,7 +907,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -972,8 +960,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -986,7 +974,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -1032,8 +1020,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1046,7 +1034,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -1099,8 +1087,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1113,7 +1101,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -1160,8 +1148,8 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val detailsRegisteredWithCds                     =
           sample[DetailsRegisteredWithCdsAnswer].copy(contactAddress = getNonUkAddress("frontend.individual"))
 
-        val completeClaim =
-          sample[CompleteClaim].copy(
+        val c285Claim =
+          sample[C285Claim].copy(
             movementReferenceNumber = completeMovementReferenceNumberAnswer,
             declarantTypeAnswer = declarantTypeAnswer,
             detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
@@ -1174,7 +1162,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
+        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {

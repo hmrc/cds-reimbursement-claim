@@ -69,40 +69,39 @@ class DefaultClaimTransformerService @Inject() (
   ): Either[Error, RequestDetail] = {
     val localDateNow = dateGenerator.nextIsoLocalDate
 
-    val completeClaim = submitClaimRequest.completeClaim
+    val c285Claim = submitClaimRequest.claim
     (
       makeReasonAndOrBasisOfClaim(
-        completeClaim.basisOfClaimAnswer,
+        c285Claim.basisOfClaimAnswer,
         getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
       ),
-      setMrnDetails(completeClaim),
+      setMrnDetails(c285Claim),
       setDuplicateMrnDetails(
-        completeClaim.duplicateDisplayDeclaration,
-        completeClaim
+        c285Claim.duplicateDisplayDeclaration,
+        c285Claim
       ),
-      buildEoriDetails(submitClaimRequest.completeClaim)
+      buildEoriDetails(submitClaimRequest.claim)
     ).mapN { case (maybeReasonAndOrBasis, mrnDetails, duplicateMrnDetails, eoriDetails) =>
       val requestDetailA = RequestDetailA(
         CDFPayService = CDFPayservice.NDRC,
         dateReceived = Some(localDateNow),
         claimType = Some(ClaimType.C285),
-        caseType = setCaseType(completeClaim),
+        caseType = setCaseType(c285Claim),
         customDeclarationType = Some(CustomDeclarationType.MRN),
-        declarationMode = setDeclarationMode(completeClaim),
+        declarationMode = setDeclarationMode(c285Claim),
         claimDate = Some(localDateNow),
-        claimAmountTotal =
-          Some(roundedTwoDecimalPlacesToString(submitClaimRequest.completeClaim.totalReimbursementAmount)),
+        claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.claim.totalReimbursementAmount)),
         disposalMethod = None,
-        reimbursementMethod = setReimbursementMethod(completeClaim),
+        reimbursementMethod = setReimbursementMethod(c285Claim),
         basisOfClaim = maybeReasonAndOrBasis,
         claimant = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
-            submitClaimRequest.completeClaim.declarantTypeAnswer
+            submitClaimRequest.claim.declarantTypeAnswer
           )
         ),
         payeeIndicator = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
-            submitClaimRequest.completeClaim.declarantTypeAnswer
+            submitClaimRequest.claim.declarantTypeAnswer
           )
         ),
         newEORI = None,
@@ -112,8 +111,8 @@ class DefaultClaimTransformerService @Inject() (
         claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
         goodsDetails = Some(
           makeGoodsDetails(
-            completeClaim.declarantTypeAnswer,
-            completeClaim.commodityDetailsAnswer
+            c285Claim.declarantTypeAnswer,
+            c285Claim.commodityDetailsAnswer
           )
         ),
         EORIDetails = Some(eoriDetails)
@@ -191,11 +190,9 @@ object DefaultClaimTransformerService {
       )
   }
 
-  def buildEoriDetails(
-    completeClaim: CompleteClaim
-  ): Validation[EoriDetails] = {
+  def buildEoriDetails(c285Claim: C285Claim): Validation[EoriDetails] = {
 
-    val agentContactInfo = (completeClaim.mrnContactDetailsAnswer, completeClaim.mrnContactAddressAnswer)
+    val agentContactInfo = (c285Claim.mrnContactDetailsAnswer, c285Claim.mrnContactAddressAnswer)
       .mapN { (contactDetails, contactAddress) =>
         ContactInformation(
           contactPerson = Option(contactDetails.fullName),
@@ -212,40 +209,40 @@ object DefaultClaimTransformerService {
         )
       }
       .getOrElse(
-        completeClaim.declarantTypeAnswer match {
+        c285Claim.declarantTypeAnswer match {
           case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
             ContactInformation(
-              contactPerson = completeClaim.consigneeDetails.map(_.legalName),
-              addressLine1 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
-              addressLine2 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine2),
-              addressLine3 = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              contactPerson = c285Claim.consigneeDetails.map(_.legalName),
+              addressLine1 = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+              addressLine2 = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine2),
+              addressLine3 = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
               street = buildStreet(
-                completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
-                completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine2)
+                c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+                c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine2)
               ),
-              city = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
-              postalCode = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.postalCode),
-              countryCode = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.countryCode),
-              telephoneNumber = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.telephone),
+              city = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              postalCode = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.postalCode),
+              countryCode = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.countryCode),
+              telephoneNumber = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.telephone),
               faxNumber = None,
-              emailAddress = completeClaim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
+              emailAddress = c285Claim.consigneeDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
             )
           case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
             ContactInformation(
-              contactPerson = completeClaim.declarantDetails.map(_.legalName),
-              addressLine1 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
-              addressLine2 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine2),
-              addressLine3 = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              contactPerson = c285Claim.declarantDetails.map(_.legalName),
+              addressLine1 = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+              addressLine2 = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine2),
+              addressLine3 = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
               street = buildStreet(
-                completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
-                completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine2)
+                c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine1),
+                c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine2)
               ),
-              city = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
-              postalCode = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.postalCode),
-              countryCode = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.countryCode),
-              telephoneNumber = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.telephone),
+              city = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.addressLine3),
+              postalCode = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.postalCode),
+              countryCode = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.countryCode),
+              telephoneNumber = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.telephone),
               faxNumber = None,
-              emailAddress = completeClaim.declarantDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
+              emailAddress = c285Claim.declarantDetails.flatMap(_.contactDetails).flatMap(_.emailAddress)
             )
         }
       )
@@ -253,64 +250,64 @@ object DefaultClaimTransformerService {
     Valid(
       EoriDetails(
         agentEORIDetails = EORIInformation(
-          EORINumber = completeClaim.declarantDetails.map(s => s.declarantEORI).getOrElse(""),
-          CDSFullName = completeClaim.declarantDetails.map(s => s.legalName),
+          EORINumber = c285Claim.declarantDetails.map(s => s.declarantEORI).getOrElse(""),
+          CDSFullName = c285Claim.declarantDetails.map(s => s.legalName),
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
-            contactPerson = Option(completeClaim.detailsRegisteredWithCdsAnswer.fullName),
-            addressLine1 = Option(completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
-            addressLine2 = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
-            AddressLine3 = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
+            contactPerson = Option(c285Claim.detailsRegisteredWithCdsAnswer.fullName),
+            addressLine1 = Option(c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
+            addressLine2 = c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
+            AddressLine3 = c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
             street = buildStreet(
-              Option(completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
-              completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line2
+              Option(c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
+              c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
             ),
-            city = Some(completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
-            postalCode = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.postcode,
-            countryCode = completeClaim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
+            city = Some(c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
+            postalCode = c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode,
+            countryCode = c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
             telephone = None,
-            emailAddress = Option(completeClaim.detailsRegisteredWithCdsAnswer.emailAddress.value)
+            emailAddress = Option(c285Claim.detailsRegisteredWithCdsAnswer.emailAddress.value)
           ),
           contactInformation = Some(agentContactInfo),
           VATDetails = None
         ),
         importerEORIDetails = EORIInformation(
-          EORINumber = completeClaim.consigneeDetails.map(s => s.consigneeEORI).getOrElse(""),
-          CDSFullName = completeClaim.consigneeDetails.map(s => s.legalName),
+          EORINumber = c285Claim.consigneeDetails.map(s => s.consigneeEORI).getOrElse(""),
+          CDSFullName = c285Claim.consigneeDetails.map(s => s.legalName),
           legalEntityType = None,
           EORIStartDate = None,
           CDSEstablishmentAddress = Address(
             contactPerson = None,
-            addressLine1 = completeClaim.consigneeDetails.map(_.establishmentAddress.addressLine1),
-            addressLine2 = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2),
-            AddressLine3 = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+            addressLine1 = c285Claim.consigneeDetails.map(_.establishmentAddress.addressLine1),
+            addressLine2 = c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2),
+            AddressLine3 = c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
             street = buildStreet(
-              completeClaim.consigneeDetails.map(_.establishmentAddress.addressLine1),
-              completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2)
+              c285Claim.consigneeDetails.map(_.establishmentAddress.addressLine1),
+              c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2)
             ),
-            city = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-            countryCode = completeClaim.consigneeDetails.map(_.establishmentAddress.countryCode).getOrElse("GB"),
-            postalCode = completeClaim.consigneeDetails.flatMap(_.establishmentAddress.postalCode),
-            telephone = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
-            emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+            city = c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+            countryCode = c285Claim.consigneeDetails.map(_.establishmentAddress.countryCode).getOrElse("GB"),
+            postalCode = c285Claim.consigneeDetails.flatMap(_.establishmentAddress.postalCode),
+            telephone = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+            emailAddress = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
           ),
           contactInformation = Some(
             ContactInformation(
-              contactPerson = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
-              addressLine1 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
-              addressLine2 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
-              addressLine3 = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              contactPerson = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.contactName)),
+              addressLine1 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
+              addressLine2 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
+              addressLine3 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
               street = buildStreet(
-                completeClaim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
-                completeClaim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2))
+                c285Claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
+                c285Claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2))
               ),
-              city = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              countryCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
-              postalCode = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
-              telephoneNumber = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
+              city = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
+              countryCode = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.countryCode)),
+              postalCode = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.postalCode)),
+              telephoneNumber = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.telephone)),
               faxNumber = None,
-              emailAddress = completeClaim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
+              emailAddress = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.emailAddress))
             )
           ),
           VATDetails = None
@@ -509,9 +506,9 @@ object DefaultClaimTransformerService {
 
   def buildBankDetails(
     maybeBankDetails: Option[models.claim.BankDetails],
-    completeClaim: CompleteClaim
+    c285Claim: C285Claim
   ): Validation[BankDetails] =
-    (maybeBankDetails, completeClaim.bankAccountDetailsAnswer) match {
+    (maybeBankDetails, c285Claim.bankAccountDetailsAnswer) match {
       case (_, Some(bankAccountDetails)) =>
         Valid(
           BankDetails(
@@ -574,34 +571,34 @@ object DefaultClaimTransformerService {
       case None                 => invalidNel("Could not format display acceptance date")
     }
 
-  def multipleClaimsAnswer(completeClaim: CompleteClaim): List[(MRN, ClaimedReimbursementsAnswer)] = {
-    val mrns   = completeClaim.movementReferenceNumber :: completeClaim.associatedMRNsAnswer.toList.flatMap(_.toList)
+  def multipleClaimsAnswer(c285Claim: C285Claim): List[(MRN, ClaimedReimbursementsAnswer)] = {
+    val mrns   = c285Claim.movementReferenceNumber :: c285Claim.associatedMRNsAnswer.toList.flatMap(_.toList)
     val claims =
-      completeClaim.claimedReimbursementsAnswer :: completeClaim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
+      c285Claim.claimedReimbursementsAnswer :: c285Claim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
     mrns.zip(claims)
   }
 
-  def setMrnDetails(completeClaim: CompleteClaim): Validation[List[MrnDetail]] = {
+  def setMrnDetails(c285Claim: C285Claim): Validation[List[MrnDetail]] = {
 
-    val details = completeClaim.displayDeclaration.toList.flatMap(displayDeclaration =>
-      multipleClaimsAnswer(completeClaim).map { case (mrn, claim) =>
+    val details = c285Claim.displayDeclaration.toList.flatMap(displayDeclaration =>
+      multipleClaimsAnswer(c285Claim).map { case (mrn, claim) =>
         (
           setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
-          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
+          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, c285Claim),
           makeNdrcDetails(claim)
         ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
           MrnDetail(
             MRNNumber = Some(mrn.value),
             acceptanceDate = Some(acceptanceDate),
             declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-            mainDeclarationReference = Some(completeClaim.movementReferenceNumber.value === mrn.value),
+            mainDeclarationReference = Some(c285Claim.movementReferenceNumber.value === mrn.value),
             procedureCode = Some(displayDeclaration.displayResponseDetail.procedureCode),
             declarantDetails = Some(declarationDetails),
             accountDetails = transformToMaybeAccountDetail(displayDeclaration.displayResponseDetail.accountDetails),
             consigneeDetails = Some(consigneeDetails),
-            bankDetails = if (completeClaim.movementReferenceNumber.value === mrn.value) Some(bankDetails) else None,
+            bankDetails = if (c285Claim.movementReferenceNumber.value === mrn.value) Some(bankDetails) else None,
             NDRCDetails = Some(ndrcDetails)
           )
         }
@@ -618,7 +615,7 @@ object DefaultClaimTransformerService {
 
   def setDuplicateMrnDetails(
     maybeDisplayDeclaration: Option[models.claim.DisplayDeclaration],
-    completeClaim: CompleteClaim
+    c285Claim: C285Claim
   ): Validation[Option[MrnDetail]] =
     maybeDisplayDeclaration match {
       case Some(displayDeclaration) =>
@@ -626,8 +623,8 @@ object DefaultClaimTransformerService {
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
           setConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails),
           setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
-          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, completeClaim),
-          makeNdrcDetails(completeClaim.claims)
+          buildBankDetails(displayDeclaration.displayResponseDetail.bankDetails, c285Claim),
+          makeNdrcDetails(c285Claim.claims)
         ).mapN { case (declarationDetails, consigneeDetails, acceptanceDate, bankDetails, ndrcDetails) =>
           Some(
             MrnDetail(
@@ -647,22 +644,22 @@ object DefaultClaimTransformerService {
       case None                     => Valid(None)
     }
 
-  def setCaseType(completeClaim: CompleteClaim): Option[String] =
-    (completeClaim.reimbursementMethodAnswer, completeClaim.typeOfClaim) match {
+  def setCaseType(c285Claim: C285Claim): Option[String] =
+    (c285Claim.reimbursementMethodAnswer, c285Claim.typeOfClaim) match {
       case (_, TypeOfClaimAnswer.Multiple)   => Some(CaseType.Bulk)
       case (_, TypeOfClaimAnswer.Scheduled)  => Some(CaseType.Bulk)
       case (Some(CurrentMonthAdjustment), _) => Some(CaseType.CMA)
       case _                                 => Some(CaseType.Individual)
     }
 
-  def setReimbursementMethod(completeClaim: CompleteClaim): Option[String] =
-    completeClaim.reimbursementMethodAnswer match {
+  def setReimbursementMethod(c285Claim: C285Claim): Option[String] =
+    c285Claim.reimbursementMethodAnswer match {
       case Some(CurrentMonthAdjustment) => Some(ReimbursementMethod.Deferment)
       case _                            => Some(ReimbursementMethod.BankTransfer)
     }
 
-  def setDeclarationMode(completeClaim: CompleteClaim): Option[String] =
-    completeClaim.typeOfClaim match {
+  def setDeclarationMode(c285Claim: C285Claim): Option[String] =
+    c285Claim.typeOfClaim match {
       case TypeOfClaimAnswer.Scheduled => Some(DeclarationMode.ParentDeclaration)
       case TypeOfClaimAnswer.Multiple  => Some(DeclarationMode.AllDeclaration)
       case _                           => Some(DeclarationMode.ParentDeclaration)

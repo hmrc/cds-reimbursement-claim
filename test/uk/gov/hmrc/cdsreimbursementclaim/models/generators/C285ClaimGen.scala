@@ -18,13 +18,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
 import org.scalacheck.magnolia.Typeclass
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.CompleteClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimedReimbursementsAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer
 
-object CompleteClaimGen {
+object C285ClaimGen {
 
   implicit val detailsRegisteredWithCdsAnswerGen: Typeclass[DetailsRegisteredWithCdsAnswer] =
     gen[DetailsRegisteredWithCdsAnswer]
@@ -37,5 +37,5 @@ object CompleteClaimGen {
   implicit val mrnInformationGen: Typeclass[MRNInformation]                                 = gen[MRNInformation]
   implicit val basisOfClaimAnswerGen: Typeclass[BasisOfClaimAnswer]                         = gen[BasisOfClaimAnswer]
   implicit val declarantTypeAnswerGen: Typeclass[DeclarantTypeAnswer]                       = gen[DeclarantTypeAnswer]
-  implicit val completeClaimGen: Typeclass[CompleteClaim]                                   = gen[CompleteClaim]
+  implicit val c285ClaimGen: Typeclass[C285Claim]                                           = gen[C285Claim]
 }

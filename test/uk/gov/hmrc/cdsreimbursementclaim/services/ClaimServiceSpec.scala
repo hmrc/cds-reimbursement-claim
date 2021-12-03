@@ -153,7 +153,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         val emailRequest = sample[EmailRequest].copy(
           email = submitClaimRequest.signedInUserDetails.verifiedEmail,
           contactName = submitClaimRequest.signedInUserDetails.contactName,
-          claimAmount = submitClaimRequest.completeClaim.totalReimbursementAmount
+          claimAmount = submitClaimRequest.claim.totalReimbursementAmount
         )
 
         val responseJsonBody = Json.parse(
@@ -199,7 +199,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         val emailRequest = sample[EmailRequest].copy(
           email = submitClaimRequest.signedInUserDetails.verifiedEmail,
           contactName = submitClaimRequest.signedInUserDetails.contactName,
-          claimAmount = submitClaimRequest.completeClaim.totalReimbursementAmount
+          claimAmount = submitClaimRequest.claim.totalReimbursementAmount
         )
 
         val responseJsonBody = Json.parse(

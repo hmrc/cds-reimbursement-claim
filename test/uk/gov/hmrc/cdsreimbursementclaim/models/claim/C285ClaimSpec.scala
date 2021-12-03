@@ -21,25 +21,25 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genAssociatedMRNs, genClaims}
 
-@SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
-class CompleteClaimSpec extends AnyWordSpec with Matchers with MockFactory {
-  "Complete Claim" should {
+class C285ClaimSpec extends AnyWordSpec with Matchers with MockFactory {
+
+  "C285 Claim" should {
     "calculate the total amount to be reimbursed" when {
       "Single Journey" in {
-        val claims                      = genClaims.sample.get.map(
+        val claims = sample(genClaims).map(
           _.copy(
             paidAmount = BigDecimal(15),
             claimAmount = BigDecimal(10)
           )
         )
-        val claimedReimbursementAnswers = ClaimedReimbursementsAnswer(claims).get
-        val completeClaim               = sample[CompleteClaim].copy(
+
+        val completeClaim = sample[C285Claim].copy(
           typeOfClaim = Individual,
-          claimedReimbursementsAnswer = claimedReimbursementAnswers,
+          claimedReimbursementsAnswer = NonEmptyList.fromListUnsafe(claims),
           associatedMRNsAnswer = None,
           associatedMRNsClaimsAnswer = None
         )
@@ -49,36 +49,40 @@ class CompleteClaimSpec extends AnyWordSpec with Matchers with MockFactory {
       }
 
       "Bulk Multiple Journey" in {
-        val claims                          = genClaims.sample.get.map(
+
+        val claims = sample(genClaims).map(
           _.copy(
             paidAmount = BigDecimal(15),
             claimAmount = BigDecimal(10)
           )
         )
-        val claimedReimbursementAnswers     = ClaimedReimbursementsAnswer(claims).get
-        val associatedMrns                  = genAssociatedMRNs.sample
+
+        val claimedReimbursementAnswers = NonEmptyList.fromListUnsafe(claims)
+
+        val associatedMrns = NonEmptyList.fromList(sample(genAssociatedMRNs))
+
         val maybeAssociatedMRNsClaimsAnswer = associatedMrns.map(_.map { _ =>
-          val associatedClaims = genClaims.sample.get.map(
+          val associatedClaims = sample(genClaims).map(
             _.copy(
               paidAmount = BigDecimal(15),
               claimAmount = BigDecimal(10)
             )
           )
-          ClaimedReimbursementsAnswer(associatedClaims).get
+          NonEmptyList.fromListUnsafe(associatedClaims)
         })
 
-        val completeClaim = sample[CompleteClaim].copy(
+        val c285Claim = sample[C285Claim].copy(
           typeOfClaim = Multiple,
           claimedReimbursementsAnswer = claimedReimbursementAnswers,
-          associatedMRNsAnswer = associatedMrns.flatMap(NonEmptyList.fromList),
-          associatedMRNsClaimsAnswer = maybeAssociatedMRNsClaimsAnswer.flatMap(NonEmptyList.fromList)
+          associatedMRNsAnswer = associatedMrns,
+          associatedMRNsClaimsAnswer = maybeAssociatedMRNsClaimsAnswer
         )
 
-        val expectedClaimAmount = maybeAssociatedMRNsClaimsAnswer.get.foldLeft(claims.size) { (a, b) =>
+        val expectedClaimAmount = maybeAssociatedMRNsClaimsAnswer.fold(0)(_.foldLeft(claims.size) { (a, b) =>
           a + b.size
-        } * 10
+        } * 10)
 
-        completeClaim.totalReimbursementAmount shouldBe expectedClaimAmount
+        c285Claim.totalReimbursementAmount shouldBe expectedClaimAmount
       }
     }
   }
