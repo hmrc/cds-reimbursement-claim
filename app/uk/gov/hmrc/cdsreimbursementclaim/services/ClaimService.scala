@@ -43,7 +43,8 @@ import scala.util.Try
 
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
-  def submitClaim(submitClaimRequest: SubmitClaimRequest)(implicit
+
+  def submitClaim[A](submitClaimRequest: SubmitClaimRequest[A])(implicit
     hc: HeaderCarrier,
     request: Request[_]
   ): EitherT[Future, Error, SubmitClaimResponse]
@@ -61,8 +62,8 @@ class DefaultClaimService @Inject() (
 ) extends ClaimService
     with Logging {
 
-  def submitClaim(
-    submitClaimRequest: SubmitClaimRequest
+  def submitClaim[A](
+    submitClaimRequest: SubmitClaimRequest[A]
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse] = {
 
     val maybeEisSubmitClaimRequest: Either[Error, EisSubmitClaimRequest] =

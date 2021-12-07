@@ -49,11 +49,7 @@ trait ClaimTransformerService {
 }
 
 @Singleton
-class DefaultClaimTransformerService @Inject() (
-  uuidGenerator: UUIDGenerator,
-  dateGenerator: DateGenerator,
-  configuration: Configuration
-) extends ClaimTransformerService
+class DefaultClaimTransformerService @Inject() (configuration: Configuration) extends ClaimTransformerService
     with Logging {
 
   private val enableCorrectAdditionalInformationCodeMappingFlag: String =

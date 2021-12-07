@@ -16,17 +16,32 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, JsPath, Reads, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.SignedInUserDetails
 
 import java.util.UUID
 
-final case class SubmitClaimRequest(
+final case class SubmitClaimRequest[A](
   id: UUID,
-  claim: C285Claim,
+  claim: A,
   signedInUserDetails: SignedInUserDetails
 )
 
 object SubmitClaimRequest {
-  implicit val format: OFormat[SubmitClaimRequest] = Json.format
+
+  private def submitClaimRequestReads[A](implicit reads: Reads[A]): Reads[SubmitClaimRequest[A]] = (
+    (JsPath \ "id").read[UUID] and
+      (JsPath \ "claim").read[A] and
+      (JsPath \ "signedInUserDetails").read[SignedInUserDetails]
+  )(SubmitClaimRequest(_, _, _))
+
+  private def submitClaimRequestWrites[A](implicit writes: Writes[A]): Writes[SubmitClaimRequest[A]] = (
+    (JsPath \ "id").write[UUID] and
+      (JsPath \ "claim").write[A] and
+      (JsPath \ "signedInUserDetails").write[SignedInUserDetails]
+  )(unlift(SubmitClaimRequest.unapply[A]))
+
+  implicit def submitClaimRequestFormat[A](implicit format: Format[A]): Format[SubmitClaimRequest[A]] =
+    Format(submitClaimRequestReads, submitClaimRequestWrites)
 }

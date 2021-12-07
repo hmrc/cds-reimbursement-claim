@@ -17,19 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
 import cats.syntax.eq._
-import com.google.inject.{ImplementedBy, Singleton}
 
 import java.util.UUID
 
-@ImplementedBy(classOf[UUIDGeneratorImpl])
-trait UUIDGenerator {
-  def nextId(): UUID
-  def correlationId: String
-  def compactCorrelationId: String
-}
-
-@Singleton
-class UUIDGeneratorImpl extends UUIDGenerator {
+object UUIDGenerator {
   def nextId(): UUID               = UUID.randomUUID()
   def correlationId: String        = nextId().toString
   def compactCorrelationId: String = correlationId.filterNot(c => c === '-')

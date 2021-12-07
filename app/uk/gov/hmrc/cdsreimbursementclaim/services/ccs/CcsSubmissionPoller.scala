@@ -51,7 +51,7 @@ class CcsSubmissionPoller @Inject() (
     servicesConfig.getDuration("ccs.submission-poller.initial-delay").toMillis,
     TimeUnit.MILLISECONDS
   ) + FiniteDuration(
-    Random.nextInt((servicesConfig.getDuration("ccs.submission-poller.jitter-period").toMillis.toInt + 1)).toLong,
+    Random.nextInt(servicesConfig.getDuration("ccs.submission-poller.jitter-period").toMillis.toInt + 1).toLong,
     TimeUnit.MILLISECONDS
   )
 

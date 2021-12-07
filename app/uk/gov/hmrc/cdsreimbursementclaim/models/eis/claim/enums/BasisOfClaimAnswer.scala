@@ -24,45 +24,73 @@ sealed trait BasisOfClaimAnswer extends Product with Serializable
 
 object BasisOfClaimAnswer {
 
-  case object DuplicateEntry extends BasisOfClaimAnswer
-  case object DutySuspension extends BasisOfClaimAnswer
-  case object EndUseRelief extends BasisOfClaimAnswer
-  case object IncorrectCommodityCode extends BasisOfClaimAnswer
-  case object IncorrectCpc extends BasisOfClaimAnswer
-  case object IncorrectValue extends BasisOfClaimAnswer
-  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaimAnswer
-  case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaimAnswer
-  case object Miscellaneous extends BasisOfClaimAnswer
-  case object OutwardProcessingRelief extends BasisOfClaimAnswer
-  case object PersonalEffects extends BasisOfClaimAnswer
-  case object Preference extends BasisOfClaimAnswer
-  case object RGR extends BasisOfClaimAnswer
-  case object ProofOfReturnRefundGiven extends BasisOfClaimAnswer
-  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaimAnswer
-  case object IncorrectExciseValue extends BasisOfClaimAnswer
-  case object IncorrectAdditionalInformationCode extends BasisOfClaimAnswer
-
-  // $COVERAGE-OFF$
-  def basisOfClaimToString(basisForClaim: BasisOfClaimAnswer): String = basisForClaim match {
-    case DuplicateEntry                         => "Duplicate Entry"
-    case DutySuspension                         => "Duty Suspension"
-    case EndUseRelief                           => "End Use"
-    case IncorrectCommodityCode                 => "Incorrect Commodity Code"
-    case IncorrectCpc                           => "Incorrect CPC"
-    case IncorrectValue                         => "Incorrect Value"
-    case IncorrectEoriAndDefermentAccountNumber => "Incorrect EORI & Deferment Acc. Num."
-    case InwardProcessingReliefFromCustomsDuty  => "IP"
-    case Miscellaneous                          => "Miscellaneous"
-    case OutwardProcessingRelief                => "OPR"
-    case PersonalEffects                        => "Personal Effects"
-    case Preference                             => "Preference"
-    case RGR                                    => "RGR"
-    case ProofOfReturnRefundGiven               => "Proof of Return/Refund Given"
-    case EvidenceThatGoodsHaveNotEnteredTheEU   => "Evidence That Goods Have Not Entered The EU"
-    case IncorrectExciseValue                   => "Incorrect Excise Value"
-    case IncorrectAdditionalInformationCode     => "Incorrect Additional Information Code"
+  case object DuplicateEntry extends BasisOfClaimAnswer {
+    override def toString: String = "Duplicate Entry"
   }
-  // $COVERAGE-ON$
+
+  case object DutySuspension extends BasisOfClaimAnswer {
+    override def toString: String = "Duty Suspension"
+  }
+
+  case object EndUseRelief extends BasisOfClaimAnswer{
+    override def toString: String = "End Use"
+  }
+
+  case object IncorrectCommodityCode extends BasisOfClaimAnswer{
+    override def toString: String = "Incorrect Commodity Code"
+  }
+
+  case object IncorrectCpc extends BasisOfClaimAnswer{
+    override def toString: String = "Incorrect CPC"
+  }
+
+  case object IncorrectValue extends BasisOfClaimAnswer{
+    override def toString: String = "Incorrect Value"
+  }
+
+  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaimAnswer{
+    override def toString: String = "Incorrect EORI & Deferment Acc. Num."
+  }
+
+  case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaimAnswer{
+    override def toString: String = "IP"
+  }
+
+  case object Miscellaneous extends BasisOfClaimAnswer{
+    override def toString: String = "Miscellaneous"
+  }
+
+  case object OutwardProcessingRelief extends BasisOfClaimAnswer{
+    override def toString: String = "OPR"
+  }
+
+  case object PersonalEffects extends BasisOfClaimAnswer{
+    override def toString: String = "Personal Effects"
+  }
+
+  case object Preference extends BasisOfClaimAnswer{
+    override def toString: String = "Preference"
+  }
+
+  case object RGR extends BasisOfClaimAnswer{
+    override def toString: String = "RGR"
+  }
+
+  case object ProofOfReturnRefundGiven extends BasisOfClaimAnswer{
+    override def toString: String = "Proof of Return/Refund Given"
+  }
+
+  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaimAnswer {
+    override def toString: String = "Evidence That Goods Have Not Entered The EU"
+  }
+
+  case object IncorrectExciseValue extends BasisOfClaimAnswer{
+    override def toString: String = "Incorrect Excise Value"
+  }
+
+  case object IncorrectAdditionalInformationCode extends BasisOfClaimAnswer{
+    override def toString: String = "Incorrect Additional Information Code"
+  }
 
   implicit val eq: Eq[BasisOfClaimAnswer] = Eq.fromUniversalEquals
 

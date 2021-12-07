@@ -36,8 +36,8 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
-  def enqueue(
-    claimRequest: SubmitClaimRequest,
+  def enqueue[A](
+    claimRequest: A,
     submitClaimResponse: SubmitClaimResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
 

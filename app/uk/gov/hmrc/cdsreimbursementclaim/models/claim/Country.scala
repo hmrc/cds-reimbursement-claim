@@ -19,23 +19,19 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.Eq
 import cats.syntax.eq._
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country.CountryCode
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country.{CountryCode, uk}
 
-final case class Country(
-  code: CountryCode
-)
+final case class Country(code: CountryCode) {
+  def isUk: Boolean = code === uk.code
+}
 
 object Country {
+
+  type CountryCode = String
 
   val uk: Country = Country("GB")
 
   implicit val eq: Eq[Country] = Eq.fromUniversalEquals
-
-  type CountryCode = String
-
-  implicit class CountryOps(private val c: Country) extends AnyVal {
-    def isUk(): Boolean = c === Country.uk
-  }
 
   implicit val format: OFormat[Country] = Json.format[Country]
 }

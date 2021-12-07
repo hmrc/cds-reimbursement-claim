@@ -16,19 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.dates
 
-import com.google.inject.{ImplementedBy, Singleton}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
-@ImplementedBy(classOf[DateGeneratorImpl])
-trait DateGenerator {
-  def nextAcknowledgementDate: String
-  def nextReceiptDate: String
-  def nextIsoLocalDate: String
-}
-
-@Singleton
-class DateGeneratorImpl extends DateGenerator {
-  override def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
-  override def nextReceiptDate: String         = TimeUtils.iso8601DateTimeNow
-  override def nextIsoLocalDate: String        = TimeUtils.isoLocalDateNow
+object DateGenerator {
+  def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
+  def nextReceiptDate: String         = TimeUtils.iso8601DateTimeNow
+  def nextIsoLocalDate: String        = TimeUtils.isoLocalDateNow
 }
