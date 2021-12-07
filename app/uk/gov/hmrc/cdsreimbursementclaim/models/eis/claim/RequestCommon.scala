@@ -23,6 +23,7 @@ final case class RequestCommon(
   receiptDate: String,
   acknowledgementReference: String
 )
+
 object RequestCommon {
   implicit val format: OFormat[RequestCommon] = Json.format[RequestCommon]
 }

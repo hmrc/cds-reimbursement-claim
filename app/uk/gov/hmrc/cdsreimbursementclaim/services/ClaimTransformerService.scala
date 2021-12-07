@@ -131,8 +131,8 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration) ex
 
     val requestCommon = RequestCommon(
       originatingSystem = Platform.MDTP,
-      receiptDate = dateGenerator.nextReceiptDate,
-      acknowledgementReference = uuidGenerator.compactCorrelationId
+      receiptDate = DateGenerator.nextReceiptDate,
+      acknowledgementReference = UUIDGenerator.compactCorrelationId
     )
 
     buildMrnNumberPayload(submitClaimRequest).bimap(
@@ -339,11 +339,11 @@ object DefaultClaimTransformerService {
     enableCorrectAdditionalInformationCodeMapping: Boolean
   ): Validation[Option[String]] =
     if (enableCorrectAdditionalInformationCodeMapping && basisOfClaim === IncorrectAdditionalInformationCode) {
-      Valid(Some(BasisOfClaimAnswer.basisOfClaimToString(basisOfClaim)))
+      Valid(Some(basisOfClaim.toString))
     } else if (basisOfClaim === IncorrectAdditionalInformationCode) {
       Valid(Some("Risk Classification Error"))
     } else {
-      Valid(Some(BasisOfClaimAnswer.basisOfClaimToString(basisOfClaim)))
+      Valid(Some(basisOfClaim.toString))
     }
 
   def buildConsigneeEstablishmentAddress(
