@@ -1,5 +1,6 @@
 # microservice specific routes
 
-GET         /declaration/:id                        uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declaration(id:uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN)
-POST        /c285claim                              uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
-POST        /ce11779claim                           uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitCE11779Claim()
+GET         /declaration/:id                        uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declaration(id: MRN)
+POST        /claim                                  uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
+POST        /claims/c285                            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
+POST        /claims/rejected-goods-single           uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitRejectedGoodsClaim()

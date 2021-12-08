@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
@@ -74,7 +74,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
       .returning(EitherT.fromEither[Future](response))
 
   def mockAuditSubmitClaimEvent(
-    submitClaimRequest: SubmitClaimRequest,
+    submitClaimRequest: C285ClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   ): CallHandler6[String, SubmitClaimEvent, String, HeaderCarrier, Writes[SubmitClaimEvent], Request[_], Unit] =
     (mockAuditService
@@ -96,7 +96,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
   private def mockAuditSubmitClaimResponseEvent(
     httpStatus: Int,
     responseBody: Option[JsValue],
-    submitClaimRequest: SubmitClaimRequest,
+    submitClaimRequest: C285ClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   ) =
     (mockAuditService
@@ -122,21 +122,21 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   def mockSendClaimSubmitConfirmationEmail(
     emailRequest: EmailRequest,
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimResponse: ClaimSubmitResponse
   )(
     response: Either[Error, Unit]
-  ): CallHandler4[EmailRequest, SubmitClaimResponse, HeaderCarrier, Request[_], EitherT[Future, models.Error, Unit]] =
+  ): CallHandler4[EmailRequest, ClaimSubmitResponse, HeaderCarrier, Request[_], EitherT[Future, models.Error, Unit]] =
     (mockEmailService
-      .sendClaimConfirmationEmail(_: EmailRequest, _: SubmitClaimResponse)(_: HeaderCarrier, _: Request[_]))
+      .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[_]))
       .expects(emailRequest, submitClaimResponse, *, *)
       .returning(EitherT(Future.successful(response)))
 
   def mockTransformSubmitClaimRequest(
-    submitClaimRequest: SubmitClaimRequest
+    submitClaimRequest: C285ClaimRequest
   )(
     response: Either[Error, EisSubmitClaimRequest]
-  ): CallHandler1[SubmitClaimRequest, Either[Error, EisSubmitClaimRequest]] = (mockClaimTransformerService
-    .toEisSubmitClaimRequest(_: SubmitClaimRequest))
+  ): CallHandler1[C285ClaimRequest, Either[Error, EisSubmitClaimRequest]] = (mockClaimTransformerService
+    .toEisSubmitClaimRequest(_: C285ClaimRequest))
     .expects(submitClaimRequest)
     .returning(response)
 
@@ -146,7 +146,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
       "successfully submit a claim" in {
 
-        val submitClaimRequest = sample[SubmitClaimRequest]
+        val submitClaimRequest = sample[C285ClaimRequest]
 
         val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
 
@@ -171,7 +171,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
             |""".stripMargin
         )
 
-        val submitClaimResponse = sample[SubmitClaimResponse].copy(caseNumber = "4374422408")
+        val submitClaimResponse = sample[ClaimSubmitResponse].copy(caseNumber = "4374422408")
 
         inSequence {
           mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
@@ -192,7 +192,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
       "successfully submit a claim even though sending of the confirmation email was not successful" in {
 
-        val submitClaimRequest = sample[SubmitClaimRequest]
+        val submitClaimRequest = sample[C285ClaimRequest]
 
         val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
 
@@ -217,7 +217,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
             |""".stripMargin
         )
 
-        val submitClaimResponse = sample[SubmitClaimResponse].copy(caseNumber = "4374422408")
+        val submitClaimResponse = sample[ClaimSubmitResponse].copy(caseNumber = "4374422408")
 
         inSequence {
           mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
@@ -242,7 +242,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
         "the response payload contains an error" in {
 
-          val submitClaimRequest = sample[SubmitClaimRequest]
+          val submitClaimRequest = sample[C285ClaimRequest]
 
           val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
 
@@ -286,7 +286,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
         "no case number is returned in the response" in {
 
-          val submitClaimRequest = sample[SubmitClaimRequest]
+          val submitClaimRequest = sample[C285ClaimRequest]
 
           val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
 
@@ -323,7 +323,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
         "a http response other than 200 OK was received" in {
 
-          val submitClaimRequest = sample[SubmitClaimRequest]
+          val submitClaimRequest = sample[C285ClaimRequest]
 
           val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
 

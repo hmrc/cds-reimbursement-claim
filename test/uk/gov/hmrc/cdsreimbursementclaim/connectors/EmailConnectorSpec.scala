@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -67,7 +67,7 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
 
     "it receives a request to send a claim submitted confirmation email" must {
 
-      val submitClaimResponse = sample[SubmitClaimResponse].copy(caseNumber = "case-number")
+      val submitClaimResponse = sample[ClaimSubmitResponse].copy(caseNumber = "case-number")
       val emailRequest        = sample[EmailRequest]
 
       val expectedRequestBody = Json.parse(

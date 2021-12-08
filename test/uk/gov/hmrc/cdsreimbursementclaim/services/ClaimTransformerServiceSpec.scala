@@ -159,7 +159,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             displayDeclaration = Some(displayDeclaration)
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         val bankDetails = uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.BankDetails(
@@ -842,7 +842,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
           case _                           => "Parent Declaration"
         }
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -907,7 +907,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -974,7 +974,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -1034,7 +1034,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -1101,7 +1101,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {
@@ -1162,7 +1162,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
             duplicateDisplayDeclaration = None
           )
 
-        val submitClaimRequest = sample[SubmitClaimRequest].copy(claim = c285Claim)
+        val submitClaimRequest = sample[C285ClaimRequest].copy(claim = c285Claim)
         val correlationId      = UUID.randomUUID()
 
         inSequence {

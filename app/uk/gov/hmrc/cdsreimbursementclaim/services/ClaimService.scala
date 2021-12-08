@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, ReimbursementClaim, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
@@ -45,8 +45,8 @@ import scala.util.Try
 trait ClaimService {
 
   def submitClaim(
-    claim: SubmitClaimRequest[C285Claim]
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse]
+    claim: C285ClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
 @Singleton
@@ -61,8 +61,8 @@ class DefaultClaimService @Inject() (
     with Logging {
 
   def submitClaim(
-    submitClaimRequest: SubmitClaimRequest[C285Claim]
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, SubmitClaimResponse] = {
+    submitClaimRequest: C285ClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse] = {
 
     val maybeEisSubmitClaimRequest: Either[Error, EisSubmitClaimRequest] =
       claimTransformerService.toEisSubmitClaimRequest(submitClaimRequest)
@@ -90,8 +90,8 @@ class DefaultClaimService @Inject() (
 
   }
 
-  private def auditClaimBeforeSubmit[A <: ReimbursementClaim](
-    submitClaimRequest: SubmitClaimRequest[A],
+  private def auditClaimBeforeSubmit(
+    submitClaimRequest: C285ClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] =
     EitherT.pure[Future, Error](
@@ -105,8 +105,8 @@ class DefaultClaimService @Inject() (
       )
     )
 
-  private def submitClaimAndAudit[A <: ReimbursementClaim](
-    submitClaimRequest: SubmitClaimRequest[A],
+  private def submitClaimAndAudit(
+    submitClaimRequest: C285ClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, HttpResponse] = {
     val timer = metrics.submitClaimTimer.time()
@@ -133,10 +133,10 @@ class DefaultClaimService @Inject() (
       }
   }
 
-  private def auditSubmitClaimResponse[A <: ReimbursementClaim](
+  private def auditSubmitClaimResponse(
     responseHttpStatus: Int,
     responseBody: String,
-    submitClaimRequest: SubmitClaimRequest[A],
+    submitClaimRequest: C285ClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[_]): Unit = {
     val responseJson =
@@ -157,7 +157,7 @@ class DefaultClaimService @Inject() (
 
   private def prepareSubmitClaimResponse(
     response: EisSubmitClaimResponse
-  ): EitherT[Future, Error, SubmitClaimResponse] =
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
     EitherT.fromEither[Future] {
       response.postNewClaimsResponse.responseCommon.errorMessage match {
         case Some(error) =>
@@ -169,7 +169,7 @@ class DefaultClaimService @Inject() (
           )
         case None        =>
           response.postNewClaimsResponse.responseCommon.CDFPayCaseNumber match {
-            case Some(caseNumber) => Right(SubmitClaimResponse(caseNumber))
+            case Some(caseNumber) => Right(ClaimSubmitResponse(caseNumber))
             case None             => Left(Error("No case number returned in response"))
           }
       }

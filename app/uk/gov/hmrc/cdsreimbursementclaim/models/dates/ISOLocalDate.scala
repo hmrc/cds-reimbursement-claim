@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
+package uk.gov.hmrc.cdsreimbursementclaim.models.dates
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285ClaimRequest
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneOffset, ZonedDateTime}
 
-final case class SubmitClaimResponseEvent(
-  status: Int,
-  responseBody: JsValue,
-  requestBody: JsValue,
-  submitClaimRequest: C285ClaimRequest
-)
+object ISOLocalDate {
 
-object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+  def now: String =
+    DateTimeFormatter.ISO_LOCAL_DATE
+      .format(ZonedDateTime.now(ZoneOffset.UTC))
+      .replaceAllLiterally("-", "")
 }

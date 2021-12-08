@@ -21,7 +21,7 @@ import cats.data.Validated.Valid
 import cats.implicits.catsSyntaxOptionId
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, IsoLocalDate}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CDFPayservice, ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator.compactCorrelationId
@@ -33,9 +33,9 @@ object TPI05 {
       RequestDetail(
         RequestDetailA(
           CDFPayService = CDFPayservice.NDRC,
-          dateReceived = IsoLocalDate.now.some,
+          dateReceived = ISOLocalDate.now.some,
           customDeclarationType = Some(CustomDeclarationType.MRN),
-          claimDate = IsoLocalDate.now.some
+          claimDate = ISOLocalDate.now.some
         ),
         RequestDetailB()
       )

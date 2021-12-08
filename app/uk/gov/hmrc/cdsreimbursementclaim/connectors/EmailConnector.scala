@@ -22,7 +22,7 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.libs.json.{JsValue, Json, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultEmailConnector.SendEmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.http.AcceptLanguage
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[DefaultEmailConnector])
 trait EmailConnector {
   def sendClaimSubmitConfirmationEmail(
-    submitClaimResponse: SubmitClaimResponse,
+    submitClaimResponse: ClaimSubmitResponse,
     emailRequest: EmailRequest
   )(implicit
     hc: HeaderCarrier
@@ -54,7 +54,7 @@ class DefaultEmailConnector @Inject() (
   val claimSubmittedTemplateId: String = servicesConfig.getString("email.claim-submitted.template-id")
 
   override def sendClaimSubmitConfirmationEmail(
-    submitClaimResponse: SubmitClaimResponse,
+    submitClaimResponse: ClaimSubmitResponse,
     emailRequest: EmailRequest
   )(implicit
     hc: HeaderCarrier

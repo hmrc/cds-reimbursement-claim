@@ -18,10 +18,11 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
 import java.time.LocalDate
 
-final case class CE1779Claim(
+final case class RejectedGoodsClaim(
   movementReferenceNumber: MRN,
   declarantType: DeclarantTypeAnswer,
   basisOfClaim: BasisOfRejectedGoodsClaim,
@@ -38,9 +39,15 @@ final case class CE1779Claim(
   contactDetails: MrnContactDetails,
   contactAddress: ContactAddress,
   bankAccountDetailsAndType: Option[(BankAccountDetails, BankAccountType)]
-) extends ReimbursementClaim
+)
 
-object CE1779Claim {
+object RejectedGoodsClaim {
 
-  implicit val format: Format[CE1779Claim] = Json.format[CE1779Claim]
+  implicit lazy val mapFormat1: Format[Map[TaxCode, BigDecimal]] =
+    MapFormat[TaxCode, BigDecimal]
+
+  implicit lazy val mapFormat2: Format[Map[UploadDocument, DocumentTypeRejectedGoods]] =
+    MapFormat[UploadDocument, DocumentTypeRejectedGoods]
+
+  implicit val format: Format[RejectedGoodsClaim] = Json.format[RejectedGoodsClaim]
 }

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{DisplayDeclaration, DisplayResponseDetail, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 
 object ClaimGen {
@@ -29,7 +29,7 @@ object ClaimGen {
   implicit lazy val eisRequestCommonGen: Typeclass[RequestCommon]                = gen[RequestCommon]
   implicit lazy val eisSubmitClaimResponseGen: Typeclass[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
   implicit lazy val eisSubmitClaimRequestGen: Typeclass[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]
-  implicit lazy val submitClaimResponseGen: Typeclass[SubmitClaimResponse]       = gen[SubmitClaimResponse]
-  implicit lazy val submitClaimRequestGen: Typeclass[SubmitClaimRequest]         = gen[SubmitClaimRequest]
+  implicit lazy val submitClaimResponseGen: Typeclass[ClaimSubmitResponse]       = gen[ClaimSubmitResponse]
+  implicit lazy val submitClaimRequestGen: Typeclass[C285ClaimRequest]           = gen[C285ClaimRequest]
 
 }

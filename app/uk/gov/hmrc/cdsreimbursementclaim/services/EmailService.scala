@@ -24,7 +24,7 @@ import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.EmailConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.ClaimConfirmationEmailSentEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
@@ -38,7 +38,7 @@ trait EmailService {
 
   def sendClaimConfirmationEmail(
     emailRequest: EmailRequest,
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit]
 
 }
@@ -51,7 +51,7 @@ class DefaultEmailService @Inject() (connector: EmailConnector, auditService: Au
 
   def sendClaimConfirmationEmail(
     emailRequest: EmailRequest,
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] = {
     val timer = metrics.submitClaimConfirmationEmailTimer.time()
 
@@ -73,7 +73,7 @@ class DefaultEmailService @Inject() (connector: EmailConnector, auditService: Au
 
   private def auditClaimConfirmationEmailSent(
     emailRequest: EmailRequest,
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier, request: Request[_]): Unit =
     auditService.sendEvent(
       "ClaimConfirmationEmailSent",

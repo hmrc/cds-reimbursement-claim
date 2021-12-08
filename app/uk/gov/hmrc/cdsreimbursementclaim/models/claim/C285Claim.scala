@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{BasisOfClaimAnswer, ClaimType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
 
@@ -45,7 +45,7 @@ final case class C285Claim(
   reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
   associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
   associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
-) extends ReimbursementClaim
+)
 
 object C285Claim {
 

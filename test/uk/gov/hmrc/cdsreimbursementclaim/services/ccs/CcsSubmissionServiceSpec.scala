@@ -219,8 +219,8 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
         )
         val ccsSubmissionRequest = sample[CcsSubmissionRequest]
         val workItem             = sample[WorkItem[CcsSubmissionRequest]]
-        val submitClaimRequest   = sample[SubmitClaimRequest].copy(claim = c285claim)
-        val submitClaimResponse  = sample[SubmitClaimResponse]
+        val submitClaimRequest   = sample[C285ClaimRequest].copy(claim = c285claim)
+        val submitClaimResponse  = sample[ClaimSubmitResponse]
         val evidence             = submitClaimRequest.claim.documents.head
 
         val dec64payload = makeDec64XmlPayload(

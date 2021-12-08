@@ -16,4 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-trait ReimbursementClaim
+import play.api.libs.json.{Json, OFormat}
+
+final case class ClaimSubmitResponse(
+  caseNumber: String
+)
+
+object ClaimSubmitResponse {
+  implicit val format: OFormat[ClaimSubmitResponse] = Json.format[ClaimSubmitResponse]
+}

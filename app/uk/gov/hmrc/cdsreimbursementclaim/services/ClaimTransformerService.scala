@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursementsAnswer, Address => _, BankDetails => _, NdrcDetails => _, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, IsoLocalDate}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer.IncorrectAdditionalInformationCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -45,7 +45,7 @@ import javax.inject.Singleton
 
 @ImplementedBy(classOf[DefaultClaimTransformerService])
 trait ClaimTransformerService {
-  def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest[C285Claim]): Either[Error, EisSubmitClaimRequest]
+  def toEisSubmitClaimRequest(claimRequest: C285ClaimRequest): Either[Error, EisSubmitClaimRequest]
 }
 
 @Singleton
@@ -62,9 +62,9 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration)
       .value
 
   private def buildMrnNumberPayload(
-    submitClaimRequest: SubmitClaimRequest[C285Claim]
+    submitClaimRequest: C285ClaimRequest
   ): Either[Error, RequestDetail] = {
-    val localDateNow = IsoLocalDate.now
+    val localDateNow = ISOLocalDate.now
 
     val c285Claim = submitClaimRequest.claim
     (
@@ -129,7 +129,7 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration)
   }
 
   override def toEisSubmitClaimRequest(
-    submitClaimRequest: SubmitClaimRequest[C285Claim]
+    submitClaimRequest: C285ClaimRequest
   ): Either[Error, EisSubmitClaimRequest] = {
 
     val requestCommon = RequestCommon(

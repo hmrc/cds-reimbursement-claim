@@ -24,7 +24,7 @@ import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, ReimbursementClaim, SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, UploadDocument}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.DefaultCcsSubmissionService.makeBatchFileInterfaceMetaDataPayload
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString}
@@ -37,8 +37,8 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
   def enqueue(
-    claimRequest: SubmitClaimRequest[C285Claim],
-    submitClaimResponse: SubmitClaimResponse
+    claimRequest: C285ClaimRequest,
+    submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
 
   def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]]
@@ -70,8 +70,8 @@ class DefaultCcsSubmissionService @Inject() (
 
   @SuppressWarnings(Array("org.wartremover.warts.Any")) // compiler can't infer the type properly on sequence
   override def enqueue(
-    submitClaimRequest: SubmitClaimRequest[C285Claim],
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimRequest: C285ClaimRequest,
+    submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
 
     val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
@@ -97,8 +97,8 @@ class DefaultCcsSubmissionService @Inject() (
 object DefaultCcsSubmissionService {
 
   def makeBatchFileInterfaceMetaDataPayload(
-    submitClaimRequest: SubmitClaimRequest[C285Claim],
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimRequest: C285ClaimRequest,
+    submitClaimResponse: ClaimSubmitResponse
   ): List[Envelope] = {
     def make(
       referenceNumber: String,

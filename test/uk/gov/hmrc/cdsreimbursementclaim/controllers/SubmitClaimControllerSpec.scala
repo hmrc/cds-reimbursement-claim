@@ -25,7 +25,7 @@ import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -61,22 +61,22 @@ class SubmitClaimControllerSpec extends ControllerSpec {
     Helpers.stubControllerComponents()
   )
 
-  def mockSubmitClaimService(request: SubmitClaimRequest)(
-    response: Either[Error, SubmitClaimResponse]
-  ): CallHandler3[SubmitClaimRequest, HeaderCarrier, Request[_], EitherT[Future, Error, SubmitClaimResponse]] =
+  def mockSubmitClaimService(request: C285ClaimRequest)(
+    response: Either[Error, ClaimSubmitResponse]
+  ): CallHandler3[C285ClaimRequest, HeaderCarrier, Request[_], EitherT[Future, Error, ClaimSubmitResponse]] =
     (mockClaimService
-      .submitClaim(_: SubmitClaimRequest)(_: HeaderCarrier, _: Request[_]))
+      .submitClaim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_]))
       .expects(request, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockCcsRequestEnqueue(
-    submitClaimRequest: SubmitClaimRequest,
-    submitClaimResponse: SubmitClaimResponse
-  ): CallHandler3[SubmitClaimRequest, SubmitClaimResponse, HeaderCarrier, EitherT[Future, Error, List[
+    submitClaimRequest: C285ClaimRequest,
+    submitClaimResponse: ClaimSubmitResponse
+  ): CallHandler3[C285ClaimRequest, ClaimSubmitResponse, HeaderCarrier, EitherT[Future, Error, List[
     WorkItem[CcsSubmissionRequest]
   ]]] =
     (mockCcsSubmissionService
-      .enqueue(_: SubmitClaimRequest, _: SubmitClaimResponse)(_: HeaderCarrier))
+      .enqueue(_: C285ClaimRequest, _: ClaimSubmitResponse)(_: HeaderCarrier))
       .expects(submitClaimRequest, submitClaimResponse, *)
       .returning(EitherT.pure(List(ccsSubmissionRequestWorkItem)))
 
@@ -89,8 +89,8 @@ class SubmitClaimControllerSpec extends ControllerSpec {
 
       "return the claim reference number" in {
 
-        val submitClaimRequest  = sample[SubmitClaimRequest]
-        val submitClaimResponse = sample[SubmitClaimResponse]
+        val submitClaimRequest  = sample[C285ClaimRequest]
+        val submitClaimResponse = sample[ClaimSubmitResponse]
 
         inSequence {
           mockSubmitClaimService(submitClaimRequest)(Right(submitClaimResponse))
@@ -104,7 +104,7 @@ class SubmitClaimControllerSpec extends ControllerSpec {
 
       "return an error if the submission of the claim failed" in {
 
-        val submitClaimRequest = sample[SubmitClaimRequest]
+        val submitClaimRequest = sample[C285ClaimRequest]
 
         inSequence {
           mockSubmitClaimService(submitClaimRequest)(Left(Error("boom!")))
