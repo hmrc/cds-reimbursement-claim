@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, SubmitClaimRequest, SubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, CE1779Claim, SubmitClaimRequest, SubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -59,6 +59,8 @@ class SubmitClaimController @Inject() (
   }
 
   def submitCE11779Claim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    ???
+    withJsonBody[SubmitClaimRequest[CE1779Claim]] { submitClaimRequest =>
+      ???
+    }
   }
 }

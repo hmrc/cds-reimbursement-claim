@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursementsAnswer, Address => _, BankDetails => _, NdrcDetails => _, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, IsoLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer.IncorrectAdditionalInformationCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -45,11 +45,12 @@ import javax.inject.Singleton
 
 @ImplementedBy(classOf[DefaultClaimTransformerService])
 trait ClaimTransformerService {
-  def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest]
+  def toEisSubmitClaimRequest(claimRequest: SubmitClaimRequest[C285Claim]): Either[Error, EisSubmitClaimRequest]
 }
 
 @Singleton
-class DefaultClaimTransformerService @Inject() (configuration: Configuration) extends ClaimTransformerService
+class DefaultClaimTransformerService @Inject() (configuration: Configuration)
+    extends ClaimTransformerService
     with Logging {
 
   private val enableCorrectAdditionalInformationCodeMappingFlag: String =
@@ -61,9 +62,9 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration) ex
       .value
 
   private def buildMrnNumberPayload(
-    submitClaimRequest: SubmitClaimRequest
+    submitClaimRequest: SubmitClaimRequest[C285Claim]
   ): Either[Error, RequestDetail] = {
-    val localDateNow = dateGenerator.nextIsoLocalDate
+    val localDateNow = IsoLocalDate.now
 
     val c285Claim = submitClaimRequest.claim
     (
@@ -127,11 +128,13 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration) ex
       }
   }
 
-  override def toEisSubmitClaimRequest(submitClaimRequest: SubmitClaimRequest): Either[Error, EisSubmitClaimRequest] = {
+  override def toEisSubmitClaimRequest(
+    submitClaimRequest: SubmitClaimRequest[C285Claim]
+  ): Either[Error, EisSubmitClaimRequest] = {
 
     val requestCommon = RequestCommon(
       originatingSystem = Platform.MDTP,
-      receiptDate = DateGenerator.nextReceiptDate,
+      receiptDate = ISO8601DateTime.now,
       acknowledgementReference = UUIDGenerator.compactCorrelationId
     )
 
@@ -198,7 +201,7 @@ object DefaultClaimTransformerService {
           street = buildStreet(Option(contactAddress.line1), contactAddress.line2),
           city = Option(contactAddress.line4),
           countryCode = Option(contactAddress.country.code),
-          postalCode = Option(contactAddress.postcode),
+          postalCode = Option(contactAddress.postcode.value),
           telephoneNumber = contactDetails.phoneNumber.map(_.value),
           faxNumber = None,
           emailAddress = Option(contactDetails.emailAddress.value)

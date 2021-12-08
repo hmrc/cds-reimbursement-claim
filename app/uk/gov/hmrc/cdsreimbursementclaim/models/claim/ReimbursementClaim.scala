@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.dates
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
-
-object DateGenerator {
-  def nextAcknowledgementDate: String = TimeUtils.rfc7231DateTimeNow
-  def nextReceiptDate: String         = TimeUtils.iso8601DateTimeNow
-  def nextIsoLocalDate: String        = TimeUtils.isoLocalDateNow
-}
+trait ReimbursementClaim

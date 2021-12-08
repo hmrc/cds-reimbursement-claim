@@ -19,29 +19,27 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 import play.api.libs.functional.syntax.{unlift, _}
 import play.api.libs.json.{JsPath, Json, OWrites, Writes}
 
-// The root structure for the JSON payload exceed 22 fields.
-// Therefore the type needs to be split.
 final case class RequestDetailA(
   CDFPayService: String,
-  dateReceived: Option[String],
-  claimType: Option[String],
-  caseType: Option[String],
-  customDeclarationType: Option[String],
-  declarationMode: Option[String],
-  claimDate: Option[String],
-  claimAmountTotal: Option[String],
-  disposalMethod: Option[String],
-  reimbursementMethod: Option[String],
-  basisOfClaim: Option[String],
-  claimant: Option[String],
-  payeeIndicator: Option[String],
-  newEORI: Option[String],
-  newDAN: Option[String],
-  authorityTypeProvided: Option[String],
-  claimantEORI: Option[String],
-  claimantEmailAddress: Option[String],
-  goodsDetails: Option[GoodsDetails],
-  EORIDetails: Option[EoriDetails]
+  dateReceived: Option[String] = None,
+  claimType: Option[String] = None,
+  caseType: Option[String] = None,
+  customDeclarationType: Option[String] = None,
+  declarationMode: Option[String] = None,
+  claimDate: Option[String] = None,
+  claimAmountTotal: Option[String] = None,
+  disposalMethod: Option[String] = None,
+  reimbursementMethod: Option[String] = None,
+  basisOfClaim: Option[String] = None,
+  claimant: Option[String] = None,
+  payeeIndicator: Option[String] = None,
+  newEORI: Option[String] = None,
+  newDAN: Option[String] = None,
+  authorityTypeProvided: Option[String] = None,
+  claimantEORI: Option[String] = None,
+  claimantEmailAddress: Option[String] = None,
+  goodsDetails: Option[GoodsDetails] = None,
+  EORIDetails: Option[EoriDetails] = None
 )
 
 object RequestDetailA {
@@ -49,8 +47,8 @@ object RequestDetailA {
 }
 
 final case class RequestDetailB(
-  MRNDetails: Option[List[MrnDetail]],
-  duplicateMRNDetails: Option[MrnDetail]
+  MRNDetails: Option[List[MrnDetail]] = None,
+  duplicateMRNDetails: Option[MrnDetail] = None
 )
 
 object RequestDetailB {

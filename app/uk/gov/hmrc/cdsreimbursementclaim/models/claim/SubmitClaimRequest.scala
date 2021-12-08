@@ -22,7 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.SignedInUserDetails
 
 import java.util.UUID
 
-final case class SubmitClaimRequest[A](
+final case class SubmitClaimRequest[A <: ReimbursementClaim](
   id: UUID,
   claim: A,
   signedInUserDetails: SignedInUserDetails
@@ -30,18 +30,18 @@ final case class SubmitClaimRequest[A](
 
 object SubmitClaimRequest {
 
-  private def submitClaimRequestReads[A](implicit reads: Reads[A]): Reads[SubmitClaimRequest[A]] = (
+  private def claimRequestReads[A <: ReimbursementClaim](implicit reads: Reads[A]): Reads[SubmitClaimRequest[A]] = (
     (JsPath \ "id").read[UUID] and
       (JsPath \ "claim").read[A] and
       (JsPath \ "signedInUserDetails").read[SignedInUserDetails]
   )(SubmitClaimRequest(_, _, _))
 
-  private def submitClaimRequestWrites[A](implicit writes: Writes[A]): Writes[SubmitClaimRequest[A]] = (
+  private def claimRequestWrites[A <: ReimbursementClaim](implicit writes: Writes[A]): Writes[SubmitClaimRequest[A]] = (
     (JsPath \ "id").write[UUID] and
       (JsPath \ "claim").write[A] and
       (JsPath \ "signedInUserDetails").write[SignedInUserDetails]
   )(unlift(SubmitClaimRequest.unapply[A]))
 
-  implicit def submitClaimRequestFormat[A](implicit format: Format[A]): Format[SubmitClaimRequest[A]] =
-    Format(submitClaimRequestReads, submitClaimRequestWrites)
+  implicit def claimRequestFormat[A <: ReimbursementClaim](implicit format: Format[A]): Format[SubmitClaimRequest[A]] =
+    Format(claimRequestReads, claimRequestWrites)
 }

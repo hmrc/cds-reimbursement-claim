@@ -24,7 +24,7 @@ import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, ReimbursementClaim, SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.DefaultCcsSubmissionService.makeBatchFileInterfaceMetaDataPayload
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString}
@@ -36,8 +36,8 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
-  def enqueue[A](
-    claimRequest: A,
+  def enqueue(
+    claimRequest: SubmitClaimRequest[C285Claim],
     submitClaimResponse: SubmitClaimResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
 
@@ -70,7 +70,7 @@ class DefaultCcsSubmissionService @Inject() (
 
   @SuppressWarnings(Array("org.wartremover.warts.Any")) // compiler can't infer the type properly on sequence
   override def enqueue(
-    submitClaimRequest: SubmitClaimRequest,
+    submitClaimRequest: SubmitClaimRequest[C285Claim],
     submitClaimResponse: SubmitClaimResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
 
@@ -97,7 +97,7 @@ class DefaultCcsSubmissionService @Inject() (
 object DefaultCcsSubmissionService {
 
   def makeBatchFileInterfaceMetaDataPayload(
-    submitClaimRequest: SubmitClaimRequest,
+    submitClaimRequest: SubmitClaimRequest[C285Claim],
     submitClaimResponse: SubmitClaimResponse
   ): List[Envelope] = {
     def make(

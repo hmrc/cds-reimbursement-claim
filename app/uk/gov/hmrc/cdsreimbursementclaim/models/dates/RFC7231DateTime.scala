@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.dates
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneOffset, ZonedDateTime}
 
-sealed trait BankAccountType extends Product with Serializable
+object RFC7231DateTime {
 
-object BankAccountType {
+  private val rfc7231DateTimeFormat: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss O")
 
-  case object BusinessBankAccount extends BankAccountType
-  case object PersonalBankAccount extends BankAccountType
-
-  implicit val equality: Eq[BankAccountType] =
-    Eq.fromUniversalEquals[BankAccountType]
-
-  implicit val format: OFormat[BankAccountType] =
-    derived.oformat[BankAccountType]()
+  def now: String = rfc7231DateTimeFormat.format(ZonedDateTime.now(ZoneOffset.UTC))
 }
