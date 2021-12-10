@@ -16,53 +16,36 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.functional.syntax.{unlift, _}
-import play.api.libs.json.{JsPath, Json, OWrites, Writes}
+import play.api.libs.json.{Json, OWrites}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MethodOfDisposal
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 
-final case class RequestDetailA(
-  CDFPayService: String,
-  dateReceived: Option[String] = None,
-  claimType: Option[String] = None,
-  caseType: Option[String] = None,
-  customDeclarationType: Option[String] = None,
-  declarationMode: Option[String] = None,
-  claimDate: Option[String] = None,
-  claimAmountTotal: Option[String] = None,
-  disposalMethod: Option[String] = None,
-  reimbursementMethod: Option[String] = None,
-  basisOfClaim: Option[String] = None,
-  claimant: Option[String] = None,
-  payeeIndicator: Option[String] = None,
-  newEORI: Option[String] = None,
-  newDAN: Option[String] = None,
-  authorityTypeProvided: Option[String] = None,
+final case class RequestDetail(
+  CDFPayService: CDFPayService, // ok
+  dateReceived: Option[String] = None, // ok
+  claimType: Option[ClaimType] = None, // ok
+  caseType: Option[CaseType] = None, // ok
+  customDeclarationType: Option[CustomDeclarationType] = None, // ok
+  declarationMode: Option[DeclarationMode] = None, // ok
+  claimDate: Option[String] = None, // ok
+  claimAmountTotal: Option[BigDecimal] = None, // ok
+  disposalMethod: Option[MethodOfDisposal] = None, // ok
+  reimbursementMethod: Option[ReimbursementMethod] = None, // ok
+  basisOfClaim: Option[String] = None, // ok
+  claimant: Option[String] = None, // ok
+  payeeIndicator: Option[String] = None, // ok
+  newEORI: Option[String] = None, // ok
+  newDAN: Option[String] = None, // ok
+  authorityTypeProvided: Option[String] = None, // ok
   claimantEORI: Option[String] = None,
   claimantEmailAddress: Option[String] = None,
   goodsDetails: Option[GoodsDetails] = None,
-  EORIDetails: Option[EoriDetails] = None
-)
-
-object RequestDetailA {
-  implicit val format: OWrites[RequestDetailA] = Json.writes[RequestDetailA]
-}
-
-final case class RequestDetailB(
+  EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,
   duplicateMRNDetails: Option[MrnDetail] = None
 )
 
-object RequestDetailB {
-  implicit val format: OWrites[RequestDetailB] = Json.writes[RequestDetailB]
-}
-
-final case class RequestDetail(
-  requestDetailA: RequestDetailA,
-  requestDetailB: RequestDetailB
-)
-
 object RequestDetail {
-  implicit val format: Writes[RequestDetail] = (
-    JsPath.write[RequestDetailA] and
-      JsPath.write[RequestDetailB]
-  )(unlift(RequestDetail.unapply))
+
+  implicit val writes: OWrites[RequestDetail] = Json.writes[RequestDetail]
 }

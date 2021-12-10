@@ -38,8 +38,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils.{roundedTwoDecimalPlaces, roundedTwoDecimalPlacesToString}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, Logging, TimeUtils}
 
 import javax.inject.Singleton
 
@@ -79,15 +78,15 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration)
       ),
       buildEoriDetails(submitClaimRequest.claim)
     ).mapN { case (maybeReasonAndOrBasis, mrnDetails, duplicateMrnDetails, eoriDetails) =>
-      val requestDetailA = RequestDetailA(
-        CDFPayService = CDFPayservice.NDRC,
+      RequestDetail(
+        CDFPayService = CDFPayService.NDRC,
         dateReceived = Some(localDateNow),
         claimType = Some(ClaimType.C285),
         caseType = setCaseType(c285Claim),
         customDeclarationType = Some(CustomDeclarationType.MRN),
         declarationMode = setDeclarationMode(c285Claim),
         claimDate = Some(localDateNow),
-        claimAmountTotal = Some(roundedTwoDecimalPlacesToString(submitClaimRequest.claim.totalReimbursementAmount)),
+        claimAmountTotal = Some(submitClaimRequest.claim.totalReimbursementAmount.roundToTwoDecimalPlaces),
         disposalMethod = None,
         reimbursementMethod = setReimbursementMethod(c285Claim),
         basisOfClaim = maybeReasonAndOrBasis,
@@ -104,24 +103,20 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration)
         newEORI = None,
         newDAN = None,
         authorityTypeProvided = None,
+
         claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori.value),
         claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
+
         goodsDetails = Some(
           makeGoodsDetails(
             c285Claim.declarantTypeAnswer,
             c285Claim.commodityDetailsAnswer
           )
         ),
-        EORIDetails = Some(eoriDetails)
-      )
-
-      val requestDetailB = RequestDetailB(
+        EORIDetails = Some(eoriDetails),
         MRNDetails = Some(mrnDetails),
         duplicateMRNDetails = duplicateMrnDetails
       )
-
-      RequestDetail(requestDetailA, requestDetailB)
-
     }.toEither
       .leftMap { errors =>
         Error(s"Could not create TPI05 EIS submit claim request for mrn journey: ${errors.toList.mkString("; ")}")
@@ -543,8 +538,8 @@ object DefaultClaimTransformerService {
         isValidPaymentMethod(claim.paymentMethod),
         isValidTaxType(claim.taxCode.value),
         isValidPaymentReference(claim.paymentReference),
-        isValidAmount(roundedTwoDecimalPlaces(claim.paidAmount)),
-        isValidAmount(roundedTwoDecimalPlaces(claim.claimAmount))
+        isValidAmount(claim.paidAmount.roundToTwoDecimalPlaces),
+        isValidAmount(claim.claimAmount.roundToTwoDecimalPlaces)
       ).mapN { case (paymentMethod, taxType, paymentReference, paidAmount, claimAmount) =>
         NdrcDetails(
           paymentMethod = paymentMethod,
@@ -643,21 +638,21 @@ object DefaultClaimTransformerService {
       case None                     => Valid(None)
     }
 
-  def setCaseType(c285Claim: C285Claim): Option[String] =
+  def setCaseType(c285Claim: C285Claim): Option[CaseType] =
     (c285Claim.reimbursementMethodAnswer, c285Claim.typeOfClaim) match {
       case (_, TypeOfClaimAnswer.Multiple)   => Some(CaseType.Bulk)
       case (_, TypeOfClaimAnswer.Scheduled)  => Some(CaseType.Bulk)
-      case (Some(CurrentMonthAdjustment), _) => Some(CaseType.CMA)
+      case (CurrentMonthAdjustment, _)       => Some(CaseType.CMA)
       case _                                 => Some(CaseType.Individual)
     }
 
-  def setReimbursementMethod(c285Claim: C285Claim): Option[String] =
+  def setReimbursementMethod(c285Claim: C285Claim): Option[ReimbursementMethod] =
     c285Claim.reimbursementMethodAnswer match {
-      case Some(CurrentMonthAdjustment) => Some(ReimbursementMethod.Deferment)
-      case _                            => Some(ReimbursementMethod.BankTransfer)
+      case CurrentMonthAdjustment => Some(ReimbursementMethod.Deferment)
+      case _                      => Some(ReimbursementMethod.BankTransfer)
     }
 
-  def setDeclarationMode(c285Claim: C285Claim): Option[String] =
+  def setDeclarationMode(c285Claim: C285Claim): Option[DeclarationMode] =
     c285Claim.typeOfClaim match {
       case TypeOfClaimAnswer.Scheduled => Some(DeclarationMode.ParentDeclaration)
       case TypeOfClaimAnswer.Multiple  => Some(DeclarationMode.AllDeclaration)

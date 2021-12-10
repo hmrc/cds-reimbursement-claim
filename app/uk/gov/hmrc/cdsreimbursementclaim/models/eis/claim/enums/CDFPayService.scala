@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.utils
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-object MoneyUtils {
+import play.api.libs.json.{JsString, Writes}
 
-  def roundedTwoDecimalPlacesToString(value: BigDecimal): String =
-    value.setScale(2, BigDecimal.RoundingMode.HALF_UP).toString()
+sealed trait CDFPayService extends Product with Serializable
 
-  def roundedTwoDecimalPlaces(value: BigDecimal): BigDecimal =
-    value.setScale(2, BigDecimal.RoundingMode.HALF_UP)
+object CDFPayService {
 
+  case object NDRC extends CDFPayService
+  case object SCTY extends CDFPayService
+
+  implicit val writes: Writes[CDFPayService] =
+    Writes(service => JsString(service.toString))
 }

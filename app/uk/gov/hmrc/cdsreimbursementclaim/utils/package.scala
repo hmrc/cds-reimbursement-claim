@@ -22,4 +22,8 @@ package object utils {
 
   implicit def toUUIDString: UUID => String = uuid => uuid.toString
 
+  implicit class BigDecimalOps(val value: BigDecimal) extends AnyVal {
+    def roundToTwoDecimalPlaces: BigDecimal =
+      value.setScale(2, BigDecimal.RoundingMode.HALF_UP)
+  }
 }

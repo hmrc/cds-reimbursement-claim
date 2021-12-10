@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
 sealed trait DeclarantTypeAnswer extends Product with Serializable
 
 object DeclarantTypeAnswer {
+
   case object Importer extends DeclarantTypeAnswer
   case object AssociatedWithImporterCompany extends DeclarantTypeAnswer
   case object AssociatedWithRepresentativeCompany extends DeclarantTypeAnswer
 
-  implicit val format: OFormat[DeclarantTypeAnswer] = derived.oformat[DeclarantTypeAnswer]()
+  implicit val equality: Eq[DeclarantTypeAnswer] =
+    Eq.fromUniversalEquals[DeclarantTypeAnswer]
+
+  implicit val format: OFormat[DeclarantTypeAnswer] =
+    derived.oformat[DeclarantTypeAnswer]()
 }

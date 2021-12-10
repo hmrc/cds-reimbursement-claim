@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import play.api.libs.json.{JsString, Writes}
+
 sealed trait CaseType extends Product with Serializable
 
 object CaseType {
+
   case object Individual extends CaseType
   case object Bulk extends CaseType
   case object CMA extends CaseType
 
-  implicit def caseTypeToString(caseType: CaseType): String = caseType match {
-    case Individual => Individual.toString
-    case Bulk       => Bulk.toString
-    case CMA        => CMA.toString
-  }
-
+  implicit val writes: Writes[CaseType] =
+    Writes(caseType => JsString(caseType.toString))
 }

@@ -18,16 +18,27 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.Eq
 import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{OFormat, __}
 
 sealed trait BasisOfRejectedGoodsClaim extends Product with Serializable
 
 object BasisOfRejectedGoodsClaim {
 
-  case object DamagedBeforeClearance extends BasisOfRejectedGoodsClaim
-  case object Defective extends BasisOfRejectedGoodsClaim
-  case object NotInAccordanceWithContract extends BasisOfRejectedGoodsClaim
-  case object SpecialCircumstances extends BasisOfRejectedGoodsClaim
+  case object DamagedBeforeClearance extends BasisOfRejectedGoodsClaim {
+    override def toString: String = "Damaged Before Clearance"
+  }
+
+  case object Defective extends BasisOfRejectedGoodsClaim {
+    override def toString: String = "Defective"
+  }
+
+  case object NotInAccordanceWithContract extends BasisOfRejectedGoodsClaim {
+    override def toString: String = "Not In Accordance with Contract"
+  }
+
+  case object SpecialCircumstances extends BasisOfRejectedGoodsClaim {
+    override def toString: String = "Special Circumstances"
+  }
 
   implicit val equality: Eq[BasisOfRejectedGoodsClaim] =
     Eq.fromUniversalEquals[BasisOfRejectedGoodsClaim]

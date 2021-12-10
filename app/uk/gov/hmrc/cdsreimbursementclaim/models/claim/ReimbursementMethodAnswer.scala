@@ -16,15 +16,20 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
 sealed trait ReimbursementMethodAnswer extends Product with Serializable
 
 object ReimbursementMethodAnswer {
+
   final case object CurrentMonthAdjustment extends ReimbursementMethodAnswer
   final case object BankAccountTransfer extends ReimbursementMethodAnswer
 
-  implicit val reimbursementMethodFormat: OFormat[ReimbursementMethodAnswer] =
+  implicit val equality: Eq[ReimbursementMethodAnswer] =
+    Eq.fromUniversalEquals[ReimbursementMethodAnswer]
+
+  implicit val format: OFormat[ReimbursementMethodAnswer] =
     derived.oformat[ReimbursementMethodAnswer]()
 }

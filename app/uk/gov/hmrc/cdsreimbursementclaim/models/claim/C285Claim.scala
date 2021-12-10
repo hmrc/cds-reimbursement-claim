@@ -20,7 +20,7 @@ import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.utils.MoneyUtils._
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
 
@@ -42,7 +42,7 @@ final case class C285Claim(
   importerEoriNumber: Option[ImporterEoriNumberAnswer],
   declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
   claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
-  reimbursementMethodAnswer: Option[ReimbursementMethodAnswer],
+  reimbursementMethodAnswer: ReimbursementMethodAnswer,
   associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
   associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
 )
@@ -55,8 +55,8 @@ object C285Claim {
       claim.claimedReimbursementsAnswer
         .map(claim =>
           claim.copy(
-            claimAmount = roundedTwoDecimalPlaces(claim.claimAmount),
-            paidAmount = roundedTwoDecimalPlaces(claim.paidAmount)
+            claimAmount = claim.claimAmount.roundToTwoDecimalPlaces,
+            paidAmount = claim.paidAmount.roundToTwoDecimalPlaces
           )
         )
 

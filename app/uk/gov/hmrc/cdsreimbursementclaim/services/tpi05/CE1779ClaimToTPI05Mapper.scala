@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import uk.gov.hmrc.cdsreimbursementclaim.models
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
@@ -24,8 +24,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
 class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[RejectedGoodsClaimRequest] with Logging {
 
-  def mapToEisSubmitClaimRequest(request: RejectedGoodsClaimRequest): Either[models.Error, EisSubmitClaimRequest] =
+  def mapToEisSubmitClaimRequest(request: RejectedGoodsClaimRequest): Either[Error, EisSubmitClaimRequest] =
     TPI05.request
       .forClaimOfType(CE1179)
+      .withClaimant(request.claim.declarantType)
+      .withBasisOfClaim(request.claim.basisOfClaim.toString)
+      .withClaimedAmount(request.claim.totalReimbursementAmount)
+      .withReimbursementMethod(request.claim.reimbursementMethod)
+      .withDisposalMethod(request.claim.methodOfDisposal)
       .verify
 }

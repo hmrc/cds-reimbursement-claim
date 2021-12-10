@@ -24,12 +24,29 @@ sealed trait MethodOfDisposal extends Product with Serializable
 
 object MethodOfDisposal {
 
-  case object Export extends MethodOfDisposal
-  case object PostalExport extends MethodOfDisposal
-  case object DonationToCharity extends MethodOfDisposal
-  case object PlacedInCustomsWarehouse extends MethodOfDisposal
-  case object ExportInBaggage extends MethodOfDisposal
-  case object Destruction extends MethodOfDisposal
+  case object Export extends MethodOfDisposal {
+    override def toString: String = "Export"
+  }
+
+  case object PostalExport extends MethodOfDisposal {
+    override def toString: String = "Postal Export"
+  }
+
+  case object DonationToCharity extends MethodOfDisposal {
+    override def toString: String = "Donation to Charity"
+  }
+
+  case object PlacedInCustomsWarehouse extends MethodOfDisposal {
+    override def toString: String = "Placed in Customs Warehouse"
+  }
+
+  case object ExportInBaggage extends MethodOfDisposal {
+    override def toString: String = "Export in Baggage"
+  }
+
+  case object Destruction extends MethodOfDisposal {
+    override def toString: String = "Destruction"
+  }
 
   implicit val equality: Eq[MethodOfDisposal] =
     Eq.fromUniversalEquals[MethodOfDisposal]
