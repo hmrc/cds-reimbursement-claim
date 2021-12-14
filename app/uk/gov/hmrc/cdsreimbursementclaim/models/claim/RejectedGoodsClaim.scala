@@ -17,27 +17,24 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
 import java.time.LocalDate
 
 final case class RejectedGoodsClaim(
   movementReferenceNumber: MRN,
-  declarantType: DeclarantTypeAnswer,
+  claimantType: ClaimantType,
+  claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfRejectedGoodsClaim,
+  basisOfClaimSpecialCircumstances: Option[String],
   methodOfDisposal: MethodOfDisposal,
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
   inspectionAddress: InspectionAddress,
   totalReimbursementAmount: BigDecimal,
-  supportingEvidences: Map[UploadDocument, DocumentTypeRejectedGoods],
-  basisOfClaimSpecialCircumstances: Option[String],
   reimbursementMethod: ReimbursementMethodAnswer,
-  consigneeEoriNumber: Eori,
-  declarantEoriNumber: Eori,
-  contactDetails: MrnContactDetails,
-  contactAddress: ContactAddress,
+  supportingEvidences: Map[UploadDocument, DocumentTypeRejectedGoods],
   bankAccountDetails: Option[BankAccountDetails]
 )
 

@@ -17,31 +17,35 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MethodOfDisposal
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIndicator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class RequestDetail(
-  CDFPayService: CDFPayService, // ok
-  dateReceived: Option[String] = None, // ok
-  claimType: Option[ClaimType] = None, // ok
-  caseType: Option[CaseType] = None, // ok
-  customDeclarationType: Option[CustomDeclarationType] = None, // ok
-  declarationMode: Option[DeclarationMode] = None, // ok
-  claimDate: Option[String] = None, // ok
-  claimAmountTotal: Option[BigDecimal] = None, // ok
-  disposalMethod: Option[MethodOfDisposal] = None, // ok
-  reimbursementMethod: Option[ReimbursementMethod] = None, // ok
-  basisOfClaim: Option[String] = None, // ok
-  claimant: Option[String] = None, // ok
-  payeeIndicator: Option[String] = None, // ok
-  newEORI: Option[String] = None, // ok
-  newDAN: Option[String] = None, // ok
-  authorityTypeProvided: Option[String] = None, // ok
-  claimantEORI: Option[String] = None,
-  claimantEmailAddress: Option[String] = None,
-  goodsDetails: Option[GoodsDetails] = None,
-  EORIDetails: Option[EoriDetails] = None,
-  MRNDetails: Option[List[MrnDetail]] = None,
+  CDFPayService: CDFPayService,
+  dateReceived: Option[String] = None,
+  claimType: Option[ClaimType] = None,
+  caseType: Option[CaseType] = None,
+  customDeclarationType: Option[CustomDeclarationType] = None,
+  declarationMode: Option[DeclarationMode] = None,
+  claimDate: Option[String] = None,
+  claimAmountTotal: Option[BigDecimal] = None,
+  disposalMethod: Option[String] = None,
+  reimbursementMethod: Option[ReimbursementMethod] = None,
+  basisOfClaim: Option[String] = None,
+  claimant: Option[Claimant] = None,
+  payeeIndicator: Option[PayeeIndicator] = None,
+  newEORI: Option[Eori] = None,
+  newDAN: Option[String] = None,
+  authorityTypeProvided: Option[String] = None,
+  claimantEORI: Option[Eori] = None,
+  claimantEmailAddress: Option[Email] = None,
+
+  goodsDetails: Option[GoodsDetails] = None, //
+
+  EORIDetails: Option[EoriDetails] = None, //
+  MRNDetails: Option[List[MrnDetail]] = None, // ???
   duplicateMRNDetails: Option[MrnDetail] = None
 )
 

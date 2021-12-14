@@ -20,33 +20,21 @@ import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait MethodOfDisposal extends Product with Serializable
+sealed abstract class MethodOfDisposal(val value: String) extends Product with Serializable
 
 object MethodOfDisposal {
 
-  case object Export extends MethodOfDisposal {
-    override def toString: String = "Export"
-  }
+  case object Export extends MethodOfDisposal("Export")
 
-  case object PostalExport extends MethodOfDisposal {
-    override def toString: String = "Postal Export"
-  }
+  case object PostalExport extends MethodOfDisposal("Postal Export")
 
-  case object DonationToCharity extends MethodOfDisposal {
-    override def toString: String = "Donation to Charity"
-  }
+  case object DonationToCharity extends MethodOfDisposal("Donation to Charity")
 
-  case object PlacedInCustomsWarehouse extends MethodOfDisposal {
-    override def toString: String = "Placed in Customs Warehouse"
-  }
+  case object PlacedInCustomsWarehouse extends MethodOfDisposal("Placed in Customs Warehouse")
 
-  case object ExportInBaggage extends MethodOfDisposal {
-    override def toString: String = "Export in Baggage"
-  }
+  case object ExportInBaggage extends MethodOfDisposal("Export in Baggage")
 
-  case object Destruction extends MethodOfDisposal {
-    override def toString: String = "Destruction"
-  }
+  case object Destruction extends MethodOfDisposal("Destruction")
 
   implicit val equality: Eq[MethodOfDisposal] =
     Eq.fromUniversalEquals[MethodOfDisposal]

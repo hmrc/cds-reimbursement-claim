@@ -17,12 +17,13 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 
 final case class GoodsDetails(
-  placeOfImport: Option[String],
-  isPrivateImporter: Option[String],
-  groundsForRepaymentApplication: Option[String],
-  descOfGoods: Option[String]
+  descOfGoods: Option[String],
+  isPrivateImporter: Option[YesNo] = None,
+  placeOfImport: Option[String] = None,
+  groundsForRepaymentApplication: Option[String] = None
 )
 
 object GoodsDetails {

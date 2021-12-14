@@ -144,7 +144,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
 
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
 
-        val basisOfClaimAnswer = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer = BasisOfClaim.DutySuspension
 
         val declarantTypeAnswer       = DeclarantTypeAnswer.Importer
         val movevementReferenceNumber = MRN("10ABCDEFGHIJKLMNO0")
@@ -798,7 +798,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val amounts                                      = getClaimAmounts
         val claimedReimbursementsAnswer                  = ClaimedReimbursementsAnswer(amounts)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
@@ -887,7 +887,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val amounts                                      = getClaimAmounts
         val claimedReimbursementsAnswer                  = ClaimedReimbursementsAnswer(amounts)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
@@ -954,7 +954,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val amounts                                      = getClaimAmounts
         val claimedReimbursementsAnswer                  = ClaimedReimbursementsAnswer(amounts)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
@@ -1014,7 +1014,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val amounts                                      = getClaimAmounts
         val claimedReimbursementsAnswer                  = ClaimedReimbursementsAnswer(amounts)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
@@ -1081,7 +1081,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val amounts                                      = getClaimAmounts
         val claimedReimbursementsAnswer                  = ClaimedReimbursementsAnswer(amounts)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =
@@ -1142,7 +1142,7 @@ class ClaimTransformerServiceSpec extends AnyWordSpec with Matchers with MockFac
         val amounts                                      = getClaimAmounts
         val claimedReimbursementsAnswer                  = ClaimedReimbursementsAnswer(amounts)
         val bankAccountDetailsAnswer: BankAccountDetails = sample[BankAccountDetails]
-        val basisOfClaimAnswer                           = BasisOfClaimAnswer.DutySuspension
+        val basisOfClaimAnswer                           = BasisOfClaim.DutySuspension
         val declarantTypeAnswer                          = declarantType
         val completeMovementReferenceNumberAnswer        = MRN("10ABCDEFGHIJKLMNO0")
         val detailsRegisteredWithCds                     =

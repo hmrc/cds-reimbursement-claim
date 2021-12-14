@@ -18,33 +18,33 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
 
 final case class C285Claim(
-  id: UUID,
-  typeOfClaim: TypeOfClaimAnswer,
-  movementReferenceNumber: MRN,
-  duplicateMovementReferenceNumberAnswer: Option[MRN],
-  declarantTypeAnswer: DeclarantTypeAnswer,
-  detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
-  mrnContactDetailsAnswer: Option[MrnContactDetails],
-  mrnContactAddressAnswer: Option[ContactAddress],
-  basisOfClaimAnswer: BasisOfClaimAnswer,
-  bankAccountDetailsAnswer: Option[BankAccountDetails],
-  documents: NonEmptyList[UploadDocument],
-  commodityDetailsAnswer: CommodityDetailsAnswer,
-  displayDeclaration: Option[DisplayDeclaration],
-  duplicateDisplayDeclaration: Option[DisplayDeclaration],
-  importerEoriNumber: Option[ImporterEoriNumberAnswer],
-  declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
-  claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
-  reimbursementMethodAnswer: ReimbursementMethodAnswer,
-  associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
-  associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
+                            id: UUID,
+                            typeOfClaim: TypeOfClaimAnswer,
+                            movementReferenceNumber: MRN,
+                            duplicateMovementReferenceNumberAnswer: Option[MRN],
+                            declarantTypeAnswer: DeclarantTypeAnswer,
+                            detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
+                            mrnContactDetailsAnswer: Option[MrnContactDetails],
+                            mrnContactAddressAnswer: Option[ContactAddress],
+                            basisOfClaimAnswer: BasisOfClaim,
+                            bankAccountDetailsAnswer: Option[BankAccountDetails],
+                            documents: NonEmptyList[UploadDocument],
+                            commodityDetailsAnswer: CommodityDetailsAnswer,
+                            displayDeclaration: Option[DisplayDeclaration],
+                            duplicateDisplayDeclaration: Option[DisplayDeclaration],
+                            importerEoriNumber: Option[ImporterEoriNumberAnswer],
+                            declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
+                            claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
+                            reimbursementMethodAnswer: ReimbursementMethodAnswer,
+                            associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
+                            associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
 )
 
 object C285Claim {

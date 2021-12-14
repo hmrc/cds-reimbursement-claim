@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
 
 sealed trait YesNo extends Product with Serializable
 
 object YesNo {
-  final case object No extends YesNo
-  final case object Yes extends YesNo
 
-  implicit val eq: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
+  case object No extends YesNo
+  case object Yes extends YesNo
 
-  implicit val format: OFormat[YesNo] = derived.oformat[YesNo]()
+  def apply(declarantTypeAnswer: DeclarantTypeAnswer): YesNo =
+    declarantTypeAnswer match {
+      case DeclarantTypeAnswer.Importer => Yes
+      case _                            => No
+    }
+
+  implicit val equality: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
+
+  implicit val writes: Writes[DeclarationMode] =
+    Writes(declarationMode => JsString(declarationMode.toString))
 }

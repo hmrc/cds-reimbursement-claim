@@ -27,7 +27,7 @@ object ClaimType {
   }
 
   case object CE1179 extends ClaimType {
-    override def toString: String =  "C&E1179"
+    override def toString: String = "C&E1179"
   }
 
   implicit val writes: Writes[ClaimType] =

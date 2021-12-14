@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer
 
 sealed trait DeclarationMode extends Product with Serializable
 
@@ -29,6 +30,12 @@ object DeclarationMode {
   case object AllDeclaration extends DeclarationMode {
     override def toString: String = "All Declarations"
   }
+
+  def apply(typeOfClaim: TypeOfClaimAnswer): DeclarationMode =
+    typeOfClaim match {
+      case TypeOfClaimAnswer.Multiple => DeclarationMode.AllDeclaration
+      case _                          => DeclarationMode.ParentDeclaration
+    }
 
   implicit val writes: Writes[DeclarationMode] =
     Writes(declarationMode => JsString(declarationMode.toString))

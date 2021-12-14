@@ -17,11 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, TypeOfClaimAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, DeclarantTypeAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] with Logging {
@@ -29,19 +28,20 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] with L
   def mapToEisSubmitClaimRequest(request: C285ClaimRequest): Either[Error, EisSubmitClaimRequest] =
     TPI05.request
       .forClaimOfType(C285)
-      .withClaimant(request.claim.declarantTypeAnswer)
+      .withClaimant(Claimant(request.claim.declarantTypeAnswer))
+      .withClaimantEORI(request.signedInUserDetails.eori)
+      .withClaimantEmail(request.signedInUserDetails.email)
       .withClaimedAmount(request.claim.totalReimbursementAmount)
       .withReimbursementMethod(request.claim.reimbursementMethodAnswer)
-      .withCaseType((request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer) match {
-        case (TypeOfClaimAnswer.Multiple, _)  => CaseType.Bulk
-        case (TypeOfClaimAnswer.Scheduled, _) => CaseType.Bulk
-        case (_, CurrentMonthAdjustment)      => CaseType.CMA
-        case _                                => CaseType.Individual
-      })
-      .withDeclarationMode(request.claim.typeOfClaim match {
-        case TypeOfClaimAnswer.Multiple => DeclarationMode.AllDeclaration
-        case _                          => DeclarationMode.ParentDeclaration
-      })
-      .withBasisOfClaim(request.claim.basisOfClaimAnswer.toString)
+      .withCaseType(CaseType(request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer))
+      .withDeclarationMode(DeclarationMode(request.claim.typeOfClaim))
+      .withBasisOfClaim(request.claim.basisOfClaimAnswer.value)
+      .withEORIDetails(???)
+      .withGoodsDetails(
+        GoodsDetails(
+          descOfGoods = Some(request.claim.commodityDetailsAnswer.value),
+          isPrivateImporter = Some(YesNo(request.claim.declarantTypeAnswer))
+        )
+      )
       .verify
 }

@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ReimbursementMethodAnswer, TypeOfClaimAnswer}
 
 sealed trait CaseType extends Product with Serializable
 
@@ -25,6 +27,14 @@ object CaseType {
   case object Individual extends CaseType
   case object Bulk extends CaseType
   case object CMA extends CaseType
+
+  def apply(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
+    (typeOfClaim, reimbursementMethod) match {
+      case (TypeOfClaimAnswer.Multiple, _)  => CaseType.Bulk
+      case (TypeOfClaimAnswer.Scheduled, _) => CaseType.Bulk
+      case (_, CurrentMonthAdjustment)      => CaseType.CMA
+      case _                                => CaseType.Individual
+    }
 
   implicit val writes: Writes[CaseType] =
     Writes(caseType => JsString(caseType.toString))

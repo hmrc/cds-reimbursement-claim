@@ -16,23 +16,32 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
+import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, DeclarantTypeAnswer}
 
 sealed trait Claimant extends Product with Serializable
 
 object Claimant {
+
+  type PayeeIndicator = Claimant
+
   case object Importer extends Claimant
   case object Representative extends Claimant
 
-  implicit def claimantToString(claimant: Claimant): String = claimant match {
-    case Importer       => "Importer"
-    case Representative => "Representative"
-  }
-
-  implicit def completeDeclarantTypeAnswerToClaimant(declarantTypeAnswer: DeclarantTypeAnswer): Claimant =
-    declarantTypeAnswer match {
+  def apply(declarantType: DeclarantTypeAnswer): Claimant =
+    declarantType match {
       case DeclarantTypeAnswer.Importer                            => Importer
       case DeclarantTypeAnswer.AssociatedWithImporterCompany       => Representative
       case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany => Representative
     }
+
+  def apply(claimantType: ClaimantType): Claimant =
+    claimantType match {
+      case ClaimantType.Consignee => Importer
+      case ClaimantType.Declarant => Representative
+      case ClaimantType.User      => Representative
+    }
+
+  implicit val writes: Writes[Claimant] =
+    Writes(claimant => JsString(claimant.toString))
 }

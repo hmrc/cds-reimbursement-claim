@@ -24,15 +24,12 @@ import cats.syntax.apply._
 import cats.syntax.eq._
 import cats.syntax.traverse._
 import com.google.inject.{ImplementedBy, Inject}
-import configs.syntax._
-import play.api.Configuration
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursementsAnswer, Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaimAnswer.IncorrectAdditionalInformationCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
@@ -48,17 +45,7 @@ trait ClaimTransformerService {
 }
 
 @Singleton
-class DefaultClaimTransformerService @Inject() (configuration: Configuration)
-    extends ClaimTransformerService
-    with Logging {
-
-  private val enableCorrectAdditionalInformationCodeMappingFlag: String =
-    "enable-correct-additional-information-code-mapping"
-
-  def getFeatureFlag[A : configs.ConfigReader](key: String): A =
-    configuration.underlying
-      .get[A](s"feature.$key")
-      .value
+class DefaultClaimTransformerService @Inject() () extends ClaimTransformerService with Logging {
 
   private def buildMrnNumberPayload(
     submitClaimRequest: C285ClaimRequest
@@ -68,8 +55,7 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration)
     val c285Claim = submitClaimRequest.claim
     (
       makeReasonAndOrBasisOfClaim(
-        c285Claim.basisOfClaimAnswer,
-        getFeatureFlag[Boolean](enableCorrectAdditionalInformationCodeMappingFlag)
+        c285Claim.basisOfClaimAnswer
       ),
       setMrnDetails(c285Claim),
       setDuplicateMrnDetails(
@@ -103,9 +89,8 @@ class DefaultClaimTransformerService @Inject() (configuration: Configuration)
         newEORI = None,
         newDAN = None,
         authorityTypeProvided = None,
-
-        claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori.value),
-        claimantEmailAddress = submitClaimRequest.signedInUserDetails.email.map(email => email.value),
+        claimantEORI = Some(submitClaimRequest.signedInUserDetails.eori),
+        claimantEmailAddress = submitClaimRequest.signedInUserDetails.email,
 
         goodsDetails = Some(
           makeGoodsDetails(
@@ -169,6 +154,7 @@ object DefaultClaimTransformerService {
 
   object CompareContactInformation {
     implicit val eq: Eq[CompareContactInformation]                = Eq.fromUniversalEquals[CompareContactInformation]
+
     val emptyCompareContactInformation: CompareContactInformation =
       CompareContactInformation(
         None,
@@ -333,16 +319,9 @@ object DefaultClaimTransformerService {
     )
 
   def makeReasonAndOrBasisOfClaim(
-    basisOfClaim: BasisOfClaimAnswer,
-    enableCorrectAdditionalInformationCodeMapping: Boolean
+    basisOfClaim: BasisOfClaim
   ): Validation[Option[String]] =
-    if (enableCorrectAdditionalInformationCodeMapping && basisOfClaim === IncorrectAdditionalInformationCode) {
-      Valid(Some(basisOfClaim.toString))
-    } else if (basisOfClaim === IncorrectAdditionalInformationCode) {
-      Valid(Some("Risk Classification Error"))
-    } else {
-      Valid(Some(basisOfClaim.toString))
-    }
+    Valid(Some(basisOfClaim.toString))
 
   def buildConsigneeEstablishmentAddress(
     consigneeDetails: models.claim.ConsigneeDetails
@@ -640,10 +619,10 @@ object DefaultClaimTransformerService {
 
   def setCaseType(c285Claim: C285Claim): Option[CaseType] =
     (c285Claim.reimbursementMethodAnswer, c285Claim.typeOfClaim) match {
-      case (_, TypeOfClaimAnswer.Multiple)   => Some(CaseType.Bulk)
-      case (_, TypeOfClaimAnswer.Scheduled)  => Some(CaseType.Bulk)
-      case (CurrentMonthAdjustment, _)       => Some(CaseType.CMA)
-      case _                                 => Some(CaseType.Individual)
+      case (_, TypeOfClaimAnswer.Multiple)  => Some(CaseType.Bulk)
+      case (_, TypeOfClaimAnswer.Scheduled) => Some(CaseType.Bulk)
+      case (CurrentMonthAdjustment, _)      => Some(CaseType.CMA)
+      case _                                => Some(CaseType.Individual)
     }
 
   def setReimbursementMethod(c285Claim: C285Claim): Option[ReimbursementMethod] =

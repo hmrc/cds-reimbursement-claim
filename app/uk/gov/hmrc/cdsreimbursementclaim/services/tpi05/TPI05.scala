@@ -26,6 +26,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{DeclarantTypeAnswer, Meth
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator.compactCorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
@@ -65,7 +67,7 @@ object TPI05 {
       copy(validation.map(_.copy(declarationMode = Some(declarationMode))))
 
     def withDisposalMethod(methodOfDisposal: MethodOfDisposal): Builder =
-      copy(validation.map(_.copy(disposalMethod = Some(methodOfDisposal))))
+      copy(validation.map(_.copy(disposalMethod = Some(methodOfDisposal.value))))
 
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(
@@ -82,18 +84,35 @@ object TPI05 {
     def withBasisOfClaim(basisOfClaim: String): Builder =
       copy(validation.map(_.copy(basisOfClaim = Some(basisOfClaim))))
 
-    def withClaimant(declarantType: DeclarantTypeAnswer): Builder = {
-      val payeeIndicator =
-        Option(declarantType === DeclarantTypeAnswer.Importer)
-          .filter(_ === true)
-          .map(_ => "Importer")
-          .orElse(Some("Declarant"))
-
-      copy(validation.map(_.copy(
-        claimant = payeeIndicator,
-        payeeIndicator = payeeIndicator
-      )))
+    def withClaimant(claimant: Claimant): Builder = {
+      copy(
+        validation.map(
+          _.copy(
+            claimant = Some(claimant),
+            payeeIndicator = Some(claimant)
+          )
+        )
+      )
     }
+
+    def withClaimantEmail(claimantEmailAddress: Option[Email]): Builder = {
+      copy(validation.andThen { request =>
+        Validated.cond(
+          claimantEmailAddress.nonEmpty,
+          request.copy(claimantEmailAddress = claimantEmailAddress),
+          Error("Email address is missing")
+        )
+      })
+    }
+
+    def withClaimantEORI(eori: Eori): Builder =
+      copy(validation.map(_.copy(claimantEORI = Some(eori))))
+
+    def withEORIDetails(eoriDetails: EoriDetails): Builder =
+      copy(validation.map(_.copy(EORIDetails = Some(eoriDetails))))
+
+    def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
+      copy(validation.map(_.copy(goodsDetails = Some(goodsDetails))))
 
     def verify: Either[Error, EisSubmitClaimRequest] =
       validation.toEither.map { requestDetail =>
