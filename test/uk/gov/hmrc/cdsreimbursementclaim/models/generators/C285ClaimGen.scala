@@ -35,7 +35,7 @@ object C285ClaimGen {
   implicit val bankAccountDetailsAnswerGen: Typeclass[BankAccountDetails]                   =
     gen[BankAccountDetails]
   implicit val mrnInformationGen: Typeclass[MRNInformation]                                 = gen[MRNInformation]
-  implicit val basisOfClaimAnswerGen: Typeclass[BasisOfClaim]                         = gen[BasisOfClaim]
+  implicit val basisOfClaimAnswerGen: Typeclass[BasisOfClaim]                               = gen[BasisOfClaim]
   implicit val declarantTypeAnswerGen: Typeclass[DeclarantTypeAnswer]                       = gen[DeclarantTypeAnswer]
   implicit val c285ClaimGen: Typeclass[C285Claim]                                           = gen[C285Claim]
 }

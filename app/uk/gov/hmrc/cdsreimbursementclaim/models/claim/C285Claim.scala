@@ -25,27 +25,34 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 import java.util.UUID
 
 final case class C285Claim(
-                            id: UUID,
-                            typeOfClaim: TypeOfClaimAnswer,
-                            movementReferenceNumber: MRN,
-                            duplicateMovementReferenceNumberAnswer: Option[MRN],
-                            declarantTypeAnswer: DeclarantTypeAnswer,
-                            detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
-                            mrnContactDetailsAnswer: Option[MrnContactDetails],
-                            mrnContactAddressAnswer: Option[ContactAddress],
-                            basisOfClaimAnswer: BasisOfClaim,
-                            bankAccountDetailsAnswer: Option[BankAccountDetails],
-                            documents: NonEmptyList[UploadDocument],
-                            commodityDetailsAnswer: CommodityDetailsAnswer,
-                            displayDeclaration: Option[DisplayDeclaration],
-                            duplicateDisplayDeclaration: Option[DisplayDeclaration],
-                            importerEoriNumber: Option[ImporterEoriNumberAnswer],
-                            declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
-                            claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
-                            reimbursementMethodAnswer: ReimbursementMethodAnswer,
-                            associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
-                            associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
-)
+  id: UUID,
+  typeOfClaim: TypeOfClaimAnswer,
+  movementReferenceNumber: MRN,
+  duplicateMovementReferenceNumberAnswer: Option[MRN],
+  declarantTypeAnswer: DeclarantTypeAnswer,
+  detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
+  mrnContactDetailsAnswer: Option[MrnContactDetails],
+  mrnContactAddressAnswer: Option[ContactAddress],
+  basisOfClaimAnswer: BasisOfClaim,
+  bankAccountDetailsAnswer: Option[BankAccountDetails],
+  documents: NonEmptyList[UploadDocument],
+  commodityDetailsAnswer: CommodityDetailsAnswer,
+  displayDeclaration: Option[DisplayDeclaration],
+  duplicateDisplayDeclaration: Option[DisplayDeclaration],
+  importerEoriNumber: Option[ImporterEoriNumberAnswer],
+  declarantEoriNumber: Option[DeclarantEoriNumberAnswer],
+  claimedReimbursementsAnswer: ClaimedReimbursementsAnswer,
+  reimbursementMethodAnswer: ReimbursementMethodAnswer,
+  associatedMRNsAnswer: Option[AssociatedMRNsAnswer],
+  associatedMRNsClaimsAnswer: Option[AssociatedMRNsClaimsAnswer]
+) {
+
+  lazy val consigneeDetails: Option[ConsigneeDetails] =
+    displayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
+
+  lazy val declarantDetails: Option[DeclarantDetails] =
+    displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
+}
 
 object C285Claim {
 
@@ -74,12 +81,6 @@ object C285Claim {
       claimedReimbursementsAnswer.foldLeft(BigDecimal(0)) { (accumulator, claim) =>
         accumulator + claim.claimAmount
       }
-
-    def consigneeDetails: Option[ConsigneeDetails] =
-      claim.displayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
-
-    def declarantDetails: Option[DeclarantDetails] =
-      claim.displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
   }
 
   implicit val format: Format[C285Claim] = Json.format[C285Claim]

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantDetails, ContactAddress, MrnContactDetails, Street}
 
 final case class ContactInformation(
   contactPerson: Option[String],
@@ -33,5 +34,43 @@ final case class ContactInformation(
 )
 
 object ContactInformation {
+
+  def apply(contactDetails: MrnContactDetails, contactAddress: ContactAddress): ContactInformation =
+    new ContactInformation(
+      contactPerson = Option(contactDetails.fullName),
+      addressLine1 = Option(contactAddress.line1),
+      addressLine2 = contactAddress.line2,
+      addressLine3 = contactAddress.line3,
+      street = Street(Option(contactAddress.line1), contactAddress.line2),
+      city = Option(contactAddress.line4),
+      countryCode = Option(contactAddress.country.code),
+      postalCode = Option(contactAddress.postcode.value),
+      telephoneNumber = contactDetails.phoneNumber.map(_.value),
+      faxNumber = None,
+      emailAddress = Option(contactDetails.emailAddress.value)
+    )
+
+  def apply(claimantDetails: Option[ClaimantDetails]): ContactInformation = {
+
+    val maybeContactDetails = claimantDetails.flatMap(_.contactDetails)
+
+    new ContactInformation(
+      contactPerson = claimantDetails.map(_.legalName),
+      addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
+      addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
+      addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
+      street = Street(
+        maybeContactDetails.flatMap(_.addressLine1),
+        maybeContactDetails.flatMap(_.addressLine2)
+      ),
+      city = maybeContactDetails.flatMap(_.addressLine3),
+      postalCode = maybeContactDetails.flatMap(_.postalCode),
+      countryCode = maybeContactDetails.flatMap(_.countryCode),
+      telephoneNumber = maybeContactDetails.flatMap(_.telephone),
+      faxNumber = None,
+      emailAddress = maybeContactDetails.flatMap(_.emailAddress)
+    )
+  }
+
   implicit val format: OFormat[ContactInformation] = Json.format[ContactInformation]
 }

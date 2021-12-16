@@ -41,9 +41,7 @@ final case class RequestDetail(
   authorityTypeProvided: Option[String] = None,
   claimantEORI: Option[Eori] = None,
   claimantEmailAddress: Option[Email] = None,
-
-  goodsDetails: Option[GoodsDetails] = None, //
-
+  goodsDetails: Option[GoodsDetails] = None,
   EORIDetails: Option[EoriDetails] = None, //
   MRNDetails: Option[List[MrnDetail]] = None, // ???
   duplicateMRNDetails: Option[MrnDetail] = None

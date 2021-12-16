@@ -17,15 +17,16 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class EORIInformation(
-  EORINumber: String,
+  EORINumber: Eori,
   CDSFullName: Option[String],
-  legalEntityType: Option[String],
-  EORIStartDate: Option[String],
   CDSEstablishmentAddress: Address,
   contactInformation: Option[ContactInformation],
-  VATDetails: Option[List[VATDetail]]
+  legalEntityType: Option[String] = None,
+  EORIStartDate: Option[String] = None,
+  VATDetails: Option[List[VATDetail]] = None
 )
 
 object EORIInformation {

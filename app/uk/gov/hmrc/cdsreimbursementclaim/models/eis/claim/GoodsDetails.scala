@@ -16,16 +16,21 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
+import play.api.libs.json.{Json, OWrites}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.InspectionAddress
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{InspectionAddressType, YesNo}
 
 final case class GoodsDetails(
   descOfGoods: Option[String],
   isPrivateImporter: Option[YesNo] = None,
   placeOfImport: Option[String] = None,
-  groundsForRepaymentApplication: Option[String] = None
+  groundsForRepaymentApplication: Option[String] = None,
+  atTheImporterOrDeclarantAddress: Option[InspectionAddressType] = None,
+  inspectionAddress: Option[InspectionAddress] = None,
+  anySpecialCircumstances: Option[String] = None,
+  dateOfInspection: Option[String] = None
 )
 
 object GoodsDetails {
-  implicit val format: OFormat[GoodsDetails] = Json.format[GoodsDetails]
+  implicit val writes: OWrites[GoodsDetails] = Json.writes[GoodsDetails]
 }

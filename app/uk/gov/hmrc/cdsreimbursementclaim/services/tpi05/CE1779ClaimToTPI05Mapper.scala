@@ -18,9 +18,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISOLocalDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EORIInformation, EisSubmitClaimRequest, EoriDetails, GoodsDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, InspectionAddressType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
@@ -38,12 +39,18 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[RejectedGoodsClaimRequ
       .withBasisOfClaim(request.claim.basisOfClaim.value)
       .withGoodsDetails(
         GoodsDetails(
-          descOfGoods = Some(request.claim.detailsOfRejectedGoods)
+          descOfGoods = Some(request.claim.detailsOfRejectedGoods),
+          anySpecialCircumstances = request.claim.basisOfClaimSpecialCircumstances,
+          dateOfInspection = Some(ISOLocalDate.of(request.claim.inspectionDate)),
+          atTheImporterOrDeclarantAddress = Some(InspectionAddressType(request.claim.claimantType)),
+          inspectionAddress = Some(request.claim.inspectionAddress)
         )
       )
-      .withEORIDetails(EoriDetails(
-        agentEORIDetails = ???,
-        importerEORIDetails = ???  // from Acc14
-      ))
+//      .withEORIDetails(
+//        EoriDetails(
+//          agentEORIDetails = ???,
+//          importerEORIDetails = ??? // from Acc14
+//        )
+//      )
       .verify
 }

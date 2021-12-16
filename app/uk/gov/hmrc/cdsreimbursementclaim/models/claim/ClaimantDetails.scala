@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-sealed trait CDFPayService extends Product with Serializable
-
-object CDFPayService {
-
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  implicit val writes: Writes[CDFPayService] =
-    Writes(service => JsString(service.toString))
+trait ClaimantDetails {
+  val EORI: Eori
+  val legalName: String
+  val establishmentAddress: EstablishmentAddress
+  val contactDetails: Option[ContactDetails]
 }

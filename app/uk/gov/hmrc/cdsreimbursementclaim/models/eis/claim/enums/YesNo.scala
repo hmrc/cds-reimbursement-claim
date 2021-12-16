@@ -24,8 +24,8 @@ sealed trait YesNo extends Product with Serializable
 
 object YesNo {
 
-  case object No extends YesNo
-  case object Yes extends YesNo
+  final case object No extends YesNo
+  final case object Yes extends YesNo
 
   def apply(declarantTypeAnswer: DeclarantTypeAnswer): YesNo =
     declarantTypeAnswer match {
@@ -35,6 +35,5 @@ object YesNo {
 
   implicit val equality: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
 
-  implicit val writes: Writes[DeclarationMode] =
-    Writes(declarationMode => JsString(declarationMode.toString))
+  implicit val writes: Writes[YesNo] = Writes(yesNo => JsString(yesNo.toString))
 }

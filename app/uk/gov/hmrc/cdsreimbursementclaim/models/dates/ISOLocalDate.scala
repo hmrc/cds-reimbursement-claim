@@ -17,12 +17,16 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.dates
 
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 import java.time.{ZoneOffset, ZonedDateTime}
 
 object ISOLocalDate {
 
   def now: String =
+    of(ZonedDateTime.now(ZoneOffset.UTC))
+
+  def of(date: TemporalAccessor): String =
     DateTimeFormatter.ISO_LOCAL_DATE
-      .format(ZonedDateTime.now(ZoneOffset.UTC))
+      .format(date)
       .replaceAllLiterally("-", "")
 }

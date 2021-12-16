@@ -22,9 +22,9 @@ sealed trait CustomDeclarationType extends Product with Serializable
 
 object CustomDeclarationType {
 
-  case object MRN extends CustomDeclarationType
-  case object Entry extends CustomDeclarationType
+  final case object MRN extends CustomDeclarationType
+  final case object Entry extends CustomDeclarationType
 
-  implicit val writes: Writes[ClaimType] =
+  implicit val writes: Writes[CustomDeclarationType] =
     Writes(customDeclarationType => JsString(customDeclarationType.toString))
 }

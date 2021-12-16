@@ -17,14 +17,23 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
 
-sealed trait CDFPayService extends Product with Serializable
+sealed trait InspectionAddressType
 
-object CDFPayService {
+object InspectionAddressType {
 
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
+  final case object Importer extends InspectionAddressType
+  final case object Declarant extends InspectionAddressType
+  final case object Other extends InspectionAddressType
 
-  implicit val writes: Writes[CDFPayService] =
-    Writes(service => JsString(service.toString))
+  def apply(claimantType: ClaimantType): InspectionAddressType =
+    claimantType match {
+      case ClaimantType.Consignee => Importer
+      case ClaimantType.Declarant => Declarant
+      case ClaimantType.User      => Other
+    }
+
+  implicit val writes: Writes[InspectionAddressType] =
+    Writes(inspectionAddressType => JsString(inspectionAddressType.toString))
 }

@@ -25,8 +25,8 @@ object Claimant {
 
   type PayeeIndicator = Claimant
 
-  case object Importer extends Claimant
-  case object Representative extends Claimant
+  final case object Importer extends Claimant
+  final case object Representative extends Claimant
 
   def apply(declarantType: DeclarantTypeAnswer): Claimant =
     declarantType match {

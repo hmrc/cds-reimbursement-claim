@@ -58,7 +58,7 @@ object BasisOfClaim {
 
   case object IncorrectAdditionalInformationCode extends BasisOfClaim("Incorrect Additional Information Code")
 
-  implicit val eq: Eq[BasisOfClaim] = Eq.fromUniversalEquals
+  implicit val equality: Eq[BasisOfClaim] = Eq.fromUniversalEquals
 
   implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
 }

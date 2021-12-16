@@ -24,9 +24,9 @@ sealed trait CaseType extends Product with Serializable
 
 object CaseType {
 
-  case object Individual extends CaseType
-  case object Bulk extends CaseType
-  case object CMA extends CaseType
+  final case object Individual extends CaseType
+  final case object Bulk extends CaseType
+  final case object CMA extends CaseType
 
   def apply(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
     (typeOfClaim, reimbursementMethod) match {

@@ -22,7 +22,7 @@ import cats.implicits.catsSyntaxEq
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{DeclarantTypeAnswer, MethodOfDisposal, ReimbursementMethodAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -84,7 +84,7 @@ object TPI05 {
     def withBasisOfClaim(basisOfClaim: String): Builder =
       copy(validation.map(_.copy(basisOfClaim = Some(basisOfClaim))))
 
-    def withClaimant(claimant: Claimant): Builder = {
+    def withClaimant(claimant: Claimant): Builder =
       copy(
         validation.map(
           _.copy(
@@ -93,9 +93,8 @@ object TPI05 {
           )
         )
       )
-    }
 
-    def withClaimantEmail(claimantEmailAddress: Option[Email]): Builder = {
+    def withClaimantEmail(claimantEmailAddress: Option[Email]): Builder =
       copy(validation.andThen { request =>
         Validated.cond(
           claimantEmailAddress.nonEmpty,
@@ -103,7 +102,6 @@ object TPI05 {
           Error("Email address is missing")
         )
       })
-    }
 
     def withClaimantEORI(eori: Eori): Builder =
       copy(validation.map(_.copy(claimantEORI = Some(eori))))

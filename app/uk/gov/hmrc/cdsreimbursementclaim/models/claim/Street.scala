@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsString, Writes}
+object Street {
 
-sealed trait CDFPayService extends Product with Serializable
-
-object CDFPayService {
-
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  implicit val writes: Writes[CDFPayService] =
-    Writes(service => JsString(service.toString))
+  def apply(line1: Option[String], line2: Option[String]): Option[String] =
+    (line1, line2) match {
+      case (Some(s1), Some(s2)) => Some(s"$s1 $s2")
+      case (Some(s1), None)     => Some(s1)
+      case (None, Some(s2))     => Some(s2)
+      case _                    => Some("")
+    }
 }

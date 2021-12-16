@@ -22,15 +22,15 @@ sealed trait ReimbursementMethod extends Product with Serializable
 
 object ReimbursementMethod {
 
-  case object Deferment extends ReimbursementMethod {
+  final case object Deferment extends ReimbursementMethod {
     override def toString: String = "Deferment"
   }
 
-  case object BankTransfer extends ReimbursementMethod {
+  final case object BankTransfer extends ReimbursementMethod {
     override def toString: String = "Bank Transfer"
   }
 
-  case object PayableOrder extends ReimbursementMethod {
+  final case object PayableOrder extends ReimbursementMethod {
     override def toString: String = "Payable Order"
   }
 
