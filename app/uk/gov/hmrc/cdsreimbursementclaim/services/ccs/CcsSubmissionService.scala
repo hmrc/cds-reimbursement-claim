@@ -126,7 +126,7 @@ object DefaultCcsSubmissionService {
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType(
                   "DocumentType",
-                  evidence.documentType.map(documentType => documentType.toString).getOrElse("")
+                  evidence.documentType.map(_.toTPI05Key).getOrElse("")
                 ),
                 PropertyType("DocumentReceivedDate", TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn))
               )
