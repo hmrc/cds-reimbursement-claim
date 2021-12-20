@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsString, Writes}
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
 
 sealed trait ReimbursementMethod extends Product with Serializable
 
@@ -34,6 +35,5 @@ object ReimbursementMethod {
     override def toString: String = "Payable Order"
   }
 
-  implicit val writes: Writes[ReimbursementMethod] =
-    Writes(reimbursementMethod => JsString(reimbursementMethod.toString))
+  implicit val writes: Writes[ReimbursementMethod] = EnumerationToStringWrites[ReimbursementMethod]
 }

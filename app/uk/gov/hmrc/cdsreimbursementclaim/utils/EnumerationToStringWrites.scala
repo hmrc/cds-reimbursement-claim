@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import play.api.libs.json.Writes
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
+import play.api.libs.json.{JsString, Writes}
 
-sealed trait CustomDeclarationType extends Product with Serializable
+object EnumerationToStringWrites {
 
-object CustomDeclarationType {
-
-  final case object MRN extends CustomDeclarationType
-  final case object Entry extends CustomDeclarationType
-
-  implicit val writes: Writes[CustomDeclarationType] = EnumerationToStringWrites[CustomDeclarationType]
+  def apply[A]: Writes[A] =
+    Writes((enumeration: A) => JsString(enumeration.toString))
 }

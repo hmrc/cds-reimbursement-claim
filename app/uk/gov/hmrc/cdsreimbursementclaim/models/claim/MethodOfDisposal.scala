@@ -16,29 +16,38 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed abstract class MethodOfDisposal(val value: String) extends Product with Serializable
+sealed trait MethodOfDisposal extends Product with Serializable {
+  def toTPI05Key: String
+}
 
-object MethodOfDisposal {
+object MethodOfDisposal extends EnumerationFormat[MethodOfDisposal] {
 
-  case object Export extends MethodOfDisposal("Export")
+  final case object Export extends MethodOfDisposal {
+    def toTPI05Key: String = "Export"
+  }
 
-  case object PostalExport extends MethodOfDisposal("Postal Export")
+  final case object PostalExport extends MethodOfDisposal {
+    def toTPI05Key: String = "Postal Export"
+  }
 
-  case object DonationToCharity extends MethodOfDisposal("Donation to Charity")
+  final case object DonationToCharity extends MethodOfDisposal {
+    def toTPI05Key: String = "Donation to Charity"
+  }
 
-  case object PlacedInCustomsWarehouse extends MethodOfDisposal("Placed in Customs Warehouse")
+  final case object PlacedInCustomsWarehouse extends MethodOfDisposal {
+    def toTPI05Key: String = "Placed in Customs Warehouse"
+  }
 
-  case object ExportInBaggage extends MethodOfDisposal("Export in Baggage")
+  final case object ExportInBaggage extends MethodOfDisposal {
+    def toTPI05Key: String = "Export in Baggage"
+  }
 
-  case object Destruction extends MethodOfDisposal("Destruction")
+  final case object Destruction extends MethodOfDisposal {
+    def toTPI05Key: String = "Destruction"
+  }
 
-  implicit val equality: Eq[MethodOfDisposal] =
-    Eq.fromUniversalEquals[MethodOfDisposal]
-
-  implicit val format: OFormat[MethodOfDisposal] =
-    derived.oformat[MethodOfDisposal]()
+  override val values: Set[MethodOfDisposal] =
+    Set(Export, PostalExport, DonationToCharity, PlacedInCustomsWarehouse, ExportInBaggage, Destruction)
 }

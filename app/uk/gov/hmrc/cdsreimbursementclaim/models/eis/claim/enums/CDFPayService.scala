@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsString, Writes}
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
 
 sealed trait CDFPayService extends Product with Serializable
 
@@ -25,6 +26,5 @@ object CDFPayService {
   final case object NDRC extends CDFPayService
   final case object SCTY extends CDFPayService
 
-  implicit val writes: Writes[CDFPayService] =
-    Writes(service => JsString(service.toString))
+  implicit val writes: Writes[CDFPayService] = EnumerationToStringWrites[CDFPayService]
 }

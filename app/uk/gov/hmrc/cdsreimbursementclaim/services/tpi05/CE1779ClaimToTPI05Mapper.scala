@@ -39,7 +39,7 @@ class CE1779ClaimToTPI05Mapper @Inject() () extends ClaimToTPI05Mapper[RejectedG
       .withClaimedAmount(request.claim.totalReimbursementAmount)
       .withReimbursementMethod(request.claim.reimbursementMethod)
       .withDisposalMethod(request.claim.methodOfDisposal)
-      .withBasisOfClaim(request.claim.basisOfClaim.value)
+      .withBasisOfClaim(request.claim.basisOfClaim.toTPI05Key)
       .withGoodsDetails(
         GoodsDetails(
           descOfGoods = Some(request.claim.detailsOfRejectedGoods),

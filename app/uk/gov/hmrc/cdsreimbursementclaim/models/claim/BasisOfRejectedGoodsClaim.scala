@@ -16,33 +16,30 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.Eq
-import play.api.libs.json.Format
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed abstract class BasisOfRejectedGoodsClaim(val value: String) extends Product with Serializable
+sealed trait BasisOfRejectedGoodsClaim extends Product with Serializable {
+  def toTPI05Key: String
+}
 
-object BasisOfRejectedGoodsClaim {
+object BasisOfRejectedGoodsClaim extends EnumerationFormat[BasisOfRejectedGoodsClaim] {
 
-  case object DamagedBeforeClearance extends BasisOfRejectedGoodsClaim("Damaged Before Clearance")
+  case object DamagedBeforeClearance extends BasisOfRejectedGoodsClaim {
+    def toTPI05Key: String = "Damaged Before Clearance"
+  }
 
-  case object Defective extends BasisOfRejectedGoodsClaim("Defective")
+  case object Defective extends BasisOfRejectedGoodsClaim {
+    def toTPI05Key: String = "Defective"
+  }
 
-  case object NotInAccordanceWithContract extends BasisOfRejectedGoodsClaim("Not In Accordance with Contract")
+  case object NotInAccordanceWithContract extends BasisOfRejectedGoodsClaim {
+    def toTPI05Key: String = "Not In Accordance with Contract"
+  }
 
-  case object SpecialCircumstances extends BasisOfRejectedGoodsClaim("Special Circumstances")
+  case object SpecialCircumstances extends BasisOfRejectedGoodsClaim {
+    def toTPI05Key: String = "Special Circumstances"
+  }
 
-  private val mappings =
-    Seq(
-      DamagedBeforeClearance,
-      Defective,
-      NotInAccordanceWithContract,
-      SpecialCircumstances
-    ).map(item => (item.toString, item)).toMap
-
-  implicit val format: Format[BasisOfRejectedGoodsClaim] =
-    EnumerationFormat(mappings)
-
-  implicit val equality: Eq[BasisOfRejectedGoodsClaim] =
-    Eq.fromUniversalEquals[BasisOfRejectedGoodsClaim]
+  override val values: Set[BasisOfRejectedGoodsClaim] =
+    Set(DamagedBeforeClearance, Defective, NotInAccordanceWithContract, SpecialCircumstances)
 }

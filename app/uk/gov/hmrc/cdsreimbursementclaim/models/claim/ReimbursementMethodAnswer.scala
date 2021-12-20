@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait ReimbursementMethodAnswer

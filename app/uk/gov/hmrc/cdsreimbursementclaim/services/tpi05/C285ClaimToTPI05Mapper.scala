@@ -115,7 +115,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] with L
       .withReimbursementMethod(request.claim.reimbursementMethodAnswer)
       .withCaseType(CaseType(request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer))
       .withDeclarationMode(DeclarationMode(request.claim.typeOfClaim))
-      .withBasisOfClaim(request.claim.basisOfClaimAnswer.value)
+      .withBasisOfClaim(request.claim.basisOfClaimAnswer.toTPI05Key)
       .withEORIDetails(createEORIDetails(request.claim))
       .withGoodsDetails(
         GoodsDetails(

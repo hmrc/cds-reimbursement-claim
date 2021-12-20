@@ -103,7 +103,7 @@ object TaxCode {
   case object NI99C extends TaxCode("99C")
   case object NI99D extends TaxCode("99D")
 
-  val all: List[TaxCode] = List(
+  val values: List[TaxCode] = List(
     A00,
     A20,
     A30,
@@ -182,7 +182,7 @@ object TaxCode {
   )
 
   private val stringToTaxCodeMap: Map[String, TaxCode] =
-    all.map(code => code.value -> code).toMap
+    values.map(code => code.value -> code).toMap
 
   def apply(taxCode: String): Option[TaxCode]          =
     stringToTaxCodeMap.get(taxCode)

@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsString, Writes}
+import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
 
 sealed trait InspectionAddressType
 
@@ -34,6 +35,5 @@ object InspectionAddressType {
       case ClaimantType.User      => Other
     }
 
-  implicit val writes: Writes[InspectionAddressType] =
-    Writes(inspectionAddressType => JsString(inspectionAddressType.toString))
+  implicit val writes: Writes[InspectionAddressType] = EnumerationToStringWrites[InspectionAddressType]
 }

@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.{JsString, Writes}
+import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, DeclarantTypeAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
 
 sealed trait Claimant extends Product with Serializable
 
@@ -42,6 +43,5 @@ object Claimant {
       case ClaimantType.User      => Representative
     }
 
-  implicit val writes: Writes[Claimant] =
-    Writes(claimant => JsString(claimant.toString))
+  implicit val writes: Writes[Claimant] = EnumerationToStringWrites[Claimant]
 }

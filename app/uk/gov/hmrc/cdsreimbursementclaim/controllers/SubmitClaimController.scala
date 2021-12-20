@@ -60,7 +60,8 @@ class SubmitClaimController @Inject() (
         _                    = logger.info(s"Enqueued supporting evidences for claim")
       } yield submitClaimResponse
 
-    result.fold({ e =>
+    result.fold(
+      { e =>
         logger.warn("Could not submit claim", e)
         InternalServerError
       },
