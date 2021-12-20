@@ -17,43 +17,46 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISOLocalDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, InspectionAddressType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
-import javax.inject.{Inject, Singleton}
+class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, DisplayDeclaration)] {
 
-@Singleton
-class CE1779ClaimToTPI05Mapper @Inject() () extends ClaimToTPI05Mapper[RejectedGoodsClaimRequest] with Logging {
+  def mapToEisSubmitClaimRequest(
+    data: (RejectedGoodsClaim, DisplayDeclaration)
+  ): Either[Error, EisSubmitClaimRequest] = {
+    val claim       = data._1
+    val declaration = data._2
 
-  def mapToEisSubmitClaimRequest(request: RejectedGoodsClaimRequest): Either[Error, EisSubmitClaimRequest] =
     TPI05.request
       .forClaimOfType(CE1179)
-      .withClaimant(Claimant(request.claim.claimantType))
-      .withClaimantEmail(request.claim.claimantInformation.contactInformation.emailAddress.map(Email(_)))
-      .withClaimantEORI(request.claim.claimantInformation.eori)
-      .withClaimedAmount(request.claim.totalReimbursementAmount)
-      .withReimbursementMethod(request.claim.reimbursementMethod)
-      .withDisposalMethod(request.claim.methodOfDisposal)
-      .withBasisOfClaim(request.claim.basisOfClaim.toTPI05Key)
+      .withClaimant(Claimant(claim.claimantType))
+      .withClaimantEmail(claim.claimantInformation.contactInformation.emailAddress.map(Email(_)))
+      .withClaimantEORI(claim.claimantInformation.eori)
+      .withClaimedAmount(claim.totalReimbursementAmount)
+      .withReimbursementMethod(claim.reimbursementMethod)
+      .withDisposalMethod(claim.methodOfDisposal)
+      .withBasisOfClaim(claim.basisOfClaim.toTPI05Key)
       .withGoodsDetails(
         GoodsDetails(
-          descOfGoods = Some(request.claim.detailsOfRejectedGoods),
-          anySpecialCircumstances = request.claim.basisOfClaimSpecialCircumstances,
-          dateOfInspection = Some(ISOLocalDate.of(request.claim.inspectionDate)),
-          atTheImporterOrDeclarantAddress = Some(InspectionAddressType(request.claim.claimantType)),
-          inspectionAddress = Some(request.claim.inspectionAddress)
+          descOfGoods = Some(claim.detailsOfRejectedGoods),
+          anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
+          dateOfInspection = Some(ISOLocalDate.of(claim.inspectionDate)),
+          atTheImporterOrDeclarantAddress = Some(InspectionAddressType(claim.claimantType)),
+          inspectionAddress = Some(claim.inspectionAddress)
         )
       )
-//      .withEORIDetails(
-//        EoriDetails(
-//          agentEORIDetails = ???,
-//          importerEORIDetails = ??? // from Acc14
-//        )
-//      )
+      //      .withEORIDetails(
+      //        EoriDetails(
+      //          agentEORIDetails = ???,
+      //          importerEORIDetails = ??? // from Acc14
+      //        )
+      //      )
       .verify
+  }
 }

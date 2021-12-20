@@ -23,12 +23,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{Address, ContactInformation, EORIInformation, EisSubmitClaimRequest, EoriDetails, GoodsDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
 import javax.inject.Singleton
 
 @Singleton
-class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] with Logging {
+class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
 
   def mapToEisSubmitClaimRequest(request: C285ClaimRequest): Either[Error, EisSubmitClaimRequest] = {
 

@@ -24,9 +24,9 @@ sealed trait DeclarantTypeAnswer extends Product with Serializable
 
 object DeclarantTypeAnswer {
 
-  case object Importer extends DeclarantTypeAnswer
-  case object AssociatedWithImporterCompany extends DeclarantTypeAnswer
-  case object AssociatedWithRepresentativeCompany extends DeclarantTypeAnswer
+  final case object Importer extends DeclarantTypeAnswer
+  final case object AssociatedWithImporterCompany extends DeclarantTypeAnswer
+  final case object AssociatedWithRepresentativeCompany extends DeclarantTypeAnswer
 
   implicit val equality: Eq[DeclarantTypeAnswer] =
     Eq.fromUniversalEquals[DeclarantTypeAnswer]

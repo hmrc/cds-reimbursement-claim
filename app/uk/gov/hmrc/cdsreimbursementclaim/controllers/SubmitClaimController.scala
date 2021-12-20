@@ -16,19 +16,18 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import play.api.libs.json.{Format, JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActions, AuthenticatedRequest}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, RejectedGoodsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{C285ClaimToTPI05Mapper, CE1779ClaimToTPI05Mapper, ClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton()
 class SubmitClaimController @Inject() (
@@ -36,36 +35,45 @@ class SubmitClaimController @Inject() (
   claimService: ClaimService,
   ccsSubmissionService: CcsSubmissionService,
   cc: ControllerComponents
-)(implicit ec: ExecutionContext, c285Mapper: C285ClaimToTPI05Mapper, ce1779Mapper: CE1779ClaimToTPI05Mapper)
+)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
   def submitC285Claim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[C285ClaimRequest](submitClaim(_))
+    withJsonBody[C285ClaimRequest] { c285ClaimRequest =>
+      val result =
+        for {
+          submitClaimResponse <- claimService.submitC285Claim(c285ClaimRequest)
+          _                   <- ccsSubmissionService.enqueue(c285ClaimRequest, submitClaimResponse)
+          _                    = logger.info(s"Enqueued documents for claim")
+        } yield submitClaimResponse
+
+      result.fold(
+        { e =>
+          logger.warn("Error submitting claim", e)
+          InternalServerError
+        },
+        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
+      )
+    }
   }
 
   def submitRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[RejectedGoodsClaimRequest](submitClaim(_))
-  }
+    withJsonBody[RejectedGoodsClaimRequest] { rejectedGoodsClaim =>
+      val result =
+        for {
+          submitClaimResponse <- claimService.submitRejectedGoodsClaim(rejectedGoodsClaim)
+          _                   <- ccsSubmissionService.enqueue(rejectedGoodsClaim, submitClaimResponse)
+          _                    = logger.info(s"Enqueued documents for claim")
+        } yield submitClaimResponse
 
-  private def submitClaim[A](claimRequest: A)(implicit
-    request: AuthenticatedRequest[_],
-    claimToTPI05Mapper: ClaimToTPI05Mapper[A],
-    claimRequestFormat: Format[A]
-  ): Future[Result] = {
-    val result =
-      for {
-        submitClaimResponse <- claimService.submitClaim(claimRequest)
-        _                   <- ccsSubmissionService.enqueue(claimRequest, submitClaimResponse)
-        _                    = logger.info(s"Enqueued supporting evidences for claim")
-      } yield submitClaimResponse
-
-    result.fold(
-      { e =>
-        logger.warn("Could not submit claim", e)
-        InternalServerError
-      },
-      submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
-    )
+      result.fold(
+        { e =>
+          logger.warn("Error submitting claim", e)
+          InternalServerError
+        },
+        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
+      )
+    }
   }
 }

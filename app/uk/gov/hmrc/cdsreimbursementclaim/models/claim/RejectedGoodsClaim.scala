@@ -34,8 +34,8 @@ final case class RejectedGoodsClaim(
   inspectionAddress: InspectionAddress,
   totalReimbursementAmount: BigDecimal,
   reimbursementMethod: ReimbursementMethodAnswer,
-  supportingEvidences: Map[UploadDocument, DocumentTypeRejectedGoods],
-  bankAccountDetails: Option[BankAccountDetails]
+  bankAccountDetails: Option[BankAccountDetails],
+  supportingEvidences: Seq[EvidenceDocument]
 )
 
 object RejectedGoodsClaim {
