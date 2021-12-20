@@ -25,6 +25,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{Address, ContactInfor
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
+import javax.inject.Singleton
+
+@Singleton
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] with Logging {
 
   def mapToEisSubmitClaimRequest(request: C285ClaimRequest): Either[Error, EisSubmitClaimRequest] = {

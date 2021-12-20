@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285ClaimRequest
+import play.api.libs.json.{Format, JsValue, Json, OFormat}
 
-final case class SubmitClaimResponseEvent(
+final case class SubmitClaimResponseEvent[A](
   status: Int,
   responseBody: JsValue,
   requestBody: JsValue,
-  submitClaimRequest: C285ClaimRequest
+  submitClaimRequest: A
 )
 
 object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+
+  implicit def format[A](implicit requestFormat: Format[A]): OFormat[SubmitClaimResponseEvent[A]] =
+    Json.format[SubmitClaimResponseEvent[A]]
 }

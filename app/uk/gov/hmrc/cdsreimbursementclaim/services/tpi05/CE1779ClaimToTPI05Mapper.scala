@@ -25,7 +25,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
-class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[RejectedGoodsClaimRequest] with Logging {
+import javax.inject.{Inject, Singleton}
+
+@Singleton
+class CE1779ClaimToTPI05Mapper @Inject() () extends ClaimToTPI05Mapper[RejectedGoodsClaimRequest] with Logging {
 
   def mapToEisSubmitClaimRequest(request: RejectedGoodsClaimRequest): Either[Error, EisSubmitClaimRequest] =
     TPI05.request

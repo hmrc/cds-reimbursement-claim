@@ -36,8 +36,8 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
-  def enqueue(
-    claimRequest: C285ClaimRequest,
+  def enqueue[A](
+    claimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
 
@@ -69,11 +69,10 @@ class DefaultCcsSubmissionService @Inject() (
     )
 
   @SuppressWarnings(Array("org.wartremover.warts.Any")) // compiler can't infer the type properly on sequence
-  override def enqueue(
-    submitClaimRequest: C285ClaimRequest,
+  override def enqueue[A](
+    submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
-
     val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
       makeBatchFileInterfaceMetaDataPayload(submitClaimRequest, submitClaimResponse)
         .map(data =>
@@ -81,6 +80,7 @@ class DefaultCcsSubmissionService @Inject() (
             CcsSubmissionRequest(XmlEncoder[Envelope].encode(data), DefaultCcsSubmissionService.getHeaders(hc))
           )
         )
+
     queueCcsSubmissions.sequence
   }
 
@@ -96,8 +96,8 @@ class DefaultCcsSubmissionService @Inject() (
 
 object DefaultCcsSubmissionService {
 
-  def makeBatchFileInterfaceMetaDataPayload(
-    submitClaimRequest: C285ClaimRequest,
+  def makeBatchFileInterfaceMetaDataPayload[A](
+    submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
   ): List[Envelope] = {
     def make(

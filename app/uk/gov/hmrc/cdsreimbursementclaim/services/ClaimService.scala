@@ -16,22 +16,24 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 import cats.data.EitherT
+import cats.implicits.catsSyntaxTuple3Semigroupal
 import cats.instances.future._
 import cats.instances.int._
 import cats.syntax.either._
 import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import play.api.http.Status.OK
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{C285ClaimToTPI05Mapper, CE1779ClaimToTPI05Mapper, ClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
@@ -44,71 +46,84 @@ import scala.util.Try
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
 
-  def submitClaim(
-    claim: C285ClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse]
+  def submitClaim[A](claim: A)(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Mapper: ClaimToTPI05Mapper[A],
+    requestFormat: Format[A]
+  ): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
 @Singleton
 class DefaultClaimService @Inject() (
   claimConnector: ClaimConnector,
-  claimTransformerService: ClaimTransformerService,
   emailService: EmailService,
   auditService: AuditService,
   metrics: Metrics
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, c285Mapper: C285ClaimToTPI05Mapper, ce1779Mapper: CE1779ClaimToTPI05Mapper)
     extends ClaimService
     with Logging {
 
-  def submitClaim(
-    submitClaimRequest: C285ClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse] = {
+  def submitClaim[A](submitClaimRequest: A)(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Mapper: ClaimToTPI05Mapper[A],
+    requestFormat: Format[A]
+  ): EitherT[Future, Error, ClaimSubmitResponse] = {
 
     val maybeEisSubmitClaimRequest: Either[Error, EisSubmitClaimRequest] =
-      claimTransformerService.toEisSubmitClaimRequest(submitClaimRequest)
-
-    val emailRequest: EmailRequest = EmailRequest(
-      submitClaimRequest.signedInUserDetails.verifiedEmail,
-      submitClaimRequest.signedInUserDetails.contactName,
-      submitClaimRequest.claim.totalReimbursementAmount
-    )
+      EisSubmitClaimRequest(submitClaimRequest)
 
     for {
       eisSubmitRequest       <-
         EitherT.fromEither[Future](maybeEisSubmitClaimRequest).leftMap(e => Error(s"could not make TPIO5 payload: $e"))
-      _                      <- auditClaimBeforeSubmit(submitClaimRequest, eisSubmitRequest)
+      _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
       returnHttpResponse     <- submitClaimAndAudit(submitClaimRequest, eisSubmitRequest)
       eisSubmitClaimResponse <- EitherT.fromEither[Future](
                                   returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                                 )
       claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
-      _                      <- emailService.sendClaimConfirmationEmail(emailRequest, claimResponse).leftFlatMap { e =>
-                                  logger.warn("could not send claim submission confirmation email or audit event", e)
-                                  EitherT.pure[Future, Error](())
-                                }
+      _                      <- createEmailRequest(eisSubmitRequest)
+                                  .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
+                                  .leftFlatMap { e =>
+                                    logger.warn("could not send claim submission confirmation email or audit event", e)
+                                    EitherT.pure[Future, Error](())
+                                  }
     } yield claimResponse
-
   }
 
-  private def auditClaimBeforeSubmit(
-    submitClaimRequest: C285ClaimRequest,
-    eisSubmitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] =
-    EitherT.pure[Future, Error](
-      auditService.sendEvent(
-        "SubmitClaim",
-        SubmitClaimEvent(
-          eisSubmitClaimRequest,
-          submitClaimRequest.signedInUserDetails.eori
-        ),
-        "submit-claim"
-      )
-    )
+  private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] = {
+    val details           = eisSubmitClaimRequest.postNewClaimsRequest.requestDetail
+    val maybeEmailRequest = (
+      details.claimantEmailAddress,
+      details.EORIDetails
+        .flatMap(_.agentEORIDetails.contactInformation)
+        .flatMap(_.contactPerson),
+      details.claimAmountTotal
+    ) mapN (EmailRequest(_, _, _))
 
-  private def submitClaimAndAudit(
-    submitClaimRequest: C285ClaimRequest,
+    EitherT.fromOption[Future](maybeEmailRequest, Error("Cannot create Email request because required fields missing"))
+  }
+
+  private def auditClaimBeforeSubmit(eisSubmitClaimRequest: EisSubmitClaimRequest)(implicit
+    hc: HeaderCarrier,
+    request: Request[_]
+  ): EitherT[Future, Error, Unit] = EitherT.fromEither[Future](
+    eisSubmitClaimRequest.postNewClaimsRequest.requestDetail.claimantEORI
+      .toRight(Error("Claimant EORI is missing"))
+      .map { eori =>
+        auditService.sendEvent(
+          auditType = "SubmitClaim",
+          detail = SubmitClaimEvent(eisSubmitClaimRequest, eori),
+          transactionName = "submit-claim"
+        )
+      }
+  )
+
+  private def submitClaimAndAudit[A](
+    submitClaimRequest: A,
     eisSubmitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, HttpResponse] = {
+  )(implicit hc: HeaderCarrier, request: Request[_], requestFormat: Format[A]): EitherT[Future, Error, HttpResponse] = {
     val timer = metrics.submitClaimTimer.time()
     claimConnector
       .submitClaim(
@@ -133,12 +148,12 @@ class DefaultClaimService @Inject() (
       }
   }
 
-  private def auditSubmitClaimResponse(
+  private def auditSubmitClaimResponse[A](
     responseHttpStatus: Int,
     responseBody: String,
-    submitClaimRequest: C285ClaimRequest,
+    submitClaimRequest: A,
     eisSubmitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): Unit = {
+  )(implicit hc: HeaderCarrier, request: Request[_], f: Format[A]): Unit = {
     val responseJson =
       Try(Json.parse(responseBody))
         .getOrElse(Json.parse(s"""{ "body" : "could not parse body as JSON: $responseBody" }"""))
