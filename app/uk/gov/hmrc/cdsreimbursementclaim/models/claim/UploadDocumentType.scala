@@ -16,45 +16,59 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed trait UploadDocumentType extends Product with Serializable
+sealed trait UploadDocumentType {
+  def toTPI05Key: String
+}
 
-object UploadDocumentType {
+object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
+
   case object CommercialInvoice extends UploadDocumentType {
-    override def toString: String = "Commercial Invoice"
+    override def toTPI05Key: String = "Commercial Invoice"
   }
   case object PackingList extends UploadDocumentType {
-    override def toString: String = "Packing List"
+    override def toTPI05Key: String = "Packing List"
   }
   case object AirWayBill extends UploadDocumentType {
-    override def toString: String = "Air Waybill"
+    override def toTPI05Key: String = "Air Waybill"
   }
   case object BillOfLading extends UploadDocumentType {
-    override def toString: String = "Bill of Lading"
+    override def toTPI05Key: String = "Bill of Lading"
   }
   case object SubstituteEntry extends UploadDocumentType {
-    override def toString: String = "Substitute Entry"
+    override def toTPI05Key: String = "Substitute Entry"
   }
   case object ScheduleOfMRNs extends UploadDocumentType {
-    override def toString: String = "Schedule of MRNs"
+    override def toTPI05Key: String = "Schedule of MRNs"
   }
   case object ProofOfAuthority extends UploadDocumentType {
-    override def toString: String = "Proof of Authority (to be repaid)"
+    override def toTPI05Key: String = "Proof of Authority (to be repaid)"
   }
   case object CorrespondenceTrader extends UploadDocumentType {
-    override def toString: String = "Correspondence Trader"
+    override def toTPI05Key: String = "Correspondence Trader"
   }
   case object AdditionalSupportingDocuments extends UploadDocumentType {
-    override def toString: String = "Additional Supporting Documentation"
+    override def toTPI05Key: String = "Additional Supporting Documentation"
   }
   case object ImportAndExportDeclaration extends UploadDocumentType {
-    override def toString: String = "Import and Export Declaration"
+    override def toTPI05Key: String = "Import and Export Declaration"
   }
   case object Other extends UploadDocumentType {
-    override def toString: String = "Other"
+    override def toTPI05Key: String = "Other"
   }
 
-  implicit val format: OFormat[UploadDocumentType] = derived.oformat[UploadDocumentType]()
+  val values: Set[UploadDocumentType] = Set(
+    CommercialInvoice,
+    PackingList,
+    AirWayBill,
+    BillOfLading,
+    SubstituteEntry,
+    ScheduleOfMRNs,
+    ProofOfAuthority,
+    CorrespondenceTrader,
+    AdditionalSupportingDocuments,
+    ImportAndExportDeclaration,
+    Other
+  )
 }
