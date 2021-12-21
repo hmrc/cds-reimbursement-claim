@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.data.Validated
 import cats.data.Validated.Valid
-import cats.implicits.catsSyntaxEq
+import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
@@ -108,6 +108,24 @@ object TPI05 {
 
     def withEORIDetails(eoriDetails: EoriDetails): Builder =
       copy(validation.map(_.copy(EORIDetails = Some(eoriDetails))))
+
+    def withMrnDetails(mrnDetails: MrnDetail.Builder*): Builder =
+      copy(validation.andThen { request =>
+        mrnDetails
+          .ensuring(_.nonEmpty)
+          .map(_.validated)
+          .toList
+          .sequence
+          .leftMap { errors =>
+            Error(s"There is at least one claim which has failed validation: ${errors.toList.mkString("|")}")
+          }
+          .map { details =>
+            request.copy(MRNDetails = Some(details))
+          }
+      })
+
+    def withDuplicateMrnDetails(): Builder =
+      copy()
 
     def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
       copy(validation.map(_.copy(goodsDetails = Some(goodsDetails))))

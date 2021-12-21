@@ -58,6 +58,12 @@ object C285Claim {
 
   implicit class C285ClaimOps(val claim: C285Claim) extends AnyVal {
 
+    def multipleClaims: List[(MRN, ClaimedReimbursementsAnswer)] = {
+      val mrns   = claim.movementReferenceNumber     :: claim.associatedMRNsAnswer.toList.flatMap(_.toList)
+      val claims = claim.claimedReimbursementsAnswer :: claim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
+      mrns zip claims
+    }
+
     def claims: NonEmptyList[ClaimedReimbursement] =
       claim.claimedReimbursementsAnswer
         .map(claim =>

@@ -16,21 +16,104 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
+import cats.data.Validated.Valid
+import cats.data.{Ior, ValidatedNel}
+import cats.implicits.catsSyntaxOption
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, claim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
 final case class MrnDetail(
-  MRNNumber: Option[String],
-  acceptanceDate: Option[String],
-  declarantReferenceNumber: Option[String],
-  mainDeclarationReference: Option[Boolean],
-  procedureCode: Option[String],
-  declarantDetails: Option[MRNInformation],
-  accountDetails: Option[List[AccountDetail]],
-  consigneeDetails: Option[MRNInformation],
-  bankDetails: Option[BankDetails],
-  NDRCDetails: Option[List[NdrcDetails]]
+  MRNNumber: Option[MRN] = None,
+  acceptanceDate: Option[String] = None,
+  declarantReferenceNumber: Option[String] = None,
+  mainDeclarationReference: Option[Boolean] = None,
+  procedureCode: Option[String] = None,
+  declarantDetails: Option[MRNInformation] = None,
+  accountDetails: Option[List[AccountDetail]] = None,
+  consigneeDetails: Option[MRNInformation] = None,
+  bankDetails: Option[BankDetails] = None,
+  NDRCDetails: Option[List[NdrcDetails]] = None
 )
 
 object MrnDetail {
+
+  def build: Builder = Builder(Valid(MrnDetail()))
+
+  final case class Builder(validated: ValidatedNel[Error, MrnDetail]) extends AnyVal {
+
+    def withMrnNumber(mrn: MRN): Builder =
+      copy(validated.map(_.copy(MRNNumber = Some(mrn))))
+
+    def withAcceptanceDate(acceptanceDate: String): Builder =
+      copy(
+        validated.andThen(mrnDetails =>
+          TimeUtils
+            .fromDisplayAcceptanceDateFormat(acceptanceDate)
+            .map(date => mrnDetails.copy(acceptanceDate = Some(date)))
+            .toValidNel(Error("Could not format display acceptance date"))
+        )
+      )
+
+    def withDeclarantReferenceNumber(maybeDeclarantReferenceNumber: Option[String]): Builder =
+      copy(validated.map(_.copy(declarantReferenceNumber = maybeDeclarantReferenceNumber)))
+
+    def withWhetherMainDeclarationReference(whetherMainDeclarationReference: Boolean): Builder =
+      copy(validated.map(_.copy(mainDeclarationReference = Some(whetherMainDeclarationReference))))
+
+    def withProcedureCode(procedureCode: String): Builder =
+      copy(validated.map(_.copy(procedureCode = Some(procedureCode))))
+
+    def withDeclarantDetails(
+      eori: Eori,
+      legalName: String,
+      address: Address,
+      maybeContactInformation: Option[ContactInformation]
+    ): Builder =
+      copy(validated.andThen { detail =>
+        maybeContactInformation
+          .toValidNel(Error("The declarant contact information is missing"))
+          .map { inf =>
+            detail.copy(declarantDetails =
+              Some(
+                MRNInformation(
+                  EORI = eori,
+                  legalName = legalName,
+                  establishmentAddress = address,
+                  contactDetails = inf
+                )
+              )
+            )
+          }
+      })
+
+    def withConsigneeDetails(maybeDetails: Option[(Eori, String, Address, Option[ContactInformation])]): Builder =
+      copy(validated.andThen { detail =>
+        maybeDetails
+          .toValidNel(Error("The consignee details are missing"))
+          .andThen { consigneeDetails =>
+            consigneeDetails._4
+              .toValidNel(Error("The consignee contact information is missing"))
+              .map { contactInformation =>
+                detail.copy(consigneeDetails =
+                  Some(
+                    MRNInformation(
+                      EORI = consigneeDetails._1,
+                      legalName = consigneeDetails._2,
+                      establishmentAddress = consigneeDetails._3,
+                      contactDetails = contactInformation
+                    )
+                  )
+                )
+              }
+          }
+      })
+
+    def withBankDetails(option: Option[Ior[claim.BankDetails, BankAccountDetails]]): Builder = ???
+
+  }
+
   implicit val format: OFormat[MrnDetail] = Json.format[MrnDetail]
 }

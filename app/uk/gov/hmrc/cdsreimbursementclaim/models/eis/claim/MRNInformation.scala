@@ -17,9 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class MRNInformation(
-  EORI: String,
+  EORI: Eori,
   legalName: String,
   establishmentAddress: Address,
   contactDetails: ContactInformation

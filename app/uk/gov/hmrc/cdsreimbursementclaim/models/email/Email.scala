@@ -22,7 +22,6 @@ import play.api.libs.json.Format
 final case class Email(value: String) extends AnyVal
 
 object Email {
-
   implicit val format: Format[Email] =
     implicitly[Format[String]].inmap(Email(_), _.value)
 }

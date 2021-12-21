@@ -56,16 +56,13 @@ class DefaultClaimTransformerService @Inject() () extends ClaimTransformerServic
 
     val c285Claim = submitClaimRequest.claim
     (
-      makeReasonAndOrBasisOfClaim(
-        c285Claim.basisOfClaimAnswer
-      ),
       setMrnDetails(c285Claim),
       setDuplicateMrnDetails(
         c285Claim.duplicateDisplayDeclaration,
         c285Claim
       ),
       buildEoriDetails(submitClaimRequest.claim)
-    ).mapN { case (maybeReasonAndOrBasis, mrnDetails, duplicateMrnDetails, eoriDetails) =>
+    ).mapN { case (mrnDetails, duplicateMrnDetails, eoriDetails) =>
       RequestDetail(
         CDFPayService = CDFPayService.NDRC,
         dateReceived = Some(localDateNow),
@@ -77,7 +74,7 @@ class DefaultClaimTransformerService @Inject() () extends ClaimTransformerServic
         claimAmountTotal = Some(submitClaimRequest.claim.totalReimbursementAmount.roundToTwoDecimalPlaces),
         disposalMethod = None,
         reimbursementMethod = setReimbursementMethod(c285Claim),
-        basisOfClaim = maybeReasonAndOrBasis,
+        basisOfClaim = Some(submitClaimRequest.claim.basisOfClaimAnswer.toTPI05Key),
         claimant = Some(
           DefaultClaimTransformerService.setPayeeIndicator(
             submitClaimRequest.claim.declarantTypeAnswer
@@ -174,20 +171,20 @@ object DefaultClaimTransformerService {
   def buildEoriDetails(c285Claim: C285Claim): Validation[EoriDetails] = {
 
     val agentContactInfo = (c285Claim.mrnContactDetailsAnswer, c285Claim.mrnContactAddressAnswer)
-      .mapN(ContactInformation(_, _))
+      .mapN(ContactInformation.combine)
       .getOrElse(
         c285Claim.declarantTypeAnswer match {
           case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
-            ContactInformation(c285Claim.consigneeDetails)
+            ContactInformation.from(c285Claim.consigneeDetails)
           case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
-            ContactInformation(c285Claim.declarantDetails)
+            ContactInformation.from(c285Claim.declarantDetails)
         }
       )
 
     Valid(
       EoriDetails(
         agentEORIDetails = EORIInformation(
-          EORINumber = c285Claim.declarantDetails.map(_.EORI).getOrElse(Eori("")),
+          EORINumber = c285Claim.declarantDetails.map(_.EORI),
           CDSFullName = c285Claim.declarantDetails.map(_.legalName),
           legalEntityType = None,
           EORIStartDate = None,
@@ -196,7 +193,7 @@ object DefaultClaimTransformerService {
             addressLine1 = Option(c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
             addressLine2 = c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
             AddressLine3 = c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
-            street = Street(
+            street = Street.of(
               Option(c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
               c285Claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
             ),
@@ -210,7 +207,7 @@ object DefaultClaimTransformerService {
           VATDetails = None
         ),
         importerEORIDetails = EORIInformation(
-          EORINumber = c285Claim.consigneeDetails.map(s => s.EORI).getOrElse(Eori("")),
+          EORINumber = c285Claim.consigneeDetails.map(s => s.EORI),
           CDSFullName = c285Claim.consigneeDetails.map(s => s.legalName),
           legalEntityType = None,
           EORIStartDate = None,
@@ -219,7 +216,7 @@ object DefaultClaimTransformerService {
             addressLine1 = c285Claim.consigneeDetails.map(_.establishmentAddress.addressLine1),
             addressLine2 = c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2),
             AddressLine3 = c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-            street = Street(
+            street = Street.of(
               c285Claim.consigneeDetails.map(_.establishmentAddress.addressLine1),
               c285Claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2)
             ),
@@ -235,7 +232,7 @@ object DefaultClaimTransformerService {
               addressLine1 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine1)),
               addressLine2 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine2)),
               addressLine3 = c285Claim.consigneeDetails.flatMap(s => s.contactDetails.flatMap(f => f.addressLine3)),
-              street = Street(
+              street = Street.of(
                 c285Claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
                 c285Claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2))
               ),
@@ -267,11 +264,6 @@ object DefaultClaimTransformerService {
       descOfGoods = Some(commodityDetails.value)
     )
 
-  def makeReasonAndOrBasisOfClaim(
-    basisOfClaim: BasisOfClaim
-  ): Validation[Option[String]] =
-    Valid(Some(basisOfClaim.toString))
-
   def buildConsigneeEstablishmentAddress(
     consigneeDetails: models.claim.ConsigneeDetails
   ): Validation[Address] =
@@ -281,7 +273,7 @@ object DefaultClaimTransformerService {
         addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
         addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
         AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-        street = Street(
+        street = Street.of(
           Option(consigneeDetails.establishmentAddress.addressLine1),
           consigneeDetails.establishmentAddress.addressLine2
         ),
@@ -302,7 +294,7 @@ object DefaultClaimTransformerService {
         addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
         addressLine2 = declarantDetails.establishmentAddress.addressLine2,
         AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
-        street = Street(
+        street = Street.of(
           Option(declarantDetails.establishmentAddress.addressLine1),
           declarantDetails.establishmentAddress.addressLine2
         ),
@@ -327,7 +319,7 @@ object DefaultClaimTransformerService {
                 addressLine1 = contactDetails.addressLine1,
                 addressLine2 = contactDetails.addressLine2,
                 addressLine3 = contactDetails.addressLine3,
-                street = Street(contactDetails.addressLine1, contactDetails.addressLine2),
+                street = Street.of(contactDetails.addressLine1, contactDetails.addressLine2),
                 city = contactDetails.addressLine3,
                 countryCode = contactDetails.countryCode,
                 postalCode = contactDetails.postalCode,
@@ -356,7 +348,7 @@ object DefaultClaimTransformerService {
                 addressLine1 = contactDetails.addressLine1,
                 addressLine2 = contactDetails.addressLine2,
                 addressLine3 = contactDetails.addressLine3,
-                street = Street(contactDetails.addressLine1, contactDetails.addressLine2),
+                street = Street.of(contactDetails.addressLine1, contactDetails.addressLine2),
                 city = contactDetails.addressLine3,
                 countryCode = contactDetails.countryCode,
                 postalCode = contactDetails.postalCode,
@@ -493,17 +485,10 @@ object DefaultClaimTransformerService {
       case None                 => invalidNel("Could not format display acceptance date")
     }
 
-  def multipleClaimsAnswer(c285Claim: C285Claim): List[(MRN, ClaimedReimbursementsAnswer)] = {
-    val mrns   = c285Claim.movementReferenceNumber :: c285Claim.associatedMRNsAnswer.toList.flatMap(_.toList)
-    val claims =
-      c285Claim.claimedReimbursementsAnswer :: c285Claim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
-    mrns.zip(claims)
-  }
-
   def setMrnDetails(c285Claim: C285Claim): Validation[List[MrnDetail]] = {
 
     val details = c285Claim.displayDeclaration.toList.flatMap(displayDeclaration =>
-      multipleClaimsAnswer(c285Claim).map { case (mrn, claim) =>
+      c285Claim.multipleClaims.map { case (mrn, claim) =>
         (
           setAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate),
           setDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails),
@@ -512,7 +497,7 @@ object DefaultClaimTransformerService {
           makeNdrcDetails(claim)
         ).mapN { case (acceptanceDate, declarationDetails, consigneeDetails, bankDetails, ndrcDetails) =>
           MrnDetail(
-            MRNNumber = Some(mrn.value),
+            MRNNumber = Some(mrn),
             acceptanceDate = Some(acceptanceDate),
             declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
             mainDeclarationReference = Some(c285Claim.movementReferenceNumber.value === mrn.value),

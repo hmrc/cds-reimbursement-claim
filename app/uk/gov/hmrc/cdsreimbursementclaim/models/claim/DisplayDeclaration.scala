@@ -21,6 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 final case class DisplayDeclaration(
   displayResponseDetail: DisplayResponseDetail
 )
+
 object DisplayDeclaration {
   implicit val format: OFormat[DisplayDeclaration] = Json.format[DisplayDeclaration]
 }

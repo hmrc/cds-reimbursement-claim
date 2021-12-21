@@ -29,4 +29,6 @@ object Eori {
   }
 
   implicit val format: Format[Eori] = implicitly[Format[String]].inmap(Eori(_), _.value)
+
+  implicit def stringToEori(s: String): Eori = Eori(s)
 }

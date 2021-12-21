@@ -28,7 +28,7 @@ object YesNo {
   final case object No extends YesNo
   final case object Yes extends YesNo
 
-  def apply(declarantTypeAnswer: DeclarantTypeAnswer): YesNo =
+  def whetherFrom(declarantTypeAnswer: DeclarantTypeAnswer): YesNo =
     declarantTypeAnswer match {
       case DeclarantTypeAnswer.Importer => Yes
       case _                            => No

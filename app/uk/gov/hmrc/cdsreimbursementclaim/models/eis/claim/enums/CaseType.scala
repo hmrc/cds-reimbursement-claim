@@ -29,7 +29,7 @@ object CaseType {
   final case object Bulk extends CaseType
   final case object CMA extends CaseType
 
-  def apply(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
+  def resolveFrom(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
     (typeOfClaim, reimbursementMethod) match {
       case (TypeOfClaimAnswer.Multiple, _)  => CaseType.Bulk
       case (TypeOfClaimAnswer.Scheduled, _) => CaseType.Bulk

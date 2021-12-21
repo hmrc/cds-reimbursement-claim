@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class EORIInformation(
-  EORINumber: Eori,
+  EORINumber: Option[Eori],
   CDSFullName: Option[String],
   CDSEstablishmentAddress: Address,
   contactInformation: Option[ContactInformation],

@@ -35,13 +35,13 @@ final case class ContactInformation(
 
 object ContactInformation {
 
-  def apply(contactDetails: MrnContactDetails, contactAddress: ContactAddress): ContactInformation =
+  def combine(contactDetails: MrnContactDetails, contactAddress: ContactAddress): ContactInformation =
     new ContactInformation(
       contactPerson = Option(contactDetails.fullName),
       addressLine1 = Option(contactAddress.line1),
       addressLine2 = contactAddress.line2,
       addressLine3 = contactAddress.line3,
-      street = Street(Option(contactAddress.line1), contactAddress.line2),
+      street = Street.of(Option(contactAddress.line1), contactAddress.line2),
       city = Option(contactAddress.line4),
       countryCode = Option(contactAddress.country.code),
       postalCode = Option(contactAddress.postcode.value),
@@ -50,7 +50,7 @@ object ContactInformation {
       emailAddress = Option(contactDetails.emailAddress.value)
     )
 
-  def apply(claimantDetails: Option[ClaimantDetails]): ContactInformation = {
+  def from(claimantDetails: Option[ClaimantDetails]): ContactInformation = {
 
     val maybeContactDetails = claimantDetails.flatMap(_.contactDetails)
 
@@ -59,7 +59,7 @@ object ContactInformation {
       addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
       addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
       addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
-      street = Street(
+      street = Street.of(
         maybeContactDetails.flatMap(_.addressLine1),
         maybeContactDetails.flatMap(_.addressLine2)
       ),
