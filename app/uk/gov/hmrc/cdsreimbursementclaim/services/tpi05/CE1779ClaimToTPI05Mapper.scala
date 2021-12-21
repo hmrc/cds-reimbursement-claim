@@ -61,7 +61,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, D
             contactInformation = Some(claim.claimantInformation.contactInformation)
           ),
           importerEORIDetails = EORIInformation(
-            EORINumber = maybeConsigneeDetails.map(_.consigneeEORI),
+            EORINumber = maybeConsigneeDetails.map(_.EORI),
             CDSFullName = maybeConsigneeDetails.map(_.legalName),
             CDSEstablishmentAddress = Address(
               contactPerson = None,
@@ -109,7 +109,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, D
           .withWhetherMainDeclarationReference(true)
           .withProcedureCode(declaration.procedureCode)
           .withDeclarantDetails(
-            declaration.declarantDetails.declarantEORI,
+            declaration.declarantDetails.EORI,
             declaration.declarantDetails.legalName,
             Address(
               contactPerson = None,
@@ -145,7 +145,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, D
           .withConsigneeDetails(
             maybeConsigneeDetails.map(consigneeDetails =>
               (
-                consigneeDetails.consigneeEORI,
+                consigneeDetails.EORI,
                 consigneeDetails.legalName,
                 Address(
                   contactPerson = None,

@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.{BatchFileInterfaceMetadata, Body, Envelope, PropertiesType, PropertyType}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, DeclarantTypeAnswer, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, RejectedGoodsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils.cdsDateTimeFormat
 
 import java.util.UUID

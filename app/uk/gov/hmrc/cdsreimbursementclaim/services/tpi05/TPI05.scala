@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.data.Validated
+import cats.data.{Validated}
 import cats.data.Validated.Valid
 import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
@@ -109,23 +109,23 @@ object TPI05 {
     def withEORIDetails(eoriDetails: EoriDetails): Builder =
       copy(validation.map(_.copy(EORIDetails = Some(eoriDetails))))
 
+    @SuppressWarnings(Array("org.wartremover.warts.Any"))
     def withMrnDetails(mrnDetails: MrnDetail.Builder*): Builder =
       copy(validation.andThen { request =>
-        mrnDetails
+        mrnDetails.toList
           .ensuring(_.nonEmpty)
           .map(_.validated)
-          .toList
           .sequence
-          .leftMap { errors =>
-            Error(s"There is at least one claim which has failed validation: ${errors.toList.mkString("|")}")
-          }
           .map { details =>
             request.copy(MRNDetails = Some(details))
           }
+          .leftMap { errors =>
+            Error(s"There is at least one claim which has failed validation: ${errors.toList.mkString("|")}")
+          }
       })
 
-    def withDuplicateMrnDetails(): Builder =
-      copy()
+//    def withDuplicateMrnDetails(): Builder =
+//      copy()
 
     def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
       copy(validation.map(_.copy(goodsDetails = Some(goodsDetails))))

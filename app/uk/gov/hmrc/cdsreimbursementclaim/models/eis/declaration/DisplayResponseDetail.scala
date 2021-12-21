@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountDetails, BankDetails, ConsigneeDetails, DeclarantDetails, NdrcDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 
 final case class DisplayResponseDetail(

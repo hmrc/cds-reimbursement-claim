@@ -119,7 +119,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
       )
       .withMrnDetails(
         request.claim.displayDeclaration.toList.flatMap { displayDeclaration =>
-          request.claim.multipleClaims.map { case (mrn, reimbursementClaim) =>
+          request.claim.multipleClaims.map { case (mrn, reimbursementClaim @ _) =>
             val declarantDetails      = displayDeclaration.displayResponseDetail.declarantDetails
             val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.consigneeDetails
 
@@ -202,7 +202,10 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
                 )
               )
               .withBankDetails(
-                Ior.fromOptions(displayDeclaration.displayResponseDetail.bankDetails, request.claim.bankAccountDetailsAnswer)
+                Ior.fromOptions(
+                  displayDeclaration.displayResponseDetail.bankDetails,
+                  request.claim.bankAccountDetailsAnswer
+                )
               )
           }
         }: _*

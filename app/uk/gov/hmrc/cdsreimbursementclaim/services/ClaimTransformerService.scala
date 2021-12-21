@@ -27,13 +27,13 @@ import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursementsAnswer, Address => _, BankDetails => _, NdrcDetails => _, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Address => _, BankDetails => _, NdrcDetails => _, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN, UUIDGenerator}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, Validation}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultClaimTransformerService._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.DataUtils._
@@ -535,7 +535,7 @@ object DefaultClaimTransformerService {
         ).mapN { case (declarationDetails, consigneeDetails, acceptanceDate, bankDetails, ndrcDetails) =>
           Some(
             MrnDetail(
-              MRNNumber = Some(displayDeclaration.displayResponseDetail.declarationId),
+              MRNNumber = Some(MRN(displayDeclaration.displayResponseDetail.declarationId)),
               acceptanceDate = Some(acceptanceDate),
               declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
               mainDeclarationReference = Some(true),
