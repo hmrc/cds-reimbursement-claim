@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 

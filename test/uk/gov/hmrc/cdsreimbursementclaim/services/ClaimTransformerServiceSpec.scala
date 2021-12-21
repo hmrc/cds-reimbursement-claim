@@ -31,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample

@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimedReimbursementsAnswe
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.MRNInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 
 object C285ClaimGen {
 

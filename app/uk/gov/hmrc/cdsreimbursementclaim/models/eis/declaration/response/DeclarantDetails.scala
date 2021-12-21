@@ -16,15 +16,32 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, JsPath, Reads, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class DeclarantDetails(
-  declarantEORI: String,
+  EORI: Eori,
   legalName: String,
   establishmentAddress: EstablishmentAddress,
   contactDetails: Option[ContactDetails]
-)
+) extends ClaimantDetails
 
 object DeclarantDetails {
-  implicit val format: OFormat[DeclarantDetails] = Json.format[DeclarantDetails]
+
+  private val reads: Reads[DeclarantDetails] = (
+    (JsPath \ "declarantEORI").read[Eori] and
+      (JsPath \ "legalName").read[String] and
+      (JsPath \ "establishmentAddress").read[EstablishmentAddress] and
+      (JsPath \ "contactDetails").readNullable[ContactDetails]
+  )(DeclarantDetails(_, _, _, _))
+
+  private val writes: Writes[DeclarantDetails] = (
+    (JsPath \ "declarantEORI").write[Eori] and
+      (JsPath \ "legalName").write[String] and
+      (JsPath \ "establishmentAddress").write[EstablishmentAddress] and
+      (JsPath \ "contactDetails").writeNullable[ContactDetails]
+  )(unlift(DeclarantDetails.unapply))
+
+  implicit val format: Format[DeclarantDetails] = Format(reads, writes)
 }

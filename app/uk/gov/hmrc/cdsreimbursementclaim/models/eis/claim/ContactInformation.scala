@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantDetails, ContactAddress, MrnContactDetails, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ContactAddress, MrnContactDetails, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ClaimantDetails
 
 final case class ContactInformation(
   contactPerson: Option[String],

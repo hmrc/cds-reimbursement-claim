@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
 
-final case class EstablishmentAddress(
-  addressLine1: String,
-  addressLine2: Option[String],
-  addressLine3: Option[String],
-  postalCode: Option[String],
-  countryCode: String
+final case class BankAccountDetails(
+  accountName: AccountName,
+  sortCode: SortCode,
+  accountNumber: AccountNumber
 )
 
-object EstablishmentAddress {
-  implicit val format: OFormat[EstablishmentAddress] = derived.oformat[EstablishmentAddress]()
+object BankAccountDetails {
+  implicit val format: OFormat[BankAccountDetails] = Json.format[BankAccountDetails]
 }

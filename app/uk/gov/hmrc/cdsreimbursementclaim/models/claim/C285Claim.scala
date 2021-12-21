@@ -19,6 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, ConsigneeDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 

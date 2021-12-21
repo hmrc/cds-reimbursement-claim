@@ -19,8 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import play.api.libs.json.{Json, OFormat}
 
 final case class NdrcDetails(
-  taxType: String,
-  amount: String,
+  taxType: String, // tax code === tax type Map[TaxCode, BigDecimal] // claimed amount
+  amount: String, // paid amount
   paymentMethod: String,
   paymentReference: String,
   cmaEligible: Option[String]

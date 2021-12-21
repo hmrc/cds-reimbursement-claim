@@ -20,8 +20,9 @@ import cats.data.Validated.Valid
 import cats.data.{Ior, ValidatedNel}
 import cats.implicits.catsSyntaxOption
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BankAccountDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error, claim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
@@ -111,8 +112,7 @@ object MrnDetail {
           }
       })
 
-    def withBankDetails(option: Option[Ior[claim.BankDetails, BankAccountDetails]]): Builder = ???
-
+    def withBankDetails(option: Option[Ior[response.BankDetails, BankAccountDetails]]): Builder = ???
   }
 
   implicit val format: OFormat[MrnDetail] = Json.format[MrnDetail]
