@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.data.Ior
+import cats.implicits.{catsSyntaxEq, catsSyntaxOption}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, RejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISOLocalDate
@@ -25,6 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, DisplayDeclaration)] {
 
@@ -86,6 +88,24 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, D
           .withConsigneeDetails(declaration.consigneeDetails)
           .withAccountDetails(declaration.accountDetails)
           .withBankDetails(Ior.fromOptions(declaration.bankDetails, claim.bankAccountDetails))
+          .withNdrcDetails {
+            val ndrcDetails = declaration.ndrcDetails.toList.flatten
+
+            claim.reimbursementClaims.map { case (taxCode, claimedAmount) =>
+              ndrcDetails
+                .find(_.taxType === taxCode.value)
+                .toValidNel(Error(s"Cannot find NDRC details for tax code: ${taxCode.value}"))
+                .andThen { foundNdrcDetails =>
+                  NdrcDetails.buildChecking(
+                    taxCode,
+                    foundNdrcDetails.paymentMethod,
+                    foundNdrcDetails.paymentReference,
+                    BigDecimal(foundNdrcDetails.amount),
+                    claimedAmount.roundToTwoDecimalPlaces
+                  )
+                }
+            }.toList
+          }
       )
       .verify
   }

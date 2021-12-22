@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, Declara
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
 
@@ -81,7 +82,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
       )
       .withMrnDetails(
         request.claim.displayDeclaration.toList.flatMap { displayDeclaration =>
-          request.claim.multipleClaims.map { case (mrn, reimbursementClaim @ _) =>
+          request.claim.multipleClaims.map { case (mrn, reimbursementClaim) =>
             val declarantDetails      = displayDeclaration.displayResponseDetail.declarantDetails
             val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.consigneeDetails
 
@@ -99,6 +100,17 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
                 Ior.fromOptions(
                   displayDeclaration.displayResponseDetail.bankDetails,
                   request.claim.bankAccountDetailsAnswer
+                )
+              )
+              .withNdrcDetails(
+                reimbursementClaim.toList.map(reimbursement =>
+                  NdrcDetails.buildChecking(
+                    reimbursement.taxCode,
+                    reimbursement.paymentMethod,
+                    reimbursement.paymentReference,
+                    reimbursement.paidAmount.roundToTwoDecimalPlaces,
+                    reimbursement.claimAmount.roundToTwoDecimalPlaces
+                  )
                 )
               )
           }

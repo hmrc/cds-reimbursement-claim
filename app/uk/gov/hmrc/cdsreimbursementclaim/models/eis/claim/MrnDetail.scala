@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import cats.data.Validated.Valid
 import cats.data.{Ior, ValidatedNel}
-import cats.implicits.catsSyntaxOption
+import cats.implicits.{catsSyntaxOption, toTraverseOps}
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Street
@@ -69,11 +69,11 @@ object MrnDetail {
       copy(validated.map(_.copy(procedureCode = Some(procedureCode))))
 
     def withDeclarantDetails(declarantDetails: DeclarantDetails): Builder =
-      copy(validated.andThen { detail =>
+      copy(validated.andThen { mrnDetails =>
         declarantDetails.contactDetails
           .toValidNel(Error("The declarant contact information is missing"))
           .map { contactDetails =>
-            detail.copy(declarantDetails =
+            mrnDetails.copy(declarantDetails =
               Some(
                 MRNInformation(
                   EORI = declarantDetails.EORI,
@@ -113,14 +113,14 @@ object MrnDetail {
       })
 
     def withConsigneeDetails(maybeConsigneeDetails: Option[ConsigneeDetails]): Builder =
-      copy(validated.andThen { detail =>
+      copy(validated.andThen { mrnDetails =>
         maybeConsigneeDetails
           .toValidNel(Error("The consignee details are missing"))
           .andThen { consigneeDetails =>
             consigneeDetails.contactDetails
               .toValidNel(Error("The consignee contact information is missing"))
               .map { contactInformation =>
-                detail.copy(consigneeDetails =
+                mrnDetails.copy(consigneeDetails =
                   Some(
                     MRNInformation(
                       EORI = consigneeDetails.EORI,
@@ -164,7 +164,7 @@ object MrnDetail {
       if (boolean) withBankDetails(f) else this
 
     def withBankDetails(maybeBankDetails: Option[Ior[response.BankDetails, BankAccountDetails]]): Builder =
-      copy(validated.andThen { detail =>
+      copy(validated.andThen { mrnDetails =>
         maybeBankDetails
           .toValidNel(Error("Missing bank details"))
           .map(
@@ -186,7 +186,7 @@ object MrnDetail {
                 )
             )
           )
-          .map(bankDetails => detail.copy(bankDetails = Some(bankDetails)))
+          .map(bankDetails => mrnDetails.copy(bankDetails = Some(bankDetails)))
       })
 
     def withAccountDetails(maybeAccountDetails: Option[List[AccountDetails]]): Builder =
@@ -220,6 +220,16 @@ object MrnDetail {
         )
       )
 
+    @SuppressWarnings(Array("org.wartremover.warts.Any"))
+    def withNdrcDetails(validatedNdrcDetails: List[ValidatedNel[Error, NdrcDetails]]): Builder =
+      copy(
+        validated.andThen { mrnDetails =>
+          validatedNdrcDetails
+            .ensuring(_.nonEmpty)
+            .sequence
+            .map(ndrcDetails => mrnDetails.copy(NDRCDetails = Some(ndrcDetails)))
+        }
+      )
   }
 
   implicit val format: OFormat[MrnDetail] = Json.format[MrnDetail]
