@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, Declara
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
@@ -115,6 +116,30 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
               )
           }
         }: _*
+      )
+      .withMaybeDuplicateMrnDetails(
+        request.claim.duplicateDisplayDeclaration.map(_.displayResponseDetail).map { displayDeclaration =>
+          MrnDetail.build
+            .withMrnNumber(MRN(displayDeclaration.declarationId))
+            .withAcceptanceDate(displayDeclaration.acceptanceDate)
+            .withDeclarantReferenceNumber(displayDeclaration.declarantReferenceNumber)
+            .withWhetherMainDeclarationReference(true)
+            .withProcedureCode(displayDeclaration.procedureCode)
+            .withDeclarantDetails(displayDeclaration.declarantDetails)
+            .withConsigneeDetails(displayDeclaration.consigneeDetails)
+            .withBankDetails(Ior.fromOptions(displayDeclaration.bankDetails, request.claim.bankAccountDetailsAnswer))
+            .withNdrcDetails(
+              request.claim.claims.toList.map { reimbursement =>
+                NdrcDetails.buildChecking(
+                  reimbursement.taxCode,
+                  reimbursement.paymentMethod,
+                  reimbursement.paymentReference,
+                  reimbursement.paidAmount.roundToTwoDecimalPlaces,
+                  reimbursement.claimAmount.roundToTwoDecimalPlaces
+                )
+              }
+            )
+        }
       )
       .verify
 }

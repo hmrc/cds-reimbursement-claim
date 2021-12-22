@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.data.{Validated}
+import cats.data.Validated
 import cats.data.Validated.Valid
 import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
@@ -44,13 +44,13 @@ object TPI05 {
     )
   )
 
-  final case class Builder private (validation: Validated[Error, RequestDetail]) extends AnyVal {
+  final case class Builder private (validatedRequest: Validated[Error, RequestDetail]) extends AnyVal {
 
     def forClaimOfType(claimType: ClaimType): Builder =
-      copy(validation.map(_.copy(claimType = Some(claimType))))
+      copy(validatedRequest.map(_.copy(claimType = Some(claimType))))
 
     def withClaimedAmount(claimedAmount: BigDecimal): Builder =
-      copy(validation.andThen { request =>
+      copy(validatedRequest.andThen { request =>
         Validated.cond(
           claimedAmount > 0,
           request.copy(
@@ -61,17 +61,17 @@ object TPI05 {
       })
 
     def withCaseType(caseType: CaseType): Builder =
-      copy(validation.map(_.copy(caseType = Some(caseType))))
+      copy(validatedRequest.map(_.copy(caseType = Some(caseType))))
 
     def withDeclarationMode(declarationMode: DeclarationMode): Builder =
-      copy(validation.map(_.copy(declarationMode = Some(declarationMode))))
+      copy(validatedRequest.map(_.copy(declarationMode = Some(declarationMode))))
 
     def withDisposalMethod(methodOfDisposal: MethodOfDisposal): Builder =
-      copy(validation.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05Key))))
+      copy(validatedRequest.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05Key))))
 
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(
-        validation.map(
+        validatedRequest.map(
           _.copy(reimbursementMethod =
             Some(
               if (reimbursementMethod === CurrentMonthAdjustment) ReimbursementMethod.Deferment
@@ -82,11 +82,11 @@ object TPI05 {
       )
 
     def withBasisOfClaim(basisOfClaim: String): Builder =
-      copy(validation.map(_.copy(basisOfClaim = Some(basisOfClaim))))
+      copy(validatedRequest.map(_.copy(basisOfClaim = Some(basisOfClaim))))
 
     def withClaimant(claimant: Claimant): Builder =
       copy(
-        validation.map(
+        validatedRequest.map(
           _.copy(
             claimant = Some(claimant),
             payeeIndicator = Some(claimant)
@@ -95,7 +95,7 @@ object TPI05 {
       )
 
     def withClaimantEmail(claimantEmailAddress: Option[Email]): Builder =
-      copy(validation.andThen { request =>
+      copy(validatedRequest.andThen { request =>
         Validated.cond(
           claimantEmailAddress.nonEmpty,
           request.copy(claimantEmailAddress = claimantEmailAddress),
@@ -104,14 +104,14 @@ object TPI05 {
       })
 
     def withClaimantEORI(eori: Eori): Builder =
-      copy(validation.map(_.copy(claimantEORI = Some(eori))))
+      copy(validatedRequest.map(_.copy(claimantEORI = Some(eori))))
 
     def withEORIDetails(eoriDetails: EoriDetails): Builder =
-      copy(validation.map(_.copy(EORIDetails = Some(eoriDetails))))
+      copy(validatedRequest.map(_.copy(EORIDetails = Some(eoriDetails))))
 
     @SuppressWarnings(Array("org.wartremover.warts.Any"))
     def withMrnDetails(mrnDetails: MrnDetail.Builder*): Builder =
-      copy(validation.andThen { request =>
+      copy(validatedRequest.andThen { request =>
         mrnDetails.toList
           .ensuring(_.nonEmpty)
           .map(_.validated)
@@ -120,18 +120,27 @@ object TPI05 {
             request.copy(MRNDetails = Some(details))
           }
           .leftMap { errors =>
-            Error(s"There is at least one claim which has failed validation: ${errors.toList.mkString("|")}")
+            Error(s"Cannot build MRN detail due to validation errors: ${errors.toList.mkString("|")}")
           }
       })
 
-//    def withDuplicateMrnDetails(): Builder =
-//      copy()
+    @SuppressWarnings(Array("org.wartremover.warts.Any"))
+    def withMaybeDuplicateMrnDetails(maybeDuplicateMrnDetails: Option[MrnDetail.Builder]): Builder =
+      copy(validatedRequest.andThen { request =>
+        maybeDuplicateMrnDetails
+          .map(_.validated)
+          .sequence
+          .map(maybeDetails => request.copy(duplicateMRNDetails = maybeDetails))
+          .leftMap { errors =>
+            Error(s"Cannot build Duplicate MRN detail due to validation errors: ${errors.toList.mkString("|")}")
+          }
+      })
 
     def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
-      copy(validation.map(_.copy(goodsDetails = Some(goodsDetails))))
+      copy(validatedRequest.map(_.copy(goodsDetails = Some(goodsDetails))))
 
     def verify: Either[Error, EisSubmitClaimRequest] =
-      validation.toEither.map { requestDetail =>
+      validatedRequest.toEither.map { requestDetail =>
         EisSubmitClaimRequest(
           PostNewClaimsRequest(
             RequestCommon(
