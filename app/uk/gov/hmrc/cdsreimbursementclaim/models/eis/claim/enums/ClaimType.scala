@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import play.api.libs.json.Writes
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
 
 sealed trait ClaimType extends Product with Serializable
 
@@ -31,5 +31,5 @@ object ClaimType {
     override def toString: String = "C&E1179"
   }
 
-  implicit val writes: Writes[ClaimType] = EnumerationToStringWrites[ClaimType]
+  implicit val writes: Writes[ClaimType] = WriteEnumerationToString[ClaimType]
 }

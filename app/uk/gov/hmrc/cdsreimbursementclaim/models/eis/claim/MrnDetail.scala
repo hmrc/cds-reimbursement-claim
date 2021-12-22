@@ -21,9 +21,10 @@ import cats.data.{Ior, ValidatedNel}
 import cats.implicits.catsSyntaxOption
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Street
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
 final case class MrnDetail(
@@ -67,44 +68,91 @@ object MrnDetail {
     def withProcedureCode(procedureCode: String): Builder =
       copy(validated.map(_.copy(procedureCode = Some(procedureCode))))
 
-    def withDeclarantDetails(
-      eori: Eori,
-      legalName: String,
-      address: Address,
-      maybeContactInformation: Option[ContactInformation]
-    ): Builder =
+    def withDeclarantDetails(declarantDetails: DeclarantDetails): Builder =
       copy(validated.andThen { detail =>
-        maybeContactInformation
+        declarantDetails.contactDetails
           .toValidNel(Error("The declarant contact information is missing"))
-          .map { inf =>
+          .map { contactDetails =>
             detail.copy(declarantDetails =
               Some(
                 MRNInformation(
-                  EORI = eori,
-                  legalName = legalName,
-                  establishmentAddress = address,
-                  contactDetails = inf
+                  EORI = declarantDetails.EORI,
+                  legalName = declarantDetails.legalName,
+                  establishmentAddress = Address(
+                    contactPerson = None,
+                    addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
+                    addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+                    AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                    street = Street.fromLines(
+                      Option(declarantDetails.establishmentAddress.addressLine1),
+                      declarantDetails.establishmentAddress.addressLine2
+                    ),
+                    city = declarantDetails.establishmentAddress.addressLine3,
+                    countryCode = declarantDetails.establishmentAddress.countryCode,
+                    postalCode = declarantDetails.establishmentAddress.postalCode,
+                    telephone = None,
+                    emailAddress = None
+                  ),
+                  contactDetails = ContactInformation(
+                    contactPerson = contactDetails.contactName,
+                    addressLine1 = contactDetails.addressLine1,
+                    addressLine2 = contactDetails.addressLine2,
+                    addressLine3 = contactDetails.addressLine3,
+                    street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
+                    city = contactDetails.addressLine3,
+                    countryCode = contactDetails.countryCode,
+                    postalCode = contactDetails.postalCode,
+                    telephoneNumber = contactDetails.telephone,
+                    faxNumber = None,
+                    emailAddress = contactDetails.emailAddress
+                  )
                 )
               )
             )
           }
       })
 
-    def withConsigneeDetails(maybeDetails: Option[(Eori, String, Address, Option[ContactInformation])]): Builder =
+    def withConsigneeDetails(maybeConsigneeDetails: Option[ConsigneeDetails]): Builder =
       copy(validated.andThen { detail =>
-        maybeDetails
+        maybeConsigneeDetails
           .toValidNel(Error("The consignee details are missing"))
           .andThen { consigneeDetails =>
-            consigneeDetails._4
+            consigneeDetails.contactDetails
               .toValidNel(Error("The consignee contact information is missing"))
               .map { contactInformation =>
                 detail.copy(consigneeDetails =
                   Some(
                     MRNInformation(
-                      EORI = consigneeDetails._1,
-                      legalName = consigneeDetails._2,
-                      establishmentAddress = consigneeDetails._3,
-                      contactDetails = contactInformation
+                      EORI = consigneeDetails.EORI,
+                      legalName = consigneeDetails.legalName,
+                      establishmentAddress = Address(
+                        contactPerson = None,
+                        addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
+                        addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+                        AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                        street = Street.fromLines(
+                          Option(consigneeDetails.establishmentAddress.addressLine1),
+                          consigneeDetails.establishmentAddress.addressLine2
+                        ),
+                        city = consigneeDetails.establishmentAddress.addressLine3,
+                        countryCode = consigneeDetails.establishmentAddress.countryCode,
+                        postalCode = consigneeDetails.establishmentAddress.postalCode,
+                        telephone = None,
+                        emailAddress = None
+                      ),
+                      contactDetails = ContactInformation(
+                        contactPerson = contactInformation.contactName,
+                        addressLine1 = contactInformation.addressLine1,
+                        addressLine2 = contactInformation.addressLine2,
+                        addressLine3 = contactInformation.addressLine3,
+                        street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
+                        city = contactInformation.addressLine3,
+                        countryCode = contactInformation.countryCode,
+                        postalCode = contactInformation.postalCode,
+                        telephoneNumber = contactInformation.telephone,
+                        faxNumber = None,
+                        emailAddress = contactInformation.emailAddress
+                      )
                     )
                   )
                 )
@@ -112,7 +160,66 @@ object MrnDetail {
           }
       })
 
-    def withBankDetails(option: Option[Ior[response.BankDetails, BankAccountDetails]]): Builder = ???
+    def withBankDetailsWhen(boolean: Boolean, f: => Option[Ior[response.BankDetails, BankAccountDetails]]): Builder =
+      if (boolean) withBankDetails(f) else this
+
+    def withBankDetails(maybeBankDetails: Option[Ior[response.BankDetails, BankAccountDetails]]): Builder =
+      copy(validated.andThen { detail =>
+        maybeBankDetails
+          .toValidNel(Error("Missing bank details"))
+          .map(
+            _.fold(
+              bankDetails =>
+                BankDetails(
+                  declarantBankDetails = bankDetails.declarantBankDetails.map(BankDetail.from),
+                  consigneeBankDetails = bankDetails.consigneeBankDetails.map(BankDetail.from)
+                ),
+              bankAccountDetails =>
+                BankDetails(
+                  consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
+                  declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+                ),
+              (_, bankAccountDetails) =>
+                BankDetails(
+                  consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
+                  declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+                )
+            )
+          )
+          .map(bankDetails => detail.copy(bankDetails = Some(bankDetails)))
+      })
+
+    def withAccountDetails(maybeAccountDetails: Option[List[AccountDetails]]): Builder =
+      maybeAccountDetails.fold(this)(accountDetails =>
+        copy(
+          validated.map(
+            _.copy(accountDetails = Some(accountDetails.map { accountDetail =>
+              AccountDetail(
+                accountType = accountDetail.accountType,
+                accountNumber = accountDetail.accountNumber,
+                EORI = accountDetail.eori,
+                legalName = accountDetail.legalName,
+                contactDetails = accountDetail.contactDetails.map { contactDetails =>
+                  ContactInformation(
+                    contactPerson = contactDetails.contactName,
+                    addressLine1 = contactDetails.addressLine1,
+                    addressLine2 = contactDetails.addressLine2,
+                    addressLine3 = contactDetails.addressLine3,
+                    street = contactDetails.addressLine4,
+                    city = None,
+                    countryCode = contactDetails.countryCode,
+                    postalCode = contactDetails.postalCode,
+                    telephoneNumber = contactDetails.telephone,
+                    faxNumber = None,
+                    emailAddress = contactDetails.emailAddress
+                  )
+                }
+              )
+            }))
+          )
+        )
+      )
+
   }
 
   implicit val format: OFormat[MrnDetail] = Json.format[MrnDetail]

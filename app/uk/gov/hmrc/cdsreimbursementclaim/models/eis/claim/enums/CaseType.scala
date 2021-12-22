@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ReimbursementMethodAnswer, TypeOfClaimAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
 
 sealed trait CaseType extends Product with Serializable
 
@@ -37,5 +37,5 @@ object CaseType {
       case _                                => CaseType.Individual
     }
 
-  implicit val writes: Writes[CaseType] = EnumerationToStringWrites[CaseType]
+  implicit val writes: Writes[CaseType] = WriteEnumerationToString[CaseType]
 }

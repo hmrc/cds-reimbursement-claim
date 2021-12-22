@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.utils
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{JsString, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-object EnumerationToStringWrites {
+sealed trait InspectionAddressType
 
-  def apply[A]: Writes[A] =
-    Writes((enumeration: A) => JsString(enumeration.toString))
+object InspectionAddressType extends EnumerationFormat[InspectionAddressType] {
+
+  final case object Importer extends InspectionAddressType
+  final case object Declarant extends InspectionAddressType
+  final case object Other extends InspectionAddressType
+
+  override val values: Set[InspectionAddressType] =
+    Set(Importer, Declarant, Other)
 }

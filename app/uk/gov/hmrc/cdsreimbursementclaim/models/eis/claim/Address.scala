@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country
 
 final case class Address(
   contactPerson: Option[String],
@@ -33,20 +32,5 @@ final case class Address(
 )
 
 object Address {
-
-  def from(contactInformation: ContactInformation): Address =
-    Address(
-      contactPerson = contactInformation.contactPerson,
-      addressLine1 = contactInformation.addressLine1,
-      addressLine2 = contactInformation.addressLine2,
-      AddressLine3 = contactInformation.addressLine3,
-      street = contactInformation.street,
-      city = contactInformation.city,
-      countryCode = contactInformation.countryCode.getOrElse(Country.uk.code),
-      postalCode = contactInformation.postalCode,
-      telephone = contactInformation.telephoneNumber,
-      emailAddress = contactInformation.emailAddress
-    )
-
   implicit val format: OFormat[Address] = Json.format[Address]
 }

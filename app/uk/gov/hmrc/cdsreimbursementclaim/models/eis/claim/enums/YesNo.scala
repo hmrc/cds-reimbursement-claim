@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 import cats.Eq
 import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
 
 sealed trait YesNo extends Product with Serializable
 
@@ -36,5 +36,5 @@ object YesNo {
 
   implicit val equality: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
 
-  implicit val writes: Writes[YesNo] = EnumerationToStringWrites[YesNo]
+  implicit val writes: Writes[YesNo] = WriteEnumerationToString[YesNo]
 }

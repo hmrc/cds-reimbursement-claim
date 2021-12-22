@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import play.api.libs.json.Writes
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import play.api.libs.json.{JsString, Writes}
 
-sealed trait CDFPayService extends Product with Serializable
+object WriteEnumerationToString {
 
-object CDFPayService {
-
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  implicit val writes: Writes[CDFPayService] = WriteEnumerationToString[CDFPayService]
+  def apply[A]: Writes[A] =
+    Writes((enumeration: A) => JsString(enumeration.toString))
 }

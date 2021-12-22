@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 import cats.data.Ior
 import cats.implicits.{catsSyntaxEq, catsSyntaxTuple2Semigroupal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, Country, DeclarantTypeAnswer, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, DeclarantTypeAnswer, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
@@ -45,6 +45,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
       )
       .withEORIDetails(
         EoriDetails(
+          importerEORIDetails = EORIInformation.forConsignee(request.claim.consigneeDetails),
           agentEORIDetails = EORIInformation(
             EORINumber = request.claim.declarantDetails.map(_.EORI),
             CDSFullName = request.claim.declarantDetails.map(_.legalName),
@@ -53,7 +54,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
               addressLine1 = Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
               addressLine2 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
               AddressLine3 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
-              street = Street.of(
+              street = Street.fromLines(
                 Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
                 request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
               ),
@@ -75,45 +76,6 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
                   }
                 )
             )
-          ),
-          importerEORIDetails = EORIInformation(
-            EORINumber = request.claim.consigneeDetails.map(_.EORI),
-            CDSFullName = request.claim.consigneeDetails.map(_.legalName),
-            CDSEstablishmentAddress = Address(
-              contactPerson = None,
-              addressLine1 = request.claim.consigneeDetails.map(_.establishmentAddress.addressLine1),
-              addressLine2 = request.claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2),
-              AddressLine3 = request.claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-              street = Street.of(
-                request.claim.consigneeDetails.map(_.establishmentAddress.addressLine1),
-                request.claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine2)
-              ),
-              city = request.claim.consigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-              countryCode = request.claim.consigneeDetails
-                .map(_.establishmentAddress.countryCode)
-                .getOrElse(Country.uk.code),
-              postalCode = request.claim.consigneeDetails.flatMap(_.establishmentAddress.postalCode),
-              telephone = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.telephone)),
-              emailAddress = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.emailAddress))
-            ),
-            contactInformation = Some(
-              ContactInformation(
-                contactPerson = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.contactName)),
-                addressLine1 = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
-                addressLine2 = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2)),
-                addressLine3 = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine3)),
-                street = Street.of(
-                  request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
-                  request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2))
-                ),
-                city = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine3)),
-                countryCode = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.countryCode)),
-                postalCode = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.postalCode)),
-                telephoneNumber = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.telephone)),
-                faxNumber = None,
-                emailAddress = request.claim.consigneeDetails.flatMap(_.contactDetails.flatMap(_.emailAddress))
-              )
-            )
           )
         )
       )
@@ -129,79 +91,11 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
               .withDeclarantReferenceNumber(displayDeclaration.displayResponseDetail.declarantReferenceNumber)
               .withWhetherMainDeclarationReference(request.claim.movementReferenceNumber.value === mrn.value)
               .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
-              .withDeclarantDetails(
-                declarantDetails.EORI,
-                declarantDetails.legalName,
-                Address(
-                  contactPerson = None,
-                  addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
-                  addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                  AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
-                  street = Street.of(
-                    Option(declarantDetails.establishmentAddress.addressLine1),
-                    declarantDetails.establishmentAddress.addressLine2
-                  ),
-                  city = declarantDetails.establishmentAddress.addressLine3,
-                  countryCode = declarantDetails.establishmentAddress.countryCode,
-                  postalCode = declarantDetails.establishmentAddress.postalCode,
-                  telephone = None,
-                  emailAddress = None
-                ),
-                declarantDetails.contactDetails.map(contactDetails =>
-                  ContactInformation(
-                    contactPerson = contactDetails.contactName,
-                    addressLine1 = contactDetails.addressLine1,
-                    addressLine2 = contactDetails.addressLine2,
-                    addressLine3 = contactDetails.addressLine3,
-                    street = Street.of(contactDetails.addressLine1, contactDetails.addressLine2),
-                    city = contactDetails.addressLine3,
-                    countryCode = contactDetails.countryCode,
-                    postalCode = contactDetails.postalCode,
-                    telephoneNumber = contactDetails.telephone,
-                    faxNumber = None,
-                    emailAddress = contactDetails.emailAddress
-                  )
-                )
-              )
-              .withConsigneeDetails(
-                maybeConsigneeDetails.map(consigneeDetails =>
-                  (
-                    consigneeDetails.EORI,
-                    consigneeDetails.legalName,
-                    Address(
-                      contactPerson = None,
-                      addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
-                      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                      AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-                      street = Street.of(
-                        Option(consigneeDetails.establishmentAddress.addressLine1),
-                        consigneeDetails.establishmentAddress.addressLine2
-                      ),
-                      city = consigneeDetails.establishmentAddress.addressLine3,
-                      countryCode = consigneeDetails.establishmentAddress.countryCode,
-                      postalCode = consigneeDetails.establishmentAddress.postalCode,
-                      telephone = None,
-                      emailAddress = None
-                    ),
-                    consigneeDetails.contactDetails.map(contactDetails =>
-                      ContactInformation(
-                        contactPerson = contactDetails.contactName,
-                        addressLine1 = contactDetails.addressLine1,
-                        addressLine2 = contactDetails.addressLine2,
-                        addressLine3 = contactDetails.addressLine3,
-                        street = Street.of(contactDetails.addressLine1, contactDetails.addressLine2),
-                        city = contactDetails.addressLine3,
-                        countryCode = contactDetails.countryCode,
-                        postalCode = contactDetails.postalCode,
-                        telephoneNumber = contactDetails.telephone,
-                        faxNumber = None,
-                        emailAddress = contactDetails.emailAddress
-                      )
-                    )
-                  )
-                )
-              )
-              .withBankDetails(
+              .withDeclarantDetails(declarantDetails)
+              .withConsigneeDetails(maybeConsigneeDetails)
+              .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
+              .withBankDetailsWhen(
+                request.claim.movementReferenceNumber.value === mrn.value,
                 Ior.fromOptions(
                   displayDeclaration.displayResponseDetail.bankDetails,
                   request.claim.bankAccountDetailsAnswer

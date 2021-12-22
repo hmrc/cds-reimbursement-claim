@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 object Street {
 
-  def of(line1: Option[String], line2: Option[String]): Option[String] =
+  def fromLines(line1: Option[String], line2: Option[String]): Option[String] =
     (line1, line2) match {
       case (Some(s1), Some(s2)) => Some(s"$s1 $s2")
       case (Some(s1), None)     => Some(s1)

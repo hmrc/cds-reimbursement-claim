@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import play.api.libs.json.Writes
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationToStringWrites
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
 
 sealed trait CustomDeclarationType extends Product with Serializable
 
@@ -26,5 +26,5 @@ object CustomDeclarationType {
   final case object MRN extends CustomDeclarationType
   final case object Entry extends CustomDeclarationType
 
-  implicit val writes: Writes[CustomDeclarationType] = EnumerationToStringWrites[CustomDeclarationType]
+  implicit val writes: Writes[CustomDeclarationType] = WriteEnumerationToString[CustomDeclarationType]
 }

@@ -42,7 +42,7 @@ object ContactInformation {
       addressLine1 = Option(contactAddress.line1),
       addressLine2 = contactAddress.line2,
       addressLine3 = contactAddress.line3,
-      street = Street.of(Option(contactAddress.line1), contactAddress.line2),
+      street = Street.fromLines(Option(contactAddress.line1), contactAddress.line2),
       city = Option(contactAddress.line4),
       countryCode = Option(contactAddress.country.code),
       postalCode = Option(contactAddress.postcode.value),
@@ -60,7 +60,7 @@ object ContactInformation {
       addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
       addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
       addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
-      street = Street.of(
+      street = Street.fromLines(
         maybeContactDetails.flatMap(_.addressLine1),
         maybeContactDetails.flatMap(_.addressLine2)
       ),

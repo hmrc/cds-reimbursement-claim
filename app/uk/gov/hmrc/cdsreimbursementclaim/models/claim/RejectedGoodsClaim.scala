@@ -34,6 +34,7 @@ final case class RejectedGoodsClaim(
   inspectionDate: LocalDate,
   inspectionAddress: InspectionAddress,
   totalReimbursementAmount: BigDecimal,
+  reimbursementClaims: Map[TaxCode, BigDecimal],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument]
@@ -41,8 +42,8 @@ final case class RejectedGoodsClaim(
 
 object RejectedGoodsClaim {
 
-  implicit lazy val mapFormat: Format[Map[UploadDocument, DocumentTypeRejectedGoods]] =
-    MapFormat[UploadDocument, DocumentTypeRejectedGoods]
+  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =
+    MapFormat[TaxCode, BigDecimal]
 
   implicit val format: Format[RejectedGoodsClaim] = Json.format[RejectedGoodsClaim]
 }
