@@ -32,13 +32,17 @@ final case class RejectedGoodsClaim(
   methodOfDisposal: MethodOfDisposal,
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
+  inspectionAddressType: InspectionAddressType,
   inspectionAddress: InspectionAddress,
-  totalReimbursementAmount: BigDecimal,
   reimbursementClaims: Map[TaxCode, BigDecimal],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument]
-)
+) {
+
+  def totalReimbursementAmount: BigDecimal =
+    reimbursementClaims.values.sum
+}
 
 object RejectedGoodsClaim {
 

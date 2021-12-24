@@ -21,11 +21,10 @@ import play.api.libs.json.{Format, Json}
 
 final case class InspectionAddress(
   addressLine1: String,
-  addressLine2: Option[String] = None,
-  addressLine3: Option[String] = None,
-  city: Option[String] = None,
-  postalCode: Postcode,
-  addressType: InspectionAddressType
+  addressLine2: String,
+  city: String,
+  countryCode: String,
+  postalCode: Postcode
 )
 
 object InspectionAddress {

@@ -33,7 +33,7 @@ object BasisOfRejectedGoodsClaim extends EnumerationFormat[BasisOfRejectedGoodsC
   }
 
   case object NotInAccordanceWithContract extends BasisOfRejectedGoodsClaim {
-    def toTPI05Key: String = "Not In Accordance with Contract"
+    def toTPI05Key: String = "Not in Accordance with Contract"
   }
 
   case object SpecialCircumstances extends BasisOfRejectedGoodsClaim {

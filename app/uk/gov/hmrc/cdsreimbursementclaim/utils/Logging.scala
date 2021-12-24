@@ -29,8 +29,8 @@ object Logging {
   implicit class LoggerOps(private val logger: Logger) extends AnyVal {
 
     def warn(msg: => String, e: => Error): Unit = e.value match {
-      case throwable: Throwable => logger.warn(s"$msg:", throwable)
-      case message              => logger.warn(s"$msg: $message")
+      case throwable: Throwable => logger.warn(s"$msg because", throwable)
+      case message              => logger.warn(s"$msg because $message")
     }
   }
 }

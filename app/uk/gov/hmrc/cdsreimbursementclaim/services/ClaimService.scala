@@ -70,7 +70,7 @@ class DefaultClaimService @Inject() (
   )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse] = for {
     eisSubmitRequest       <- EitherT
                                 .fromEither[Future](EisSubmitClaimRequest(c285ClaimRequest))
-                                .leftMap(e => Error(s"could not make TPIO5 payload: $e"))
+                                .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
     _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
     returnHttpResponse     <- submitClaimAndAudit(c285ClaimRequest, eisSubmitRequest)
     eisSubmitClaimResponse <- EitherT.fromEither[Future](
@@ -93,7 +93,7 @@ class DefaultClaimService @Inject() (
                                 .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
     eisSubmitRequest       <- EitherT
                                 .fromEither[Future](EisSubmitClaimRequest((rejectedGoodsClaimRequest.claim, declaration)))
-                                .leftMap(e => Error(s"could not make TPIO5 payload: $e"))
+                                .leftMap(e => Error(s"could not make TPIO5 payload. Cause: ${e.value}"))
     _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
     returnHttpResponse     <- submitClaimAndAudit(rejectedGoodsClaimRequest, eisSubmitRequest)
     eisSubmitClaimResponse <- EitherT.fromEither[Future](
