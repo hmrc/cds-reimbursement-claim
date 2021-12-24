@@ -30,7 +30,7 @@ final case class RequestDetail(
   customDeclarationType: Option[CustomDeclarationType] = None,
   declarationMode: Option[DeclarationMode] = None,
   claimDate: Option[String] = None,
-  claimAmountTotal: Option[BigDecimal] = None,
+  claimAmountTotal: Option[String] = None,
   disposalMethod: Option[String] = None,
   reimbursementMethod: Option[ReimbursementMethod] = None,
   basisOfClaim: Option[String] = None,

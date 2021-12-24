@@ -115,7 +115,7 @@ class DefaultClaimService @Inject() (
       details.EORIDetails
         .flatMap(_.agentEORIDetails.contactInformation)
         .flatMap(_.contactPerson),
-      details.claimAmountTotal
+      details.claimAmountTotal.map(BigDecimal(_))
     ) mapN (EmailRequest(_, _, _))
 
     EitherT.fromOption[Future](maybeEmailRequest, Error("Cannot create Email request because required fields missing"))

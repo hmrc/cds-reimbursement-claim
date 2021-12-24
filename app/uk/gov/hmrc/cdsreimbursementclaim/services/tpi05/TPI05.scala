@@ -54,7 +54,7 @@ object TPI05 {
         Validated.cond(
           claimedAmount > 0,
           request.copy(
-            claimAmountTotal = Some(claimedAmount.roundToTwoDecimalPlaces)
+            claimAmountTotal = Some(claimedAmount.roundToTwoDecimalPlaces.toString())
           ),
           Error("Total reimbursement amount must be greater than zero")
         )
