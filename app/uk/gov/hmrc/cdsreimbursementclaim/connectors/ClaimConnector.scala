@@ -47,7 +47,14 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
 
   override def submitClaim(
     submitClaimRequest: EisSubmitClaimRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] = {
+
+    val a = Json.toJson(submitClaimRequest)
+
+    val s = a.toString()
+
+    println(s)
+
     EitherT[Future, Error, HttpResponse](
       http
         .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(submitClaimRequest), getExplicitHeaders)(
@@ -59,5 +66,6 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
+  }
 
 }

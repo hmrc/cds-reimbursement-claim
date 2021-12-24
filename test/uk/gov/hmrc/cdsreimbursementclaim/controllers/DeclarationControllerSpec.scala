@@ -25,6 +25,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN

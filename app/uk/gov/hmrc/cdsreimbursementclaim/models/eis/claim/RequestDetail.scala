@@ -43,7 +43,7 @@ final case class RequestDetail(
   claimantEmailAddress: Option[Email] = None,
   goodsDetails: Option[GoodsDetails] = None,
   EORIDetails: Option[EoriDetails] = None,
-  MRNDetails: Option[List[MrnDetail]] = None, //
+  MRNDetails: Option[List[MrnDetail]] = None,
   duplicateMRNDetails: Option[MrnDetail] = None
 )
 

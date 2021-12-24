@@ -17,15 +17,16 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 
 object ClaimGen {
+  import BankAccountDetailsGen._
 
   implicit lazy val displayResponseGen: Typeclass[DisplayResponseDetail]         = gen[DisplayResponseDetail]
   implicit lazy val displayDeclarationGen: Typeclass[DisplayDeclaration]         = gen[DisplayDeclaration]
-  implicit lazy val eisRequestBGen: Typeclass[RequestDetailB]                    = gen[RequestDetailB]
-  implicit lazy val eisRequestAGen: Typeclass[RequestDetailA]                    = gen[RequestDetailA]
+  implicit lazy val eisRequestGen: Typeclass[RequestDetail]                      = gen[RequestDetail]
   implicit lazy val eisRequestCommonGen: Typeclass[RequestCommon]                = gen[RequestCommon]
   implicit lazy val eisSubmitClaimResponseGen: Typeclass[EisSubmitClaimResponse] = gen[EisSubmitClaimResponse]
   implicit lazy val eisSubmitClaimRequestGen: Typeclass[EisSubmitClaimRequest]   = gen[EisSubmitClaimRequest]

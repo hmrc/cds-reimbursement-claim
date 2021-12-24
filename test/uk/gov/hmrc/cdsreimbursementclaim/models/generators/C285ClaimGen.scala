@@ -26,15 +26,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 
 object C285ClaimGen {
+  import EmailGen._
+  import BankAccountDetailsGen._
+  import ClaimedReimbursementGen._
 
   implicit val detailsRegisteredWithCdsAnswerGen: Typeclass[DetailsRegisteredWithCdsAnswer] =
     gen[DetailsRegisteredWithCdsAnswer]
   implicit val contactAddressGen: Typeclass[ContactAddress]                                 = gen[ContactAddress]
   implicit val mrnContactDetailsGen: Typeclass[MrnContactDetails]                           = gen[MrnContactDetails]
-  implicit val claimGen: Typeclass[ClaimedReimbursement]                                    = ClaimedReimbursementGen.arbitraryClaimedReimbursement
   implicit val claimedReimbursementAnswerGen: Typeclass[ClaimedReimbursementsAnswer]        = gen[ClaimedReimbursementsAnswer]
-  implicit val bankAccountDetailsAnswerGen: Typeclass[BankAccountDetails]                   =
-    gen[BankAccountDetails]
   implicit val mrnInformationGen: Typeclass[MRNInformation]                                 = gen[MRNInformation]
   implicit val basisOfClaimAnswerGen: Typeclass[BasisOfClaim]                               = gen[BasisOfClaim]
   implicit val declarantTypeAnswerGen: Typeclass[DeclarantTypeAnswer]                       = gen[DeclarantTypeAnswer]

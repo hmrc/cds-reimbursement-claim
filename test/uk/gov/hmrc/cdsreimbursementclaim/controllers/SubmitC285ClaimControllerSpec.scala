@@ -25,7 +25,7 @@ import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -38,7 +38,7 @@ import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubmitClaimControllerSpec extends ControllerSpec {
+class SubmitC285ClaimControllerSpec extends ControllerSpec {
 
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
@@ -61,11 +61,11 @@ class SubmitClaimControllerSpec extends ControllerSpec {
     Helpers.stubControllerComponents()
   )
 
-  def mockSubmitClaimService(request: C285ClaimRequest)(
+  def mockSubmitC285ClaimService(request: C285ClaimRequest)(
     response: Either[Error, ClaimSubmitResponse]
   ): CallHandler3[C285ClaimRequest, HeaderCarrier, Request[_], EitherT[Future, Error, ClaimSubmitResponse]] =
     (mockClaimService
-      .submitClaim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_]))
+      .submitC285Claim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_]))
       .expects(request, *, *)
       .returning(EitherT.fromEither[Future](response))
 
@@ -93,11 +93,11 @@ class SubmitClaimControllerSpec extends ControllerSpec {
         val submitClaimResponse = sample[ClaimSubmitResponse]
 
         inSequence {
-          mockSubmitClaimService(submitClaimRequest)(Right(submitClaimResponse))
+          mockSubmitC285ClaimService(submitClaimRequest)(Right(submitClaimResponse))
           mockCcsRequestEnqueue(submitClaimRequest, submitClaimResponse)
         }
 
-        val result = controller.submitClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
+        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
         status(result)        shouldBe OK
         contentAsJson(result) shouldBe Json.toJson(submitClaimResponse)
       }
@@ -107,13 +107,12 @@ class SubmitClaimControllerSpec extends ControllerSpec {
         val submitClaimRequest = sample[C285ClaimRequest]
 
         inSequence {
-          mockSubmitClaimService(submitClaimRequest)(Left(Error("boom!")))
+          mockSubmitC285ClaimService(submitClaimRequest)(Left(Error("boom!")))
         }
 
-        val result = controller.submitClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
+        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
-
   }
 }

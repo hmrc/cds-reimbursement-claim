@@ -26,7 +26,7 @@ object ClaimedReimbursementGen {
     id               <- arbitraryUuid.arbitrary
     paymentMethod    <- Gen.listOfN(3, Gen.alphaUpperChar).map(_.mkString(""))
     paymentReference <- genStringWithMaxSizeOfN(max = 18)
-    taxCode          <- Gen.oneOf(TaxCode.allTaxCodes)
+    taxCode          <- Gen.oneOf(TaxCode.values)
     paidAmount       <- bigDecimalGen.arbitrary
     claimAmount      <- bigDecimalGen.arbitrary
     isFilled         <- arbitraryBoolean.arbitrary

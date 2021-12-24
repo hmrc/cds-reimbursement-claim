@@ -19,11 +19,12 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 
 object DeclarationGen {
-  implicit lazy val mrnGen: Typeclass[MRN]                                                                     = gen[MRN]
+  import IdGen._
+  import BankAccountDetailsGen._
+
   implicit lazy val requestCommonGen: Typeclass[RequestCommon]                                                 = gen[RequestCommon]
   implicit lazy val requestDetailGen: Typeclass[RequestDetail]                                                 = gen[RequestDetail]
   implicit lazy val overpaymentDeclarationDisplayRequestGen: Typeclass[OverpaymentDeclarationDisplayRequest]   =
@@ -34,10 +35,7 @@ object DeclarationGen {
   implicit lazy val declarantDetailsGen: Typeclass[DeclarantDetails]                                           = gen[DeclarantDetails]
   implicit lazy val accountDetailsGen: Typeclass[AccountDetails]                                               = gen[AccountDetails]
   implicit lazy val consigneeDetailsGen: Typeclass[ConsigneeDetails]                                           = gen[ConsigneeDetails]
-  implicit lazy val consigneeBankDetailsGen: Typeclass[ConsigneeBankDetails]                                   = gen[ConsigneeBankDetails]
-  implicit lazy val declarantBankDetailsGen: Typeclass[DeclarantBankDetails]                                   = gen[DeclarantBankDetails]
   implicit lazy val bankDetailsGen: Typeclass[BankDetails]                                                     = gen[BankDetails]
-  implicit lazy val maskedBankDetailsGen: Typeclass[MaskedBankDetails]                                         = gen[MaskedBankDetails]
   implicit lazy val taxDetailsGen: Typeclass[TaxDetails]                                                       = gen[TaxDetails]
   implicit lazy val securityDetailsGen: Typeclass[SecurityDetails]                                             = gen[SecurityDetails]
   implicit lazy val ndrcDetailsGen: Typeclass[NdrcDetails]                                                     = gen[NdrcDetails]
