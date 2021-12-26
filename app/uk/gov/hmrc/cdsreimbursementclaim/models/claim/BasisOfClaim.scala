@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.Eq
 import julienrf.json.derived
@@ -26,73 +26,93 @@ sealed trait BasisOfClaim extends Product with Serializable {
 
 object BasisOfClaim {
 
-  case object DuplicateEntry extends BasisOfClaim {
+  final case object DuplicateEntry extends BasisOfClaim {
     def toTPI05Key: String = "Duplicate Entry"
   }
 
-  case object DutySuspension extends BasisOfClaim {
+  final case object DutySuspension extends BasisOfClaim {
     def toTPI05Key: String = "Duty Suspension"
   }
 
-  case object EndUseRelief extends BasisOfClaim {
+  final case object EndUseRelief extends BasisOfClaim {
     def toTPI05Key: String = "End Use"
   }
 
-  case object IncorrectCommodityCode extends BasisOfClaim {
+  final case object IncorrectCommodityCode extends BasisOfClaim {
     def toTPI05Key: String = "Incorrect Commodity Code"
   }
 
-  case object IncorrectCpc extends BasisOfClaim {
+  final case object IncorrectCpc extends BasisOfClaim {
     def toTPI05Key: String = "Incorrect CPC"
   }
 
-  case object IncorrectValue extends BasisOfClaim {
+  final case object IncorrectValue extends BasisOfClaim {
     def toTPI05Key: String = "Incorrect Value"
   }
 
-  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim {
+  final case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim {
     def toTPI05Key: String = "Incorrect EORI & Deferment Acc. Num."
   }
 
-  case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim {
+  final case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim {
     def toTPI05Key: String = "IP"
   }
 
-  case object Miscellaneous extends BasisOfClaim {
+  final case object Miscellaneous extends BasisOfClaim {
     def toTPI05Key: String = "Miscellaneous"
   }
 
-  case object OutwardProcessingRelief extends BasisOfClaim {
+  final case object OutwardProcessingRelief extends BasisOfClaim {
     def toTPI05Key: String = "OPR"
   }
 
-  case object PersonalEffects extends BasisOfClaim {
+  final case object PersonalEffects extends BasisOfClaim {
     def toTPI05Key: String = "Personal Effects"
   }
 
-  case object Preference extends BasisOfClaim {
+  final case object Preference extends BasisOfClaim {
     def toTPI05Key: String = "Preference"
   }
 
-  case object RGR extends BasisOfClaim {
+  final case object RGR extends BasisOfClaim {
     def toTPI05Key: String = "RGR"
   }
 
-  case object ProofOfReturnRefundGiven extends BasisOfClaim {
+  final case object ProofOfReturnRefundGiven extends BasisOfClaim {
     def toTPI05Key: String = "Proof of Return/Refund Given"
   }
 
-  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim {
+  final case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim {
     def toTPI05Key: String = "Evidence That Goods Have Not Entered The EU"
   }
 
-  case object IncorrectExciseValue extends BasisOfClaim {
+  final case object IncorrectExciseValue extends BasisOfClaim {
     def toTPI05Key: String = "Incorrect Excise Value"
   }
 
-  case object IncorrectAdditionalInformationCode extends BasisOfClaim {
+  final case object IncorrectAdditionalInformationCode extends BasisOfClaim {
     def toTPI05Key: String = "Incorrect Additional Information Code"
   }
+
+  lazy val values: Set[BasisOfClaim] = Set(
+    DuplicateEntry,
+    DutySuspension,
+    EndUseRelief,
+    IncorrectCommodityCode,
+    IncorrectCpc,
+    IncorrectValue,
+    IncorrectEoriAndDefermentAccountNumber,
+    InwardProcessingReliefFromCustomsDuty,
+    Miscellaneous,
+    OutwardProcessingRelief,
+    PersonalEffects,
+    Preference,
+    RGR,
+    ProofOfReturnRefundGiven,
+    EvidenceThatGoodsHaveNotEnteredTheEU,
+    IncorrectExciseValue,
+    IncorrectAdditionalInformationCode
+  )
 
   implicit val equality: Eq[BasisOfClaim] = Eq.fromUniversalEquals
 

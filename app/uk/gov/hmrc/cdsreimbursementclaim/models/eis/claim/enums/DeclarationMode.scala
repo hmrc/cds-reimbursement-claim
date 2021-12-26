@@ -38,5 +38,7 @@ object DeclarationMode {
       case _                          => DeclarationMode.ParentDeclaration
     }
 
+  lazy val values: Set[DeclarationMode] = Set(ParentDeclaration, AllDeclaration)
+
   implicit val writes: Writes[DeclarationMode] = WriteEnumerationToString[DeclarationMode]
 }

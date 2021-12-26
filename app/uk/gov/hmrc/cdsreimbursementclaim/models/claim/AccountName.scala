@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import play.api.libs.json.Format
 import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
 
 final case class AccountName(value: String) extends AnyVal
 
 object AccountName {
+
+  implicit val equality: Eq[SortCode] =
+    Eq.fromUniversalEquals[SortCode]
 
   implicit val accountNameFormat: Format[AccountName] =
     SimpleStringFormat(AccountName(_), _.value)

@@ -18,13 +18,12 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import julienrf.json.derived
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Address.NonUkAddress
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 
 final case class DetailsRegisteredWithCdsAnswer(
   fullName: String,
   emailAddress: Email,
-  contactAddress: NonUkAddress,
+  contactAddress: ContactAddress,
   addCompanyDetails: Boolean
 )
 

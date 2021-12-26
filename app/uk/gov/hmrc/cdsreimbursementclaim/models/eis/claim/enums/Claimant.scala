@@ -43,5 +43,7 @@ object Claimant {
       case ClaimantType.User      => Representative
     }
 
+  lazy val values: Set[PayeeIndicator] = Set(Importer, Representative)
+
   implicit val writes: Writes[Claimant] = WriteEnumerationToString[Claimant]
 }

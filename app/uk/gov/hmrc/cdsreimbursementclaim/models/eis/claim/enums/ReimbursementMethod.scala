@@ -35,5 +35,7 @@ object ReimbursementMethod {
     override def toString: String = "Payable Order"
   }
 
+  lazy val values: Set[ReimbursementMethod] = Set(Deferment, BankTransfer, PayableOrder)
+
   implicit val writes: Writes[ReimbursementMethod] = WriteEnumerationToString[ReimbursementMethod]
 }

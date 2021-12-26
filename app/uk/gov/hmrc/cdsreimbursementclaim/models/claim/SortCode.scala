@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
@@ -23,7 +24,9 @@ final case class SortCode(value: String) extends AnyVal
 
 object SortCode {
 
+  implicit val equality: Eq[SortCode] =
+    Eq.fromUniversalEquals[SortCode]
+
   implicit val format: Format[SortCode] =
     implicitly[Format[String]].inmap(SortCode(_), _.value)
-
 }

@@ -37,4 +37,6 @@ object YesNo {
   implicit val equality: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
 
   implicit val writes: Writes[YesNo] = WriteEnumerationToString[YesNo]
+
+  lazy val values: Set[YesNo] = Set(Yes, No)
 }

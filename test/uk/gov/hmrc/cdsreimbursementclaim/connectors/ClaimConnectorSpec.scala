@@ -26,7 +26,7 @@ import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

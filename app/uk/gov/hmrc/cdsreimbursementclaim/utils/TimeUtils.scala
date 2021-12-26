@@ -16,46 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import org.joda.time.{DateTime, DateTimeZone}
-
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.util.TimeZone
-import scala.util.Try
 
 object TimeUtils {
-
-  def toDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
-    val result = for {
-      t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("u-M-d")))
-      f <- Try(DateTimeFormatter.ofPattern("d MMMM u").format(t))
-    } yield f
-    result.toOption
-  }
-
-  def fromDisplayAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
-    val result = for {
-      t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("d MMMM u")))
-      f <- Try(DateTimeFormatter.ofPattern("uMMdd").format(t))
-    } yield f
-    result.toOption
-  }
-
-  def fromDateOfImportAcceptanceDateFormat(acceptanceDate: String): Option[String] = {
-    val result = for {
-      t <- Try(LocalDate.parse(acceptanceDate, DateTimeFormatter.ofPattern("u-M-d")))
-      f <- Try(DateTimeFormatter.ofPattern("uMMdd").format(t))
-    } yield f
-    result.toOption
-  }
 
   val cdsDateTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
 
   def cdsDateTimeNow: String = cdsDateTimeFormat.format(LocalDateTime.now)
-
-  implicit class JavaToJoda(clock: Clock) {
-    def nowAsJoda: DateTime =
-      new DateTime(clock.instant().toEpochMilli, DateTimeZone.forTimeZone(TimeZone.getTimeZone(clock.getZone)))
-  }
 }

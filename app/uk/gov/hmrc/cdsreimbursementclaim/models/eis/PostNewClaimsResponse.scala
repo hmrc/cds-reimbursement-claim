@@ -32,6 +32,7 @@ final case class ResponseCommon(
 object ResponseCommon {
   implicit val format: OFormat[ResponseCommon] = Json.format[ResponseCommon]
 }
+
 final case class PostNewClaimsResponse(
   responseCommon: ResponseCommon
 )

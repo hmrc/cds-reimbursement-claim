@@ -16,24 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 
-sealed trait ReasonForClaim extends Product with Serializable {
-  def repr: String
-}
+final case class ContactDetails(
+  fullName: String,
+  emailAddress: Email,
+  phoneNumber: Option[PhoneNumber]
+)
 
-object ReasonForClaim {
-  case object MailForOrderGoods extends ReasonForClaim {
-    override def repr = "Mail order goods - duties not due"
-  }
-  case object Overpayment extends ReasonForClaim {
-    override def repr = "Overpayment"
-  }
-  case object SpecialGoods extends ReasonForClaim {
-    override def repr = "Special circumstances"
-  }
-
-  implicit val format: OFormat[ReasonForClaim] = derived.oformat[ReasonForClaim]()
-
+object ContactDetails {
+  implicit val format: OFormat[ContactDetails] = Json.format[ContactDetails]
 }

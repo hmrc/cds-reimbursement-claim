@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import play.api.libs.json.{Json, OFormat}
+import org.scalacheck.Gen
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, Postcode}
 
-final case class SelectReasonForClaimAndBasis(
-  basisForClaim: BasisForClaim,
-  reasonForClaim: ReasonForClaim
-)
+import java.util.Locale
 
-object SelectReasonForClaimAndBasis {
-  implicit val format: OFormat[SelectReasonForClaimAndBasis] = Json.format[SelectReasonForClaimAndBasis]
+object AddressGen {
+
+  lazy val genPostcode: Gen[Postcode] = for {
+    first <- Gen.listOfN(3, Gen.alphaNumChar)
+    last  <- Gen.listOfN(3, Gen.alphaNumChar)
+  } yield Postcode(s"${first.mkString("")} ${last.mkString("")}")
+
+  lazy val genCountry: Gen[Country] = Gen
+    .oneOf(Locale.getISOCountries)
+    .map(Country(_))
 }

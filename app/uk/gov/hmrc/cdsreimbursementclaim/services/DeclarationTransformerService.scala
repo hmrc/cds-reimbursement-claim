@@ -19,10 +19,11 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultDeclarationTransformerService.{maskBankDetails, toDisplayResponseDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
 import javax.inject.Singleton
 
@@ -59,8 +60,8 @@ object DefaultDeclarationTransformerService {
   ): DisplayResponseDetail =
     DisplayResponseDetail(
       declarationId = responseDetail.declarationId,
-      acceptanceDate = TimeUtils
-        .toDisplayAcceptanceDateFormat(responseDetail.acceptanceDate)
+      acceptanceDate = AcceptanceDate(responseDetail.acceptanceDate)
+        .flatMap(_.toDisplayString)
         .getOrElse("could not convert acceptance date"),
       declarantReferenceNumber = responseDetail.declarantReferenceNumber,
       securityReason = responseDetail.securityReason,

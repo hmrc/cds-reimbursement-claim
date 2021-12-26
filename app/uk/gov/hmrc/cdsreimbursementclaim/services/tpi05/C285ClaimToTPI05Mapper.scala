@@ -61,7 +61,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
                 request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
               ),
               city = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
-              postalCode = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode,
+              postalCode = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode.value),
               countryCode = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
               telephone = None,
               emailAddress = Option(request.claim.detailsRegisteredWithCdsAnswer.emailAddress.value)

@@ -23,7 +23,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genAssociatedMRNs, genClaims}
 
 class C285ClaimSpec extends AnyWordSpec with Matchers with MockFactory {
 

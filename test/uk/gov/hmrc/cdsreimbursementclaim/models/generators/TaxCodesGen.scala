@@ -16,21 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.magnolia._
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import org.scalacheck.Gen
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
 
-import java.util.Locale
+object TaxCodesGen {
 
-object EmailGen {
-
-  lazy val genEmail: Gen[Email] =
-    for {
-      name   <- genStringWithMaxSizeOfN(max = 15).map(_.toLowerCase(Locale.UK))
-      at      = "@"
-      domain <- genStringWithMaxSizeOfN(max = 10).map(_.toLowerCase(Locale.UK))
-      dotCom  = ".com"
-    } yield Email(Seq(name, at, domain, dotCom).mkString)
-
-  implicit lazy val arbitraryEmail: Typeclass[Email] = Arbitrary(genEmail)
+  lazy val genTaxCode: Gen[TaxCode] = Gen.oneOf(TaxCode.values)
 }

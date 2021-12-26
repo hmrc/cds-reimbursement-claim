@@ -19,11 +19,12 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{DeclarationResponse, OverpaymentDeclarationDisplayResponse, ResponseDetail, _}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.DeclarationGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
 class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
@@ -37,17 +38,17 @@ class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with M
 
         val bankDetails = BankDetails(
           Some(
-            ConsigneeBankDetails(
-              accountHolderName = "Test Account",
-              sortCode = "123456",
-              accountNumber = "12345678"
+            BankAccountDetails(
+              AccountName("Test Account"),
+              SortCode("123456"),
+              AccountNumber("12345678")
             )
           ),
           Some(
-            DeclarantBankDetails(
-              accountHolderName = "Test Account",
-              sortCode = "123456",
-              accountNumber = "12345678"
+            BankAccountDetails(
+              AccountName("Test Account"),
+              SortCode("123456"),
+              AccountNumber("12345678")
             )
           )
         )
@@ -59,19 +60,19 @@ class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with M
           overpaymentDeclarationDisplayResponse
         )
 
-        val maskedBankDetails = MaskedBankDetails(
+        val maskedBankDetails = BankDetails(
           Some(
-            ConsigneeBankDetails(
-              accountHolderName = "Test Account",
-              sortCode = "Ending with 56",
-              accountNumber = "Ending with 5678"
+            BankAccountDetails(
+              AccountName("Test Account"),
+              SortCode("Ending with 56"),
+              AccountNumber("Ending with 5678")
             )
           ),
           Some(
-            DeclarantBankDetails(
-              accountHolderName = "Test Account",
-              sortCode = "Ending with 56",
-              accountNumber = "Ending with 5678"
+            BankAccountDetails(
+              AccountName("Test Account"),
+              SortCode("Ending with 56"),
+              AccountNumber("Ending with 5678")
             )
           )
         )
@@ -79,8 +80,8 @@ class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with M
         val displayDeclaration = DisplayDeclaration(
           DisplayResponseDetail(
             declarationId = responseDetail.declarationId,
-            acceptanceDate = TimeUtils
-              .toDisplayAcceptanceDateFormat(responseDetail.acceptanceDate)
+            acceptanceDate = AcceptanceDate(responseDetail.acceptanceDate)
+              .flatMap(_.toTpi05DateString)
               .getOrElse("could not convert acceptance date"),
             declarantReferenceNumber = responseDetail.declarantReferenceNumber,
             securityReason = responseDetail.securityReason,

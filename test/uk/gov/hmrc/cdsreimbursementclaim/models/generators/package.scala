@@ -22,11 +22,13 @@ import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
 import reactivemongo.bson.BSONObjectID
 
-import java.net.URL
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import java.util.UUID
 
 package object generators {
+
+  def genRandomString: Gen[String] =
+    genStringWithMaxSizeOfN(15)
 
   def genStringWithMaxSizeOfN(max: Int): Gen[String] =
     Gen
@@ -39,9 +41,19 @@ package object generators {
       .chooseNum(0L, 10000L)
       .map(millis => LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault()))
 
-  implicit lazy val arbitraryBoolean: Typeclass[Boolean] = Arbitrary(
-    Gen.oneOf(true, false)
-  )
+  implicit lazy val arbitraryLocalDateTime: Arbitrary[LocalDateTime] =
+    Arbitrary(genLocalDateTime)
+
+  lazy val genLocalDate: Gen[LocalDate] =
+    Gen.chooseNum(0L, 10000L).map(LocalDate.ofEpochDay)
+
+  implicit lazy val arbitraryLocalDate: Arbitrary[LocalDate] =
+    Arbitrary(genLocalDate)
+
+  lazy val genBoolean: Gen[Boolean] = Gen.oneOf(true, false)
+
+  implicit lazy val arbitraryBoolean: Typeclass[Boolean] =
+    Arbitrary(genBoolean)
 
   implicit lazy val arbitraryString: Typeclass[String] = Arbitrary(
     Gen.nonEmptyListOf(Gen.alphaUpperChar).map(_.mkString(""))
@@ -51,13 +63,6 @@ package object generators {
     Gen.choose(-5e13.toLong, 5e13.toLong)
   )
 
-  implicit lazy val arbitraryLocalDate: Arbitrary[LocalDate] = Arbitrary(
-    Gen.chooseNum(0L, 10000L).map(LocalDate.ofEpochDay)
-  )
-
-  implicit lazy val arbitraryLocalDateTime: Arbitrary[LocalDateTime] =
-    Arbitrary(genLocalDateTime)
-
   implicit lazy val arbitraryInstant: Arbitrary[Instant] =
     Arbitrary(
       Gen
@@ -65,15 +70,10 @@ package object generators {
         .map(Instant.ofEpochMilli)
     )
 
-  implicit lazy val arbitraryUuid: Arbitrary[UUID] = Arbitrary(UUID.randomUUID())
+  lazy val genUUID: Gen[UUID] = Gen.const(UUID.randomUUID())
 
-  implicit lazy val arbitraryUrl: Arbitrary[URL] = Arbitrary(
-    for {
-      protocol <- Gen.oneOf("http", "https")
-      hostname <- genStringWithMaxSizeOfN(7)
-      domain   <- Gen.oneOf("com", "co.uk", "lv")
-    } yield new URL(s"$protocol://$hostname.$domain")
-  )
+  implicit lazy val arbitraryUUID: Arbitrary[UUID] =
+    Arbitrary(genUUID)
 
   implicit lazy val bsonObjectId: Arbitrary[BSONObjectID] =
     Arbitrary(
@@ -82,7 +82,11 @@ package object generators {
         .map(_ => BSONObjectID.generate())
     )
 
-  implicit lazy val bigDecimalGen: Arbitrary[BigDecimal] = Arbitrary(Gen.choose(0, 100).map(BigDecimal(_)))
+  lazy val genBigDecimal: Gen[BigDecimal] =
+    Gen.choose(0, 100).map(BigDecimal(_))
+
+  implicit lazy val bigDecimalGen: Arbitrary[BigDecimal] =
+    Arbitrary(genBigDecimal)
 
   implicit lazy val jodaDateTime: Arbitrary[DateTime] =
     Arbitrary(

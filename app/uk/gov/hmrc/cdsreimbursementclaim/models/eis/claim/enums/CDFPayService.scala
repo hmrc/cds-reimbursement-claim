@@ -26,5 +26,7 @@ object CDFPayService {
   final case object NDRC extends CDFPayService
   final case object SCTY extends CDFPayService
 
+  lazy val values: Set[CDFPayService] = Set(NDRC, CDFPayService.SCTY)
+
   implicit val writes: Writes[CDFPayService] = WriteEnumerationToString[CDFPayService]
 }

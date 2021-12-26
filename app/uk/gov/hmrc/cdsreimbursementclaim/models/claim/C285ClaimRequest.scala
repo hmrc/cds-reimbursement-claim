@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.SignedInUserDetails
 
 import java.util.UUID
 

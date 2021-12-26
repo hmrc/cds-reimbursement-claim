@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import play.api.libs.json.{Json, OFormat}
+import org.joda.time.{DateTime, DateTimeZone}
 
-final case class EnterClaim(
-  dutyAmounts: List[DutyAmount],
-  makeEuDutyClaim: Boolean
-)
-object EnterClaim {
-  implicit val format: OFormat[EnterClaim] = Json.format[EnterClaim]
+import java.time.Clock
+import java.time.temporal.TemporalAccessor
+import java.util.TimeZone
+
+package object dates {
+
+  implicit class TemporalAccessorOps(val temporalAccessor: TemporalAccessor) extends AnyVal {
+    def toIsoLocalDate: String = ISOLocalDate.of(temporalAccessor)
+  }
+
+  implicit class JavaToJoda(val clock: Clock) extends AnyVal {
+    def nowAsJoda: DateTime =
+      new DateTime(clock.instant().toEpochMilli, DateTimeZone.forTimeZone(TimeZone.getTimeZone(clock.getZone)))
+  }
 }

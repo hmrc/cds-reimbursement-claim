@@ -18,7 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.BasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, ConsigneeDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -33,7 +32,7 @@ final case class C285Claim(
   duplicateMovementReferenceNumberAnswer: Option[MRN],
   declarantTypeAnswer: DeclarantTypeAnswer,
   detailsRegisteredWithCdsAnswer: DetailsRegisteredWithCdsAnswer,
-  mrnContactDetailsAnswer: Option[MrnContactDetails],
+  mrnContactDetailsAnswer: Option[ContactDetails],
   mrnContactAddressAnswer: Option[ContactAddress],
   basisOfClaimAnswer: BasisOfClaim,
   bankAccountDetailsAnswer: Option[BankAccountDetails],
@@ -54,42 +53,41 @@ final case class C285Claim(
 
   lazy val declarantDetails: Option[DeclarantDetails] =
     displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)
-}
 
-object C285Claim {
+  def multipleClaims: List[(MRN, ClaimedReimbursementsAnswer)] = {
+    val mrns   = movementReferenceNumber :: associatedMRNsAnswer.toList.flatMap(_.toList)
+    val claims = claimedReimbursementsAnswer :: associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
+    mrns zip claims
+  }
 
-  implicit class C285ClaimOps(val claim: C285Claim) extends AnyVal {
-
-    def multipleClaims: List[(MRN, ClaimedReimbursementsAnswer)] = {
-      val mrns   = claim.movementReferenceNumber :: claim.associatedMRNsAnswer.toList.flatMap(_.toList)
-      val claims = claim.claimedReimbursementsAnswer :: claim.associatedMRNsClaimsAnswer.toList.flatMap(_.toList)
-      mrns zip claims
-    }
-
-    def claims: NonEmptyList[ClaimedReimbursement] =
-      claim.claimedReimbursementsAnswer
-        .map(claim =>
-          claim.copy(
-            claimAmount = claim.claimAmount.roundToTwoDecimalPlaces,
-            paidAmount = claim.paidAmount.roundToTwoDecimalPlaces
-          )
+  def claims: NonEmptyList[ClaimedReimbursement] =
+    claimedReimbursementsAnswer
+      .map(claim =>
+        claim.copy(
+          claimAmount = claim.claimAmount.roundToTwoDecimalPlaces,
+          paidAmount = claim.paidAmount.roundToTwoDecimalPlaces
         )
+      )
 
-    def totalReimbursementAmount: BigDecimal = claim.typeOfClaim match {
-      case TypeOfClaimAnswer.Multiple =>
-        claim.associatedMRNsClaimsAnswer.toList
-          .flatMap(_.toList)
-          .foldLeft(totalClaimedDuty(claim.claimedReimbursementsAnswer))((accumulator, claimedReimbursementsAnswer) =>
-            accumulator + totalClaimedDuty(claimedReimbursementsAnswer)
-          )
-      case _                          => totalClaimedDuty(claim.claimedReimbursementsAnswer)
-    }
-
-    private def totalClaimedDuty(claimedReimbursementsAnswer: ClaimedReimbursementsAnswer): BigDecimal =
+  def totalReimbursementAmount: BigDecimal = {
+    def totalClaimedDuty(claimedReimbursementsAnswer: ClaimedReimbursementsAnswer): BigDecimal =
       claimedReimbursementsAnswer.foldLeft(BigDecimal(0)) { (accumulator, claim) =>
         accumulator + claim.claimAmount
       }
+
+    typeOfClaim match {
+      case TypeOfClaimAnswer.Multiple =>
+        associatedMRNsClaimsAnswer.toList
+          .flatMap(_.toList)
+          .foldLeft(totalClaimedDuty(claimedReimbursementsAnswer))((accumulator, claimedReimbursementsAnswer) =>
+            accumulator + totalClaimedDuty(claimedReimbursementsAnswer)
+          )
+      case _                          => totalClaimedDuty(claimedReimbursementsAnswer)
+    }
   }
+}
+
+object C285Claim {
 
   implicit val format: Format[C285Claim] = Json.format[C285Claim]
 }

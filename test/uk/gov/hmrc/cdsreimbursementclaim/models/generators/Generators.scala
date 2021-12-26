@@ -20,19 +20,10 @@ import org.scalacheck.{Arbitrary, Gen}
 
 object Generators {
 
-  implicit lazy val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
-
-  implicit lazy val stringGen: Gen[String] = Gen.nonEmptyListOf(Gen.alphaUpperChar).map(_.mkString(""))
-
-  implicit lazy val longGen: Gen[Long] =
-    Gen.choose(-5e13.toLong, 5e13.toLong)
-
   def sample[A](implicit anItem: Arbitrary[A]): A =
     sample(anItem.arbitrary)
 
   def sample[A](gen: Gen[A]): A =
     gen.sample.getOrElse(sys.error(s"Could not generate instance with $gen"))
-
-  implicit def arb[A](implicit g: Gen[A]): Arbitrary[A] = Arbitrary(g)
 
 }

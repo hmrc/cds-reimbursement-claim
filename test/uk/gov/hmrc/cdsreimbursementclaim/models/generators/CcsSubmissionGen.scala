@@ -23,8 +23,8 @@ import uk.gov.hmrc.workitem.WorkItem
 
 object CcsSubmissionGen {
 
-  implicit lazy val ccsSubmissionPayloadGen: Typeclass[CcsSubmissionPayload] = gen[CcsSubmissionPayload]
-  implicit lazy val ccsSubmissionRequestGen: Typeclass[CcsSubmissionRequest] = gen[CcsSubmissionRequest]
-  implicit lazy val workItemGen: Typeclass[WorkItem[CcsSubmissionRequest]]   = gen[WorkItem[CcsSubmissionRequest]]
+  implicit lazy val arbitraryCCSSubmissionPayload: Typeclass[CcsSubmissionPayload] = gen[CcsSubmissionPayload]
+  implicit lazy val arbitraryCCSSubmissionRequest: Typeclass[CcsSubmissionRequest] = gen[CcsSubmissionRequest]
+  implicit lazy val arbitraryWorkItem: Typeclass[WorkItem[CcsSubmissionRequest]]   = gen[WorkItem[CcsSubmissionRequest]]
 
 }

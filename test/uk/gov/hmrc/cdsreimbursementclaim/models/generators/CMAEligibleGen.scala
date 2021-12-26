@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import org.scalacheck.Gen
 
-final case class MrnContactDetails(
-  fullName: String,
-  emailAddress: Email,
-  phoneNumber: Option[PhoneNumber]
-)
+object CMAEligibleGen {
 
-object MrnContactDetails {
-  implicit val format: OFormat[MrnContactDetails] = Json.format[MrnContactDetails]
+  val CMANotEligible: String = "0"
+  val CMAEligible: String    = "1"
+
+  lazy val genWhetherCMAEligible: Gen[Option[String]] =
+    Gen.option(Gen.oneOf("0", "1"))
 }

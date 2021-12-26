@@ -28,6 +28,9 @@ object DeclarantTypeAnswer {
   final case object AssociatedWithImporterCompany extends DeclarantTypeAnswer
   final case object AssociatedWithRepresentativeCompany extends DeclarantTypeAnswer
 
+  lazy val values: Set[DeclarantTypeAnswer] =
+    Set(Importer, AssociatedWithImporterCompany, AssociatedWithRepresentativeCompany)
+
   implicit val equality: Eq[DeclarantTypeAnswer] =
     Eq.fromUniversalEquals[DeclarantTypeAnswer]
 

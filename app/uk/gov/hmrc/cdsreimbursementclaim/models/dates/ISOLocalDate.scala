@@ -22,8 +22,7 @@ import java.time.{ZoneOffset, ZonedDateTime}
 
 object ISOLocalDate {
 
-  def now: String =
-    of(ZonedDateTime.now(ZoneOffset.UTC))
+  def now: String = of(ZonedDateTime.now(ZoneOffset.UTC))
 
   def of(date: TemporalAccessor): String =
     DateTimeFormatter.ISO_LOCAL_DATE

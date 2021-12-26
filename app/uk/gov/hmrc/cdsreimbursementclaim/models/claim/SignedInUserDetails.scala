@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.generators
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import org.scalacheck.magnolia._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.SignedInUserDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-object SignedInUserDetailsGen {
-  implicit lazy val arbitrarySignedInUserDetails: Typeclass[SignedInUserDetails] = gen[SignedInUserDetails]
+final case class SignedInUserDetails(
+  email: Option[Email],
+  eori: Eori,
+  verifiedEmail: Email,
+  contactName: ContactName
+)
+
+object SignedInUserDetails {
+  implicit val format: OFormat[SignedInUserDetails] = Json.format[SignedInUserDetails]
 }

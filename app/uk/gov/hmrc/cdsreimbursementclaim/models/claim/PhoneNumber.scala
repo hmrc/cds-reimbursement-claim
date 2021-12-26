@@ -24,6 +24,7 @@ import play.api.libs.json.Format
 final case class PhoneNumber(value: String) extends AnyVal
 
 object PhoneNumber {
+
   implicit val format: Format[PhoneNumber] = implicitly[Format[String]].inmap(PhoneNumber(_), _.value)
 
   implicit val eq: Eq[PhoneNumber] = Eq.instance(_.value === _.value)

@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import cats.data.Validated.Valid
+import cats.data.Validated.{Valid, invalidNel, validNel}
 import cats.data.{Ior, ValidatedNel}
 import cats.implicits.{catsSyntaxOption, toTraverseOps}
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Street
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
 
 final case class MrnDetail(
   MRNNumber: Option[MRN] = None,
@@ -52,10 +52,13 @@ object MrnDetail {
     def withAcceptanceDate(acceptanceDate: String): Builder =
       copy(
         validated.andThen(mrnDetails =>
-          TimeUtils
-            .fromDisplayAcceptanceDateFormat(acceptanceDate)
-            .map(date => mrnDetails.copy(acceptanceDate = Some(date)))
-            .toValidNel(Error("Could not format display acceptance date"))
+          AcceptanceDate
+            .fromDisplayFormat(acceptanceDate)
+            .flatMap(_.toTpi05DateString)
+            .fold(
+              throwable => invalidNel(Error(s"Error formatting acceptance date: ${throwable.getMessage}")),
+              date => validNel(mrnDetails.copy(acceptanceDate = Some(date)))
+            )
         )
       )
 

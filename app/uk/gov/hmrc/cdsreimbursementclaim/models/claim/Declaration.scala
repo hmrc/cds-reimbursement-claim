@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankDetails, ConsigneeDetails, ContactDetails, DeclarantDetails, EstablishmentAddress, NdrcDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankDetails, ConsigneeDetails, DeclarantDetails, NdrcDetails}
 
 final case class Declaration(
   declarantId: String,
@@ -30,59 +30,6 @@ final case class Declaration(
 )
 
 object Declaration {
-
-  implicit class DeclarationOps(declaration: Declaration) {
-
-    def totalPaidCharges: BigDecimal =
-      BigDecimal(
-        declaration.ndrcDetails.fold(0.0)(ndrcDetails => ndrcDetails.map(s => s.amount.toDouble).sum)
-      )
-
-    def consigneeName: Option[String] = declaration.consigneeDetails.map(details => details.legalName)
-
-    def consigneeEmail: Option[String] =
-      declaration.consigneeDetails.flatMap(details => details.contactDetails.flatMap(f => f.emailAddress))
-
-    def consigneeTelephone: Option[String] =
-      declaration.consigneeDetails.flatMap(details => details.contactDetails.flatMap(f => f.telephone))
-
-    def consigneeAddress: Option[String] =
-      declaration.consigneeDetails.map(details => establishmentAddress(details.establishmentAddress).mkString(", "))
-
-    def declarantName: String = declaration.declarantDetails.legalName
-
-    def declarantEmailAddress: Option[String] =
-      declaration.declarantDetails.contactDetails.flatMap(details => details.emailAddress)
-
-    def declarantTelephoneNumber: Option[String] =
-      declaration.declarantDetails.contactDetails.flatMap(details => details.telephone)
-
-    def declarantContactAddress: Option[String] =
-      declaration.declarantDetails.contactDetails.map(details => declarantAddress(details).mkString(", "))
-
-    def declarantAddress(contactDetails: ContactDetails): List[String] = {
-      val lines = List(
-        contactDetails.addressLine1,
-        contactDetails.addressLine2,
-        contactDetails.addressLine3,
-        contactDetails.addressLine4,
-        contactDetails.postalCode,
-        contactDetails.countryCode
-      )
-      lines.collect { case Some(s) => s }
-    }
-
-    def establishmentAddress(establishmentAddress: EstablishmentAddress): List[String] = {
-      val lines = List(
-        Some(establishmentAddress.addressLine1),
-        establishmentAddress.addressLine2,
-        establishmentAddress.addressLine3,
-        establishmentAddress.postalCode,
-        Some(establishmentAddress.countryCode)
-      )
-      lines.collect { case Some(s) => s }
-    }
-  }
 
   implicit val format: OFormat[Declaration] = Json.format[Declaration]
 }

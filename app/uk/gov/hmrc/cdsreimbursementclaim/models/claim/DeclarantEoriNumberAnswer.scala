@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class DeclarantEoriNumberAnswer(value: Eori)
+final case class DeclarantEoriNumberAnswer(value: Eori) // TODO: Replace with just Eori
 
 object DeclarantEoriNumberAnswer {
   implicit val format: OFormat[DeclarantEoriNumberAnswer] = Json.format[DeclarantEoriNumberAnswer]

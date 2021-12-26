@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
+import org.scalacheck.Gen
 
-final case class SignedInUserDetails(
-  email: Option[Email],
-  eori: Eori,
-  verifiedEmail: Email,
-  contactName: ContactName
-)
+object PaymentMethodGen {
 
-object SignedInUserDetails {
-  implicit val format: OFormat[SignedInUserDetails] = Json.format[SignedInUserDetails]
+  val ImmediatePayment: String = "001"
+  val DutyDeferment: String    = "002"
+  val CashAccount: String      = "003"
+
+  lazy val genPaymentMethod: Gen[String] =
+    Gen.oneOf(ImmediatePayment, DutyDeferment, CashAccount)
 }

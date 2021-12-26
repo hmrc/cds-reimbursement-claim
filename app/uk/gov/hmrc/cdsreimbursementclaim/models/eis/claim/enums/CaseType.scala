@@ -29,6 +29,8 @@ object CaseType {
   final case object Bulk extends CaseType
   final case object CMA extends CaseType
 
+  lazy val values: Set[CaseType] = Set(Individual, Bulk, CMA)
+
   def resolveFrom(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
     (typeOfClaim, reimbursementMethod) match {
       case (TypeOfClaimAnswer.Multiple, _)  => CaseType.Bulk

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ContactAddress, MrnContactDetails, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ContactAddress, ContactDetails, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ClaimantDetails
 
 final case class ContactInformation(
@@ -36,7 +36,7 @@ final case class ContactInformation(
 
 object ContactInformation {
 
-  def combine(contactDetails: MrnContactDetails, contactAddress: ContactAddress): ContactInformation =
+  def combine(contactDetails: ContactDetails, contactAddress: ContactAddress): ContactInformation =
     new ContactInformation(
       contactPerson = Option(contactDetails.fullName),
       addressLine1 = Option(contactAddress.line1),

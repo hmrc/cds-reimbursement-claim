@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.magnolia.Typeclass
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BankDetails}
 
 object BankAccountDetailsGen {
 
@@ -48,15 +48,39 @@ object BankAccountDetailsGen {
       accountNumber <- genAccountNumber
     } yield BankAccountDetails(accountName, sortCode, accountNumber)
 
-  implicit lazy val arbitrarySortCode: Typeclass[SortCode] =
-    Arbitrary(genSortCode)
+  lazy val genBankDetails: Gen[BankDetails] =
+    for {
+      consigneeBankDetails <- genBankAccountDetails
+      declarantBankDetails <- genBankAccountDetails
+    } yield BankDetails(Some(consigneeBankDetails), Some(declarantBankDetails))
 
-  implicit lazy val arbitraryAccountNumber: Typeclass[AccountNumber] =
-    Arbitrary(genAccountNumber)
+  lazy val genMaskedBankDetails: Gen[BankDetails] = {
 
-  implicit lazy val arbitraryAccountName: Typeclass[AccountName] =
-    Arbitrary(genAccountName)
+    def mask(value: String): String =
+      s"Ends with ${value.substring(value.length - 2)}"
 
-  implicit lazy val arbitraryBankAccountDetailsGen: Typeclass[BankAccountDetails] =
+    for {
+      consigneeBankDetails <- genBankAccountDetails
+      declarantBankDetails <- genBankAccountDetails
+    } yield BankDetails(
+      consigneeBankDetails = Some(
+        consigneeBankDetails.copy(
+          sortCode = SortCode(mask(consigneeBankDetails.sortCode.value)),
+          accountNumber = AccountNumber(mask(consigneeBankDetails.accountNumber.value))
+        )
+      ),
+      declarantBankDetails = Some(
+        declarantBankDetails.copy(
+          sortCode = SortCode(mask(declarantBankDetails.sortCode.value)),
+          accountNumber = AccountNumber(mask(declarantBankDetails.accountNumber.value))
+        )
+      )
+    )
+  }
+
+  implicit lazy val arbitraryBankAccountDetails: Typeclass[BankAccountDetails] =
     Arbitrary(genBankAccountDetails)
+
+  implicit lazy val arbitraryBankDetails: Typeclass[BankDetails] =
+    Arbitrary(genBankDetails)
 }

@@ -31,12 +31,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
@@ -55,7 +54,6 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
   val mockCcsSubmissionRepo: CcsSubmissionRepo = mock[CcsSubmissionRepo]
   val mockCcsConnector: CcsConnector           = mock[CcsConnector]
-  val mockUUIDGenerator: UUIDGenerator         = mock[UUIDGenerator]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

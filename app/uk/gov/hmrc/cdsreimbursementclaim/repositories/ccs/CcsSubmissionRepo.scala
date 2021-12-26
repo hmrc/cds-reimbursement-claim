@@ -25,9 +25,9 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.JavaToJoda
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.CacheRepository
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 import uk.gov.hmrc.workitem._
