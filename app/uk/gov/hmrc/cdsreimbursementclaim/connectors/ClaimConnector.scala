@@ -59,4 +59,5 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
+
 }

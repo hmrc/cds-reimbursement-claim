@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -57,7 +57,7 @@ class DefaultDeclarationService @Inject() (
         RequestCommon(
           Platform.MDTP,
           ISO8601DateTime.now,
-          UUIDGenerator.compactCorrelationId
+          CorrelationId.compact
         ),
         RequestDetail(
           mrn.value,

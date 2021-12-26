@@ -16,6 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
+import cats.syntax.eq._
+
 import java.util.UUID
 
-final case class CorrelationId(uuid: UUID) extends AnyVal
+object CorrelationId {
+
+  def spawn: String = UUID.randomUUID().toString
+
+  def compact: String = spawn.filterNot(c => c === '-')
+}

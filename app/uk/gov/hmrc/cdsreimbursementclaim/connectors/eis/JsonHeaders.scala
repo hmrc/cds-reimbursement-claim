@@ -20,14 +20,14 @@ import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 
 trait JsonHeaders {
 
   def getExtraHeaders: Seq[(String, String)] =
     Seq(
       HeaderNames.DATE                   -> RFC7231DateTime.now,
-      CustomHeaderNames.X_CORRELATION_ID -> UUIDGenerator.correlationId,
+      CustomHeaderNames.X_CORRELATION_ID -> CorrelationId.spawn,
       HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
       HeaderNames.CONTENT_TYPE           -> MimeTypes.JSON,
       HeaderNames.ACCEPT                 -> MimeTypes.JSON

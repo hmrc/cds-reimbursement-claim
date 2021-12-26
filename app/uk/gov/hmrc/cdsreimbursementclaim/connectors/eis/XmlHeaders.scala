@@ -21,13 +21,13 @@ import play.api.mvc.Codec
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 
 trait XmlHeaders {
   def getExtraHeaders: Seq[(String, String)] =
     Seq(
       HeaderNames.DATE                   -> RFC7231DateTime.now,
-      CustomHeaderNames.X_CORRELATION_ID -> UUIDGenerator.correlationId,
+      CustomHeaderNames.X_CORRELATION_ID -> CorrelationId.spawn,
       HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
       HeaderNames.CONTENT_TYPE           -> ContentTypes.withCharset(MimeTypes.XML)(Codec.utf_8),
       HeaderNames.ACCEPT                 -> MimeTypes.XML

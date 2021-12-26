@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator.compactCorrelationId
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05 {
@@ -146,7 +146,7 @@ object TPI05 {
             RequestCommon(
               originatingSystem = Platform.MDTP,
               receiptDate = ISO8601DateTime.now,
-              acknowledgementReference = compactCorrelationId
+              acknowledgementReference = CorrelationId.compact
             ),
             requestDetail
           )
