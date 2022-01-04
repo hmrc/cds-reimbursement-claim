@@ -22,7 +22,7 @@ import java.util.UUID
 
 object CorrelationId {
 
-  def spawn: String = UUID.randomUUID().toString
+  def apply(): String = UUID.randomUUID().toString
 
-  def compact: String = spawn.filterNot(c => c === '-')
+  def compact: String = CorrelationId().filterNot(c => c === '-')
 }

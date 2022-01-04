@@ -27,7 +27,7 @@ trait JsonHeaders {
   def getExtraHeaders: Seq[(String, String)] =
     Seq(
       HeaderNames.DATE                   -> RFC7231DateTime.now,
-      CustomHeaderNames.X_CORRELATION_ID -> CorrelationId.spawn,
+      CustomHeaderNames.X_CORRELATION_ID -> CorrelationId(),
       HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
       HeaderNames.CONTENT_TYPE           -> MimeTypes.JSON,
       HeaderNames.ACCEPT                 -> MimeTypes.JSON
