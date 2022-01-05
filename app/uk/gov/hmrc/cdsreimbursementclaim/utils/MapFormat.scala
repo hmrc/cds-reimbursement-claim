@@ -20,7 +20,6 @@ import play.api.libs.json.{Format, JsError, JsNull, JsObject, JsResult, JsString
 
 import scala.util.Try
 
-/** Creates instances of [[play.api.libs.json.Format]] for the different [[Map]] variants. */
 object MapFormat {
 
   val entryPrefix: String = "entry__"
