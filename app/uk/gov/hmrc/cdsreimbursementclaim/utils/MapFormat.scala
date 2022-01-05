@@ -23,7 +23,7 @@ import scala.util.Try
 /** Creates instances of [[play.api.libs.json.Format]] for the different [[Map]] variants. */
 object MapFormat {
 
-  val entryPrefix = "entry__"
+  val entryPrefix: String = "entry__"
 
   def apply[K, V](implicit keyFormat: Format[K], valueFormat: Format[V]): Format[Map[K, V]] =
     Format(
