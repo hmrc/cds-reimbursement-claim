@@ -18,7 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
+import org.scalatest.EitherValues._
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
@@ -122,7 +123,7 @@ object Acc14DeclarationGen {
 
   lazy val genDisplayDeclaration: Gen[DisplayDeclaration] = for {
     mrn                      <- genMRN
-    acceptanceDate           <- genLocalDate.map(_.toIsoLocalDate)
+    acceptanceDate           <- genLocalDate.map(AcceptanceDate(_))
     declarantReferenceNumber <- Gen.option(genRandomString)
     securityReason           <- Gen.option(genRandomString)
     btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
@@ -137,7 +138,7 @@ object Acc14DeclarationGen {
   } yield DisplayDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,
-      acceptanceDate = acceptanceDate,
+      acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
       declarantReferenceNumber = declarantReferenceNumber,
       securityReason = securityReason,
       btaDueDate = btaDueDate,

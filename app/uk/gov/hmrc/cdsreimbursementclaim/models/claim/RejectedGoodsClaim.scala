@@ -32,7 +32,6 @@ final case class RejectedGoodsClaim(
   methodOfDisposal: MethodOfDisposal,
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
-  inspectionAddressType: InspectionAddressType,
   inspectionAddress: InspectionAddress,
   reimbursementClaims: Map[TaxCode, BigDecimal],
   reimbursementMethod: ReimbursementMethodAnswer,

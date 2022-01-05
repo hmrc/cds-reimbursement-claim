@@ -51,7 +51,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, D
           descOfGoods = Some(claim.detailsOfRejectedGoods),
           anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
           dateOfInspection = Some(ISOLocalDate.of(claim.inspectionDate)),
-          atTheImporterOrDeclarantAddress = Some(claim.inspectionAddressType),
+          atTheImporterOrDeclarantAddress = Some(claim.inspectionAddress.addressType),
           inspectionAddress = Some(claim.inspectionAddress)
         )
       )

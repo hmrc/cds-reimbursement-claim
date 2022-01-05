@@ -63,18 +63,20 @@ object RejectedGoodsClaimGen {
 
   lazy val genInspectionAddress: Gen[InspectionAddress] =
     for {
-      num          <- Gen.choose(1, 100)
-      street       <- genStringWithMaxSizeOfN(7)
-      addressLine2 <- genStringWithMaxSizeOfN(10)
-      city         <- genRandomString
-      country      <- genCountry
-      postalCode   <- genPostcode
+      num                   <- Gen.choose(1, 100)
+      street                <- genStringWithMaxSizeOfN(7)
+      addressLine2          <- genStringWithMaxSizeOfN(10)
+      city                  <- genRandomString
+      country               <- genCountry
+      postalCode            <- genPostcode
+      inspectionAddressType <- genInspectionAddressType
     } yield InspectionAddress(
       addressLine1 = s"$num $street",
       addressLine2 = addressLine2,
       city = city,
       countryCode = country.code,
-      postalCode = postalCode
+      postalCode = postalCode,
+      addressType = inspectionAddressType
     )
 
   lazy val genClaimantInformation: Gen[ClaimantInformation] = for {
@@ -115,7 +117,6 @@ object RejectedGoodsClaimGen {
       methodOfDisposal       <- genMethodOfDisposal
       bankAccountDetails     <- Gen.option(genBankAccountDetails)
       inspectionDate         <- genLocalDate
-      inspectionAddressType  <- genInspectionAddressType
       inspectionAddress      <- genInspectionAddress
       detailsOfRejectedGoods <- genRandomString
       reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
@@ -130,7 +131,6 @@ object RejectedGoodsClaimGen {
       methodOfDisposal = methodOfDisposal,
       detailsOfRejectedGoods = detailsOfRejectedGoods,
       inspectionDate = inspectionDate,
-      inspectionAddressType = inspectionAddressType,
       inspectionAddress = inspectionAddress,
       reimbursementClaims = claims,
       reimbursementMethod = reimbursementMethod,
