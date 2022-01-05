@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.{C285, CE1179}
@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CMAEligibleGen.genWhe
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.{genEmail, genUkPhoneNumber}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.{genBasisOfRejectedGoodsClaim, genInspectionAddress, genInspectionAddressType, genInspectionDate, genMethodOfDisposal}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.{genBasisOfRejectedGoodsClaim, genInspectionAddressType, genInspectionDate, genMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
@@ -98,6 +98,22 @@ object TPI05RequestGen {
       postalCode = postalCode.map(_.value),
       telephone = Some(telephone.value),
       emailAddress = Some(email.value)
+    )
+
+  lazy val genInspectionAddress: Gen[InspectionAddress] =
+    for {
+      num          <- Gen.choose(1, 100)
+      street       <- genStringWithMaxSizeOfN(7)
+      addressLine2 <- genStringWithMaxSizeOfN(10)
+      city         <- genRandomString
+      country      <- genCountry
+      postalCode   <- genPostcode
+    } yield InspectionAddress(
+      addressLine1 = s"$num $street",
+      addressLine2 = addressLine2,
+      city = city,
+      countryCode = country.code,
+      postalCode = postalCode
     )
 
   lazy val genAccountDetail: Gen[AccountDetail] =
