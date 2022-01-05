@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import play.api.Configuration
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -41,7 +40,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.workitem._
 
-import java.util.UUID
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 class CcsSubmissionPollerSpec
@@ -89,7 +87,6 @@ class CcsSubmissionPollerSpec
     new CcsSubmissionPollerExecutionContext(system)
 
   val mockCcsSubmissionRepo: CcsSubmissionRepo       = mock[CcsSubmissionRepo]
-  val mockUUIDGenerator: UUIDGenerator               = mock[UUIDGenerator]
   val mockCcsSubmissionService: CcsSubmissionService = mock[CcsSubmissionService]
   val servicesConfig                                 = new ServicesConfig(config)
 
@@ -125,9 +122,6 @@ class CcsSubmissionPollerSpec
       .setResultStatus(_: BSONObjectID, _: ResultStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
-
-  def mockNextUUID(uuid: UUID): CallHandler0[UUID] =
-    (mockUUIDGenerator.nextId _).expects().returning(uuid)
 
   "Ccs Submission Poller" when {
     "it picks up a work item" must {

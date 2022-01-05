@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,12 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.EmailConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.ClaimConfirmationEmailSentEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -53,17 +53,17 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val request: Request[_] = FakeRequest()
 
-  def mockSendClaimConfirmationEmail(submitClaimResponse: SubmitClaimResponse, emailRequest: EmailRequest)(
+  def mockSendClaimConfirmationEmail(submitClaimResponse: ClaimSubmitResponse, emailRequest: EmailRequest)(
     result: Either[Error, HttpResponse]
-  ): CallHandler3[SubmitClaimResponse, EmailRequest, HeaderCarrier, EitherT[Future, Error, HttpResponse]] =
+  ): CallHandler3[ClaimSubmitResponse, EmailRequest, HeaderCarrier, EitherT[Future, Error, HttpResponse]] =
     (mockEmailConnector
-      .sendClaimSubmitConfirmationEmail(_: SubmitClaimResponse, _: EmailRequest)(_: HeaderCarrier))
+      .sendClaimSubmitConfirmationEmail(_: ClaimSubmitResponse, _: EmailRequest)(_: HeaderCarrier))
       .expects(submitClaimResponse, emailRequest, *)
       .returning(EitherT.fromEither[Future](result))
 
   def mockAuditClaimConfirmationEmailEvent(
     emailRequest: EmailRequest,
-    submitClaimResponse: SubmitClaimResponse
+    submitClaimResponse: ClaimSubmitResponse
   ): CallHandler6[String, ClaimConfirmationEmailSentEvent, String, HeaderCarrier, Writes[
     ClaimConfirmationEmailSentEvent
   ], Request[_], Unit] =
@@ -92,7 +92,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
     "handling requests to send claim submission confirmation emails" must {
 
-      val (submitClaimResponse, emailRequest) = sample[SubmitClaimResponse] -> sample[EmailRequest]
+      val (submitClaimResponse, emailRequest) = sample[ClaimSubmitResponse] -> sample[EmailRequest]
 
       "return an error" when {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,32 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, JsPath, Reads, Writes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class ConsigneeDetails(
-  consigneeEORI: String,
+  EORI: Eori,
   legalName: String,
   establishmentAddress: EstablishmentAddress,
   contactDetails: Option[ContactDetails]
-)
+) extends ClaimantDetails
 
 object ConsigneeDetails {
-  implicit val format: OFormat[ConsigneeDetails] = derived.oformat[ConsigneeDetails]()
+
+  private val reads: Reads[ConsigneeDetails] = (
+    (JsPath \ "consigneeEORI").read[Eori] and
+      (JsPath \ "legalName").read[String] and
+      (JsPath \ "establishmentAddress").read[EstablishmentAddress] and
+      (JsPath \ "contactDetails").readNullable[ContactDetails]
+  )(ConsigneeDetails(_, _, _, _))
+
+  private val writes: Writes[ConsigneeDetails] = (
+    (JsPath \ "consigneeEORI").write[Eori] and
+      (JsPath \ "legalName").write[String] and
+      (JsPath \ "establishmentAddress").write[EstablishmentAddress] and
+      (JsPath \ "contactDetails").writeNullable[ContactDetails]
+  )(unlift(ConsigneeDetails.unapply))
+
+  implicit val format: Format[ConsigneeDetails] = Format(reads, writes)
 }

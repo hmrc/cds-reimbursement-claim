@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,26 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+
 sealed trait ReimbursementMethod extends Product with Serializable
 
 object ReimbursementMethod {
-  case object Deferment extends ReimbursementMethod
-  case object BankTransfer extends ReimbursementMethod
-  case object PayableOrder extends ReimbursementMethod
 
-  implicit def reimbursementMethodToString(reimbursementMethod: ReimbursementMethod): String =
-    reimbursementMethod match {
-      case Deferment    => "Deferment"
-      case BankTransfer => "Bank Transfer"
-      case PayableOrder => "Payable Order"
-    }
+  final case object Deferment extends ReimbursementMethod {
+    override def toString: String = "Deferment"
+  }
+
+  final case object BankTransfer extends ReimbursementMethod {
+    override def toString: String = "Bank Transfer"
+  }
+
+  final case object PayableOrder extends ReimbursementMethod {
+    override def toString: String = "Payable Order"
+  }
+
+  lazy val values: Set[ReimbursementMethod] = Set(Deferment, BankTransfer, PayableOrder)
+
+  implicit val writes: Writes[ReimbursementMethod] = WriteEnumerationToString[ReimbursementMethod]
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ final case class ContactAddress(
   line2: Option[String],
   line3: Option[String],
   line4: String,
-  postcode: String,
+  postcode: Postcode,
   country: Country
 )
 
 object ContactAddress {
-  implicit val addressFormat: OFormat[ContactAddress] = derived.oformat[ContactAddress]()
+
+  implicit val format: OFormat[ContactAddress] = derived.oformat[ContactAddress]()
 
   implicit val eq: Eq[ContactAddress] = Eq.fromUniversalEquals
-
 }

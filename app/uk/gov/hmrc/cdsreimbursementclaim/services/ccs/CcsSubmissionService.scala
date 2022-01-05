@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,22 +24,24 @@ import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{SubmitClaimRequest, SubmitClaimResponse, UploadDocument}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
-import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.DefaultCcsSubmissionService.makeBatchFileInterfaceMetaDataPayload
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils, toUUIDString}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 
-import java.util.UUID
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
-  def enqueue(
-    claimRequest: SubmitClaimRequest,
-    submitClaimResponse: SubmitClaimResponse
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
+
+  def enqueue[A](
+    claimRequest: A,
+    submitClaimResponse: ClaimSubmitResponse
+  )(implicit
+    hc: HeaderCarrier,
+    claimToDec64FileMapper: ClaimToDec64FilesMapper[A]
+  ): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
 
   def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]]
 
@@ -69,18 +71,23 @@ class DefaultCcsSubmissionService @Inject() (
     )
 
   @SuppressWarnings(Array("org.wartremover.warts.Any")) // compiler can't infer the type properly on sequence
-  override def enqueue(
-    submitClaimRequest: SubmitClaimRequest,
-    submitClaimResponse: SubmitClaimResponse
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
+  override def enqueue[A](
+    submitClaimRequest: A,
+    submitClaimResponse: ClaimSubmitResponse
+  )(implicit
+    hc: HeaderCarrier,
+    claimToDec64FilesMapper: ClaimToDec64FilesMapper[A]
+  ): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
 
     val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
-      makeBatchFileInterfaceMetaDataPayload(submitClaimRequest, submitClaimResponse)
+      claimToDec64FilesMapper
+        .map(submitClaimRequest, submitClaimResponse)
         .map(data =>
           ccsSubmissionRepo.set(
             CcsSubmissionRequest(XmlEncoder[Envelope].encode(data), DefaultCcsSubmissionService.getHeaders(hc))
           )
         )
+
     queueCcsSubmissions.sequence
   }
 
@@ -95,54 +102,6 @@ class DefaultCcsSubmissionService @Inject() (
 }
 
 object DefaultCcsSubmissionService {
-
-  def makeBatchFileInterfaceMetaDataPayload(
-    submitClaimRequest: SubmitClaimRequest,
-    submitClaimResponse: SubmitClaimResponse
-  ): List[Envelope] = {
-    def make(
-      referenceNumber: String,
-      evidence: UploadDocument,
-      batchCount: Long
-    ): Envelope =
-      Envelope(
-        Body(
-          BatchFileInterfaceMetadata(
-            correlationID = UUID.randomUUID().toString,
-            batchID = submitClaimRequest.completeClaim.id,
-            batchCount = batchCount,
-            batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
-            checksum = evidence.upscanSuccess.uploadDetails.checksum,
-            sourceLocation = evidence.upscanSuccess.downloadUrl,
-            sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
-            sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
-            fileSize = evidence.upscanSuccess.uploadDetails.size,
-            properties = PropertiesType(
-              List(
-                PropertyType("CaseReference", submitClaimResponse.caseNumber),
-                PropertyType("Eori", submitClaimRequest.signedInUserDetails.eori.value),
-                PropertyType("DeclarationId", referenceNumber),
-                PropertyType("DeclarationType", submitClaimRequest.completeClaim.declarantTypeAnswer.toString),
-                PropertyType("ApplicationName", "NDRC"),
-                PropertyType(
-                  "DocumentType",
-                  evidence.documentType.map(_.toTPI05Key).getOrElse("")
-                ),
-                PropertyType("DocumentReceivedDate", TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn))
-              )
-            )
-          )
-        )
-      )
-
-    submitClaimRequest.completeClaim.documents.zipWithIndex.map { case (document, index) =>
-      make(
-        submitClaimRequest.completeClaim.movementReferenceNumber.value,
-        document,
-        index.toLong + 1
-      )
-    }.toList
-  }
 
   def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
     List(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CompleteClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGenerator
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
@@ -55,7 +54,6 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
   val mockCcsSubmissionRepo: CcsSubmissionRepo = mock[CcsSubmissionRepo]
   val mockCcsConnector: CcsConnector           = mock[CcsConnector]
-  val mockUUIDGenerator: UUIDGenerator         = mock[UUIDGenerator]
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -214,26 +212,26 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
     "a ccs submission request is made" must {
       "enqueue the request" in {
         val document             = sample[UploadDocument]
-        val completeClaim        = sample[CompleteClaim].copy(
+        val c285claim            = sample[C285Claim].copy(
           documents = NonEmptyList.one(document)
         )
         val ccsSubmissionRequest = sample[CcsSubmissionRequest]
         val workItem             = sample[WorkItem[CcsSubmissionRequest]]
-        val submitClaimRequest   = sample[SubmitClaimRequest].copy(completeClaim = completeClaim)
-        val submitClaimResponse  = sample[SubmitClaimResponse]
-        val evidence             = submitClaimRequest.completeClaim.documents.head
+        val submitClaimRequest   = sample[C285ClaimRequest].copy(claim = c285claim)
+        val submitClaimResponse  = sample[ClaimSubmitResponse]
+        val evidence             = submitClaimRequest.claim.documents.head
 
         val dec64payload = makeDec64XmlPayload(
           correlationId = UUID.randomUUID().toString,
-          batchId = submitClaimRequest.completeClaim.id,
-          batchSize = submitClaimRequest.completeClaim.documents.size.toLong,
-          batchCount = submitClaimRequest.completeClaim.documents.size.toLong,
+          batchId = submitClaimRequest.claim.id,
+          batchSize = submitClaimRequest.claim.documents.size.toLong,
+          batchCount = submitClaimRequest.claim.documents.size.toLong,
           checksum = evidence.upscanSuccess.uploadDetails.checksum,
           fileSize = evidence.upscanSuccess.uploadDetails.size,
           caseReference = submitClaimResponse.caseNumber,
           eori = submitClaimRequest.signedInUserDetails.eori.value,
-          declarationId = submitClaimRequest.completeClaim.movementReferenceNumber.value,
-          declarationType = submitClaimRequest.completeClaim.declarantTypeAnswer.toString,
+          declarationId = submitClaimRequest.claim.movementReferenceNumber.value,
+          declarationType = submitClaimRequest.claim.declarantTypeAnswer.toString,
           applicationName = "NDRC",
           documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
           documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,17 +32,5 @@ final case class Address(
 )
 
 object Address {
-  val empty: Address                    = Address(
-    Some("No contact person"),
-    Some("No line 1"),
-    Some("No line 2"),
-    Some("No line 3"),
-    Some("No street"),
-    Some("No city"),
-    "GB",
-    Some("None"),
-    Some("No telephone"),
-    Some("No email")
-  )
   implicit val format: OFormat[Address] = Json.format[Address]
 }

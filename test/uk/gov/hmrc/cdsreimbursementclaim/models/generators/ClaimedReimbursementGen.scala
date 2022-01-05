@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.magnolia._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursement, TaxCode}
+import org.scalacheck.{Arbitrary, Gen}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimedReimbursement
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 
 object ClaimedReimbursementGen {
 
   lazy val genClaimedReimbursement: Gen[ClaimedReimbursement] = for {
-    id               <- arbitraryUuid.arbitrary
-    paymentMethod    <- Gen.listOfN(3, Gen.alphaUpperChar).map(_.mkString(""))
+    id               <- genUUID
+    paymentMethod    <- genPaymentMethod
     paymentReference <- genStringWithMaxSizeOfN(max = 18)
-    taxCode          <- Gen.oneOf(TaxCode.allTaxCodes)
-    paidAmount       <- bigDecimalGen.arbitrary
-    claimAmount      <- bigDecimalGen.arbitrary
-    isFilled         <- arbitraryBoolean.arbitrary
+    taxCode          <- genTaxCode
+    paidAmount       <- genBigDecimal
+    claimAmount      <- genBigDecimal
+    isFilled         <- genBoolean
   } yield ClaimedReimbursement(
     id,
     paymentMethod,

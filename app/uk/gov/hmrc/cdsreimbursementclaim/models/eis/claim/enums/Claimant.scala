@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,34 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, DeclarantTypeAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
 
 sealed trait Claimant extends Product with Serializable
 
 object Claimant {
-  case object Importer extends Claimant
-  case object Representative extends Claimant
 
-  implicit def claimantToString(claimant: Claimant): String = claimant match {
-    case Importer       => "Importer"
-    case Representative => "Representative"
-  }
+  type PayeeIndicator = Claimant
 
-  implicit def completeDeclarantTypeAnswerToClaimant(declarantTypeAnswer: DeclarantTypeAnswer): Claimant =
-    declarantTypeAnswer match {
+  final case object Importer extends Claimant
+  final case object Representative extends Claimant
+
+  def of(declarantType: DeclarantTypeAnswer): Claimant =
+    declarantType match {
       case DeclarantTypeAnswer.Importer                            => Importer
       case DeclarantTypeAnswer.AssociatedWithImporterCompany       => Representative
       case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany => Representative
     }
+
+  def of(claimantType: ClaimantType): Claimant =
+    claimantType match {
+      case ClaimantType.Consignee => Importer
+      case ClaimantType.Declarant => Representative
+      case ClaimantType.User      => Representative
+    }
+
+  lazy val values: Set[PayeeIndicator] = Set(Importer, Representative)
+
+  implicit val writes: Writes[Claimant] = WriteEnumerationToString[Claimant]
 }

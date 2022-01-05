@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 
 final case class ContactDetails(
-  contactName: Option[String],
-  addressLine1: Option[String],
-  addressLine2: Option[String],
-  addressLine3: Option[String],
-  addressLine4: Option[String],
-  postalCode: Option[String],
-  countryCode: Option[String],
-  telephone: Option[String],
-  emailAddress: Option[String]
+  fullName: String,
+  emailAddress: Email,
+  phoneNumber: Option[PhoneNumber]
 )
 
 object ContactDetails {
-  implicit val format: OFormat[ContactDetails] = derived.oformat[ContactDetails]()
+  implicit val format: OFormat[ContactDetails] = Json.format[ContactDetails]
 }

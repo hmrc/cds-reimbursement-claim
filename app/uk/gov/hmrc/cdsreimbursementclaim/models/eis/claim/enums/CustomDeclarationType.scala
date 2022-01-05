@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+
 sealed trait CustomDeclarationType extends Product with Serializable
 
 object CustomDeclarationType {
-  case object MRN extends CustomDeclarationType
-  case object Entry extends CustomDeclarationType
 
-  implicit def customDeclarationTypeToString(customDeclarationType: CustomDeclarationType): String =
-    customDeclarationType match {
-      case MRN   => MRN.toString
-      case Entry => Entry.toString
-    }
+  final case object MRN extends CustomDeclarationType
+  final case object Entry extends CustomDeclarationType
 
+  implicit val writes: Writes[CustomDeclarationType] = WriteEnumerationToString[CustomDeclarationType]
 }

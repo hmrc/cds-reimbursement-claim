@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail, MaskedBankAccount, MaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultDeclarationTransformerService.{maskBankDetails, toDisplayResponseDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{Logging, TimeUtils}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
 import javax.inject.Singleton
 
@@ -54,12 +56,12 @@ object DefaultDeclarationTransformerService {
 
   def toDisplayResponseDetails(
     responseDetail: ResponseDetail,
-    maskedBankDetails: Option[MaskedBankDetails]
+    maskedBankDetails: Option[BankDetails]
   ): DisplayResponseDetail =
     DisplayResponseDetail(
       declarationId = responseDetail.declarationId,
-      acceptanceDate = TimeUtils
-        .toDisplayAcceptanceDateFormat(responseDetail.acceptanceDate)
+      acceptanceDate = AcceptanceDate(responseDetail.acceptanceDate)
+        .flatMap(_.toDisplayString)
         .getOrElse("could not convert acceptance date"),
       declarantReferenceNumber = responseDetail.declarantReferenceNumber,
       securityReason = responseDetail.securityReason,
@@ -74,59 +76,63 @@ object DefaultDeclarationTransformerService {
       ndrcDetails = responseDetail.ndrcDetails
     )
 
-  def maskBankDetails(bankDetails: BankDetails): MaskedBankDetails = {
-    val consigneeBankDetails: Option[ConsigneeBankDetails] =
+  def maskBankDetails(bankDetails: BankDetails): BankDetails = {
+    val consigneeBankDetails: Option[BankAccountDetails] =
       bankDetails.consigneeBankDetails
         .map(consigneeBankDetails =>
           maskBankAccount(
-            consigneeBankDetails.accountHolderName,
+            consigneeBankDetails.accountName,
             consigneeBankDetails.sortCode,
             consigneeBankDetails.accountNumber
           )
         )
         .map(maskedBankAccount =>
-          ConsigneeBankDetails(
-            maskedBankAccount.accountHolderName,
+          BankAccountDetails(
+            maskedBankAccount.accountName,
             maskedBankAccount.sortCode,
             maskedBankAccount.accountNumber
           )
         )
 
-    val declarantBankDetails: Option[DeclarantBankDetails] =
+    val declarantBankDetails: Option[BankAccountDetails] =
       bankDetails.declarantBankDetails
         .map(declarantBankDetails =>
           maskBankAccount(
-            declarantBankDetails.accountHolderName,
+            declarantBankDetails.accountName,
             declarantBankDetails.sortCode,
             declarantBankDetails.accountNumber
           )
         )
         .map(maskedBankAccount =>
-          DeclarantBankDetails(
-            maskedBankAccount.accountHolderName,
+          BankAccountDetails(
+            maskedBankAccount.accountName,
             maskedBankAccount.sortCode,
             maskedBankAccount.accountNumber
           )
         )
 
-    MaskedBankDetails(
+    BankDetails(
       consigneeBankDetails,
       declarantBankDetails
     )
   }
 
-  def maskBankAccount(accountHolderName: String, sortCode: String, accountNumber: String): MaskedBankAccount = {
+  def maskBankAccount(
+    accountHolderName: AccountName,
+    sortCode: SortCode,
+    accountNumber: AccountNumber
+  ): BankAccountDetails = {
     def maskDigits(digits: String): String = digits.replaceAll("([0-9]+)", "Ending with ")
 
-    val (toMaskSortCodeComponent, toDisplaySortCodeComponent)           = sortCode.splitAt(4)
+    val (toMaskSortCodeComponent, toDisplaySortCodeComponent)           = sortCode.value.splitAt(4)
     val maskedSortCode                                                  = maskDigits(toMaskSortCodeComponent) + toDisplaySortCodeComponent
-    val (toMaskAccountNumberComponent, toDisplayAccountNumberComponent) = accountNumber.splitAt(4)
+    val (toMaskAccountNumberComponent, toDisplayAccountNumberComponent) = accountNumber.value.splitAt(4)
     val maskedAccountNumber                                             = maskDigits(toMaskAccountNumberComponent) + toDisplayAccountNumberComponent
 
-    MaskedBankAccount(
+    BankAccountDetails(
       accountHolderName,
-      maskedSortCode,
-      maskedAccountNumber
+      SortCode(maskedSortCode),
+      AccountNumber(maskedAccountNumber)
     )
   }
 

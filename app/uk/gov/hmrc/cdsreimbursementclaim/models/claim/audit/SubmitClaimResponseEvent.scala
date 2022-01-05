@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit
 
-import play.api.libs.json.{JsValue, Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimRequest
+import play.api.libs.json.{Format, JsValue, Json, OFormat}
 
-final case class SubmitClaimResponseEvent(
+final case class SubmitClaimResponseEvent[A](
   status: Int,
   responseBody: JsValue,
   requestBody: JsValue,
-  submitClaimRequest: SubmitClaimRequest
+  submitClaimRequest: A
 )
 
 object SubmitClaimResponseEvent {
-  implicit val format: OFormat[SubmitClaimResponseEvent] = Json.format[SubmitClaimResponseEvent]
+
+  implicit def format[A](implicit requestFormat: Format[A]): OFormat[SubmitClaimResponseEvent[A]] =
+    Json.format[SubmitClaimResponseEvent[A]]
 }

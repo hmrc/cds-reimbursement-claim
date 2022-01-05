@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,23 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 
 final case class BankDetail(
-  accountHolderName: String,
-  sortCode: String,
-  accountNumber: String
+  accountHolderName: AccountName,
+  sortCode: SortCode,
+  accountNumber: AccountNumber
 )
 
 object BankDetail {
+
+  def from(bankAccountDetails: BankAccountDetails): BankDetail =
+    BankDetail(
+      bankAccountDetails.accountName,
+      bankAccountDetails.sortCode,
+      bankAccountDetails.accountNumber
+    )
+
   implicit val format: OFormat[BankDetail] = Json.format[BankDetail]
 }

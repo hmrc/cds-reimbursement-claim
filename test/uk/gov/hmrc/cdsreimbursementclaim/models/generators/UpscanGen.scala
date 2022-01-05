@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDet
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 
 object UpscanGen {
-  implicit lazy val uploadReferenceGen: Typeclass[UploadReference] = gen[UploadReference]
-  implicit lazy val uploadDetailsGen: Typeclass[UploadDetails]     = gen[UploadDetails]
-  implicit lazy val upscanSuccessGen: Typeclass[UpscanSuccess]     = gen[UpscanSuccess]
-  implicit lazy val uploadDocumentGen: Typeclass[UploadDocument]   = gen[UploadDocument]
-  implicit lazy val upscanUploadGen: Typeclass[UpscanUpload]       = gen[UpscanUpload]
+  implicit lazy val arbitraryUploadReference: Typeclass[UploadReference] = gen[UploadReference]
+  implicit lazy val arbitraryUploadDetails: Typeclass[UploadDetails]     = gen[UploadDetails]
+  implicit lazy val arbitraryUpscanSuccess: Typeclass[UpscanSuccess]     = gen[UpscanSuccess]
+  implicit lazy val arbitraryUploadDocument: Typeclass[UploadDocument]   = gen[UploadDocument]
+  implicit lazy val arbitraryUpscanUpload: Typeclass[UpscanUpload]       = gen[UpscanUpload]
 }

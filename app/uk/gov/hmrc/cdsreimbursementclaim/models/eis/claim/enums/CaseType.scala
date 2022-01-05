@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,28 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ReimbursementMethodAnswer, TypeOfClaimAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+
 sealed trait CaseType extends Product with Serializable
 
 object CaseType {
-  case object Individual extends CaseType
-  case object Bulk extends CaseType
-  case object CMA extends CaseType
 
-  implicit def caseTypeToString(caseType: CaseType): String = caseType match {
-    case Individual => Individual.toString
-    case Bulk       => Bulk.toString
-    case CMA        => CMA.toString
-  }
+  final case object Individual extends CaseType
+  final case object Bulk extends CaseType
+  final case object CMA extends CaseType
 
+  lazy val values: Set[CaseType] = Set(Individual, Bulk, CMA)
+
+  def resolveFrom(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
+    (typeOfClaim, reimbursementMethod) match {
+      case (TypeOfClaimAnswer.Multiple, _)  => CaseType.Bulk
+      case (TypeOfClaimAnswer.Scheduled, _) => CaseType.Bulk
+      case (_, CurrentMonthAdjustment)      => CaseType.CMA
+      case _                                => CaseType.Individual
+    }
+
+  implicit val writes: Writes[CaseType] = WriteEnumerationToString[CaseType]
 }

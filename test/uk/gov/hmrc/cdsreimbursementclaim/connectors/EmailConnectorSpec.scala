@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SubmitClaimResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -67,7 +67,7 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
 
     "it receives a request to send a claim submitted confirmation email" must {
 
-      val submitClaimResponse = sample[SubmitClaimResponse].copy(caseNumber = "case-number")
+      val submitClaimResponse = sample[ClaimSubmitResponse].copy(caseNumber = "case-number")
       val emailRequest        = sample[EmailRequest]
 
       val expectedRequestBody = Json.parse(
@@ -75,7 +75,7 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
            |  "to": ["${emailRequest.email.value}"],
            |  "templateId": "$claimSubmittedTemplateId",
            |  "parameters": {
-           |    "name": "${emailRequest.contactName.value}",
+           |    "name": "${emailRequest.contactName}",
            |    "caseNumber": "${submitClaimResponse.caseNumber}",
            |    "claimAmount": "${emailRequest.claimAmount.toString}"
            |  },
@@ -117,7 +117,7 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
              |  "to": ["${emailRequest.email.value}"],
              |  "templateId": "${claimSubmittedTemplateId}_cy",
              |  "parameters": {
-             |    "name": "${emailRequest.contactName.value}",
+             |    "name": "${emailRequest.contactName}",
              |    "caseNumber": "${submitClaimResponse.caseNumber}",
              |    "claimAmount": "${emailRequest.claimAmount.toString}"
              |  },

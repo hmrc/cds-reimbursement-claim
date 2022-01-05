@@ -51,7 +51,9 @@ lazy val microservice = Project(appName, file("."))
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
   )
-  .settings(routesImport := Seq.empty)
+  .settings(routesImport := Seq(
+    "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN"
+  ))
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
     addCompilerPlugin(scalafixSemanticdb),

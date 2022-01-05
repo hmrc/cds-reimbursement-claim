@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ import play.api.http.{ContentTypes, HeaderNames, MimeTypes}
 import play.api.mvc.Codec
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.UUIDGeneratorImpl
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 
 trait XmlHeaders {
   def getExtraHeaders: Seq[(String, String)] =
     Seq(
-      HeaderNames.DATE                   -> TimeUtils.rfc7231DateTimeNow,
-      CustomHeaderNames.X_CORRELATION_ID -> new UUIDGeneratorImpl().correlationId,
+      HeaderNames.DATE                   -> RFC7231DateTime.now,
+      CustomHeaderNames.X_CORRELATION_ID -> CorrelationId(),
       HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
       HeaderNames.CONTENT_TYPE           -> ContentTypes.withCharset(MimeTypes.XML)(Codec.utf_8),
       HeaderNames.ACCEPT                 -> MimeTypes.XML

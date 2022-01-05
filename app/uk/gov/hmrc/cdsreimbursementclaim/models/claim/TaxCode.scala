@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,8 +103,7 @@ object TaxCode {
   case object NI99C extends TaxCode("99C")
   case object NI99D extends TaxCode("99D")
 
-  // $COVERAGE-OFF$
-  val allTaxCodes: List[TaxCode] = List(
+  val values: List[TaxCode] = List(
     A00,
     A20,
     A30,
@@ -181,11 +180,17 @@ object TaxCode {
     NI99C,
     NI99D
   )
-  // $COVERAGE-ON$
 
-  private val taxCodesMap: Map[String, TaxCode] = allTaxCodes.map(a => a.value -> a).toMap
+  private val stringToTaxCodeMap: Map[String, TaxCode] =
+    values.map(code => code.value -> code).toMap
 
-  implicit val taxCodeEq: Eq[TaxCode] = Eq.fromUniversalEquals[TaxCode]
+  def apply(taxCode: String): Option[TaxCode]          =
+    stringToTaxCodeMap.get(taxCode)
 
-  implicit val taxCodeFormat: Format[TaxCode] = SimpleStringFormat(taxCodesMap, _.value)
+  def getOrFail(taxCode: String): TaxCode =
+    stringToTaxCodeMap(taxCode)
+
+  implicit val equality: Eq[TaxCode] = Eq.fromUniversalEquals[TaxCode]
+
+  implicit val format: Format[TaxCode] = SimpleStringFormat(getOrFail, _.value)
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Json, OWrites}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.InspectionAddressType
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 
 final case class GoodsDetails(
-  placeOfImport: Option[String],
-  isPrivateImporter: Option[String],
-  groundsForRepaymentApplication: Option[String],
-  descOfGoods: Option[String]
+  descOfGoods: Option[String],
+  isPrivateImporter: Option[YesNo] = None,
+  placeOfImport: Option[String] = None,
+  groundsForRepaymentApplication: Option[String] = None,
+  atTheImporterOrDeclarantAddress: Option[InspectionAddressType] = None,
+  inspectionAddress: Option[InspectionAddress] = None,
+  anySpecialCircumstances: Option[String] = None,
+  dateOfInspection: Option[String] = None
 )
 
 object GoodsDetails {
-  implicit val format: OFormat[GoodsDetails] = Json.format[GoodsDetails]
+  implicit val writes: OWrites[GoodsDetails] = Json.writes[GoodsDetails]
 }

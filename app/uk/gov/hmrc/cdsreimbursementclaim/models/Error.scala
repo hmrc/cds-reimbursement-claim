@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,20 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error.{IdKey, IdValue}
-
-final case class Error(value: Either[String, Throwable], identifiers: Map[IdKey, IdValue])
+sealed trait Error {
+  type T
+  val value: T
+}
 
 object Error {
 
-  type IdKey   = String
-  type IdValue = String
+  def apply(message: String): Error = new Error {
+    override type T = String
+    override val value: T = message
+  }
 
-  def apply(message: String, identifiers: (IdKey, IdValue)*): Error = Error(Left(message), identifiers.toMap)
-
-  def apply(error: Throwable, identifiers: (IdKey, IdValue)*): Error = Error(Right(error), identifiers.toMap)
-
+  def apply(throwable: Throwable): Error = new Error {
+    override type T = Throwable
+    override val value: T = throwable
+  }
 }

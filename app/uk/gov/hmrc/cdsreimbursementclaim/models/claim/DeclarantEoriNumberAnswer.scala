@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class DeclarantEoriNumberAnswer(value: Eori)
+final case class DeclarantEoriNumberAnswer(value: Eori) // TODO: Replace with just Eori
 
 object DeclarantEoriNumberAnswer {
   implicit val format: OFormat[DeclarantEoriNumberAnswer] = Json.format[DeclarantEoriNumberAnswer]

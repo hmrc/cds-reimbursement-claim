@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,29 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import play.api.libs.json.Writes
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+
 sealed trait DeclarationMode extends Product with Serializable
 
 object DeclarationMode {
-  case object ParentDeclaration extends DeclarationMode
-  case object AllDeclaration extends DeclarationMode
 
-  implicit def declarationModeToString(declarationMode: DeclarationMode): String = declarationMode match {
-    case ParentDeclaration => "Parent Declaration"
-    case AllDeclaration    => "All Declarations"
+  final case object ParentDeclaration extends DeclarationMode {
+    override def toString: String = "Parent Declaration"
   }
+
+  final case object AllDeclaration extends DeclarationMode {
+    override def toString: String = "All Declarations"
+  }
+
+  def of(typeOfClaim: TypeOfClaimAnswer): DeclarationMode =
+    typeOfClaim match {
+      case TypeOfClaimAnswer.Multiple => DeclarationMode.AllDeclaration
+      case _                          => DeclarationMode.ParentDeclaration
+    }
+
+  lazy val values: Set[DeclarationMode] = Set(ParentDeclaration, AllDeclaration)
+
+  implicit val writes: Writes[DeclarationMode] = WriteEnumerationToString[DeclarationMode]
 }

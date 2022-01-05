@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ids
 
+import cats.syntax.eq._
+
 import java.util.UUID
 
-final case class CorrelationId(uuid: UUID) extends AnyVal
+object CorrelationId {
+
+  def apply(): String = UUID.randomUUID().toString
+
+  def compact: String = CorrelationId().filterNot(c => c === '-')
+}

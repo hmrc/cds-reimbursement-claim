@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,13 @@ import play.api.libs.json.OFormat
 sealed trait TypeOfClaimAnswer extends Product with Serializable
 
 object TypeOfClaimAnswer {
-  case object Individual extends TypeOfClaimAnswer
-  case object Multiple extends TypeOfClaimAnswer
-  case object Scheduled extends TypeOfClaimAnswer
+
+  final case object Individual extends TypeOfClaimAnswer
+  final case object Multiple extends TypeOfClaimAnswer
+  final case object Scheduled extends TypeOfClaimAnswer
+
+  lazy val values: Set[TypeOfClaimAnswer] =
+    Set(Individual, Multiple, Scheduled)
 
   implicit val typeOfClaimAnswerFormat: OFormat[TypeOfClaimAnswer] =
     derived.oformat[TypeOfClaimAnswer]()

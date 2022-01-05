@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import play.api.libs.json.Format
 final case class PhoneNumber(value: String) extends AnyVal
 
 object PhoneNumber {
+
   implicit val format: Format[PhoneNumber] = implicitly[Format[String]].inmap(PhoneNumber(_), _.value)
 
   implicit val eq: Eq[PhoneNumber] = Eq.instance(_.value === _.value)

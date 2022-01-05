@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import play.api.libs.json.Format
 import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
 
 final case class AccountName(value: String) extends AnyVal
 
 object AccountName {
+
+  implicit val equality: Eq[SortCode] =
+    Eq.fromUniversalEquals[SortCode]
 
   implicit val accountNameFormat: Format[AccountName] =
     SimpleStringFormat(AccountName(_), _.value)

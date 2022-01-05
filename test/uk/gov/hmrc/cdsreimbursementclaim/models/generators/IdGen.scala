@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimedReimbursement, PhoneNumber}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimedReimbursementGen.genClaimedReimbursement
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
 
 object IdGen {
-
-  def alphaNumGen(n: Int): String =
-    Gen.listOfN(n, Gen.alphaNumChar).map(_.mkString).sample.getOrElse(sys.error(s"Could not generate instance"))
-
-  def alphaCharGen(n: Int): String =
-    Gen.listOfN(n, Gen.alphaChar).map(_.mkString).sample.getOrElse(sys.error(s"Could not generate instance"))
-
-  lazy val genPhoneNumber: PhoneNumber =
-    Gen
-      .listOfN(10, Gen.numChar)
-      .map(numbers => PhoneNumber(numbers.foldLeft("0")((s, ch) => s"$s$ch")))
-      .sample
-      .getOrElse(sys.error(s"Could not generate instance"))
-
-  implicit lazy val arbitraryPhoneNumber: Typeclass[PhoneNumber] = Arbitrary(genPhoneNumber)
 
   lazy val genEori: Gen[Eori] =
     for {
@@ -56,18 +39,4 @@ object IdGen {
   } yield MRN((d1 ++ letter2 ++ word ++ d2).mkString)
 
   implicit lazy val arbitraryMrn: Typeclass[MRN] = Arbitrary(genMRN)
-
-  lazy val genClaims: Gen[List[ClaimedReimbursement]] = for {
-    numberOfDuties <- Gen.chooseNum(1, 4)
-    claims         <- Gen.listOfN(numberOfDuties, genClaimedReimbursement)
-  } yield claims
-
-  implicit lazy val arbitraryClaims: Typeclass[List[ClaimedReimbursement]] = Arbitrary(genClaims)
-
-  lazy val genAssociatedMRNs: Gen[List[MRN]] = for {
-    numberOfMRNs <- Gen.chooseNum(1, 4)
-    mrns         <- Gen.listOfN(numberOfMRNs, genMRN)
-  } yield mrns
-
-  implicit lazy val arbitraryAssociatedMRNs: Typeclass[List[MRN]] = Arbitrary(genAssociatedMRNs)
 }

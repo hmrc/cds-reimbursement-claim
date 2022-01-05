@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,20 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OWrites}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
+
+import scala.annotation.implicitNotFound
 
 final case class EisSubmitClaimRequest(
   postNewClaimsRequest: PostNewClaimsRequest
 )
 
 object EisSubmitClaimRequest {
+
+  @implicitNotFound("No implicit TPI05 mapper found for request object")
+  def apply[A](claim: A)(implicit mapper: ClaimToTPI05Mapper[A]): Either[Error, EisSubmitClaimRequest] =
+    mapper.mapToEisSubmitClaimRequest(claim)
+
   implicit val format: OWrites[EisSubmitClaimRequest] = Json.writes[EisSubmitClaimRequest]
 }

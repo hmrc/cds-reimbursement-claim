@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
-
-import java.util.function.Predicate
 
 final case class Postcode(value: String) extends AnyVal
 
 object Postcode {
 
+  implicit val equality: Eq[Postcode] =
+    Eq.fromUniversalEquals[Postcode]
+
   implicit val format: Format[Postcode] =
     implicitly[Format[String]].inmap(Postcode(_), _.value)
-
-  val postcodeRegexPredicate: Predicate[String] =
-    "^[A-Z]{1,2}[0-9][0-9A-Z]?\\s?[0-9][A-Z]{2}$|BFPO\\s?[0-9]{1,3}$".r.pattern
-      .asPredicate()
-
 }

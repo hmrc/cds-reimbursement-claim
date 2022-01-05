@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 trait Logging {
 
   val logger: Logger = Logger(this.getClass)
-
 }
 
 object Logging {
 
-  implicit class LoggerOps(private val l: Logger) extends AnyVal {
-    def warn(msg: => String, e: => Error): Unit = {
-      val idString = e.identifiers.map { case (k, v) => s"[$k: $v]" }.mkString(" ")
-      e.value.fold(e => l.warn(s"$idString $msg: $e"), e => l.warn(s"$idString $msg", e))
+  implicit class LoggerOps(private val logger: Logger) extends AnyVal {
+
+    def warn(msg: => String, e: => Error): Unit = e.value match {
+      case throwable: Throwable => logger.warn(s"$msg because", throwable)
+      case message              => logger.warn(s"$msg because $message")
     }
-
   }
-
 }

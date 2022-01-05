@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,11 @@ import play.api.http.Status
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.DateGenerator
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{MRN, UUIDGenerator}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -46,8 +46,6 @@ trait DeclarationService {
 @Singleton
 class DefaultDeclarationService @Inject() (
   declarationConnector: DeclarationConnector,
-  uuidGenerator: UUIDGenerator,
-  dateGenerator: DateGenerator,
   declarationTransformerService: DeclarationTransformerService
 )(implicit ec: ExecutionContext)
     extends DeclarationService
@@ -58,8 +56,8 @@ class DefaultDeclarationService @Inject() (
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
           Platform.MDTP,
-          dateGenerator.nextReceiptDate,
-          uuidGenerator.compactCorrelationId
+          ISO8601DateTime.now,
+          CorrelationId.compact
         ),
         RequestDetail(
           mrn.value,
