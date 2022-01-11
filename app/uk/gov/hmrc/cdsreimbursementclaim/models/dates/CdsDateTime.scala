@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.utils
+package uk.gov.hmrc.cdsreimbursementclaim.models.dates
 
-import java.time._
+import java.time.{LocalDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 
-object TimeUtils {
+object CdsDateTime {
 
-  val cdsDateTimeFormat: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault())
+  private val cdsDateTimeFormat: DateTimeFormatter =
+    DateTimeFormatter
+      .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+      .withZone(ZoneId.systemDefault())
 
-  def cdsDateTimeNow: String = cdsDateTimeFormat.format(LocalDateTime.now)
+  def now: String = cdsDateTimeFormat.format(LocalDateTime.now)
+
+  def of(dateTime: TemporalAccessor): String =
+    cdsDateTimeFormat.format(dateTime)
 }

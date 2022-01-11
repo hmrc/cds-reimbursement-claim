@@ -16,49 +16,60 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-//import cats.data.EitherT
-//import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler4, CallHandler6}
+import cats.data.EitherT
+import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler4, CallHandler6}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-//import play.api.libs.json.{JsValue, Json, Writes}
-//import play.api.mvc.Request
-//import play.api.test.FakeRequest
-//import play.api.test.Helpers.{await, _}
-//import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
-//import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
-//import uk.gov.hmrc.cdsreimbursementclaim.models
-//import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-//import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-//import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
-//import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-//import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
-//import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
-//import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
-//import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen._
-//import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-//import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-//import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-//
-//import scala.concurrent.ExecutionContext.Implicits.global
-//import scala.concurrent.Future
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{await, _}
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
+import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
+import uk.gov.hmrc.cdsreimbursementclaim.models
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
-class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
-  /*
-  val mockClaimConnector: ClaimConnector = mock[ClaimConnector]
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-  val mockDeclarationService: DeclarationService = mock[DeclarationService]
+class ClaimServiceSpec
+    extends AnyWordSpec
+    with ScalaCheckDrivenPropertyChecks
+    with Matchers
+    with MockFactory
+    with OptionValues {
 
-  val mockAuditService: AuditService = mock[AuditService]
+  val claimConnectorMock: ClaimConnector = mock[ClaimConnector]
 
-  val mockEmailService: EmailService = mock[EmailService]
+  val declarationServiceMock: DeclarationService = mock[DeclarationService]
+
+  val emailServiceMock: EmailService = mock[EmailService]
+
+  val auditServiceMock: AuditService = mock[AuditService]
 
   val claimService =
     new DefaultClaimService(
-      mockClaimConnector,
-      mockDeclarationService,
-      mockEmailService,
-      mockAuditService,
+      claimConnectorMock,
+      declarationServiceMock,
+      emailServiceMock,
+      auditServiceMock,
       MockMetrics.metrics
     )
 
@@ -66,19 +77,43 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val request: Request[_] = FakeRequest()
 
+  implicit val c285ClaimMapper: ClaimToTPI05Mapper[C285ClaimRequest] =
+    mock[ClaimToTPI05Mapper[C285ClaimRequest]]
+
+  implicit val ce1779ClaimMapper: ClaimToTPI05Mapper[CE1779ClaimData] =
+    mock[ClaimToTPI05Mapper[CE1779ClaimData]]
+
+  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
+    PropertyCheckConfiguration(minSuccessful = 1)
+
+  def mockDeclarationRetrieving(mrn: MRN)(
+    displayDeclaration: DisplayDeclaration
+  ): CallHandler2[MRN, HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
+    (declarationServiceMock
+      .getDeclaration(_: MRN)(_: HeaderCarrier))
+      .expects(mrn, *)
+      .returning(EitherT.rightT(Some(displayDeclaration)))
+
+  def mockClaimMapping[A](claim: A, eis: EisSubmitClaimRequest)(implicit
+    claimMapper: ClaimToTPI05Mapper[A]
+  ): CallHandler1[A, Either[Error, EisSubmitClaimRequest]] =
+    (claimMapper
+      .mapToEisSubmitClaimRequest(_: A))
+      .expects(claim)
+      .returning(Right(eis))
+
   def mockSubmitClaim(eisSubmitClaimRequest: EisSubmitClaimRequest)(
     response: Either[Error, HttpResponse]
   ): CallHandler2[EisSubmitClaimRequest, HeaderCarrier, EitherT[Future, Error, HttpResponse]] =
-    (mockClaimConnector
+    (claimConnectorMock
       .submitClaim(_: EisSubmitClaimRequest)(_: HeaderCarrier))
       .expects(eisSubmitClaimRequest, hc)
       .returning(EitherT.fromEither[Future](response))
 
   def mockAuditSubmitClaimEvent(
-    submitClaimRequest: C285ClaimRequest,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   ): CallHandler6[String, SubmitClaimEvent, String, HeaderCarrier, Writes[SubmitClaimEvent], Request[_], Unit] =
-    (mockAuditService
+    (auditServiceMock
       .sendEvent(_: String, _: SubmitClaimEvent, _: String)(
         _: HeaderCarrier,
         _: Writes[SubmitClaimEvent],
@@ -86,11 +121,14 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
       ))
       .expects(
         "SubmitClaim",
-        SubmitClaimEvent(eisSubmitClaimRequest, submitClaimRequest.signedInUserDetails.eori),
+        SubmitClaimEvent(
+          eisSubmitClaimRequest,
+          eisSubmitClaimRequest.postNewClaimsRequest.requestDetail.claimantEORI.value
+        ),
         "submit-claim",
-   *,
-   *,
-   *
+        *,
+        *,
+        *
       )
       .returning(())
 
@@ -100,7 +138,7 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
     submitClaimRequest: A,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   ) =
-    (mockAuditService
+    (auditServiceMock
       .sendEvent(_: String, _: SubmitClaimResponseEvent[A], _: String)(
         _: HeaderCarrier,
         _: Writes[SubmitClaimResponseEvent[A]],
@@ -115,41 +153,36 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
           submitClaimRequest
         ),
         "submit-claim-response",
-   *,
-   *,
-   *
+        *,
+        *,
+        *
       )
       .returning(())
 
   def mockSendClaimSubmitConfirmationEmail(
-    emailRequest: EmailRequest,
+    eisSubmitClaimRequest: EisSubmitClaimRequest,
     submitClaimResponse: ClaimSubmitResponse
   )(
     response: Either[Error, Unit]
   ): CallHandler4[EmailRequest, ClaimSubmitResponse, HeaderCarrier, Request[_], EitherT[Future, models.Error, Unit]] =
-    (mockEmailService
+    (emailServiceMock
       .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[_]))
-      .expects(emailRequest, submitClaimResponse, *, *)
+      .expects(
+        EmailRequest(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail).value,
+        submitClaimResponse,
+        *,
+        *
+      )
       .returning(EitherT(Future.successful(response)))
 
   "Claim Service" when {
 
     "handling submission of claims" should {
 
-      "successfully submit a claim" in {
-
-        val submitClaimRequest = sample[C285ClaimRequest]
-
-        val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
-
-        val emailRequest = sample[EmailRequest].copy(
-          email = submitClaimRequest.signedInUserDetails.verifiedEmail,
-          contactName = submitClaimRequest.signedInUserDetails.contactName,
-          claimAmount = submitClaimRequest.claim.totalReimbursementAmount
-        )
-
-        val responseJsonBody = Json.parse(
-          """
+      "successfully submit a C285 claim" in forAll {
+        (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
+          val responseJsonBody = Json.parse(
+            """
             |{
             |    "postNewClaimsResponse": {
             |        "responseCommon": {
@@ -161,41 +194,36 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
             |    }
             |}
             |""".stripMargin
-        )
-
-        val submitClaimResponse = sample[ClaimSubmitResponse].copy(caseNumber = "4374422408")
-
-        inSequence {
-          mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
-          mockAuditSubmitClaimEvent(submitClaimRequest, eisSubmitClaimRequest)
-          mockSubmitClaim(eisSubmitClaimRequest)(
-            Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
           )
-          mockAuditSubmitClaimResponseEvent(
-            200,
-            Some(responseJsonBody),
-            submitClaimRequest,
-            eisSubmitClaimRequest
-          )
-          mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
-        }
-        await(claimService.submitClaim(submitClaimRequest).value) shouldBe Right(submitClaimResponse)
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+
+          inSequence {
+            mockClaimMapping(c285ClaimRequest, eisRequest)
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = c285ClaimRequest,
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
 
-      "successfully submit a claim even though sending of the confirmation email was not successful" in {
-
-        val submitClaimRequest = sample[C285ClaimRequest]
-
-        val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
-
-        val emailRequest = sample[EmailRequest].copy(
-          email = submitClaimRequest.signedInUserDetails.verifiedEmail,
-          contactName = submitClaimRequest.signedInUserDetails.contactName,
-          claimAmount = submitClaimRequest.claim.totalReimbursementAmount
-        )
-
-        val responseJsonBody = Json.parse(
-          """
+      "successfully submit a Rejected Goods claim" in forAll {
+        (
+          ce1779Request: RejectedGoodsClaimRequest,
+          displayDeclaration: DisplayDeclaration,
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val responseJsonBody = Json.parse(
+            """
             |{
             |    "postNewClaimsResponse": {
             |        "responseCommon": {
@@ -207,39 +235,114 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
             |    }
             |}
             |""".stripMargin
-        )
-
-        val submitClaimResponse = sample[ClaimSubmitResponse].copy(caseNumber = "4374422408")
-
-        inSequence {
-          mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
-          mockAuditSubmitClaimEvent(submitClaimRequest, eisSubmitClaimRequest)
-          mockSubmitClaim(eisSubmitClaimRequest)(
-            Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
           )
-          mockAuditSubmitClaimResponseEvent(
-            200,
-            Some(responseJsonBody),
-            submitClaimRequest,
-            eisSubmitClaimRequest
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+
+          inSequence {
+            mockDeclarationRetrieving(ce1779Request.claim.movementReferenceNumber)(displayDeclaration)
+            mockClaimMapping((ce1779Request.claim, displayDeclaration), eisRequest)
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = ce1779Request,
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(claimService.submitRejectedGoodsClaim(ce1779Request).value) shouldBe Right(submitClaimResponse)
+      }
+
+      "successfully submit a C285 claim even though sending of the confirmation email was not successful" in forAll {
+        (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
+          val responseJsonBody = Json.parse(
+            """
+            |{
+            |    "postNewClaimsResponse": {
+            |        "responseCommon": {
+            |            "status": "OK",
+            |            "processingDate": "2021-01-20T12:07540Z",
+            |            "CDFPayService": "NDRC",
+            |            "CDFPayCaseNumber": "4374422408"
+            |        }
+            |    }
+            |}
+            |""".stripMargin
           )
-          mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left(Error("some error")))
-        }
 
-        await(claimService.submitClaim(submitClaimRequest).value) shouldBe Right(submitClaimResponse)
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
 
+          inSequence {
+            mockClaimMapping(c285ClaimRequest, eisRequest)
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              200,
+              Some(responseJsonBody),
+              c285ClaimRequest,
+              eisRequest
+            )
+            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Left(Error("some error")))
+          }
+
+          await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
+      }
+
+      "successfully submit a Rejected Goods claim even though sending of the confirmation email was not successful" in forAll {
+        (
+          ce1779Request: RejectedGoodsClaimRequest,
+          displayDeclaration: DisplayDeclaration,
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val responseJsonBody = Json.parse(
+            """
+              |{
+              |    "postNewClaimsResponse": {
+              |        "responseCommon": {
+              |            "status": "OK",
+              |            "processingDate": "2021-01-20T12:07540Z",
+              |            "CDFPayService": "NDRC",
+              |            "CDFPayCaseNumber": "4374422408"
+              |        }
+              |    }
+              |}
+              |""".stripMargin
+          )
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+
+          inSequence {
+            mockDeclarationRetrieving(ce1779Request.claim.movementReferenceNumber)(displayDeclaration)
+            mockClaimMapping((ce1779Request.claim, displayDeclaration), eisRequest)
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              200,
+              Some(responseJsonBody),
+              ce1779Request,
+              eisRequest
+            )
+            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Left(Error("some error")))
+          }
+
+          await(claimService.submitRejectedGoodsClaim(ce1779Request).value) shouldBe Right(submitClaimResponse)
       }
 
       "return an error" when {
 
-        "the response payload contains an error" in {
-
-          val submitClaimRequest = sample[C285ClaimRequest]
-
-          val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
-
-          val errorResponseJsonBody = Json.parse(
-            """
+        "the response payload contains an error" in forAll {
+          (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
+            val errorResponseJsonBody = Json.parse(
+              """
               |{
               |    "postNewClaimsResponse": {
               |        "responseCommon": {
@@ -257,70 +360,33 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
               |    }
               |}
               |""".stripMargin
-          )
-
-          inSequence {
-            mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
-            mockAuditSubmitClaimEvent(submitClaimRequest, eisSubmitClaimRequest)
-            mockSubmitClaim(eisSubmitClaimRequest)(
-              Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, Seq[String]]))
             )
-            mockAuditSubmitClaimResponseEvent(
-              200,
-              Some(errorResponseJsonBody),
-              submitClaimRequest,
-              eisSubmitClaimRequest
-            )
-          }
-          await(claimService.submitClaim(submitClaimRequest).value).isLeft shouldBe true
 
+            inSequence {
+              mockClaimMapping(c285ClaimRequest, eisRequest)
+              mockAuditSubmitClaimEvent(eisRequest)
+              mockSubmitClaim(eisRequest)(
+                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, Seq[String]]))
+              )
+              mockAuditSubmitClaimResponseEvent(
+                200,
+                Some(errorResponseJsonBody),
+                c285ClaimRequest,
+                eisRequest
+              )
+            }
+
+            await(claimService.submitC285Claim(c285ClaimRequest).value).isLeft shouldBe true
         }
 
-        "no case number is returned in the response" in {
-
-          val submitClaimRequest = sample[C285ClaimRequest]
-
-          val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
-
-          val errorResponseJsonBody = Json.parse(
-            """
-              |{
-              |    "postNewClaimsResponse": {
-              |        "responseCommon": {
-              |            "status": "OK",
-              |            "processingDate": "2021-01-20T12:07540Z",
-              |            "CDFPayService": "NDRC"
-              |        }
-              |    }
-              |}
-              |""".stripMargin
-          )
-
-          inSequence {
-            mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
-            mockAuditSubmitClaimEvent(submitClaimRequest, eisSubmitClaimRequest)
-            mockSubmitClaim(eisSubmitClaimRequest)(
-              Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, Seq[String]]))
-            )
-            mockAuditSubmitClaimResponseEvent(
-              200,
-              Some(errorResponseJsonBody),
-              submitClaimRequest,
-              eisSubmitClaimRequest
-            )
-          }
-          await(claimService.submitClaim(submitClaimRequest).value).isLeft shouldBe true
-
-        }
-
-        "a http response other than 200 OK was received" in {
-
-          val submitClaimRequest = sample[C285ClaimRequest]
-
-          val eisSubmitClaimRequest = sample[EisSubmitClaimRequest]
-
-          val errorResponseJsonBody = Json.parse(
-            """
+        "a http response other than 200 OK was received" in forAll {
+          (
+            ce1779Request: RejectedGoodsClaimRequest,
+            displayDeclaration: DisplayDeclaration,
+            eisRequest: EisSubmitClaimRequest
+          ) =>
+            val errorResponseJsonBody = Json.parse(
+              """
               |{
               |    "errorDetail": {
               |        "timestamp": "2018-08-08T13:57:53Z",
@@ -336,29 +402,59 @@ class ClaimServiceSpec extends AnyWordSpec with Matchers with MockFactory {
               |    }
               |}
               |""".stripMargin
-          )
-
-          inSequence {
-            mockTransformSubmitClaimRequest(submitClaimRequest)(Right(eisSubmitClaimRequest))
-            mockAuditSubmitClaimEvent(submitClaimRequest, eisSubmitClaimRequest)
-            mockSubmitClaim(eisSubmitClaimRequest)(
-              Right(HttpResponse(400, errorResponseJsonBody, Map.empty[String, Seq[String]]))
             )
-            mockAuditSubmitClaimResponseEvent(
-              400,
-              Some(errorResponseJsonBody),
-              submitClaimRequest,
-              eisSubmitClaimRequest
-            )
-          }
-          await(claimService.submitClaim(submitClaimRequest).value).isLeft shouldBe true
 
+            inSequence {
+              mockDeclarationRetrieving(ce1779Request.claim.movementReferenceNumber)(displayDeclaration)
+              mockClaimMapping((ce1779Request.claim, displayDeclaration), eisRequest)
+              mockAuditSubmitClaimEvent(eisRequest)
+              mockSubmitClaim(eisRequest)(
+                Right(HttpResponse(400, errorResponseJsonBody, Map.empty[String, Seq[String]]))
+              )
+              mockAuditSubmitClaimResponseEvent(
+                400,
+                Some(errorResponseJsonBody),
+                ce1779Request,
+                eisRequest
+              )
+            }
+
+            await(claimService.submitRejectedGoodsClaim(ce1779Request).value).isLeft shouldBe true
         }
 
+        "no case number is returned in the response" in forAll {
+          (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
+            val errorResponseJsonBody = Json.parse(
+              """
+                |{
+                |    "postNewClaimsResponse": {
+                |        "responseCommon": {
+                |            "status": "OK",
+                |            "processingDate": "2021-01-20T12:07540Z",
+                |            "CDFPayService": "NDRC"
+                |        }
+                |    }
+                |}
+                |""".stripMargin
+            )
+
+            inSequence {
+              mockClaimMapping(c285ClaimRequest, eisRequest)
+              mockAuditSubmitClaimEvent(eisRequest)
+              mockSubmitClaim(eisRequest)(
+                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, Seq[String]]))
+              )
+              mockAuditSubmitClaimResponseEvent(
+                200,
+                Some(errorResponseJsonBody),
+                c285ClaimRequest,
+                eisRequest
+              )
+            }
+
+            await(claimService.submitC285Claim(c285ClaimRequest).value).isLeft shouldBe true
+        }
       }
-
     }
-
   }
-   */
 }

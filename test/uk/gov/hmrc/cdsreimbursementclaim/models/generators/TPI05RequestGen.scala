@@ -161,12 +161,12 @@ object TPI05RequestGen {
     for {
       fullName             <- genRandomString
       establishmentAddress <- genAddress
-      contactInformation   <- Gen.option(genContactInformation)
+      contactInformation   <- genContactInformation
     } yield EORIInformation(
       EORINumber = Some(eori),
       CDSFullName = Some(fullName),
       CDSEstablishmentAddress = establishmentAddress,
-      contactInformation = contactInformation
+      contactInformation = Some(contactInformation)
     )
 
   lazy val genMrnInformation: Gen[MRNInformation] =

@@ -26,9 +26,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, DisplayDeclaration)] {
+class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
 
   def mapToEisSubmitClaimRequest(
     data: (RejectedGoodsClaim, DisplayDeclaration)
@@ -117,4 +118,8 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[(RejectedGoodsClaim, D
       )
       .verify
   }
+}
+
+object CE1779ClaimToTPI05Mapper {
+  type CE1779ClaimData = (RejectedGoodsClaim, DisplayDeclaration)
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, RejectedGoodsClaimRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils.cdsDateTimeFormat
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
 
@@ -46,7 +46,7 @@ class CE1779ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[RejectedGood
                 PropertyType("DeclarationType", "MRN"),
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType("DocumentType", document.documentType.toTPI05Key),
-                PropertyType("DocumentReceivedDate", cdsDateTimeFormat.format(document.uploadedOn))
+                PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
               )
             )
           )

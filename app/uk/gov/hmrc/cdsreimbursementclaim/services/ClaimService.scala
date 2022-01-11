@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 import cats.data.EitherT
-import cats.implicits.catsSyntaxTuple3Semigroupal
 import cats.instances.future._
 import cats.instances.int._
 import cats.syntax.either._
@@ -33,6 +32,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSu
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
@@ -47,11 +48,19 @@ trait ClaimService {
 
   def submitC285Claim(
     c285ClaimRequest: C285ClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[C285ClaimRequest]
+  ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitRejectedGoodsClaim(
     rejectedGoodsClaimRequest: RejectedGoodsClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[CE1779ClaimData]
+  ): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
 @Singleton
@@ -67,7 +76,11 @@ class DefaultClaimService @Inject() (
 
   def submitC285Claim(
     c285ClaimRequest: C285ClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse] = for {
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[C285ClaimRequest]
+  ): EitherT[Future, Error, ClaimSubmitResponse] = for {
     eisSubmitRequest       <- EitherT
                                 .fromEither[Future](EisSubmitClaimRequest(c285ClaimRequest))
                                 .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
@@ -87,7 +100,11 @@ class DefaultClaimService @Inject() (
 
   def submitRejectedGoodsClaim(
     rejectedGoodsClaimRequest: RejectedGoodsClaimRequest
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, ClaimSubmitResponse] = for {
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[CE1779ClaimData]
+  ): EitherT[Future, Error, ClaimSubmitResponse] = for {
     declaration            <- declarationService
                                 .getDeclaration(rejectedGoodsClaimRequest.claim.movementReferenceNumber)
                                 .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
@@ -108,18 +125,11 @@ class DefaultClaimService @Inject() (
                                 }
   } yield claimResponse
 
-  private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] = {
-    val details           = eisSubmitClaimRequest.postNewClaimsRequest.requestDetail
-    val maybeEmailRequest = (
-      details.claimantEmailAddress,
-      details.EORIDetails
-        .flatMap(_.agentEORIDetails.contactInformation)
-        .flatMap(_.contactPerson),
-      details.claimAmountTotal.map(BigDecimal(_))
-    ) mapN (EmailRequest(_, _, _))
-
-    EitherT.fromOption[Future](maybeEmailRequest, Error("Cannot create Email request because required fields missing"))
-  }
+  private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
+    EitherT.fromOption[Future](
+      EmailRequest(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail),
+      Error("Cannot create Email request because required fields missing")
+    )
 
   private def auditClaimBeforeSubmit(eisSubmitClaimRequest: EisSubmitClaimRequest)(implicit
     hc: HeaderCarrier,

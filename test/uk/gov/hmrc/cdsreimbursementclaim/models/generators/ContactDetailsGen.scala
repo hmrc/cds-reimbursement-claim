@@ -47,7 +47,14 @@ object ContactDetailsGen {
   lazy val genContactDetails: Gen[ContactDetails] =
     for {
       contactName  <- Gen.option(genStringWithMaxSizeOfN(7))
-      addressLine1 <- Gen.option(Gen.posNum[Int].map(num => s"$num ${genStringWithMaxSizeOfN(7)}"))
+      addressLine1 <- Gen.option(
+                        Gen
+                          .posNum[Int]
+                          .flatMap(num =>
+                            genStringWithMaxSizeOfN(7)
+                              .map(building => s"$num $building")
+                          )
+                      )
       addressLine2 <- Gen.option(genStringWithMaxSizeOfN(10))
       addressLine3 <- Gen.option(genStringWithMaxSizeOfN(10))
       addressLine4 <- Gen.option(genStringWithMaxSizeOfN(10))
