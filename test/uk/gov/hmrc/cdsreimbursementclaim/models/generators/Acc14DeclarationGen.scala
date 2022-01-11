@@ -19,12 +19,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.EitherValues._
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, TemporalAccessorOps}
+import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, CdsDateTime, ISO8601DateTime, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.{genBankDetails, genMaskedBankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.{genBankDetails, mask}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CMAEligibleGen.genWhetherCMAEligible
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genContactDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
@@ -32,6 +33,33 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genP
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 
 object Acc14DeclarationGen {
+
+  lazy val genRequestCommon: Gen[RequestCommon] =
+    Gen.uuid.map { acknowledgementReference =>
+      RequestCommon(
+        originatingSystem = Platform.MDTP,
+        receiptDate = ISO8601DateTime.now,
+        acknowledgementReference = acknowledgementReference.toString
+      )
+    }
+
+  lazy val genRequestDetail: Gen[RequestDetail] =
+    genMRN.map { mrn =>
+      RequestDetail(
+        declarationId = mrn.value,
+        securityReason = None
+      )
+    }
+
+  lazy val genResponseCommon: Gen[ResponseCommon] =
+    Gen.const(
+      ResponseCommon(
+        status = "OK",
+        statusText = None,
+        processingDate = CdsDateTime.now,
+        returnParameters = None
+      )
+    )
 
   lazy val genTaxDetails: Gen[TaxDetails] = for {
     taxType <- genTaxCode.map(_.value)
@@ -130,10 +158,10 @@ object Acc14DeclarationGen {
     procedureCode            <- genStringWithMaxSizeOfN(5)
     btaSource                <- Gen.option(genRandomString)
     declarantDetails         <- genDeclarantDetails
-    consigneeDetails         <- Gen.option(genConsigneeDetails)
+    consigneeDetails         <- genConsigneeDetails
     accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
     bankDetails              <- Gen.option(genBankDetails)
-    maskedBankDetails        <- Gen.option(genMaskedBankDetails)
+    maskedBankDetails        <- Gen.const(bankDetails.map(mask))
     ndrcDetails              <- Gen.option(Gen.nonEmptyListOf(genNdrcDetails))
   } yield DisplayDeclaration(
     DisplayResponseDetail(
@@ -145,7 +173,7 @@ object Acc14DeclarationGen {
       procedureCode = procedureCode,
       btaSource = btaSource,
       declarantDetails = declarantDetails,
-      consigneeDetails = consigneeDetails,
+      consigneeDetails = Some(consigneeDetails),
       accountDetails = accountDetails,
       bankDetails = bankDetails,
       maskedBankDetails = maskedBankDetails,
@@ -207,10 +235,10 @@ object Acc14DeclarationGen {
     Arbitrary(genResponseDetail)
 
   implicit lazy val arbitraryRequestCommon: Typeclass[RequestCommon] =
-    gen[RequestCommon]
+    Arbitrary(genRequestCommon)
 
   implicit lazy val arbitraryRequestDetail: Typeclass[RequestDetail] =
-    gen[RequestDetail]
+    Arbitrary(genRequestDetail)
 
   implicit lazy val arbitraryOverpaymentDeclarationDisplayRequest: Typeclass[OverpaymentDeclarationDisplayRequest] =
     gen[OverpaymentDeclarationDisplayRequest]
@@ -219,7 +247,7 @@ object Acc14DeclarationGen {
     gen[DeclarationRequest]
 
   implicit lazy val arbitraryResponseCommon: Typeclass[ResponseCommon] =
-    gen[ResponseCommon]
+    Arbitrary(genResponseCommon)
 
   implicit lazy val arbitraryOverpaymentDeclarationDisplayResponse: Typeclass[OverpaymentDeclarationDisplayResponse] =
     gen[OverpaymentDeclarationDisplayResponse]

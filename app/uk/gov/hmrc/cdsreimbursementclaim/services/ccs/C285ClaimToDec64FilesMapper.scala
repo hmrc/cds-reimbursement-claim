@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TimeUtils.cdsDateTimeFormat
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
 
@@ -49,7 +49,7 @@ class C285ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[C285ClaimReque
                   "DocumentType",
                   document.documentType.map(_.toTPI05Key).getOrElse("")
                 ),
-                PropertyType("DocumentReceivedDate", cdsDateTimeFormat.format(document.uploadedOn))
+                PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
               )
             )
           )

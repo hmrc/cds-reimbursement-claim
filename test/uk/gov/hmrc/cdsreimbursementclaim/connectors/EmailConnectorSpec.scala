@@ -84,27 +84,80 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
            |""".stripMargin
       )
 
-      "make a http post call and return a result" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "en"))
+      "make a http post call and return a result" when {
 
-        List(
-          HttpResponse(204, emptyJsonBody),
-          HttpResponse(401, emptyJsonBody),
-          HttpResponse(400, emptyJsonBody)
-        ).foreach { httpResponse =>
-          withClue(s"For http response [${httpResponse.toString}]") {
+        "language is specified" in {
+          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "en"))
 
-            mockPost(
-              s"http://host:123/hmrc/email",
-              Seq.empty,
-              expectedRequestBody
-            )(Some(httpResponse))
+          List(
+            HttpResponse(204, emptyJsonBody),
+            HttpResponse(401, emptyJsonBody),
+            HttpResponse(400, emptyJsonBody)
+          ).foreach { httpResponse =>
+            withClue(s"For http response [${httpResponse.toString}]") {
 
-            await(
-              connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
-            ) shouldBe Right(
-              httpResponse
-            )
+              mockPost(
+                s"http://host:123/hmrc/email",
+                Seq.empty,
+                expectedRequestBody
+              )(Some(httpResponse))
+
+              await(
+                connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
+              ) shouldBe Right(
+                httpResponse
+              )
+            }
+          }
+        }
+
+        "no language is specified" in {
+          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq())
+
+          List(
+            HttpResponse(204, emptyJsonBody),
+            HttpResponse(401, emptyJsonBody),
+            HttpResponse(400, emptyJsonBody)
+          ).foreach { httpResponse =>
+            withClue(s"For http response [${httpResponse.toString}]") {
+
+              mockPost(
+                s"http://host:123/hmrc/email",
+                Seq.empty,
+                expectedRequestBody
+              )(Some(httpResponse))
+
+              await(
+                connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
+              ) shouldBe Right(
+                httpResponse
+              )
+            }
+          }
+        }
+
+        "an invalid language is passed using EN by the default" in {
+          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "ru"))
+
+          List(
+            HttpResponse(204, emptyJsonBody),
+            HttpResponse(401, emptyJsonBody),
+            HttpResponse(400, emptyJsonBody)
+          ).foreach { httpResponse =>
+            withClue(s"For http response [${httpResponse.toString}]") {
+
+              mockPost(
+                s"http://host:123/hmrc/email",
+                Seq.empty,
+                expectedRequestBody
+              )(Some(httpResponse))
+
+              await(
+                connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
+              ) shouldBe Right(
+                httpResponse
+              )
+            }
           }
         }
       }
@@ -137,24 +190,7 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
             connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
           ).isLeft shouldBe true
         }
-
-        "if there is no language specified" in {
-          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq())
-          await(
-            connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
-          ).isLeft shouldBe true
-
-        }
-
-        "if an invalid language is passed" in {
-          implicit val hc: HeaderCarrier = HeaderCarrier().copy(otherHeaders = Seq("Accept-Language" -> "ru"))
-          await(
-            connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
-          ).isLeft shouldBe true
-
-        }
       }
     }
-
   }
 }

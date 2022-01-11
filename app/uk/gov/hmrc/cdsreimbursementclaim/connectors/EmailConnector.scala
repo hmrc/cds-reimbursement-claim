@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
-import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.libs.json.{JsValue, Json, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DefaultEmailConnector.SendEmailRequest
@@ -58,36 +57,31 @@ class DefaultEmailConnector @Inject() (
     emailRequest: EmailRequest
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, HttpResponse] =
-    for {
-      acceptLanguage <- EitherT.fromOption[Future](
-                          AcceptLanguage.fromHeaderCarrier(hc),
-                          Error("could not find Accept-Language HTTP header")
-                        )
-      httpResponse   <- EitherT[Future, Error, HttpResponse](
-                          http
-                            .POST[JsValue, HttpResponse](
-                              sendEmailUrl,
-                              Json.toJson(
-                                SendEmailRequest(
-                                  List(emailRequest.email.value),
-                                  DefaultEmailConnector.getEmailTemplate(acceptLanguage, claimSubmittedTemplateId),
-                                  Map(
-                                    "name"        -> emailRequest.contactName,
-                                    "caseNumber"  -> submitClaimResponse.caseNumber,
-                                    "claimAmount" -> emailRequest.claimAmount.toString
-                                  ),
-                                  force = false
-                                )
-                              )
-                            )
-                            .map(Right(_))
-                            .recover { case e =>
-                              Left(Error(e))
-                            }
-                        )
-    } yield httpResponse
-
+  ): EitherT[Future, Error, HttpResponse] = EitherT {
+    http
+      .POST[JsValue, HttpResponse](
+        sendEmailUrl,
+        Json.toJson(
+          SendEmailRequest(
+            List(emailRequest.email.value),
+            DefaultEmailConnector.getEmailTemplate(
+              AcceptLanguage.fromHeaderCarrier(hc).getOrElse(AcceptLanguage.EN),
+              claimSubmittedTemplateId
+            ),
+            Map(
+              "name"        -> emailRequest.contactName,
+              "caseNumber"  -> submitClaimResponse.caseNumber,
+              "claimAmount" -> emailRequest.claimAmount.toString
+            ),
+            force = false
+          )
+        )
+      )
+      .map(Right(_))
+      .recover { case e =>
+        Left(Error(e))
+      }
+  }
 }
 
 object DefaultEmailConnector {

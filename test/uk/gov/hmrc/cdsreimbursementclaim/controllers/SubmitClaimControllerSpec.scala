@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler3, CallHandler4}
+import org.scalamock.handlers.CallHandler4
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Headers, Request, WrappedRequest}
 import play.api.test.Helpers._
@@ -26,13 +26,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaimRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64FilesMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.workitem.WorkItem
 
@@ -65,18 +67,30 @@ class SubmitClaimControllerSpec extends ControllerSpec {
 
   def mockC285ClaimSubmission(request: C285ClaimRequest)(
     response: Either[Error, ClaimSubmitResponse]
-  ): CallHandler3[C285ClaimRequest, HeaderCarrier, Request[_], EitherT[Future, Error, ClaimSubmitResponse]] =
+  ): CallHandler4[C285ClaimRequest, HeaderCarrier, Request[_], ClaimToTPI05Mapper[C285ClaimRequest], EitherT[
+    Future,
+    Error,
+    ClaimSubmitResponse
+  ]] =
     (mockClaimService
-      .submitC285Claim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_]))
-      .expects(request, *, *)
+      .submitC285Claim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_], _: ClaimToTPI05Mapper[C285ClaimRequest]))
+      .expects(request, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest)(
     response: Either[Error, ClaimSubmitResponse]
-  ): CallHandler3[RejectedGoodsClaimRequest, HeaderCarrier, Request[_], EitherT[Future, Error, ClaimSubmitResponse]] =
+  ): CallHandler4[RejectedGoodsClaimRequest, HeaderCarrier, Request[_], ClaimToTPI05Mapper[CE1779ClaimData], EitherT[
+    Future,
+    Error,
+    ClaimSubmitResponse
+  ]] =
     (mockClaimService
-      .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest)(_: HeaderCarrier, _: Request[_]))
-      .expects(request, *, *)
+      .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest)(
+        _: HeaderCarrier,
+        _: Request[_],
+        _: ClaimToTPI05Mapper[CE1779ClaimData]
+      ))
+      .expects(request, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockCcsRequestEnqueue[A](

@@ -54,25 +54,22 @@ object BankAccountDetailsGen {
       declarantBankDetails <- genBankAccountDetails
     } yield BankDetails(Some(consigneeBankDetails), Some(declarantBankDetails))
 
-  lazy val genMaskedBankDetails: Gen[BankDetails] = {
+  def mask(bankDetails: BankDetails): BankDetails = {
 
-    def mask(value: String): String =
+    def hideAllExceptTwoLast(value: String): String =
       s"Ends with ${value.substring(value.length - 2)}"
 
-    for {
-      consigneeBankDetails <- genBankAccountDetails
-      declarantBankDetails <- genBankAccountDetails
-    } yield BankDetails(
-      consigneeBankDetails = Some(
-        consigneeBankDetails.copy(
-          sortCode = SortCode(mask(consigneeBankDetails.sortCode.value)),
-          accountNumber = AccountNumber(mask(consigneeBankDetails.accountNumber.value))
+    BankDetails(
+      consigneeBankDetails = bankDetails.consigneeBankDetails.map(details =>
+        details.copy(
+          sortCode = SortCode(hideAllExceptTwoLast(details.sortCode.value)),
+          accountNumber = AccountNumber(hideAllExceptTwoLast(details.accountNumber.value))
         )
       ),
-      declarantBankDetails = Some(
-        declarantBankDetails.copy(
-          sortCode = SortCode(mask(declarantBankDetails.sortCode.value)),
-          accountNumber = AccountNumber(mask(declarantBankDetails.accountNumber.value))
+      declarantBankDetails = bankDetails.declarantBankDetails.map(details =>
+        details.copy(
+          sortCode = SortCode(hideAllExceptTwoLast(details.sortCode.value)),
+          accountNumber = AccountNumber(hideAllExceptTwoLast(details.accountNumber.value))
         )
       )
     )

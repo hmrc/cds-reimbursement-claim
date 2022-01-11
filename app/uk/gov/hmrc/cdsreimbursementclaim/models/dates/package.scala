@@ -25,7 +25,10 @@ import java.util.TimeZone
 package object dates {
 
   implicit class TemporalAccessorOps(val temporalAccessor: TemporalAccessor) extends AnyVal {
+
     def toIsoLocalDate: String = ISOLocalDate.of(temporalAccessor)
+
+    def toCdsDateTime: String = CdsDateTime.of(temporalAccessor)
   }
 
   implicit class JavaToJoda(val clock: Clock) extends AnyVal {

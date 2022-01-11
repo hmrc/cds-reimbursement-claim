@@ -31,13 +31,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{TimeUtils, toUUIDString}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.toUUIDString
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.workitem._
 
@@ -234,7 +235,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
           declarationType = submitClaimRequest.claim.declarantTypeAnswer.toString,
           applicationName = "NDRC",
           documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
-          documentReceivedDate = TimeUtils.cdsDateTimeFormat.format(evidence.uploadedOn),
+          documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
           sourceLocation = evidence.upscanSuccess.downloadUrl,
           sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
           sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
