@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import cats.data.Validated.{Valid, invalidNel, validNel}
-import cats.data.{Ior, ValidatedNel}
+import cats.data.ValidatedNel
 import cats.implicits.{catsSyntaxOption, toTraverseOps}
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -163,34 +163,40 @@ object MrnDetail {
           }
       })
 
-    def withBankDetailsWhen(boolean: Boolean, f: => Option[Ior[response.BankDetails, BankAccountDetails]]): Builder =
-      if (boolean) withBankDetails(f) else this
+    def withFirstNonEmptyBankDetailsWhen(isTrue: Boolean)(
+      maybeBankDetails: Option[response.BankDetails],
+      maybeBankAccountDetails: Option[BankAccountDetails]
+    ): Builder =
+      if (isTrue) withFirstNonEmptyBankDetails(maybeBankDetails, maybeBankAccountDetails) else this
 
-    def withBankDetails(maybeBankDetails: Option[Ior[response.BankDetails, BankAccountDetails]]): Builder =
-      copy(validated.andThen { mrnDetails =>
-        maybeBankDetails
-          .toValidNel(Error("Missing bank details"))
-          .map(
-            _.fold(
-              bankDetails =>
-                BankDetails(
-                  declarantBankDetails = bankDetails.declarantBankDetails.map(BankDetail.from),
-                  consigneeBankDetails = bankDetails.consigneeBankDetails.map(BankDetail.from)
-                ),
-              bankAccountDetails =>
-                BankDetails(
-                  consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
-                  declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
-                ),
-              (_, bankAccountDetails) =>
-                BankDetails(
-                  consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
-                  declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
-                )
+    def withFirstNonEmptyBankDetails(
+      maybeBankDetails: Option[response.BankDetails],
+      maybeBankAccountDetails: Option[BankAccountDetails]
+    ): Builder = {
+      def tryToFindNonEmpty = (maybeBankDetails, maybeBankAccountDetails) match {
+        case (_, Some(bankAccountDetails)) =>
+          Some(
+            BankDetails(
+              consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
+              declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
             )
           )
+        case (Some(acc14BankDetails), _)   =>
+          Some(
+            BankDetails(
+              declarantBankDetails = acc14BankDetails.declarantBankDetails.map(BankDetail.from),
+              consigneeBankDetails = acc14BankDetails.consigneeBankDetails.map(BankDetail.from)
+            )
+          )
+        case _                             => None
+      }
+
+      copy(validated.andThen { mrnDetails =>
+        tryToFindNonEmpty
+          .toValidNel(Error("Missing bank details"))
           .map(bankDetails => mrnDetails.copy(bankDetails = Some(bankDetails)))
       })
+    }
 
     def withAccountDetails(maybeAccountDetails: Option[List[AccountDetails]]): Builder =
       maybeAccountDetails.fold(this)(accountDetails =>

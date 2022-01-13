@@ -31,7 +31,7 @@ object CaseType {
 
   lazy val values: Set[CaseType] = Set(Individual, Bulk, CMA)
 
-  def resolveFrom(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
+  def basedOn(typeOfClaim: TypeOfClaimAnswer, reimbursementMethod: ReimbursementMethodAnswer): CaseType =
     (typeOfClaim, reimbursementMethod) match {
       case (TypeOfClaimAnswer.Multiple, _)  => CaseType.Bulk
       case (TypeOfClaimAnswer.Scheduled, _) => CaseType.Bulk

@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.data.Ior
 import cats.implicits.{catsSyntaxEq, catsSyntaxOption}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, RejectedGoodsClaim}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISOLocalDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
@@ -31,16 +30,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
 
-  def mapToEisSubmitClaimRequest(
-    data: (RejectedGoodsClaim, DisplayDeclaration)
-  ): Either[Error, EisSubmitClaimRequest] = {
+  def map(data: CE1779ClaimData): Either[Error, EisSubmitClaimRequest] = {
     val claim                 = data._1
     val declaration           = data._2.displayResponseDetail
     val maybeConsigneeDetails = declaration.consigneeDetails
 
     TPI05.request
       .forClaimOfType(CE1179)
-      .withClaimant(Claimant.of(claim.claimantType))
+      .withClaimant(Claimant.basedOn(claim.claimantType))
       .withClaimantEmail(claim.claimantInformation.contactInformation.emailAddress.map(Email(_)))
       .withClaimantEORI(claim.claimantInformation.eori)
       .withClaimedAmount(claim.totalReimbursementAmount)
@@ -51,7 +48,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
         GoodsDetails(
           descOfGoods = Some(claim.detailsOfRejectedGoods),
           anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
-          dateOfInspection = Some(ISOLocalDate.of(claim.inspectionDate)),
+          dateOfInspection = Some(claim.inspectionDate.toIsoLocalDate),
           atTheImporterOrDeclarantAddress = Some(claim.inspectionAddress.addressType),
           inspectionAddress = Some(
             InspectionAddress(
@@ -96,7 +93,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
           .withDeclarantDetails(declaration.declarantDetails)
           .withConsigneeDetails(declaration.consigneeDetails)
           .withAccountDetails(declaration.accountDetails)
-          .withBankDetails(Ior.fromOptions(declaration.bankDetails, claim.bankAccountDetails))
+          .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
           .withNdrcDetails {
             val ndrcDetails = declaration.ndrcDetails.toList.flatten
 

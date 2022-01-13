@@ -32,7 +32,7 @@ object DeclarationMode {
     override def toString: String = "All Declarations"
   }
 
-  def of(typeOfClaim: TypeOfClaimAnswer): DeclarationMode =
+  def basedOn(typeOfClaim: TypeOfClaimAnswer): DeclarationMode =
     typeOfClaim match {
       case TypeOfClaimAnswer.Multiple => DeclarationMode.AllDeclaration
       case _                          => DeclarationMode.ParentDeclaration

@@ -120,7 +120,7 @@ object TPI05 {
             request.copy(MRNDetails = Some(details))
           }
           .leftMap { errors =>
-            Error(s"Failed to build MRN detail - ${errors.map(_.value).toList.mkString(";\n")}")
+            Error(s"Failed to build MRN detail - ${errors.map(_.value).toList.distinct.mkString(";\n")}")
           }
       })
 
@@ -132,7 +132,7 @@ object TPI05 {
           .sequence
           .map(maybeDetails => request.copy(duplicateMRNDetails = maybeDetails))
           .leftMap { errors =>
-            Error(s"Failed to build Duplicate MRN detail - ${errors.map(_.value).toList.mkString(";\n")}")
+            Error(s"Failed to build Duplicate MRN detail - ${errors.map(_.value).toList.distinct.mkString(";\n")}")
           }
       })
 

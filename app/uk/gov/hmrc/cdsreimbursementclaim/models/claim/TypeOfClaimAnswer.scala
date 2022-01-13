@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
@@ -29,6 +30,9 @@ object TypeOfClaimAnswer {
 
   lazy val values: Set[TypeOfClaimAnswer] =
     Set(Individual, Multiple, Scheduled)
+
+  implicit val equality: Eq[TypeOfClaimAnswer] =
+    Eq.fromUniversalEquals[TypeOfClaimAnswer]
 
   implicit val typeOfClaimAnswerFormat: OFormat[TypeOfClaimAnswer] =
     derived.oformat[TypeOfClaimAnswer]()

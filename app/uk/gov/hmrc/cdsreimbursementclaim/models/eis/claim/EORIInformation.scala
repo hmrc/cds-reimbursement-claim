@@ -33,46 +33,54 @@ final case class EORIInformation(
 
 object EORIInformation {
 
-  def forConsignee(maybeConsigneeDetails: Option[ConsigneeDetails]): EORIInformation =
+  def forConsignee(maybeConsigneeDetails: Option[ConsigneeDetails]): EORIInformation = {
+    val maybeContactDetails = maybeConsigneeDetails.flatMap(_.contactDetails)
+
+    val maybeTelephone    = maybeContactDetails.flatMap(_.telephone)
+    val maybeEmailAddress = maybeContactDetails.flatMap(_.emailAddress)
+
+    val maybeEstablishmentAddressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1)
+    val maybeEstablishmentAddressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
+    val maybeEstablishmentAddressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3)
+
+    val maybeAddress1 = maybeContactDetails.flatMap(_.addressLine1)
+    val maybeAddress2 = maybeContactDetails.flatMap(_.addressLine2)
+    val maybeAddress3 = maybeContactDetails.flatMap(_.addressLine3)
+
     EORIInformation(
       EORINumber = maybeConsigneeDetails.map(_.EORI),
       CDSFullName = maybeConsigneeDetails.map(_.legalName),
       CDSEstablishmentAddress = Address(
         contactPerson = None,
-        addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
-        addressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2),
-        AddressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-        street = Street.fromLines(
-          maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
-          maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
-        ),
-        city = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+        addressLine1 = maybeEstablishmentAddressLine1,
+        addressLine2 = maybeEstablishmentAddressLine2,
+        AddressLine3 = maybeEstablishmentAddressLine3,
+        street = Street.fromLines(maybeEstablishmentAddressLine1, maybeEstablishmentAddressLine2),
+        city = maybeEstablishmentAddressLine3,
         countryCode = maybeConsigneeDetails
           .map(_.establishmentAddress.countryCode)
           .getOrElse(Country.uk.code),
         postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
-        telephone = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.telephone)),
-        emailAddress = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.emailAddress))
+        telephone = maybeTelephone,
+        emailAddress = maybeEmailAddress
       ),
       contactInformation = Some(
         ContactInformation(
-          contactPerson = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.contactName)),
-          addressLine1 = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
-          addressLine2 = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2)),
-          addressLine3 = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine3)),
-          street = Street.fromLines(
-            maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine1)),
-            maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine2))
-          ),
-          city = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.addressLine3)),
-          countryCode = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.countryCode)),
-          postalCode = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.postalCode)),
-          telephoneNumber = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.telephone)),
+          contactPerson = maybeContactDetails.flatMap(_.contactName),
+          addressLine1 = maybeAddress1,
+          addressLine2 = maybeAddress2,
+          addressLine3 = maybeAddress3,
+          street = Street.fromLines(maybeAddress1, maybeAddress2),
+          city = maybeAddress3,
+          countryCode = maybeContactDetails.flatMap(_.countryCode),
+          postalCode = maybeContactDetails.flatMap(_.postalCode),
+          telephoneNumber = maybeTelephone,
           faxNumber = None,
-          emailAddress = maybeConsigneeDetails.flatMap(_.contactDetails.flatMap(_.emailAddress))
+          emailAddress = maybeEmailAddress
         )
       )
     )
+  }
 
   implicit val format: OFormat[EORIInformation] = Json.format[EORIInformation]
 }
