@@ -29,8 +29,8 @@ object ClaimedReimbursementGen {
     paymentMethod    <- genPaymentMethod
     paymentReference <- genStringWithMaxSizeOfN(max = 18)
     taxCode          <- genTaxCode
-    paidAmount       <- genBigDecimal
-    claimAmount      <- genBigDecimal
+    paidAmount       <- Gen.posNum[Long].map(BigDecimal(_))
+    claimAmount      <- Gen.posNum[Long].map(BigDecimal(_))
     isFilled         <- genBoolean
   } yield ClaimedReimbursement(
     id,
