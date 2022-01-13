@@ -23,11 +23,6 @@ final case class Eori(value: String) extends AnyVal
 
 object Eori {
 
-  def isValid(maybeEori: String): Boolean = {
-    val regex = """\w{17}"""
-    maybeEori.matches(regex)
-  }
-
   implicit val format: Format[Eori] = implicitly[Format[String]].inmap(Eori(_), _.value)
 
   implicit def stringToEori(s: String): Eori = Eori(s)

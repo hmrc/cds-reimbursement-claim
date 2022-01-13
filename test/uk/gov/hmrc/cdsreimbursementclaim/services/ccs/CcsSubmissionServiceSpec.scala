@@ -20,12 +20,15 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import cats.data.{EitherT, NonEmptyList}
 import cats.syntax.all._
+import org.joda.time.DateTime
 import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.test.Helpers.await
 import reactivemongo.bson.BSONObjectID
+import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -34,9 +37,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.toUUIDString
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
@@ -44,19 +46,21 @@ import uk.gov.hmrc.workitem._
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFactory {
+@SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
+class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactory with ScalaCheckPropertyChecks {
+
+  val ccsSubmissionRepositoryMock: CcsSubmissionRepo = mock[CcsSubmissionRepo]
+  val ccsConnectorMock: CcsConnector                 = mock[CcsConnector]
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   implicit val timeout: Timeout = Timeout(FiniteDuration(5, TimeUnit.SECONDS))
 
-  val executionContext: ExecutionContextExecutor = ExecutionContext.global
-
-  val mockCcsSubmissionRepo: CcsSubmissionRepo = mock[CcsSubmissionRepo]
-  val mockCcsConnector: CcsConnector           = mock[CcsConnector]
-
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
+    PropertyCheckConfiguration(minSuccessful = 1)
 
   def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
     List(
@@ -157,14 +161,14 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   def mockCcsSubmissionRequestGet()(
     response: Either[Error, Option[WorkItem[CcsSubmissionRequest]]]
   ): CallHandler0[EitherT[Future, models.Error, Option[WorkItem[CcsSubmissionRequest]]]] =
-    (mockCcsSubmissionRepo.get _)
+    (ccsSubmissionRepositoryMock.get _)
       .expects()
       .returning(EitherT.fromEither[Future](response))
 
   def mockCcsSubmissionRequest()(
     response: Either[Error, WorkItem[CcsSubmissionRequest]]
   ): CallHandler1[CcsSubmissionRequest, EitherT[Future, models.Error, WorkItem[CcsSubmissionRequest]]] =
-    (mockCcsSubmissionRepo
+    (ccsSubmissionRepositoryMock
       .set(_: CcsSubmissionRequest))
       .expects(*)
       .returning(EitherT.fromEither[Future](response))
@@ -172,7 +176,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   def mockSetProcessingStatus(id: BSONObjectID, status: ProcessingStatus)(
     response: Either[Error, Boolean]
   ): CallHandler2[BSONObjectID, ProcessingStatus, EitherT[Future, models.Error, Boolean]] =
-    (mockCcsSubmissionRepo
+    (ccsSubmissionRepositoryMock
       .setProcessingStatus(_: BSONObjectID, _: ProcessingStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
@@ -180,7 +184,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   def mockSetResultStatus(id: BSONObjectID, status: ResultStatus)(
     response: Either[Error, Boolean]
   ): CallHandler2[BSONObjectID, ResultStatus, EitherT[Future, models.Error, Boolean]] =
-    (mockCcsSubmissionRepo
+    (ccsSubmissionRepositoryMock
       .setResultStatus(_: BSONObjectID, _: ResultStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
@@ -188,7 +192,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   def mockDec64Submission(ccsSubmissionPayload: CcsSubmissionPayload)(
     response: Either[Error, HttpResponse]
   ): CallHandler2[CcsSubmissionPayload, HeaderCarrier, EitherT[Future, Error, HttpResponse]] =
-    (mockCcsConnector
+    (ccsConnectorMock
       .submitToCcs(_: CcsSubmissionPayload)(_: HeaderCarrier))
       .expects(ccsSubmissionPayload, *)
       .returning(EitherT[Future, Error, HttpResponse](Future.successful(response)))
@@ -197,73 +201,111 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
   implicit val ccsSubmissionPollerExecutionContext: CcsSubmissionPollerExecutionContext =
     new CcsSubmissionPollerExecutionContext(actorSystem)
 
-  lazy val ccsSubmissionService =
-    new DefaultCcsSubmissionService(mockCcsConnector, mockCcsSubmissionRepo)
+  val ccsSubmissionService = new DefaultCcsSubmissionService(ccsConnectorMock, ccsSubmissionRepositoryMock)
 
   "Ccs Submission Service" when {
 
     "the submission poller requests a work item" must {
-      "dequeue the next work item" in {
-        val workItem = sample[WorkItem[CcsSubmissionRequest]]
+      "dequeue the next work item" in forAll { workItem: WorkItem[CcsSubmissionRequest] =>
         mockCcsSubmissionRequestGet()(Right(Some(workItem)))
         await(ccsSubmissionService.dequeue.value) shouldBe Right(Some(workItem))
       }
     }
 
     "a ccs submission request is made" must {
-      "enqueue the request" in {
-        val document             = sample[UploadDocument]
-        val c285claim            = sample[C285Claim].copy(
-          documents = NonEmptyList.one(document)
-        )
-        val ccsSubmissionRequest = sample[CcsSubmissionRequest]
-        val workItem             = sample[WorkItem[CcsSubmissionRequest]]
-        val submitClaimRequest   = sample[C285ClaimRequest].copy(claim = c285claim)
-        val submitClaimResponse  = sample[ClaimSubmitResponse]
-        val evidence             = submitClaimRequest.claim.documents.head
 
-        val dec64payload = makeDec64XmlPayload(
-          correlationId = UUID.randomUUID().toString,
-          batchId = submitClaimRequest.claim.id,
-          batchSize = submitClaimRequest.claim.documents.size.toLong,
-          batchCount = submitClaimRequest.claim.documents.size.toLong,
-          checksum = evidence.upscanSuccess.uploadDetails.checksum,
-          fileSize = evidence.upscanSuccess.uploadDetails.size,
-          caseReference = submitClaimResponse.caseNumber,
-          eori = submitClaimRequest.signedInUserDetails.eori.value,
-          declarationId = submitClaimRequest.claim.movementReferenceNumber.value,
-          declarationType = submitClaimRequest.claim.declarantTypeAnswer.toString,
-          applicationName = "NDRC",
-          documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
-          documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
-          sourceLocation = evidence.upscanSuccess.downloadUrl,
-          sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
-          sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
-          destinationSystem = "CDFPay"
-        )
+      "enqueue the C285 claim request" in forAll {
+        (claimSubmitRequest: C285ClaimRequest, claimSubmitResponse: ClaimSubmitResponse) =>
+          val documentLens          = lens[C285ClaimRequest].claim.documents
+          val evidence              = claimSubmitRequest.claim.documents.head
+          val singleDocumentRequest = documentLens.set(claimSubmitRequest)(NonEmptyList.one(evidence))
 
-        val updateWorkItem =
-          workItem.copy(item = ccsSubmissionRequest.copy(payload = dec64payload, headers = getHeaders(hc)))
+          val dec64payload = makeDec64XmlPayload(
+            correlationId = UUID.randomUUID().toString,
+            batchId = singleDocumentRequest.claim.id,
+            batchSize = singleDocumentRequest.claim.documents.size.toLong,
+            batchCount = singleDocumentRequest.claim.documents.size.toLong,
+            checksum = evidence.upscanSuccess.uploadDetails.checksum,
+            fileSize = evidence.upscanSuccess.uploadDetails.size,
+            caseReference = claimSubmitResponse.caseNumber,
+            eori = singleDocumentRequest.signedInUserDetails.eori.value,
+            declarationId = singleDocumentRequest.claim.movementReferenceNumber.value,
+            declarationType = singleDocumentRequest.claim.declarantTypeAnswer.toString,
+            applicationName = "NDRC",
+            documentType = evidence.documentType.map(s => s.toString).getOrElse(""),
+            documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
+            sourceLocation = evidence.upscanSuccess.downloadUrl,
+            sourceFileName = evidence.upscanSuccess.uploadDetails.fileName,
+            sourceFileMimeType = evidence.upscanSuccess.uploadDetails.fileMimeType,
+            destinationSystem = "CDFPay"
+          )
 
-        mockCcsSubmissionRequest()(Right(updateWorkItem))
+          val workItem = WorkItem(
+            id = BSONObjectID.generate(),
+            receivedAt = DateTime.now(),
+            updatedAt = DateTime.now(),
+            availableAt = DateTime.now(),
+            status = ToDo,
+            failureCount = 0,
+            item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
+          )
 
-        val response = await(ccsSubmissionService.enqueue(submitClaimRequest, submitClaimResponse).value)
+          mockCcsSubmissionRequest()(Right(workItem))
 
-        response.isRight should be(true)
+          await(ccsSubmissionService.enqueue(singleDocumentRequest, claimSubmitResponse).value).isRight should be(true)
+      }
+
+      "enqueue the Rejected Goods claim request" in forAll {
+        (claimSubmitRequest: RejectedGoodsClaimRequest, claimSubmitResponse: ClaimSubmitResponse) =>
+          val documentLens          = lens[RejectedGoodsClaimRequest].claim.supportingEvidences
+          val evidence              = claimSubmitRequest.claim.supportingEvidences.head
+          val singleDocumentRequest = documentLens.set(claimSubmitRequest)(evidence :: Nil)
+
+          val dec64payload = makeDec64XmlPayload(
+            correlationId = UUID.randomUUID().toString,
+            batchId = UUID.randomUUID().toString,
+            batchSize = singleDocumentRequest.claim.supportingEvidences.size.toLong,
+            batchCount = singleDocumentRequest.claim.supportingEvidences.size.toLong,
+            checksum = evidence.checksum,
+            fileSize = evidence.size,
+            caseReference = claimSubmitResponse.caseNumber,
+            eori = singleDocumentRequest.claim.claimantInformation.eori.value,
+            declarationId = singleDocumentRequest.claim.movementReferenceNumber.value,
+            declarationType = "MRN",
+            applicationName = "NDRC",
+            documentType = evidence.documentType.toTPI05Key,
+            documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
+            sourceLocation = evidence.downloadUrl,
+            sourceFileName = evidence.fileName,
+            sourceFileMimeType = evidence.fileMimeType,
+            destinationSystem = "CDFPay"
+          )
+
+          val workItem = WorkItem(
+            id = BSONObjectID.generate(),
+            receivedAt = DateTime.now(),
+            updatedAt = DateTime.now(),
+            availableAt = DateTime.now(),
+            status = ToDo,
+            failureCount = 0,
+            item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
+          )
+
+          mockCcsSubmissionRequest()(Right(workItem))
+
+          await(ccsSubmissionService.enqueue(singleDocumentRequest, claimSubmitResponse).value).isRight should be(true)
       }
     }
 
     "the submission poller updates the processing status" must {
-      "return true to indicate that the status has been updated" in {
-        val workItem = sample[WorkItem[CcsSubmissionRequest]]
+      "return true to indicate that the status has been updated" in forAll { workItem: WorkItem[CcsSubmissionRequest] =>
         mockSetProcessingStatus(workItem.id, Failed)(Right(true))
         await(ccsSubmissionService.setProcessingStatus(workItem.id, Failed).value) shouldBe Right(true)
       }
     }
 
     "the submission poller updates the complete status" must {
-      "return true to indicate that the status has been updated" in {
-        val workItem = sample[WorkItem[CcsSubmissionRequest]]
+      "return true to indicate that the status has been updated" in forAll { workItem: WorkItem[CcsSubmissionRequest] =>
         mockSetResultStatus(workItem.id, PermanentlyFailed)(Right(true))
         await(ccsSubmissionService.setResultStatus(workItem.id, PermanentlyFailed).value) shouldBe Right(true)
       }
@@ -273,9 +315,7 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
 
       "return an error" when {
 
-        "there is an issue with the DEC-64 service" in {
-          val ccsSubmissionPayload = sample[CcsSubmissionPayload]
-
+        "there is an issue with the DEC-64 service" in forAll { (ccsSubmissionPayload: CcsSubmissionPayload) =>
           inSequence {
             mockDec64Submission(ccsSubmissionPayload.copy(headers = getHeaders(hc)))(
               Left(Error("dec-64 service error"))
@@ -288,26 +328,25 @@ class CcsSubmissionServiceSpec() extends AnyWordSpec with Matchers with MockFact
               .value
           ).isLeft shouldBe true
         }
-
       }
 
       "return a http no content success status when the file has been successfully submitted to the DEC-64 service" in {
-        val ccsSubmissionPayload = sample[CcsSubmissionPayload]
-        val response             = HttpResponse(204, "Success")
-        inSequence {
-          mockDec64Submission(ccsSubmissionPayload.copy(headers = getHeaders(hc)))(Right(response))
+        forAll { (ccsSubmissionPayload: CcsSubmissionPayload) =>
+          val response = HttpResponse(204, "Success")
+          inSequence {
+            mockDec64Submission(ccsSubmissionPayload.copy(headers = getHeaders(hc)))(Right(response))
+          }
+          await(
+            ccsSubmissionService
+              .submitToCcs(
+                ccsSubmissionPayload
+              )
+              .value
+          ) shouldBe Right(
+            response
+          )
         }
-        await(
-          ccsSubmissionService
-            .submitToCcs(
-              ccsSubmissionPayload
-            )
-            .value
-        ) shouldBe Right(
-          response
-        )
       }
-
     }
   }
 

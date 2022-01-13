@@ -29,14 +29,14 @@ object Claimant {
   final case object Importer extends Claimant
   final case object Representative extends Claimant
 
-  def of(declarantType: DeclarantTypeAnswer): Claimant =
+  def basedOn(declarantType: DeclarantTypeAnswer): Claimant =
     declarantType match {
       case DeclarantTypeAnswer.Importer                            => Importer
       case DeclarantTypeAnswer.AssociatedWithImporterCompany       => Representative
       case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany => Representative
     }
 
-  def of(claimantType: ClaimantType): Claimant =
+  def basedOn(claimantType: ClaimantType): Claimant =
     claimantType match {
       case ClaimantType.Consignee => Importer
       case ClaimantType.Declarant => Representative

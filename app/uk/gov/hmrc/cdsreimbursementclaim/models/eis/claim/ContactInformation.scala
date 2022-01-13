@@ -36,7 +36,7 @@ final case class ContactInformation(
 
 object ContactInformation {
 
-  def combine(contactDetails: ContactDetails, contactAddress: ContactAddress): ContactInformation =
+  def apply(contactDetails: ContactDetails, contactAddress: ContactAddress): ContactInformation =
     new ContactInformation(
       contactPerson = Option(contactDetails.fullName),
       addressLine1 = Option(contactAddress.line1),
@@ -51,7 +51,7 @@ object ContactInformation {
       emailAddress = Option(contactDetails.emailAddress.value)
     )
 
-  def from(claimantDetails: Option[ClaimantDetails]): ContactInformation = {
+  def asPerClaimant(claimantDetails: Option[ClaimantDetails]): ContactInformation = {
 
     val maybeContactDetails = claimantDetails.flatMap(_.contactDetails)
 

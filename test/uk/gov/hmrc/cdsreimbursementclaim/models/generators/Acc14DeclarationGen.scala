@@ -32,7 +32,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMR
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 
+import java.text.DecimalFormat
+
 object Acc14DeclarationGen {
+
+  lazy val genAcceptanceDate: Gen[AcceptanceDate] =
+    genLocalDate.map(AcceptanceDate(_))
 
   lazy val genRequestCommon: Gen[RequestCommon] =
     Gen.uuid.map { acknowledgementReference =>
@@ -69,13 +74,19 @@ object Acc14DeclarationGen {
     amount = amount.toString()
   )
 
-  lazy val genNdrcDetails: Gen[NdrcDetails] = for {
-    taxType          <- genTaxCode.map(_.value)
-    amount           <- Gen.choose(0L, 10000L).map(_.toString)
-    paymentMethod    <- genPaymentMethod
-    paymentReference <- genStringWithMaxSizeOfN(18)
-    cmaEligible      <- genWhetherCMAEligible
-  } yield NdrcDetails(taxType, amount, paymentMethod, paymentReference, cmaEligible)
+  lazy val genNdrcDetails: Gen[NdrcDetails] = {
+    val formatter = new DecimalFormat()
+    formatter.setMinimumFractionDigits(2)
+    formatter.setGroupingUsed(false)
+
+    for {
+      taxType          <- genTaxCode.map(_.value)
+      amount           <- Gen.choose(0L, 10000L).map(formatter.format)
+      paymentMethod    <- genPaymentMethod
+      paymentReference <- genStringWithMaxSizeOfN(18)
+      cmaEligible      <- genWhetherCMAEligible
+    } yield NdrcDetails(taxType, amount, paymentMethod, paymentReference, cmaEligible)
+  }
 
   lazy val genAccountDetails: Gen[AccountDetails] =
     for {
@@ -151,7 +162,7 @@ object Acc14DeclarationGen {
 
   lazy val genDisplayDeclaration: Gen[DisplayDeclaration] = for {
     mrn                      <- genMRN
-    acceptanceDate           <- genLocalDate.map(AcceptanceDate(_))
+    acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
     securityReason           <- Gen.option(genRandomString)
     btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
@@ -160,9 +171,9 @@ object Acc14DeclarationGen {
     declarantDetails         <- genDeclarantDetails
     consigneeDetails         <- genConsigneeDetails
     accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
-    bankDetails              <- Gen.option(genBankDetails)
-    maskedBankDetails        <- Gen.const(bankDetails.map(mask))
-    ndrcDetails              <- Gen.option(Gen.nonEmptyListOf(genNdrcDetails))
+    bankDetails              <- genBankDetails
+    maskedBankDetails        <- Gen.const(mask(bankDetails))
+    ndrcDetails              <- Gen.nonEmptyListOf(genNdrcDetails)
   } yield DisplayDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,
@@ -175,9 +186,9 @@ object Acc14DeclarationGen {
       declarantDetails = declarantDetails,
       consigneeDetails = Some(consigneeDetails),
       accountDetails = accountDetails,
-      bankDetails = bankDetails,
-      maskedBankDetails = maskedBankDetails,
-      ndrcDetails = ndrcDetails
+      bankDetails = Some(bankDetails),
+      maskedBankDetails = Some(maskedBankDetails),
+      ndrcDetails = Some(ndrcDetails)
     )
   )
 
@@ -254,4 +265,7 @@ object Acc14DeclarationGen {
 
   implicit lazy val arbitraryDeclarationInfoResponse: Typeclass[DeclarationResponse] =
     gen[DeclarationResponse]
+
+  implicit lazy val arbitraryAcceptanceDate: Typeclass[AcceptanceDate] =
+    Arbitrary(genAcceptanceDate)
 }

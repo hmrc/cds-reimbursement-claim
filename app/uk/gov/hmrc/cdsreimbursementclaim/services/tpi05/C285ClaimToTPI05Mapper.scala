@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.data.Ior
 import cats.implicits.{catsSyntaxEq, catsSyntaxTuple2Semigroupal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, DeclarantTypeAnswer, Street}
@@ -28,21 +27,21 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
 
-  def mapToEisSubmitClaimRequest(request: C285ClaimRequest): Either[Error, EisSubmitClaimRequest] =
+  def map(request: C285ClaimRequest): Either[Error, EisSubmitClaimRequest] =
     TPI05.request
       .forClaimOfType(C285)
-      .withClaimant(Claimant.of(request.claim.declarantTypeAnswer))
+      .withClaimant(Claimant.basedOn(request.claim.declarantTypeAnswer))
       .withClaimantEORI(request.signedInUserDetails.eori)
       .withClaimantEmail(request.signedInUserDetails.email)
       .withClaimedAmount(request.claim.totalReimbursementAmount)
       .withReimbursementMethod(request.claim.reimbursementMethodAnswer)
-      .withCaseType(CaseType.resolveFrom(request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer))
-      .withDeclarationMode(DeclarationMode.of(request.claim.typeOfClaim))
+      .withCaseType(CaseType.basedOn(request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer))
+      .withDeclarationMode(DeclarationMode.basedOn(request.claim.typeOfClaim))
       .withBasisOfClaim(request.claim.basisOfClaimAnswer.toTPI05Key)
       .withGoodsDetails(
         GoodsDetails(
           descOfGoods = Some(request.claim.commodityDetailsAnswer.value),
-          isPrivateImporter = Some(YesNo.of(request.claim.declarantTypeAnswer))
+          isPrivateImporter = Some(YesNo.basedOn(request.claim.declarantTypeAnswer))
         )
       )
       .withEORIDetails(
@@ -68,13 +67,13 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
             ),
             contactInformation = Some(
               (request.claim.mrnContactDetailsAnswer, request.claim.mrnContactAddressAnswer)
-                .mapN(ContactInformation.combine)
+                .mapN(ContactInformation(_, _))
                 .getOrElse(
                   request.claim.declarantTypeAnswer match {
                     case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
-                      ContactInformation.from(request.claim.consigneeDetails)
+                      ContactInformation.asPerClaimant(request.claim.consigneeDetails)
                     case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
-                      ContactInformation.from(request.claim.declarantDetails)
+                      ContactInformation.asPerClaimant(request.claim.declarantDetails)
                   }
                 )
             )
@@ -84,24 +83,18 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
       .withMrnDetails(
         request.claim.displayDeclaration.toList.flatMap { displayDeclaration =>
           request.claim.multipleClaims.map { case (mrn, reimbursementClaim) =>
-            val declarantDetails      = displayDeclaration.displayResponseDetail.declarantDetails
-            val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.consigneeDetails
-
             MrnDetail.build
               .withMrnNumber(mrn)
               .withAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate)
               .withDeclarantReferenceNumber(displayDeclaration.displayResponseDetail.declarantReferenceNumber)
               .withWhetherMainDeclarationReference(request.claim.movementReferenceNumber.value === mrn.value)
               .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
-              .withDeclarantDetails(declarantDetails)
-              .withConsigneeDetails(maybeConsigneeDetails)
+              .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
+              .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
               .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
-              .withBankDetailsWhen(
-                request.claim.movementReferenceNumber.value === mrn.value,
-                Ior.fromOptions(
-                  displayDeclaration.displayResponseDetail.bankDetails,
-                  request.claim.bankAccountDetailsAnswer
-                )
+              .withFirstNonEmptyBankDetailsWhen(request.claim.movementReferenceNumber.value === mrn.value)(
+                displayDeclaration.displayResponseDetail.bankDetails,
+                request.claim.bankAccountDetailsAnswer
               )
               .withNdrcDetails(
                 reimbursementClaim.toList.map(reimbursement =>
@@ -127,7 +120,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
             .withProcedureCode(displayDeclaration.procedureCode)
             .withDeclarantDetails(displayDeclaration.declarantDetails)
             .withConsigneeDetails(displayDeclaration.consigneeDetails)
-            .withBankDetails(Ior.fromOptions(displayDeclaration.bankDetails, request.claim.bankAccountDetailsAnswer))
+            .withFirstNonEmptyBankDetails(displayDeclaration.bankDetails, request.claim.bankAccountDetailsAnswer)
             .withNdrcDetails(
               request.claim.claims.toList.map { reimbursement =>
                 NdrcDetails.buildChecking(

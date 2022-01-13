@@ -98,7 +98,7 @@ class ClaimServiceSpec
     claimMapper: ClaimToTPI05Mapper[A]
   ): CallHandler1[A, Either[Error, EisSubmitClaimRequest]] =
     (claimMapper
-      .mapToEisSubmitClaimRequest(_: A))
+      .map(_: A))
       .expects(claim)
       .returning(Right(eis))
 

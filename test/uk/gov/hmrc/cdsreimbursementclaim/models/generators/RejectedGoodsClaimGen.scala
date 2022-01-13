@@ -20,14 +20,17 @@ import org.scalacheck.magnolia.{Typeclass, gen}
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.genContactInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 
 import java.net.URL
 
+@SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object RejectedGoodsClaimGen {
 
   lazy val genUrl: Gen[URL] =
@@ -57,7 +60,7 @@ object RejectedGoodsClaimGen {
   lazy val genReimbursementClaims: Gen[Map[TaxCode, BigDecimal]] =
     Gen
       .nonEmptyListOf(
-        genTaxCode.flatMap(taxCode => genBigDecimal.map((taxCode, _)))
+        genTaxCode.flatMap(taxCode => Gen.posNum[Long].map(num => (taxCode, BigDecimal(num))))
       )
       .map(_.toMap)
 
@@ -143,4 +146,18 @@ object RejectedGoodsClaimGen {
 
   implicit lazy val arbitraryRejectedGoodsClaimRequest: Typeclass[RejectedGoodsClaimRequest] =
     gen[RejectedGoodsClaimRequest]
+
+  implicit lazy val arbitraryCE1779ClaimData: Typeclass[CE1779ClaimData] = Arbitrary(
+    for {
+      declaration <- genDisplayDeclaration
+      claim       <- genRejectedGoodsClaim
+    } yield {
+      val firstNdrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten.head
+      val firstClaim       = claim.reimbursementClaims.head
+      val updatedClaims    = Map(TaxCode.getOrFail(firstNdrcDetails.taxType) -> firstClaim._2)
+      val updatedDetails   = declaration.displayResponseDetail.copy(ndrcDetails = Some(firstNdrcDetails :: Nil))
+
+      (claim.copy(reimbursementClaims = updatedClaims), declaration.copy(displayResponseDetail = updatedDetails))
+    }
+  )
 }
