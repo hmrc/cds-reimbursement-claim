@@ -27,33 +27,59 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
   case object CommercialInvoice extends UploadDocumentType {
     override def toTPI05Key: String = "Commercial Invoice"
   }
+
   case object PackingList extends UploadDocumentType {
     override def toTPI05Key: String = "Packing List"
   }
+
   case object AirWayBill extends UploadDocumentType {
     override def toTPI05Key: String = "Air Waybill"
   }
+
   case object BillOfLading extends UploadDocumentType {
     override def toTPI05Key: String = "Bill of Lading"
   }
+
   case object SubstituteEntry extends UploadDocumentType {
     override def toTPI05Key: String = "Substitute Entry"
   }
+
   case object ScheduleOfMRNs extends UploadDocumentType {
     override def toTPI05Key: String = "Schedule of MRNs"
   }
+
   case object ProofOfAuthority extends UploadDocumentType {
     override def toTPI05Key: String = "Proof of Authority (to be repaid)"
   }
+
   case object CorrespondenceTrader extends UploadDocumentType {
     override def toTPI05Key: String = "Correspondence Trader"
   }
+
   case object AdditionalSupportingDocuments extends UploadDocumentType {
     override def toTPI05Key: String = "Additional Supporting Documentation"
   }
+
   case object ImportAndExportDeclaration extends UploadDocumentType {
     override def toTPI05Key: String = "Import and Export Declaration"
   }
+
+  case object CalculationWorksheet extends UploadDocumentType {
+    override def toTPI05Key: String = "Calculation worksheet"
+  }
+
+  case object DocumentaryProofFaultyOrNotWhatOrdered extends UploadDocumentType {
+    override def toTPI05Key: String = "Documentary proof that the goods are faulty or not what you ordered"
+  }
+
+  case object ProofOfExportOrDestruction extends UploadDocumentType {
+    override def toTPI05Key: String = "Proof of export or destruction"
+  }
+
+  case object LetterOfAuthority extends UploadDocumentType {
+    override def toTPI05Key: String = "Proof of Authority (to be repaid)"
+  }
+
   case object Other extends UploadDocumentType {
     override def toTPI05Key: String = "Other"
   }
@@ -69,6 +95,10 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     CorrespondenceTrader,
     AdditionalSupportingDocuments,
     ImportAndExportDeclaration,
+    CalculationWorksheet,
+    DocumentaryProofFaultyOrNotWhatOrdered,
+    ProofOfExportOrDestruction,
+    LetterOfAuthority,
     Other
   )
 }
