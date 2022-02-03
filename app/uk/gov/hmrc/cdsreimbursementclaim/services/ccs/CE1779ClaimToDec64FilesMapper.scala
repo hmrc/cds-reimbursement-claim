@@ -45,7 +45,7 @@ class CE1779ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[RejectedGood
                 PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
                 PropertyType("DeclarationType", "MRN"),
                 PropertyType("ApplicationName", "NDRC"),
-                PropertyType("DocumentType", document.documentType.toTPI05Key),
+                PropertyType("DocumentType", document.documentType.toDec64DisplayString),
                 PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
               )
             )

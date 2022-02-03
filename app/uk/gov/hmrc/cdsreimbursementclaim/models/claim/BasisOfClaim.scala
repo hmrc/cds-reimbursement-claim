@@ -21,77 +21,77 @@ import julienrf.json.derived
 import play.api.libs.json.OFormat
 
 sealed trait BasisOfClaim extends Product with Serializable {
-  def toTPI05Key: String
+  def toTPI05DisplayString: String
 }
 
 object BasisOfClaim {
 
   final case object DuplicateEntry extends BasisOfClaim {
-    def toTPI05Key: String = "Duplicate Entry"
+    def toTPI05DisplayString: String = "Duplicate Entry"
   }
 
   final case object DutySuspension extends BasisOfClaim {
-    def toTPI05Key: String = "Duty Suspension"
+    def toTPI05DisplayString: String = "Duty Suspension"
   }
 
   final case object EndUseRelief extends BasisOfClaim {
-    def toTPI05Key: String = "End Use"
+    def toTPI05DisplayString: String = "End Use"
   }
 
   final case object IncorrectCommodityCode extends BasisOfClaim {
-    def toTPI05Key: String = "Incorrect Commodity Code"
+    def toTPI05DisplayString: String = "Incorrect Commodity Code"
   }
 
   final case object IncorrectCpc extends BasisOfClaim {
-    def toTPI05Key: String = "Incorrect CPC"
+    def toTPI05DisplayString: String = "Incorrect CPC"
   }
 
   final case object IncorrectValue extends BasisOfClaim {
-    def toTPI05Key: String = "Incorrect Value"
+    def toTPI05DisplayString: String = "Incorrect Value"
   }
 
   final case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim {
-    def toTPI05Key: String = "Incorrect EORI & Deferment Acc. Num."
+    def toTPI05DisplayString: String = "Incorrect EORI & Deferment Acc. Num."
   }
 
   final case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim {
-    def toTPI05Key: String = "IP"
+    def toTPI05DisplayString: String = "IP"
   }
 
   final case object Miscellaneous extends BasisOfClaim {
-    def toTPI05Key: String = "Miscellaneous"
+    def toTPI05DisplayString: String = "Miscellaneous"
   }
 
   final case object OutwardProcessingRelief extends BasisOfClaim {
-    def toTPI05Key: String = "OPR"
+    def toTPI05DisplayString: String = "OPR"
   }
 
   final case object PersonalEffects extends BasisOfClaim {
-    def toTPI05Key: String = "Personal Effects"
+    def toTPI05DisplayString: String = "Personal Effects"
   }
 
   final case object Preference extends BasisOfClaim {
-    def toTPI05Key: String = "Preference"
+    def toTPI05DisplayString: String = "Preference"
   }
 
   final case object RGR extends BasisOfClaim {
-    def toTPI05Key: String = "RGR"
+    def toTPI05DisplayString: String = "RGR"
   }
 
   final case object ProofOfReturnRefundGiven extends BasisOfClaim {
-    def toTPI05Key: String = "Proof of Return/Refund Given"
+    def toTPI05DisplayString: String = "Proof of Return/Refund Given"
   }
 
   final case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim {
-    def toTPI05Key: String = "Evidence That Goods Have Not Entered The EU"
+    def toTPI05DisplayString: String = "Evidence That Goods Have Not Entered The EU"
   }
 
   final case object IncorrectExciseValue extends BasisOfClaim {
-    def toTPI05Key: String = "Incorrect Excise Value"
+    def toTPI05DisplayString: String = "Incorrect Excise Value"
   }
 
   final case object IncorrectAdditionalInformationCode extends BasisOfClaim {
-    def toTPI05Key: String = "Incorrect Additional Information Code"
+    def toTPI05DisplayString: String = "Incorrect Additional Information Code"
   }
 
   lazy val values: Set[BasisOfClaim] = Set(

@@ -47,7 +47,7 @@ class C285ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[C285ClaimReque
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType(
                   "DocumentType",
-                  document.documentType.map(_.toTPI05Key).getOrElse("")
+                  document.documentType.map(_.toDec64DisplayString).getOrElse("")
                 ),
                 PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
               )

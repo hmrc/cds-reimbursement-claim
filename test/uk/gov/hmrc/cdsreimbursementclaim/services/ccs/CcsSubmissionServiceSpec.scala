@@ -273,7 +273,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
             declarationId = singleDocumentRequest.claim.movementReferenceNumber.value,
             declarationType = "MRN",
             applicationName = "NDRC",
-            documentType = evidence.documentType.toTPI05Key,
+            documentType = evidence.documentType.toDec64DisplayString,
             documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
             sourceLocation = evidence.downloadUrl,
             sourceFileName = evidence.fileName,

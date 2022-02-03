@@ -67,7 +67,7 @@ class CE1779ClaimMappingSpec
           'claimantEmailAddress (claim.claimantInformation.contactInformation.emailAddress.map(Email(_))),
           'claimAmountTotal (claim.claimedAmountAsString.some),
           'reimbursementMethod (claim.tpi05ReimbursementMethod.some),
-          'basisOfClaim (claim.basisOfClaim.toTPI05Key.some),
+          'basisOfClaim (claim.basisOfClaim.toTPI05DisplayString.some),
           'goodsDetails (
             GoodsDetails(
               descOfGoods = claim.detailsOfRejectedGoods.some,

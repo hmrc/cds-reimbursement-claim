@@ -37,7 +37,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
       .withReimbursementMethod(request.claim.reimbursementMethodAnswer)
       .withCaseType(CaseType.basedOn(request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer))
       .withDeclarationMode(DeclarationMode.basedOn(request.claim.typeOfClaim))
-      .withBasisOfClaim(request.claim.basisOfClaimAnswer.toTPI05Key)
+      .withBasisOfClaim(request.claim.basisOfClaimAnswer.toTPI05DisplayString)
       .withGoodsDetails(
         GoodsDetails(
           descOfGoods = Some(request.claim.commodityDetailsAnswer.value),

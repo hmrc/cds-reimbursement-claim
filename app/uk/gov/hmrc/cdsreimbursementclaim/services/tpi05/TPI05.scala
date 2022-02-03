@@ -67,7 +67,7 @@ object TPI05 {
       copy(validatedRequest.map(_.copy(declarationMode = Some(declarationMode))))
 
     def withDisposalMethod(methodOfDisposal: MethodOfDisposal): Builder =
-      copy(validatedRequest.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05Key))))
+      copy(validatedRequest.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05DisplayString))))
 
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(

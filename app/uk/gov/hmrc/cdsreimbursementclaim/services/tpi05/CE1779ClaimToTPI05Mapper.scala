@@ -43,7 +43,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
       .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)
       .withDisposalMethod(claim.methodOfDisposal)
-      .withBasisOfClaim(claim.basisOfClaim.toTPI05Key)
+      .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(
         GoodsDetails(
           descOfGoods = Some(claim.detailsOfRejectedGoods),
