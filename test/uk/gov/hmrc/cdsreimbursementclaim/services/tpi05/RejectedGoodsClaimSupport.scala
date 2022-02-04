@@ -25,7 +25,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Import
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-trait CE1779Support {
+trait RejectedGoodsClaimSupport {
 
   implicit class RejectedGoodsClaimOps(claim: SingleRejectedGoodsClaim) {
 

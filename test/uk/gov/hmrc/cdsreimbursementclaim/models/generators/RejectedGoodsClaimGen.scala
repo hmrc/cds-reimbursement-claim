@@ -16,19 +16,21 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
+import cats.data.NonEmptySeq
 import org.scalacheck.magnolia.{Typeclass, gen}
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.genContactInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 
 import java.net.URL
+import scala.jdk.CollectionConverters.asScalaBufferConverter
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object RejectedGoodsClaimGen {
@@ -110,7 +112,7 @@ object RejectedGoodsClaimGen {
       documentType = documentType
     )
 
-  lazy val genRejectedGoodsClaim: Gen[SingleRejectedGoodsClaim] =
+  lazy val genSingleRejectedGoodsClaim: Gen[SingleRejectedGoodsClaim] =
     for {
       mrn                    <- genMRN
       claimantType           <- Gen.oneOf(ClaimantType.values)
@@ -141,23 +143,60 @@ object RejectedGoodsClaimGen {
       supportingEvidences = evidences
     )
 
-  implicit lazy val arbitraryRejectedGoodsClaim: Typeclass[SingleRejectedGoodsClaim] =
-    Arbitrary(genRejectedGoodsClaim)
+  implicit lazy val arbitrarySingleRejectedGoodsClaim: Typeclass[SingleRejectedGoodsClaim] =
+    Arbitrary(genSingleRejectedGoodsClaim)
 
-  implicit lazy val arbitraryRejectedGoodsClaimRequest: Typeclass[RejectedGoodsClaimRequest] =
-    gen[RejectedGoodsClaimRequest]
-
-  implicit lazy val arbitraryCE1779ClaimData: Typeclass[CE1779ClaimData] = Arbitrary(
+  lazy val genMultipleRejectedGoodsClaim: Gen[MultipleRejectedGoodsClaim] =
     for {
-      declaration <- genDisplayDeclaration
-      claim       <- genRejectedGoodsClaim
-    } yield {
-      val firstNdrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten.head
-      val firstClaim       = claim.reimbursementClaims.head
-      val updatedClaims    = Map(TaxCode.getOrFail(firstNdrcDetails.taxType) -> firstClaim._2)
-      val updatedDetails   = declaration.displayResponseDetail.copy(ndrcDetails = Some(firstNdrcDetails :: Nil))
+      mrns                   <- Gen.nonEmptyListOf(genMRN).map(list => NonEmptySeq.fromSeqUnsafe(list))
+      claimantType           <- Gen.oneOf(ClaimantType.values)
+      claimantInformation    <- genClaimantInformation
+      basisOfClaim           <- genBasisOfRejectedGoodsClaim
+      specialCircumstances   <- Gen.option(genRandomString)
+      methodOfDisposal       <- genMethodOfDisposal
+      bankAccountDetails     <- Gen.option(genBankAccountDetails)
+      inspectionDate         <- genLocalDate
+      inspectionAddress      <- genInspectionAddress
+      detailsOfRejectedGoods <- genRandomString
+      reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      claims                 <- Gen.sequence(mrns.map(mrn => genReimbursementClaims.map((mrn, _))).toSeq)
+      evidences              <- Gen.nonEmptyListOf(genEvidences)
+    } yield MultipleRejectedGoodsClaim(
+      movementReferenceNumbers = mrns,
+      claimantType = claimantType,
+      claimantInformation = claimantInformation,
+      basisOfClaim = basisOfClaim,
+      basisOfClaimSpecialCircumstances = specialCircumstances,
+      methodOfDisposal = methodOfDisposal,
+      detailsOfRejectedGoods = detailsOfRejectedGoods,
+      inspectionDate = inspectionDate,
+      inspectionAddress = inspectionAddress,
+      reimbursementClaims = claims.asScala.toMap,
+      reimbursementMethod = reimbursementMethod,
+      bankAccountDetails = bankAccountDetails,
+      supportingEvidences = evidences
+    )
 
-      (claim.copy(reimbursementClaims = updatedClaims), declaration.copy(displayResponseDetail = updatedDetails))
-    }
-  )
+  implicit lazy val arbitraryMultipleRejectedGoodsClaim: Typeclass[MultipleRejectedGoodsClaim] =
+    Arbitrary(genMultipleRejectedGoodsClaim)
+
+  implicit def arbitraryRequest[A <: RejectedGoodsClaim](implicit
+    arb: Arbitrary[A]
+  ): Typeclass[RejectedGoodsClaimRequest[A]] =
+    gen[RejectedGoodsClaimRequest[A]]
+
+  implicit lazy val arbitrarySingleClaimDetails: Typeclass[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+    Arbitrary(
+      for {
+        declaration <- genDisplayDeclaration
+        claim       <- genSingleRejectedGoodsClaim
+      } yield {
+        val firstNdrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten.head
+        val firstClaim       = claim.reimbursementClaims.head
+        val updatedClaims    = Map(TaxCode.getOrFail(firstNdrcDetails.taxType) -> firstClaim._2)
+        val updatedDetails   = declaration.displayResponseDetail.copy(ndrcDetails = Some(firstNdrcDetails :: Nil))
+
+        (claim.copy(reimbursementClaims = updatedClaims), declaration.copy(displayResponseDetail = updatedDetails))
+      }
+    )
 }

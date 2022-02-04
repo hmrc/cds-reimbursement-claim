@@ -41,7 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class C285ClaimMappingSpec
     extends AnyWordSpec
-    with C285Support
+    with C285ClaimSupport
     with ScalaCheckDrivenPropertyChecks
     with Matchers
     with OptionValues {

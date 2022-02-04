@@ -18,12 +18,12 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Format, Json, OFormat}
 
-final case class RejectedGoodsClaimRequest[A <: RejectedGoodsClaim](claim: A)
+final case class RejectedGoodsClaimRequest[Claim <: RejectedGoodsClaim](claim: Claim)
 
 object RejectedGoodsClaimRequest {
 
-  implicit def requestFormat[A <: RejectedGoodsClaim](implicit
-    claimFormat: Format[A]
-  ): OFormat[RejectedGoodsClaimRequest[A]] =
-    Json.format[RejectedGoodsClaimRequest[A]]
+  implicit def requestFormat[Claim <: RejectedGoodsClaim](implicit
+    claimFormat: Format[Claim]
+  ): OFormat[RejectedGoodsClaimRequest[Claim]] =
+    Json.format[RejectedGoodsClaimRequest[Claim]]
 }

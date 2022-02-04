@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-trait C285Support {
+trait C285ClaimSupport {
 
   implicit class C285ClaimOps(claim: C285Claim) {
 
