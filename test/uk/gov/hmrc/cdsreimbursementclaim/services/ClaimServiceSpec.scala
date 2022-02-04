@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
@@ -79,8 +79,11 @@ class ClaimServiceSpec
   implicit val c285ClaimMapper: ClaimToTPI05Mapper[C285ClaimRequest] =
     mock[ClaimToTPI05Mapper[C285ClaimRequest]]
 
-  implicit def rejectedGoodsClaimMapper[Claim <: RejectedGoodsClaim]: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)] =
-    mock[ClaimToTPI05Mapper[(Claim, DisplayDeclaration)]]
+  implicit val singleRejectedGoodsClaimMapper: ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+    mock[ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, DisplayDeclaration)]]
+
+  implicit val multipleRejectedGoodsClaimMapper: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, DisplayDeclaration)] =
+    mock[ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, DisplayDeclaration)]]
 
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
     PropertyCheckConfiguration(minSuccessful = 1)
@@ -248,7 +251,7 @@ class ClaimServiceSpec
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
               responseBody = Some(responseJsonBody),
-              submitClaimRequest = request,
+              submitClaimRequest = ce1779ClaimRequest,
               eisSubmitClaimRequest = eisRequest
             )
             mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
@@ -290,7 +293,7 @@ class ClaimServiceSpec
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
               responseBody = Some(responseJsonBody),
-              submitClaimRequest = request,
+              submitClaimRequest = ce1779ClaimRequest,
               eisSubmitClaimRequest = eisRequest
             )
             mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))

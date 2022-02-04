@@ -150,7 +150,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
             mockCcsRequestEnqueue(request, response)
           }
 
-          val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          val result = controller.submitMultipleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
 
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(response)
@@ -184,7 +184,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
             mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
           }
 
-          val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          val result = controller.submitMultipleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
           status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
