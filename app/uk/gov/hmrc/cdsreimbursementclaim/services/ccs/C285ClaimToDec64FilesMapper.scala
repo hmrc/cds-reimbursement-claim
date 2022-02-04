@@ -22,7 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
 
-class C285ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[C285ClaimRequest] {
+class C285ClaimToDec64FilesMapper extends ClaimToDec64Mapper[C285ClaimRequest] {
 
   def map(request: C285ClaimRequest, response: ClaimSubmitResponse): List[Envelope] =
     request.claim.documents.zipWithIndex.map { case (document, index) =>

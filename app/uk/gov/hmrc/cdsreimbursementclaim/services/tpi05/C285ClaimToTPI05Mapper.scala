@@ -108,7 +108,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
                 )
               )
           }
-        }: _*
+        }
       )
       .withMaybeDuplicateMrnDetails(
         request.claim.duplicateDisplayDeclaration.map(_.displayResponseDetail).map { displayDeclaration =>

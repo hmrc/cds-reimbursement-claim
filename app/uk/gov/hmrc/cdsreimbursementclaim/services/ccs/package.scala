@@ -16,8 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleRejectedGoodsClaim, SingleRejectedGoodsClaim}
+
 package object ccs {
 
-  implicit val ce1779ClaimToDec64FilesMapper: CE1779ClaimToDec64FilesMapper = new CE1779ClaimToDec64FilesMapper
-  implicit val c285ClaimToDec64FilesMapper: C285ClaimToDec64FilesMapper     = new C285ClaimToDec64FilesMapper
+  implicit val c285ClaimToDec64FilesMapper: C285ClaimToDec64FilesMapper =
+    new C285ClaimToDec64FilesMapper
+
+  implicit val singleCE1779ClaimToDec64FilesMapper: RejectedGoodsClaimToDec64Mapper[SingleRejectedGoodsClaim] =
+    new RejectedGoodsClaimToDec64Mapper[SingleRejectedGoodsClaim]
+
+  implicit val multipleCE1779ClaimToDec64FilesMapper: RejectedGoodsClaimToDec64Mapper[MultipleRejectedGoodsClaim] =
+    new RejectedGoodsClaimToDec64Mapper[MultipleRejectedGoodsClaim]
 }

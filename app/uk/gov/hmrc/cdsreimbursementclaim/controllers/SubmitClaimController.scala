@@ -16,18 +16,22 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
+import cats.data.EitherT
+import cats.implicits.toFlatMapOps
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
-import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionService
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionService, ClaimToDec64Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class SubmitClaimController @Inject() (
@@ -40,40 +44,43 @@ class SubmitClaimController @Inject() (
     with Logging {
 
   def submitC285Claim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[C285ClaimRequest] { c285ClaimRequest =>
-      val result =
-        for {
-          submitClaimResponse <- claimService.submitC285Claim(c285ClaimRequest)
-          _                   <- ccsSubmissionService.enqueue(c285ClaimRequest, submitClaimResponse)
-          _                    = logger.info(s"Enqueued documents for claim")
-        } yield submitClaimResponse
-
-      result.fold(
-        { e =>
-          logger.warn("Error submitting claim", e)
-          InternalServerError
-        },
-        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
-      )
+    withJsonBody[C285ClaimRequest] {
+      uploadDocumentsOnce {
+        claimService.submitC285Claim(_)
+      }
     }
   }
 
-  def submitRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[RejectedGoodsClaimRequest] { rejectedGoodsClaim =>
-      val result =
-        for {
-          submitClaimResponse <- claimService.submitRejectedGoodsClaim(rejectedGoodsClaim)
-          _                   <- ccsSubmissionService.enqueue(rejectedGoodsClaim, submitClaimResponse)
-          _                    = logger.info(s"Enqueued documents for claim")
-        } yield submitClaimResponse
-
-      result.fold(
-        { e =>
-          logger.warn("Error submitting claim", e)
-          InternalServerError
-        },
-        submitClaimResponse => Ok(Json.toJson(submitClaimResponse))
-      )
+  def submitSingleRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]] {
+      uploadDocumentsOnce {
+        claimService.submitRejectedGoodsClaim(_)
+      }
     }
   }
+
+  def submitMultipleRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]] {
+      uploadDocumentsOnce {
+        claimService.submitRejectedGoodsClaim(_)
+      }
+    }
+  }
+
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  private def uploadDocumentsOnce[R](
+    submit: R => EitherT[Future, Error, ClaimSubmitResponse]
+  )(implicit hc: HeaderCarrier, claimToDec64Mapper: ClaimToDec64Mapper[R]): R => Future[Result] =
+    request =>
+      submit(request)
+        .flatTap { response =>
+          ccsSubmissionService.enqueue(request, response)
+        }
+        .map { submitClaimResponse =>
+          Ok(Json.toJson(submitClaimResponse))
+        }
+        .valueOr { error =>
+          logger.warn("Error submitting claim", error)
+          InternalServerError
+        }
 }

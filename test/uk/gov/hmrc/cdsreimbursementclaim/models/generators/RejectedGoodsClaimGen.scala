@@ -110,7 +110,7 @@ object RejectedGoodsClaimGen {
       documentType = documentType
     )
 
-  lazy val genRejectedGoodsClaim: Gen[RejectedGoodsClaim] =
+  lazy val genRejectedGoodsClaim: Gen[SingleRejectedGoodsClaim] =
     for {
       mrn                    <- genMRN
       claimantType           <- Gen.oneOf(ClaimantType.values)
@@ -125,7 +125,7 @@ object RejectedGoodsClaimGen {
       reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
       claims                 <- genReimbursementClaims
       evidences              <- Gen.nonEmptyListOf(genEvidences)
-    } yield RejectedGoodsClaim(
+    } yield SingleRejectedGoodsClaim(
       movementReferenceNumber = mrn,
       claimantType = claimantType,
       claimantInformation = claimantInformation,
@@ -141,7 +141,7 @@ object RejectedGoodsClaimGen {
       supportingEvidences = evidences
     )
 
-  implicit lazy val arbitraryRejectedGoodsClaim: Typeclass[RejectedGoodsClaim] =
+  implicit lazy val arbitraryRejectedGoodsClaim: Typeclass[SingleRejectedGoodsClaim] =
     Arbitrary(genRejectedGoodsClaim)
 
   implicit lazy val arbitraryRejectedGoodsClaimRequest: Typeclass[RejectedGoodsClaimRequest] =

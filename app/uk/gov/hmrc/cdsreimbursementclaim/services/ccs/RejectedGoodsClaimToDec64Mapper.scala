@@ -17,14 +17,15 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, RejectedGoodsClaim, RejectedGoodsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
 
-class CE1779ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[RejectedGoodsClaimRequest] {
+class RejectedGoodsClaimToDec64Mapper[Claim <: RejectedGoodsClaim]
+    extends ClaimToDec64Mapper[RejectedGoodsClaimRequest[Claim]] {
 
-  def map(request: RejectedGoodsClaimRequest, response: ClaimSubmitResponse): List[Envelope] =
+  def map(request: RejectedGoodsClaimRequest[Claim], response: ClaimSubmitResponse): List[Envelope] =
     request.claim.supportingEvidences.zipWithIndex.map { case (document, index) =>
       Envelope(
         Body(
@@ -42,7 +43,7 @@ class CE1779ClaimToDec64FilesMapper extends ClaimToDec64FilesMapper[RejectedGood
               List(
                 PropertyType("CaseReference", response.caseNumber),
                 PropertyType("Eori", request.claim.claimantInformation.eori.value),
-                PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
+                PropertyType("DeclarationId", request.claim.leadMrn.value),
                 PropertyType("DeclarationType", "MRN"),
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType("DocumentType", document.documentType.toDec64DisplayString),

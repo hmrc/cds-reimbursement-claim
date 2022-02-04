@@ -16,8 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleRejectedGoodsClaim, SingleRejectedGoodsClaim}
+
 package object tpi05 {
 
-  implicit val ce1779ClaimToTPI05Mapper: CE1779ClaimToTPI05Mapper = new CE1779ClaimToTPI05Mapper
-  implicit val c285ClaimToTPI05Mapper: C285ClaimToTPI05Mapper     = new C285ClaimToTPI05Mapper
+  implicit val c285ClaimToTPI05Mapper: C285ClaimToTPI05Mapper =
+    new C285ClaimToTPI05Mapper
+
+  implicit val singleRejectedGoodsClaimToTPI05Mapper: RejectedGoodsClaimToTPI05Mapper[SingleRejectedGoodsClaim] =
+    new RejectedGoodsClaimToTPI05Mapper[SingleRejectedGoodsClaim]
+
+  implicit val multipleRejectedGoodsClaimToTPI05Mapper: RejectedGoodsClaimToTPI05Mapper[MultipleRejectedGoodsClaim] =
+    new RejectedGoodsClaimToTPI05Mapper[MultipleRejectedGoodsClaim]
 }

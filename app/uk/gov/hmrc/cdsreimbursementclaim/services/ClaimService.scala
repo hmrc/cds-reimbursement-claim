@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
+
 import cats.data.EitherT
 import cats.instances.future._
 import cats.instances.int._
@@ -28,11 +29,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaim, RejectedGoodsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -54,12 +55,13 @@ trait ClaimService {
     tpi05Binder: ClaimToTPI05Mapper[C285ClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
-  def submitRejectedGoodsClaim(
-    rejectedGoodsClaimRequest: RejectedGoodsClaimRequest
+  def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](
+    rejectedGoodsClaimRequest: RejectedGoodsClaimRequest[Claim]
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
-    tpi05Binder: ClaimToTPI05Mapper[CE1779ClaimData]
+    tpi05Binder: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
@@ -74,45 +76,35 @@ class DefaultClaimService @Inject() (
     extends ClaimService
     with Logging {
 
-  def submitC285Claim(
-    c285ClaimRequest: C285ClaimRequest
-  )(implicit
+  def submitC285Claim(c285ClaimRequest: C285ClaimRequest)(implicit
     hc: HeaderCarrier,
     request: Request[_],
     tpi05Binder: ClaimToTPI05Mapper[C285ClaimRequest]
-  ): EitherT[Future, Error, ClaimSubmitResponse] = for {
-    eisSubmitRequest       <- EitherT
-                                .fromEither[Future](EisSubmitClaimRequest(c285ClaimRequest))
-                                .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
-    _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
-    returnHttpResponse     <- submitClaimAndAudit(c285ClaimRequest, eisSubmitRequest)
-    eisSubmitClaimResponse <- EitherT.fromEither[Future](
-                                returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
-                              )
-    claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
-    _                      <- createEmailRequest(eisSubmitRequest)
-                                .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
-                                .leftFlatMap { e =>
-                                  logger.warn("could not send claim submission confirmation email or audit event", e)
-                                  EitherT.pure[Future, Error](())
-                                }
-  } yield claimResponse
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    proceed(c285ClaimRequest, c285ClaimRequest)
 
-  def submitRejectedGoodsClaim(
-    rejectedGoodsClaimRequest: RejectedGoodsClaimRequest
-  )(implicit
+  def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](claimRequest: RejectedGoodsClaimRequest[Claim])(implicit
     hc: HeaderCarrier,
     request: Request[_],
-    tpi05Binder: ClaimToTPI05Mapper[CE1779ClaimData]
-  ): EitherT[Future, Error, ClaimSubmitResponse] = for {
-    declaration            <- declarationService
-                                .getDeclaration(rejectedGoodsClaimRequest.claim.movementReferenceNumber)
-                                .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
+    tpi05Binder: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    declarationService
+      .getDeclaration(claimRequest.claim.leadMrn)
+      .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
+      .flatMap(declaration => proceed((claimRequest.claim, declaration), claimRequest))
+
+  private def proceed[R, A](claimRequest: R, auditable: A)(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[R],
+    auditableFormat: Format[A]
+  ) = for {
     eisSubmitRequest       <- EitherT
-                                .fromEither[Future](EisSubmitClaimRequest((rejectedGoodsClaimRequest.claim, declaration)))
-                                .leftMap(e => Error(s"could not make TPIO5 payload. Cause: ${e.value}"))
+                                .fromEither[Future](EisSubmitClaimRequest(claimRequest))
+                                .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
     _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
-    returnHttpResponse     <- submitClaimAndAudit(rejectedGoodsClaimRequest, eisSubmitRequest)
+    returnHttpResponse     <- submitClaimAndAudit(auditable, eisSubmitRequest)
     eisSubmitClaimResponse <- EitherT.fromEither[Future](
                                 returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                               )

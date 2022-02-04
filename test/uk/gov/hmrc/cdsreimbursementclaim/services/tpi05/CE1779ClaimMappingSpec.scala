@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, RejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, SingleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService.NDRC
@@ -321,7 +321,7 @@ class CE1779ClaimMappingSpec
       }
 
       "cannot find NDRC details for claimed reimbursement" in {
-        val reimbursementClaimsLens = lens[RejectedGoodsClaim].reimbursementClaims
+        val reimbursementClaimsLens = lens[SingleRejectedGoodsClaim].reimbursementClaims
 
         forAll { (data: CE1779ClaimData) =>
           val rejectedGoodsClaim = data._1

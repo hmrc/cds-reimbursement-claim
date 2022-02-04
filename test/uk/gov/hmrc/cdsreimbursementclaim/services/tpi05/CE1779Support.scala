@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, RejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
@@ -27,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 trait CE1779Support {
 
-  implicit class RejectedGoodsClaimOps(claim: RejectedGoodsClaim) {
+  implicit class RejectedGoodsClaimOps(claim: SingleRejectedGoodsClaim) {
 
     def claimant: Claimant =
       if (claim.claimantType === ClaimantType.Consignee) Importer else Representative

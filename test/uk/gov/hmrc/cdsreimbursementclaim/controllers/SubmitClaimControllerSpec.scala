@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
-import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64FilesMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.http.HeaderCarrier
@@ -96,13 +96,13 @@ class SubmitClaimControllerSpec extends ControllerSpec {
   def mockCcsRequestEnqueue[A](
     submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
-  ): CallHandler4[A, ClaimSubmitResponse, HeaderCarrier, ClaimToDec64FilesMapper[A], EitherT[Future, Error, List[
+  ): CallHandler4[A, ClaimSubmitResponse, HeaderCarrier, ClaimToDec64Mapper[A], EitherT[Future, Error, List[
     WorkItem[CcsSubmissionRequest]
   ]]] =
     (mockCcsSubmissionService
       .enqueue(_: A, _: ClaimSubmitResponse)(
         _: HeaderCarrier,
-        _: ClaimToDec64FilesMapper[A]
+        _: ClaimToDec64Mapper[A]
       ))
       .expects(submitClaimRequest, submitClaimResponse, *, *)
       .returning(EitherT.pure(List(ccsSubmissionRequestWorkItem)))
@@ -137,7 +137,8 @@ class SubmitClaimControllerSpec extends ControllerSpec {
           mockCcsRequestEnqueue(submitClaimRequest, submitClaimResponse)
         }
 
-        val result = controller.submitRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
+        val result =
+          controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
         status(result)        shouldBe OK
         contentAsJson(result) shouldBe Json.toJson(submitClaimResponse)
       }
@@ -163,7 +164,8 @@ class SubmitClaimControllerSpec extends ControllerSpec {
           mockRejectedGoodsClaimSubmission(submitClaimRequest)(Left(Error("boom!")))
         }
 
-        val result = controller.submitRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
+        val result =
+          controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }

@@ -40,7 +40,7 @@ trait CcsSubmissionService {
     submitClaimResponse: ClaimSubmitResponse
   )(implicit
     hc: HeaderCarrier,
-    claimToDec64FileMapper: ClaimToDec64FilesMapper[A]
+    claimToDec64Mapper: ClaimToDec64Mapper[A]
   ): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
 
   def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]]
@@ -76,7 +76,7 @@ class DefaultCcsSubmissionService @Inject() (
     submitClaimResponse: ClaimSubmitResponse
   )(implicit
     hc: HeaderCarrier,
-    claimToDec64FilesMapper: ClaimToDec64FilesMapper[A]
+    claimToDec64FilesMapper: ClaimToDec64Mapper[A]
   ): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
 
     val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =

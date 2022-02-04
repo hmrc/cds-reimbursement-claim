@@ -29,8 +29,8 @@ final case class EisSubmitClaimRequest(
 object EisSubmitClaimRequest {
 
   @implicitNotFound("No implicit TPI05 mapper found for request object")
-  def apply[A](claim: A)(implicit mapper: ClaimToTPI05Mapper[A]): Either[Error, EisSubmitClaimRequest] =
-    mapper.map(claim)
+  def apply[A](source: A)(implicit mapper: ClaimToTPI05Mapper[A]): Either[Error, EisSubmitClaimRequest] =
+    mapper.map(source)
 
   implicit val format: OWrites[EisSubmitClaimRequest] = Json.writes[EisSubmitClaimRequest]
 }
