@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, SingleRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, MultipleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService.NDRC
@@ -37,7 +37,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
 
-class SingleRejectedGoodsClaimMappingSpec
+class MultipleRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
     with RejectedGoodsClaimSupport
     with ScalaCheckDrivenPropertyChecks
@@ -46,11 +46,11 @@ class SingleRejectedGoodsClaimMappingSpec
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Single claim to TPI05 request" in forAll { details: (SingleRejectedGoodsClaim, DisplayDeclaration) =>
+    "map a valid Single claim to TPI05 request" in forAll { details: (MultipleRejectedGoodsClaim, DisplayDeclaration) =>
       val claim       = details._1
       val declaration = details._2
 
-      val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map(details)
+      val tpi05Request = multipleRejectedGoodsClaimToTPI05Mapper.map(details)
 
       inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
         common.originatingSystem should be(MDTP)
@@ -147,15 +147,15 @@ class SingleRejectedGoodsClaimMappingSpec
             ).some
           ),
           'MRNDetails (
-            List(
+            claim.getClaimsOverMrns.map { case (mrn, reimbursement) =>
               MrnDetail(
-                MRNNumber = claim.movementReferenceNumber.some,
+                MRNNumber = mrn.some,
                 acceptanceDate = AcceptanceDate
                   .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                   .flatMap(_.toTpi05DateString)
                   .toOption,
                 declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
-                mainDeclarationReference = true.some,
+                mainDeclarationReference = (mrn === claim.leadMrn).some,
                 procedureCode = declaration.displayResponseDetail.procedureCode.some,
                 declarantDetails = {
                   val declarantDetails = declaration.displayResponseDetail.declarantDetails
@@ -260,24 +260,26 @@ class SingleRejectedGoodsClaimMappingSpec
                 NDRCDetails = {
                   val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
 
-                  claim.reimbursementClaims.map { case (taxCode, claimedAmount) =>
-                    ndrcDetails
-                      .find(_.taxType === taxCode.value)
-                      .map(details =>
-                        NdrcDetails(
-                          paymentMethod = details.paymentMethod,
-                          paymentReference = details.paymentReference,
-                          CMAEligible = None,
-                          taxType = taxCode,
-                          amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
-                          claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some
+                  reimbursement
+                    .map { case (taxCode, claimedAmount) =>
+                      ndrcDetails
+                        .find(_.taxType === taxCode.value)
+                        .map(details =>
+                          NdrcDetails(
+                            paymentMethod = details.paymentMethod,
+                            paymentReference = details.paymentReference,
+                            CMAEligible = None,
+                            taxType = taxCode,
+                            amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
+                            claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some
+                          )
                         )
-                      )
-                      .value
-                  }.toList
+                    }
+                    .toList
+                    .flatten(Option.option2Iterable)
                 }.some
               )
-            ).some
+            }.some
           )
         )
       }
@@ -288,7 +290,7 @@ class SingleRejectedGoodsClaimMappingSpec
       "mapping claim having incorrect NDRC details" in {
         val ndrcDetailsLens = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
 
-        forAll { (random: UUID, amount: BigDecimal, details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
+        forAll { (random: UUID, amount: BigDecimal, details: (MultipleRejectedGoodsClaim, DisplayDeclaration)) =>
           val value       = random.toString
           val claim       = details._1
           val declaration = details._2
@@ -308,7 +310,7 @@ class SingleRejectedGoodsClaimMappingSpec
             )
           )
 
-          val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map((claim, declarationWithInvalidNdrcDetails))
+          val tpi05Request = multipleRejectedGoodsClaimToTPI05Mapper.map((claim, declarationWithInvalidNdrcDetails))
 
           tpi05Request.left.map(
             _.value should be(
@@ -322,19 +324,18 @@ class SingleRejectedGoodsClaimMappingSpec
 
       "cannot find NDRC details for claimed reimbursement" in {
         val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-        val reimbursementClaimsLens = lens[SingleRejectedGoodsClaim].reimbursementClaims
+        val reimbursementClaimsLens = lens[MultipleRejectedGoodsClaim].reimbursementClaims
 
-        forAll { (details: (SingleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
+        forAll { (details: (MultipleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
           val rejectedGoodsClaim = details._1
           val displayDeclaration = details._2
 
-          val claims = Map(taxCode -> BigDecimal(7))
+          val reimbursement = Map(rejectedGoodsClaim.leadMrn -> Map(taxCode -> BigDecimal(7)))
 
-          val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
-
+          val updatedClaim       = reimbursementClaimsLens.set(rejectedGoodsClaim)(reimbursement)
           val updatedDeclaration = ndrcLens.set(displayDeclaration)(None)
 
-          val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map((updatedClaim, updatedDeclaration))
+          val tpi05Request = multipleRejectedGoodsClaimToTPI05Mapper.map((updatedClaim, updatedDeclaration))
 
           tpi05Request.left.map(
             _.value should be(

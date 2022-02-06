@@ -22,7 +22,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.{genDisplayDeclaration, genNdrcDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
@@ -180,10 +180,10 @@ object RejectedGoodsClaimGen {
   implicit lazy val arbitraryMultipleRejectedGoodsClaim: Typeclass[MultipleRejectedGoodsClaim] =
     Arbitrary(genMultipleRejectedGoodsClaim)
 
-  implicit def arbitraryRequest[A <: RejectedGoodsClaim](implicit
-    arb: Arbitrary[A]
-  ): Typeclass[RejectedGoodsClaimRequest[A]] =
-    gen[RejectedGoodsClaimRequest[A]]
+  implicit def arbitraryRequest[Claim <: RejectedGoodsClaim](implicit
+    arb: Arbitrary[Claim]
+  ): Typeclass[RejectedGoodsClaimRequest[Claim]] =
+    gen[RejectedGoodsClaimRequest[Claim]]
 
   implicit lazy val arbitrarySingleClaimDetails: Typeclass[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
     Arbitrary(
@@ -197,6 +197,24 @@ object RejectedGoodsClaimGen {
         val updatedDetails   = declaration.displayResponseDetail.copy(ndrcDetails = Some(firstNdrcDetails :: Nil))
 
         (claim.copy(reimbursementClaims = updatedClaims), declaration.copy(displayResponseDetail = updatedDetails))
+      }
+    )
+
+  implicit lazy val arbitraryMultipleClaimDetails: Typeclass[(MultipleRejectedGoodsClaim, DisplayDeclaration)] =
+    Arbitrary(
+      for {
+        declaration <- genDisplayDeclaration
+        claim       <- genMultipleRejectedGoodsClaim
+        ndrcs       <- Gen
+                         .sequence(
+                           claim.reimbursementClaims.values
+                             .flatMap(_.keys)
+                             .map(taxCode => genNdrcDetails.map(_.copy(taxType = taxCode.value)))
+                         )
+                         .map(_.asScala.toList)
+      } yield {
+        val updatedDetails = declaration.displayResponseDetail.copy(ndrcDetails = Some(ndrcs))
+        (claim, declaration.copy(displayResponseDetail = updatedDetails))
       }
     )
 }
