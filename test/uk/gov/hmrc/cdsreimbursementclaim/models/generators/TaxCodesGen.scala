@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.Gen
+import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
 
 object TaxCodesGen {
 
   lazy val genTaxCode: Gen[TaxCode] = Gen.oneOf(TaxCode.values)
+
+  implicit lazy val arbitraryTaxCode: Arbitrary[TaxCode] =
+    Arbitrary(genTaxCode)
 }

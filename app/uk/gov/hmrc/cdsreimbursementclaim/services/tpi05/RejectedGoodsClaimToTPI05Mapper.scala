@@ -25,14 +25,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
+class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
+    extends ClaimToTPI05Mapper[(Claim, DisplayDeclaration)] {
 
-  def map(data: CE1779ClaimData): Either[Error, EisSubmitClaimRequest] = {
-    val claim                 = data._1
-    val declaration           = data._2.displayResponseDetail
+  def map(details: (Claim, DisplayDeclaration)): Either[Error, EisSubmitClaimRequest] = {
+    val claim                 = details._1
+    val declaration           = details._2.displayResponseDetail
     val maybeConsigneeDetails = declaration.consigneeDetails
 
     TPI05.request
@@ -43,7 +43,7 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
       .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)
       .withDisposalMethod(claim.methodOfDisposal)
-      .withBasisOfClaim(claim.basisOfClaim.toTPI05Key)
+      .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(
         GoodsDetails(
           descOfGoods = Some(claim.detailsOfRejectedGoods),
@@ -84,39 +84,37 @@ class CE1779ClaimToTPI05Mapper extends ClaimToTPI05Mapper[CE1779ClaimData] {
         )
       )
       .withMrnDetails(
-        MrnDetail.build
-          .withMrnNumber(claim.movementReferenceNumber)
-          .withAcceptanceDate(declaration.acceptanceDate)
-          .withDeclarantReferenceNumber(declaration.declarantReferenceNumber)
-          .withWhetherMainDeclarationReference(true)
-          .withProcedureCode(declaration.procedureCode)
-          .withDeclarantDetails(declaration.declarantDetails)
-          .withConsigneeDetails(declaration.consigneeDetails)
-          .withAccountDetails(declaration.accountDetails)
-          .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
-          .withNdrcDetails {
-            val ndrcDetails = declaration.ndrcDetails.toList.flatten
+        claim.getClaimsOverMrns.map { case (mrn, claimedReimbursement) =>
+          MrnDetail.build
+            .withMrnNumber(mrn)
+            .withAcceptanceDate(declaration.acceptanceDate)
+            .withDeclarantReferenceNumber(declaration.declarantReferenceNumber)
+            .withWhetherMainDeclarationReference(mrn === claim.leadMrn)
+            .withProcedureCode(declaration.procedureCode)
+            .withDeclarantDetails(declaration.declarantDetails)
+            .withConsigneeDetails(declaration.consigneeDetails)
+            .withAccountDetails(declaration.accountDetails)
+            .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
+            .withNdrcDetails {
+              val ndrcDetails = declaration.ndrcDetails.toList.flatten
 
-            claim.reimbursementClaims.map { case (taxCode, claimedAmount) =>
-              ndrcDetails
-                .find(_.taxType === taxCode.value)
-                .toValidNel(Error(s"Cannot find NDRC details for tax code: ${taxCode.value}"))
-                .andThen { foundNdrcDetails =>
-                  NdrcDetails.buildChecking(
-                    taxCode,
-                    foundNdrcDetails.paymentMethod,
-                    foundNdrcDetails.paymentReference,
-                    BigDecimal(foundNdrcDetails.amount),
-                    claimedAmount.roundToTwoDecimalPlaces
-                  )
-                }
-            }.toList
-          }
+              claimedReimbursement.map { case (taxCode, claimedAmount) =>
+                ndrcDetails
+                  .find(_.taxType === taxCode.value)
+                  .toValidNel(Error(s"Cannot find NDRC details for tax code: ${taxCode.value}"))
+                  .andThen { foundNdrcDetails =>
+                    NdrcDetails.buildChecking(
+                      taxCode,
+                      foundNdrcDetails.paymentMethod,
+                      foundNdrcDetails.paymentReference,
+                      BigDecimal(foundNdrcDetails.amount),
+                      claimedAmount.roundToTwoDecimalPlaces
+                    )
+                  }
+              }.toList
+            }
+        }
       )
       .verify
   }
-}
-
-object CE1779ClaimToTPI05Mapper {
-  type CE1779ClaimData = (RejectedGoodsClaim, DisplayDeclaration)
 }

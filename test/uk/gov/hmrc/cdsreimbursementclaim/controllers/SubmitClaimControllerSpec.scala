@@ -17,23 +17,24 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.CallHandler4
-import play.api.libs.json.{JsValue, Json}
+import org.scalamock.handlers.{CallHandler4, CallHandler5}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Headers, Request, WrappedRequest}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
-import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64FilesMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.workitem.WorkItem
@@ -42,9 +43,12 @@ import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubmitClaimControllerSpec extends ControllerSpec {
+class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyChecks {
 
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+
+  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
+    PropertyCheckConfiguration(minSuccessful = 1)
 
   val mockClaimService: ClaimService                 = mock[ClaimService]
   val mockCcsSubmissionService: CcsSubmissionService = mock[CcsSubmissionService]
@@ -77,32 +81,33 @@ class SubmitClaimControllerSpec extends ControllerSpec {
       .expects(request, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest)(
+  def mockRejectedGoodsClaimSubmission[Claim <: RejectedGoodsClaim](request: RejectedGoodsClaimRequest[Claim])(
     response: Either[Error, ClaimSubmitResponse]
-  ): CallHandler4[RejectedGoodsClaimRequest, HeaderCarrier, Request[_], ClaimToTPI05Mapper[CE1779ClaimData], EitherT[
-    Future,
-    Error,
-    ClaimSubmitResponse
-  ]] =
-    (mockClaimService
-      .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest)(
-        _: HeaderCarrier,
-        _: Request[_],
-        _: ClaimToTPI05Mapper[CE1779ClaimData]
-      ))
-      .expects(request, *, *, *)
+  ): CallHandler5[RejectedGoodsClaimRequest[Claim], HeaderCarrier, Request[_], ClaimToTPI05Mapper[
+    (Claim, DisplayDeclaration)
+  ], Format[RejectedGoodsClaimRequest[Claim]], EitherT[Future, Error, ClaimSubmitResponse]] =
+    (
+      mockClaimService
+        .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest[Claim])(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
+          _: Format[RejectedGoodsClaimRequest[Claim]]
+        )
+      )
+      .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockCcsRequestEnqueue[A](
     submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
-  ): CallHandler4[A, ClaimSubmitResponse, HeaderCarrier, ClaimToDec64FilesMapper[A], EitherT[Future, Error, List[
+  ): CallHandler4[A, ClaimSubmitResponse, HeaderCarrier, ClaimToDec64Mapper[A], EitherT[Future, Error, List[
     WorkItem[CcsSubmissionRequest]
   ]]] =
     (mockCcsSubmissionService
       .enqueue(_: A, _: ClaimSubmitResponse)(
         _: HeaderCarrier,
-        _: ClaimToDec64FilesMapper[A]
+        _: ClaimToDec64Mapper[A]
       ))
       .expects(submitClaimRequest, submitClaimResponse, *, *)
       .returning(EitherT.pure(List(ccsSubmissionRequestWorkItem)))
@@ -114,57 +119,73 @@ class SubmitClaimControllerSpec extends ControllerSpec {
 
     "succeed returning claim reference number" when {
 
-      "handling C285 claim request" in {
-        val submitClaimRequest  = sample[C285ClaimRequest]
-        val submitClaimResponse = sample[ClaimSubmitResponse]
-
+      "handling C285 claim request" in forAll { (request: C285ClaimRequest, response: ClaimSubmitResponse) =>
         inSequence {
-          mockC285ClaimSubmission(submitClaimRequest)(Right(submitClaimResponse))
-          mockCcsRequestEnqueue(submitClaimRequest, submitClaimResponse)
+          mockC285ClaimSubmission(request)(Right(response))
+          mockCcsRequestEnqueue(request, response)
         }
 
-        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
+        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(request)))
         status(result)        shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(submitClaimResponse)
+        contentAsJson(result) shouldBe Json.toJson(response)
       }
 
-      "handling C&E1779 claim request" in {
-        val submitClaimRequest  = sample[RejectedGoodsClaimRequest]
-        val submitClaimResponse = sample[ClaimSubmitResponse]
+      "handling Single C&E1779 claim request" in forAll {
+        (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
+          inSequence {
+            mockRejectedGoodsClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
 
-        inSequence {
-          mockRejectedGoodsClaimSubmission(submitClaimRequest)(Right(submitClaimResponse))
-          mockCcsRequestEnqueue(submitClaimRequest, submitClaimResponse)
-        }
+          val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
 
-        val result = controller.submitRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
-        status(result)        shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(submitClaimResponse)
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
+
+      "handling Multiple C&E1779 claim request" in forAll {
+        (request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
+          inSequence {
+            mockRejectedGoodsClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
+
+          val result = controller.submitMultipleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
       }
     }
 
     "fail" when {
 
-      "submission of the C285 claim failed" in {
-        val submitClaimRequest = sample[C285ClaimRequest]
-
+      "submission of the C285 claim failed" in forAll { request: C285ClaimRequest =>
         inSequence {
-          mockC285ClaimSubmission(submitClaimRequest)(Left(Error("boom!")))
+          mockC285ClaimSubmission(request)(Left(Error("boom!")))
         }
 
-        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
+        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(request)))
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
-      "submission of the C&E1779 claim failed" in {
-        val submitClaimRequest = sample[RejectedGoodsClaimRequest]
+      "submission of the Single C&E1779 claim failed" in forAll {
+        request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim] =>
+          inSequence {
+            mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+          }
 
-        inSequence {
-          mockRejectedGoodsClaimSubmission(submitClaimRequest)(Left(Error("boom!")))
-        }
+          val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
 
-        val result = controller.submitRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(submitClaimRequest)))
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+      "submission of the Multiple C&E1779 claim failed" in forAll {
+        request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim] =>
+          inSequence {
+            mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+          }
+
+          val result = controller.submitMultipleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }

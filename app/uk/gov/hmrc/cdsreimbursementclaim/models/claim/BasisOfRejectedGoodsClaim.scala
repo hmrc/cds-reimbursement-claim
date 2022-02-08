@@ -19,25 +19,25 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait BasisOfRejectedGoodsClaim extends Product with Serializable {
-  def toTPI05Key: String
+  def toTPI05DisplayString: String
 }
 
 object BasisOfRejectedGoodsClaim extends EnumerationFormat[BasisOfRejectedGoodsClaim] {
 
   case object DamagedBeforeClearance extends BasisOfRejectedGoodsClaim {
-    def toTPI05Key: String = "Damaged Before Clearance"
+    def toTPI05DisplayString: String = "Damaged Before Clearance"
   }
 
   case object Defective extends BasisOfRejectedGoodsClaim {
-    def toTPI05Key: String = "Defective"
+    def toTPI05DisplayString: String = "Defective"
   }
 
   case object NotInAccordanceWithContract extends BasisOfRejectedGoodsClaim {
-    def toTPI05Key: String = "Not in Accordance with Contract"
+    def toTPI05DisplayString: String = "Not in Accordance with Contract"
   }
 
   case object SpecialCircumstances extends BasisOfRejectedGoodsClaim {
-    def toTPI05Key: String = "Special Circumstances"
+    def toTPI05DisplayString: String = "Special Circumstances"
   }
 
   override val values: Set[BasisOfRejectedGoodsClaim] =

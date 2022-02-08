@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
@@ -42,7 +42,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.CE1779ClaimToTPI05Mapper.CE1779ClaimData
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -80,8 +79,11 @@ class ClaimServiceSpec
   implicit val c285ClaimMapper: ClaimToTPI05Mapper[C285ClaimRequest] =
     mock[ClaimToTPI05Mapper[C285ClaimRequest]]
 
-  implicit val ce1779ClaimMapper: ClaimToTPI05Mapper[CE1779ClaimData] =
-    mock[ClaimToTPI05Mapper[CE1779ClaimData]]
+  implicit val singleRejectedGoodsClaimMapper: ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+    mock[ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, DisplayDeclaration)]]
+
+  implicit val multipleRejectedGoodsClaimMapper: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, DisplayDeclaration)] =
+    mock[ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, DisplayDeclaration)]]
 
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
     PropertyCheckConfiguration(minSuccessful = 1)
@@ -216,9 +218,9 @@ class ClaimServiceSpec
           await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
 
-      "successfully submit a Rejected Goods claim" in forAll {
+      "successfully submit a Single Rejected Goods claim" in forAll {
         (
-          ce1779Request: RejectedGoodsClaimRequest,
+          ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
           displayDeclaration: DisplayDeclaration,
           eisRequest: EisSubmitClaimRequest
         ) =>
@@ -240,8 +242,8 @@ class ClaimServiceSpec
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
 
           inSequence {
-            mockDeclarationRetrieving(ce1779Request.claim.movementReferenceNumber)(displayDeclaration)
-            mockClaimMapping((ce1779Request.claim, displayDeclaration), eisRequest)
+            mockDeclarationRetrieving(ce1779ClaimRequest.claim.leadMrn)(displayDeclaration)
+            mockClaimMapping((ce1779ClaimRequest.claim, displayDeclaration), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
@@ -249,13 +251,55 @@ class ClaimServiceSpec
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
               responseBody = Some(responseJsonBody),
-              submitClaimRequest = ce1779Request,
+              submitClaimRequest = ce1779ClaimRequest,
               eisSubmitClaimRequest = eisRequest
             )
             mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
           }
 
-          await(claimService.submitRejectedGoodsClaim(ce1779Request).value) shouldBe Right(submitClaimResponse)
+          await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)
+      }
+
+      "successfully submit a Multiple Rejected Goods claim" in forAll {
+        (
+          ce1779ClaimRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim],
+          displayDeclaration: DisplayDeclaration,
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val responseJsonBody = Json.parse(
+            """
+              |{
+              |    "postNewClaimsResponse": {
+              |        "responseCommon": {
+              |            "status": "OK",
+              |            "processingDate": "2021-01-20T12:07540Z",
+              |            "CDFPayService": "NDRC",
+              |            "CDFPayCaseNumber": "4374422408"
+              |        }
+              |    }
+              |}
+              |""".stripMargin
+          )
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+
+          inSequence {
+            mockDeclarationRetrieving(ce1779ClaimRequest.claim.leadMrn)(displayDeclaration)
+            mockClaimMapping((ce1779ClaimRequest.claim, displayDeclaration), eisRequest)
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = ce1779ClaimRequest,
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
 
       "successfully submit a C285 claim even though sending of the confirmation email was not successful" in forAll {
@@ -295,9 +339,9 @@ class ClaimServiceSpec
           await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
 
-      "successfully submit a Rejected Goods claim even though sending of the confirmation email was not successful" in forAll {
+      "successfully submit a Single Rejected Goods claim even though sending of the confirmation email was not successful" in forAll {
         (
-          ce1779Request: RejectedGoodsClaimRequest,
+          ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
           displayDeclaration: DisplayDeclaration,
           eisRequest: EisSubmitClaimRequest
         ) =>
@@ -319,8 +363,8 @@ class ClaimServiceSpec
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
 
           inSequence {
-            mockDeclarationRetrieving(ce1779Request.claim.movementReferenceNumber)(displayDeclaration)
-            mockClaimMapping((ce1779Request.claim, displayDeclaration), eisRequest)
+            mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(displayDeclaration)
+            mockClaimMapping((ce1779ClaimRequest.claim, displayDeclaration), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
@@ -328,13 +372,13 @@ class ClaimServiceSpec
             mockAuditSubmitClaimResponseEvent(
               200,
               Some(responseJsonBody),
-              ce1779Request,
+              ce1779ClaimRequest,
               eisRequest
             )
             mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Left(Error("some error")))
           }
 
-          await(claimService.submitRejectedGoodsClaim(ce1779Request).value) shouldBe Right(submitClaimResponse)
+          await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
 
       "return an error" when {
@@ -381,7 +425,7 @@ class ClaimServiceSpec
 
         "a http response other than 200 OK was received" in forAll {
           (
-            ce1779Request: RejectedGoodsClaimRequest,
+            ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
             displayDeclaration: DisplayDeclaration,
             eisRequest: EisSubmitClaimRequest
           ) =>
@@ -405,8 +449,8 @@ class ClaimServiceSpec
             )
 
             inSequence {
-              mockDeclarationRetrieving(ce1779Request.claim.movementReferenceNumber)(displayDeclaration)
-              mockClaimMapping((ce1779Request.claim, displayDeclaration), eisRequest)
+              mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(displayDeclaration)
+              mockClaimMapping((ce1779ClaimRequest.claim, displayDeclaration), eisRequest)
               mockAuditSubmitClaimEvent(eisRequest)
               mockSubmitClaim(eisRequest)(
                 Right(HttpResponse(400, errorResponseJsonBody, Map.empty[String, Seq[String]]))
@@ -414,12 +458,12 @@ class ClaimServiceSpec
               mockAuditSubmitClaimResponseEvent(
                 400,
                 Some(errorResponseJsonBody),
-                ce1779Request,
+                ce1779ClaimRequest,
                 eisRequest
               )
             }
 
-            await(claimService.submitRejectedGoodsClaim(ce1779Request).value).isLeft shouldBe true
+            await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value).isLeft shouldBe true
         }
 
         "no case number is returned in the response" in forAll {

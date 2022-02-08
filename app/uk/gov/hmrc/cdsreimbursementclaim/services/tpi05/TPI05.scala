@@ -67,7 +67,7 @@ object TPI05 {
       copy(validatedRequest.map(_.copy(declarationMode = Some(declarationMode))))
 
     def withDisposalMethod(methodOfDisposal: MethodOfDisposal): Builder =
-      copy(validatedRequest.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05Key))))
+      copy(validatedRequest.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05DisplayString))))
 
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(
@@ -110,9 +110,9 @@ object TPI05 {
       copy(validatedRequest.map(_.copy(EORIDetails = Some(eoriDetails))))
 
     @SuppressWarnings(Array("org.wartremover.warts.Any"))
-    def withMrnDetails(mrnDetails: MrnDetail.Builder*): Builder =
+    def withMrnDetails(mrnDetails: List[MrnDetail.Builder]): Builder =
       copy(validatedRequest.andThen { request =>
-        mrnDetails.toList
+        mrnDetails
           .ensuring(_.nonEmpty)
           .map(_.validated)
           .sequence

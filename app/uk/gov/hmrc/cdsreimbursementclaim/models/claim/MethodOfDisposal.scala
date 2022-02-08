@@ -19,33 +19,33 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait MethodOfDisposal extends Product with Serializable {
-  def toTPI05Key: String
+  def toTPI05DisplayString: String
 }
 
 object MethodOfDisposal extends EnumerationFormat[MethodOfDisposal] {
 
   final case object Export extends MethodOfDisposal {
-    def toTPI05Key: String = "Export"
+    def toTPI05DisplayString: String = "Export"
   }
 
   final case object PostalExport extends MethodOfDisposal {
-    def toTPI05Key: String = "Postal Export"
+    def toTPI05DisplayString: String = "Postal Export"
   }
 
   final case object DonationToCharity extends MethodOfDisposal {
-    def toTPI05Key: String = "Donation to Charity"
+    def toTPI05DisplayString: String = "Donation to Charity"
   }
 
   final case object PlacedInCustomsWarehouse extends MethodOfDisposal {
-    def toTPI05Key: String = "Placed in Customs Warehouse"
+    def toTPI05DisplayString: String = "Placed in Customs Warehouse"
   }
 
   final case object ExportInBaggage extends MethodOfDisposal {
-    def toTPI05Key: String = "Export in Baggage"
+    def toTPI05DisplayString: String = "Export in Baggage"
   }
 
   final case object Destruction extends MethodOfDisposal {
-    def toTPI05Key: String = "Destruction"
+    def toTPI05DisplayString: String = "Destruction"
   }
 
   override val values: Set[MethodOfDisposal] =
