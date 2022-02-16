@@ -28,6 +28,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, MultipleRejected
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService.NDRC
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.AllDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -280,7 +282,9 @@ class MultipleRejectedGoodsClaimMappingSpec
                 }.some
               )
             }.some
-          )
+          ),
+          'caseType (Bulk.some),
+          'declarationMode (AllDeclaration.some)
         )
       }
     }

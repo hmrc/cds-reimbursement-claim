@@ -19,6 +19,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 import cats.data.NonEmptySeq
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Format, JsPath}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.AllDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
@@ -49,6 +52,10 @@ final case class MultipleRejectedGoodsClaim(
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
     reimbursementClaims.toList
+
+  override def caseType: CaseType = Bulk
+
+  override def declarationMode: DeclarationMode = AllDeclaration
 }
 
 object MultipleRejectedGoodsClaim {

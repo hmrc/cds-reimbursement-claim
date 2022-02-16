@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
@@ -50,4 +51,8 @@ trait RejectedGoodsClaim extends Product with Serializable {
   def totalReimbursementAmount: BigDecimal
 
   def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])]
+
+  def declarationMode: DeclarationMode
+
+  def caseType: CaseType
 }
