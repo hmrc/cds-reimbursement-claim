@@ -115,6 +115,8 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
             }
         }
       )
+      .withDeclarationMode(claim.declarationMode)
+      .withCaseType(claim.caseType)
       .verify
   }
 }

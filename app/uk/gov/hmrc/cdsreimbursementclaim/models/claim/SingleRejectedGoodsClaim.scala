@@ -16,7 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
+import cats.implicits.catsSyntaxEq
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
@@ -46,6 +51,10 @@ final case class SingleRejectedGoodsClaim(
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
     (movementReferenceNumber, reimbursementClaims) :: Nil
+
+  override def caseType: CaseType = if (reimbursementMethod === CurrentMonthAdjustment) CMA else Individual
+
+  override def declarationMode: DeclarationMode = ParentDeclaration
 }
 
 object SingleRejectedGoodsClaim {
