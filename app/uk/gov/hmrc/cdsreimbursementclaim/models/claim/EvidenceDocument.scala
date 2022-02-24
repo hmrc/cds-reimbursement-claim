@@ -21,6 +21,7 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDateTime
 
+// TODO: Name more generic
 final case class EvidenceDocument(
   checksum: String,
   downloadUrl: String,

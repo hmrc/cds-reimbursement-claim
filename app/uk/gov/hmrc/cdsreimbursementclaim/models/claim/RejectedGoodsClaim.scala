@@ -55,4 +55,6 @@ trait RejectedGoodsClaim extends Product with Serializable {
   def declarationMode: DeclarationMode
 
   def caseType: CaseType
+
+  def documents: Seq[EvidenceDocument]
 }

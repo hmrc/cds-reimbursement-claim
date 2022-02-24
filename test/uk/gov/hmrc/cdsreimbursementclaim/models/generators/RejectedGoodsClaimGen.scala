@@ -180,6 +180,42 @@ object RejectedGoodsClaimGen {
   implicit lazy val arbitraryMultipleRejectedGoodsClaim: Typeclass[MultipleRejectedGoodsClaim] =
     Arbitrary(genMultipleRejectedGoodsClaim)
 
+  lazy val genScheduledRejectedGoodsClaim: Gen[ScheduledRejectedGoodsClaim] =
+    for {
+      mrn                    <- genMRN
+      claimantType           <- Gen.oneOf(ClaimantType.values)
+      claimantInformation    <- genClaimantInformation
+      basisOfClaim           <- genBasisOfRejectedGoodsClaim
+      specialCircumstances   <- Gen.option(genRandomString)
+      methodOfDisposal       <- genMethodOfDisposal
+      bankAccountDetails     <- Gen.option(genBankAccountDetails)
+      inspectionDate         <- genLocalDate
+      inspectionAddress      <- genInspectionAddress
+      detailsOfRejectedGoods <- genRandomString
+      reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      claims                 <- genReimbursementClaims
+      evidences              <- Gen.nonEmptyListOf(genEvidences)
+      scheduledDocument      <- genEvidences
+    } yield ScheduledRejectedGoodsClaim(
+      movementReferenceNumber = mrn,
+      claimantType = claimantType,
+      claimantInformation = claimantInformation,
+      basisOfClaim = basisOfClaim,
+      basisOfClaimSpecialCircumstances = specialCircumstances,
+      methodOfDisposal = methodOfDisposal,
+      detailsOfRejectedGoods = detailsOfRejectedGoods,
+      inspectionDate = inspectionDate,
+      inspectionAddress = inspectionAddress,
+      reimbursementClaims = claims,
+      reimbursementMethod = reimbursementMethod,
+      bankAccountDetails = bankAccountDetails,
+      supportingEvidences = evidences,
+      scheduledDocument = scheduledDocument
+    )
+
+  implicit lazy val arbitraryScheduledRejectedGoodsClaim: Typeclass[ScheduledRejectedGoodsClaim] =
+    Arbitrary(genScheduledRejectedGoodsClaim)
+
   implicit def arbitraryRequest[Claim <: RejectedGoodsClaim](implicit
     arb: Arbitrary[Claim]
   ): Typeclass[RejectedGoodsClaimRequest[Claim]] =
@@ -215,6 +251,21 @@ object RejectedGoodsClaimGen {
       } yield {
         val updatedDetails = declaration.displayResponseDetail.copy(ndrcDetails = Some(ndrcs))
         (claim, declaration.copy(displayResponseDetail = updatedDetails))
+      }
+    )
+
+  implicit lazy val arbitraryScheduledClaimDetails: Typeclass[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] =
+    Arbitrary(
+      for {
+        declaration <- genDisplayDeclaration
+        claim       <- genScheduledRejectedGoodsClaim
+      } yield {
+        val firstNdrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten.head
+        val firstClaim       = claim.reimbursementClaims.head
+        val updatedClaims    = Map(TaxCode.getOrFail(firstNdrcDetails.taxType) -> firstClaim._2)
+        val updatedDetails   = declaration.displayResponseDetail.copy(ndrcDetails = Some(firstNdrcDetails :: Nil))
+
+        (claim.copy(reimbursementClaims = updatedClaims), declaration.copy(displayResponseDetail = updatedDetails))
       }
     )
 }

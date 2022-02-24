@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.implicits.catsSyntaxEq
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
@@ -28,7 +26,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
 import java.time.LocalDate
 
-final case class SingleRejectedGoodsClaim(
+// TODO: Reflect a Frontend model once ready
+final case class ScheduledRejectedGoodsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
   claimantInformation: ClaimantInformation,
@@ -41,7 +40,8 @@ final case class SingleRejectedGoodsClaim(
   reimbursementClaims: Map[TaxCode, BigDecimal],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument],
+  scheduledDocument: EvidenceDocument
 ) extends RejectedGoodsClaim {
 
   override def totalReimbursementAmount: BigDecimal =
@@ -52,17 +52,19 @@ final case class SingleRejectedGoodsClaim(
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
     (movementReferenceNumber, reimbursementClaims) :: Nil
 
-  override def caseType: CaseType = if (reimbursementMethod === CurrentMonthAdjustment) CMA else Individual
+  override def caseType: CaseType = Bulk
 
   override def declarationMode: DeclarationMode = ParentDeclaration
 
-  override def documents: Seq[EvidenceDocument] = supportingEvidences
+  override def documents: Seq[EvidenceDocument] =
+    scheduledDocument +: supportingEvidences
 }
 
-object SingleRejectedGoodsClaim {
+object ScheduledRejectedGoodsClaim {
 
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =
     MapFormat[TaxCode, BigDecimal]
 
-  implicit val format: Format[SingleRejectedGoodsClaim] = Json.format[SingleRejectedGoodsClaim]
+  implicit val format: Format[ScheduledRejectedGoodsClaim] =
+    Json.format[ScheduledRejectedGoodsClaim]
 }

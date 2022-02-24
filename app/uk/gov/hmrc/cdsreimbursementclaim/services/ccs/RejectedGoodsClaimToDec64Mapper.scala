@@ -26,7 +26,7 @@ class RejectedGoodsClaimToDec64Mapper[Claim <: RejectedGoodsClaim]
     extends ClaimToDec64Mapper[RejectedGoodsClaimRequest[Claim]] {
 
   def map(request: RejectedGoodsClaimRequest[Claim], response: ClaimSubmitResponse): List[Envelope] =
-    request.claim.supportingEvidences.zipWithIndex.map { case (document, index) =>
+    request.claim.documents.zipWithIndex.map { case (document, index) =>
       Envelope(
         Body(
           BatchFileInterfaceMetadata(
