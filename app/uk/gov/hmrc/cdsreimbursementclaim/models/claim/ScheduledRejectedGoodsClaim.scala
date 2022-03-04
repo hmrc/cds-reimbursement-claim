@@ -23,8 +23,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Decla
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
+import cats.implicits.catsSyntaxSemigroup
 
 import java.time.LocalDate
+import cats.kernel.Semigroup
 
 // TODO: Reflect a Frontend model once ready
 final case class ScheduledRejectedGoodsClaim(
@@ -37,7 +39,7 @@ final case class ScheduledRejectedGoodsClaim(
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
   inspectionAddress: InspectionAddress,
-  reimbursementClaims: Map[TaxCode, BigDecimal],
+  reimbursementClaims: Map[String, Map[TaxCode, Reimbursement]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument],
@@ -45,12 +47,18 @@ final case class ScheduledRejectedGoodsClaim(
 ) extends RejectedGoodsClaim {
 
   override def totalReimbursementAmount: BigDecimal =
-    reimbursementClaims.values.sum
+    reimbursementClaims.values.map(_.values.map(_.shouldOfPaid).sum).sum
 
   override def leadMrn: MRN = movementReferenceNumber
 
+  lazy val combinedReimbursementClaims: Map[TaxCode, BigDecimal] =
+    reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty).mapValues(_.shouldOfPaid)
+
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
-    (movementReferenceNumber, reimbursementClaims) :: Nil
+    (
+      movementReferenceNumber,
+      combinedReimbursementClaims
+    ) :: Nil
 
   override def caseType: CaseType = Bulk
 
@@ -62,8 +70,12 @@ final case class ScheduledRejectedGoodsClaim(
 
 object ScheduledRejectedGoodsClaim {
 
-  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =
-    MapFormat[TaxCode, BigDecimal]
+  implicit val semigroup: Semigroup[Map[TaxCode, Reimbursement]] =
+    (x: Map[TaxCode, Reimbursement], y: Map[TaxCode, Reimbursement]) =>
+      (x.toSeq ++ y.toSeq).groupBy(_._1).mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(Reimbursement.empty))
+
+  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, Reimbursement]] =
+    MapFormat[TaxCode, Reimbursement]
 
   implicit val format: Format[ScheduledRejectedGoodsClaim] =
     Json.format[ScheduledRejectedGoodsClaim]

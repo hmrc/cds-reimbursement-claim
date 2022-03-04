@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, ScheduledRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, Reimbursement, ScheduledRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService.NDRC
@@ -49,7 +49,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Single claim to TPI05 request" in forAll {
+    "map a valid Scheduled claim to TPI05 request" in forAll {
       details: (ScheduledRejectedGoodsClaim, DisplayDeclaration) =>
         val claim       = details._1
         val declaration = details._2
@@ -264,7 +264,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
                   NDRCDetails = {
                     val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
 
-                    claim.reimbursementClaims.map { case (taxCode, claimedAmount) =>
+                    claim.combinedReimbursementClaims.map { case (taxCode, claimedAmount) =>
                       ndrcDetails
                         .find(_.taxType === taxCode.value)
                         .map(details =>
@@ -334,7 +334,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
           val rejectedGoodsClaim = details._1
           val displayDeclaration = details._2
 
-          val claims = Map(taxCode -> BigDecimal(7))
+          val claims = Map("eu-duty" -> Map(taxCode -> Reimbursement(BigDecimal(7), BigDecimal(8))))
 
           val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
 

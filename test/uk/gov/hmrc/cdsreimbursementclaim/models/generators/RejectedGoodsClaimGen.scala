@@ -66,6 +66,24 @@ object RejectedGoodsClaimGen {
       )
       .map(_.toMap)
 
+  lazy val genScheduledReimbursementClaims: Gen[Map[String, Map[TaxCode, Reimbursement]]] =
+    Gen
+      .nonEmptyListOf(
+        Gen
+          .nonEmptyListOf(Gen.oneOf('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'))
+          .map(String.valueOf)
+          .flatMap { id =>
+            Gen
+              .nonEmptyListOf(
+                genTaxCode.flatMap(taxCode =>
+                  Gen.posNum[Long].map(num => (taxCode, Reimbursement(BigDecimal(num), BigDecimal(num + 1))))
+                )
+              )
+              .map(list => id -> list.toMap)
+          }
+      )
+      .map(_.toMap)
+
   lazy val genInspectionAddress: Gen[InspectionAddress] =
     for {
       num                   <- Gen.choose(1, 100)
@@ -193,7 +211,7 @@ object RejectedGoodsClaimGen {
       inspectionAddress      <- genInspectionAddress
       detailsOfRejectedGoods <- genRandomString
       reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      claims                 <- genReimbursementClaims
+      claims                 <- genScheduledReimbursementClaims
       evidences              <- Gen.nonEmptyListOf(genEvidences)
       scheduledDocument      <- genEvidences
     } yield ScheduledRejectedGoodsClaim(
@@ -259,13 +277,6 @@ object RejectedGoodsClaimGen {
       for {
         declaration <- genDisplayDeclaration
         claim       <- genScheduledRejectedGoodsClaim
-      } yield {
-        val firstNdrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten.head
-        val firstClaim       = claim.reimbursementClaims.head
-        val updatedClaims    = Map(TaxCode.getOrFail(firstNdrcDetails.taxType) -> firstClaim._2)
-        val updatedDetails   = declaration.displayResponseDetail.copy(ndrcDetails = Some(firstNdrcDetails :: Nil))
-
-        (claim.copy(reimbursementClaims = updatedClaims), declaration.copy(displayResponseDetail = updatedDetails))
-      }
+      } yield (claim, declaration)
     )
 }
