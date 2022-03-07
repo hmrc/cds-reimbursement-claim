@@ -26,7 +26,7 @@ import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
@@ -98,6 +98,22 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
+  def mockScheduledRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
+    response: Either[Error, ClaimSubmitResponse]
+  ): CallHandler4[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim], HeaderCarrier, Request[_], Format[
+    RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]
+  ], EitherT[Future, Error, ClaimSubmitResponse]] =
+    (
+      mockClaimService
+        .submitScheduledRejectedGoodsClaim(_: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
+        )
+      )
+      .expects(request, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
   def mockCcsRequestEnqueue[A](
     submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
@@ -155,6 +171,19 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(response)
       }
+
+      "handling Scheduled C&E1779 claim request" in forAll {
+        (request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim], response: ClaimSubmitResponse) =>
+          inSequence {
+            mockScheduledRejectedGoodsClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
+
+          val result = controller.submitScheduledRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
     }
 
     "fail" when {
@@ -185,6 +214,16 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           }
 
           val result = controller.submitMultipleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "submission of the Scheduled C&E1779 claim failed" in forAll {
+        request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim] =>
+          inSequence {
+            mockScheduledRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+          }
+
+          val result = controller.submitScheduledRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
           status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }

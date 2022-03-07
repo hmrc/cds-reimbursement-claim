@@ -56,6 +56,8 @@ final case class MultipleRejectedGoodsClaim(
   override def caseType: CaseType = Bulk
 
   override def declarationMode: DeclarationMode = AllDeclaration
+
+  override def documents: Seq[EvidenceDocument] = supportingEvidences
 }
 
 object MultipleRejectedGoodsClaim {

@@ -22,7 +22,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionService, ClaimToDec64Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -63,6 +63,14 @@ class SubmitClaimController @Inject() (
     withJsonBody[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]] {
       uploadDocumentsOnce {
         claimService.submitRejectedGoodsClaim(_)
+      }
+    }
+  }
+
+  def submitScheduledRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]] {
+      uploadDocumentsOnce {
+        claimService.submitScheduledRejectedGoodsClaim(_)
       }
     }
   }

@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.implicits.catsSyntaxEq
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
+import cats.implicits.catsSyntaxSemigroup
 
 import java.time.LocalDate
+import cats.kernel.Semigroup
 
-final case class SingleRejectedGoodsClaim(
+// TODO: Reflect a Frontend model once ready
+final case class ScheduledRejectedGoodsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
   claimantInformation: ClaimantInformation,
@@ -38,31 +39,51 @@ final case class SingleRejectedGoodsClaim(
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
   inspectionAddress: InspectionAddress,
-  reimbursementClaims: Map[TaxCode, BigDecimal],
+  reimbursementClaims: Map[String, Map[TaxCode, Reimbursement]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument],
+  scheduledDocument: EvidenceDocument
 ) extends RejectedGoodsClaim {
 
   override def totalReimbursementAmount: BigDecimal =
-    reimbursementClaims.values.sum
+    reimbursementClaims.values.map(_.values.map(_.shouldOfPaid).sum).sum
 
   override def leadMrn: MRN = movementReferenceNumber
 
-  override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
-    (movementReferenceNumber, reimbursementClaims) :: Nil
+  lazy val combinedReimbursementClaims: Map[TaxCode, Reimbursement] =
+    reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
-  override def caseType: CaseType = if (reimbursementMethod === CurrentMonthAdjustment) CMA else Individual
+  override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
+    (movementReferenceNumber, combinedReimbursementClaims.mapValues(_.shouldOfPaid)) :: Nil
+
+  def getClaimedReimbursements: List[ClaimedReimbursement] =
+    combinedReimbursementClaims.toList
+      .map { case (taxCode, reimbursement) =>
+        ClaimedReimbursement(
+          taxCode = taxCode,
+          paidAmount = reimbursement.paidAmount,
+          claimAmount = reimbursement.shouldOfPaid
+        )
+      }
+
+  override def caseType: CaseType = Bulk
 
   override def declarationMode: DeclarationMode = ParentDeclaration
 
-  override def documents: Seq[EvidenceDocument] = supportingEvidences
+  override def documents: Seq[EvidenceDocument] =
+    scheduledDocument +: supportingEvidences
 }
 
-object SingleRejectedGoodsClaim {
+object ScheduledRejectedGoodsClaim {
 
-  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =
-    MapFormat[TaxCode, BigDecimal]
+  implicit val semigroup: Semigroup[Map[TaxCode, Reimbursement]] =
+    (x: Map[TaxCode, Reimbursement], y: Map[TaxCode, Reimbursement]) =>
+      (x.toSeq ++ y.toSeq).groupBy(_._1).mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(Reimbursement.empty))
 
-  implicit val format: Format[SingleRejectedGoodsClaim] = Json.format[SingleRejectedGoodsClaim]
+  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, Reimbursement]] =
+    MapFormat[TaxCode, Reimbursement]
+
+  implicit val format: Format[ScheduledRejectedGoodsClaim] =
+    Json.format[ScheduledRejectedGoodsClaim]
 }
