@@ -25,11 +25,13 @@ object Error {
 
   def apply(message: String): Error = new Error {
     override type T = String
-    override val value: T = message
+    override val value: T           = message
+    override def toString(): String = message
   }
 
   def apply(throwable: Throwable): Error = new Error {
     override type T = Throwable
-    override val value: T = throwable
+    override val value: T           = throwable
+    override def toString(): String = throwable.getMessage()
   }
 }

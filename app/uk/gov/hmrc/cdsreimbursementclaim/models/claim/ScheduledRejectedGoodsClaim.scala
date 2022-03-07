@@ -51,14 +51,21 @@ final case class ScheduledRejectedGoodsClaim(
 
   override def leadMrn: MRN = movementReferenceNumber
 
-  lazy val combinedReimbursementClaims: Map[TaxCode, BigDecimal] =
-    reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty).mapValues(_.shouldOfPaid)
+  lazy val combinedReimbursementClaims: Map[TaxCode, Reimbursement] =
+    reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
-    (
-      movementReferenceNumber,
-      combinedReimbursementClaims
-    ) :: Nil
+    (movementReferenceNumber, combinedReimbursementClaims.mapValues(_.shouldOfPaid)) :: Nil
+
+  def getClaimedReimbursements: List[ClaimedReimbursement] =
+    combinedReimbursementClaims.toList
+      .map { case (taxCode, reimbursement) =>
+        ClaimedReimbursement(
+          taxCode = taxCode,
+          paidAmount = reimbursement.paidAmount,
+          claimAmount = reimbursement.shouldOfPaid
+        )
+      }
 
   override def caseType: CaseType = Bulk
 

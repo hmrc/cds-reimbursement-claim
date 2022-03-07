@@ -70,7 +70,7 @@ class SubmitClaimController @Inject() (
   def submitScheduledRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]] {
       uploadDocumentsOnce {
-        claimService.submitRejectedGoodsClaim(_)
+        claimService.submitScheduledRejectedGoodsClaim(_)
       }
     }
   }

@@ -39,7 +39,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
 
-// TODO: Update tests once model changed
 class ScheduledRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
     with RejectedGoodsClaimSupport
@@ -261,24 +260,15 @@ class ScheduledRejectedGoodsClaimMappingSpec
                     )
                   ),
                   bankDetails = claim.firstNonEmptyBankDetails(declaration.displayResponseDetail.bankDetails),
-                  NDRCDetails = {
-                    val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
-
-                    claim.combinedReimbursementClaims.map { case (taxCode, claimedAmount) =>
-                      ndrcDetails
-                        .find(_.taxType === taxCode.value)
-                        .map(details =>
-                          NdrcDetails(
-                            paymentMethod = details.paymentMethod,
-                            paymentReference = details.paymentReference,
-                            CMAEligible = None,
-                            taxType = taxCode,
-                            amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
-                            claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some
-                          )
-                        )
-                        .value
-                    }.toList
+                  NDRCDetails = claim.getClaimedReimbursements.map { reimbursement =>
+                    NdrcDetails(
+                      paymentMethod = reimbursement.paymentMethod,
+                      paymentReference = reimbursement.paymentReference,
+                      CMAEligible = None,
+                      taxType = reimbursement.taxCode,
+                      amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
+                      claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some
+                    )
                   }.some
                 )
               ).some

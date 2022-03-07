@@ -43,6 +43,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ScheduledRejectedGoodsClaim
 
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
@@ -62,6 +63,14 @@ trait ClaimService {
     request: Request[_],
     tpi05Binder: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse]
+
+  def submitScheduledRejectedGoodsClaim(
+    rejectedGoodsClaimRequest: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
@@ -88,6 +97,18 @@ class DefaultClaimService @Inject() (
     request: Request[_],
     tpi05Binder: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    declarationService
+      .getDeclaration(claimRequest.claim.leadMrn)
+      .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
+      .flatMap(declaration => proceed((claimRequest.claim, declaration), claimRequest))
+
+  def submitScheduledRejectedGoodsClaim(
+    claimRequest: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     declarationService
       .getDeclaration(claimRequest.claim.leadMrn)

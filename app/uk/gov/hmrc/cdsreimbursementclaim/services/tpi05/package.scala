@@ -29,6 +29,6 @@ package object tpi05 {
   implicit val multipleRejectedGoodsClaimToTPI05Mapper: RejectedGoodsClaimToTPI05Mapper[MultipleRejectedGoodsClaim] =
     new RejectedGoodsClaimToTPI05Mapper[MultipleRejectedGoodsClaim]
 
-  implicit val scheduledRejectedGoodsClaimToTPI05Mapper: RejectedGoodsClaimToTPI05Mapper[ScheduledRejectedGoodsClaim] =
-    new RejectedGoodsClaimToTPI05Mapper[ScheduledRejectedGoodsClaim]
+  implicit val scheduledRejectedGoodsClaimToTPI05Mapper: ScheduledRejectedGoodsClaimToTPI05Mapper =
+    new ScheduledRejectedGoodsClaimToTPI05Mapper
 }

@@ -98,6 +98,22 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
+  def mockScheduledRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
+    response: Either[Error, ClaimSubmitResponse]
+  ): CallHandler4[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim], HeaderCarrier, Request[_], Format[
+    RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]
+  ], EitherT[Future, Error, ClaimSubmitResponse]] =
+    (
+      mockClaimService
+        .submitScheduledRejectedGoodsClaim(_: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
+        )
+      )
+      .expects(request, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
   def mockCcsRequestEnqueue[A](
     submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
@@ -159,7 +175,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       "handling Scheduled C&E1779 claim request" in forAll {
         (request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim], response: ClaimSubmitResponse) =>
           inSequence {
-            mockRejectedGoodsClaimSubmission(request)(Right(response))
+            mockScheduledRejectedGoodsClaimSubmission(request)(Right(response))
             mockCcsRequestEnqueue(request, response)
           }
 
@@ -204,7 +220,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       "submission of the Scheduled C&E1779 claim failed" in forAll {
         request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim] =>
           inSequence {
-            mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+            mockScheduledRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
           }
 
           val result = controller.submitScheduledRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
