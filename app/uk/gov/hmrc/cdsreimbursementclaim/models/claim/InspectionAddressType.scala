@@ -18,13 +18,23 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed trait InspectionAddressType
+sealed trait InspectionAddressType {
+  def toTPI05DisplayString: String
+}
 
 object InspectionAddressType extends EnumerationFormat[InspectionAddressType] {
 
-  final case object Importer extends InspectionAddressType
-  final case object Declarant extends InspectionAddressType
-  final case object Other extends InspectionAddressType
+  final case object Importer extends InspectionAddressType {
+    override def toTPI05DisplayString: String = "Importer"
+  }
+
+  final case object Declarant extends InspectionAddressType {
+    override def toTPI05DisplayString: String = "Declarant or Representative"
+  }
+
+  final case object Other extends InspectionAddressType {
+    override def toTPI05DisplayString: String = "Other"
+  }
 
   override val values: Set[InspectionAddressType] =
     Set(Importer, Declarant, Other)

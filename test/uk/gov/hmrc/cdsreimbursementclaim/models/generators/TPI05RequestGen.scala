@@ -91,12 +91,12 @@ object TPI05RequestGen {
       contactPerson = Some(s"$firstName $lastName"),
       addressLine1 = Some(s"$num $street"),
       addressLine2 = addressLine2,
-      AddressLine3 = addressLine3,
+      addressLine3 = addressLine3,
       street = Some(street),
       city = city,
       countryCode = country.code,
       postalCode = postalCode.map(_.value),
-      telephone = Some(telephone.value),
+      telephoneNumber = Some(telephone.value),
       emailAddress = Some(email.value)
     )
 
@@ -289,7 +289,7 @@ object TPI05RequestGen {
           descOfGoods = Some(descOfGoods),
           anySpecialCircumstances = Some(specialCircumstances),
           dateOfInspection = Some(inspectionDate),
-          atTheImporterOrDeclarantAddress = Some(inspectionAddressType),
+          atTheImporterOrDeclarantAddress = Some(inspectionAddressType.toTPI05DisplayString),
           inspectionAddress = Some(inspectionAddress)
         )
       ),

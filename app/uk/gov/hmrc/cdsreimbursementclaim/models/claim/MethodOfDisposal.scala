@@ -37,7 +37,7 @@ object MethodOfDisposal extends EnumerationFormat[MethodOfDisposal] {
   }
 
   final case object PlacedInCustomsWarehouse extends MethodOfDisposal {
-    def toTPI05DisplayString: String = "Placed in Customs Warehouse"
+    def toTPI05DisplayString: String = "Placed in Custom Warehouse"
   }
 
   final case object ExportInBaggage extends MethodOfDisposal {

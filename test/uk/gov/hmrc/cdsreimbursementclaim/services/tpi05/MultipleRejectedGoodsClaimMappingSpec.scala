@@ -75,7 +75,7 @@ class MultipleRejectedGoodsClaimMappingSpec
               descOfGoods = claim.detailsOfRejectedGoods.some,
               anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
               dateOfInspection = claim.inspectionDate.toIsoLocalDate.some,
-              atTheImporterOrDeclarantAddress = claim.inspectionAddress.addressType.some,
+              atTheImporterOrDeclarantAddress = claim.inspectionAddress.addressType.toTPI05DisplayString.some,
               inspectionAddress = InspectionAddress(
                 addressLine1 = claim.inspectionAddress.addressLine1,
                 addressLine2 = claim.inspectionAddress.addressLine2,
@@ -94,12 +94,12 @@ class MultipleRejectedGoodsClaimMappingSpec
                   contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
                   addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
                   addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-                  AddressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+                  addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
                   street = claim.claimantInformation.establishmentAddress.street,
                   city = claim.claimantInformation.establishmentAddress.city,
                   countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
                   postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-                  telephone = claim.claimantInformation.establishmentAddress.telephoneNumber,
+                  telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
                   emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
                 ),
                 contactInformation = claim.claimantInformation.contactInformation.some
@@ -115,7 +115,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                     contactPerson = None,
                     addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
                     addressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2),
-                    AddressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+                    addressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
                     street = Street.fromLines(
                       maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
                       maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
@@ -125,7 +125,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                       .map(_.establishmentAddress.countryCode)
                       .getOrElse(Country.uk.code),
                     postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
-                    telephone = maybeContactDetails.flatMap(_.telephone),
+                    telephoneNumber = maybeContactDetails.flatMap(_.telephone),
                     emailAddress = maybeContactDetails.flatMap(_.emailAddress)
                   ),
                   contactInformation = ContactInformation(
@@ -170,7 +170,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                       contactPerson = None,
                       addressLine1 = declarantDetails.establishmentAddress.addressLine1.some,
                       addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                      AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                      addressLine3 = declarantDetails.establishmentAddress.addressLine3,
                       street = Street.fromLines(
                         declarantDetails.establishmentAddress.addressLine1.some,
                         declarantDetails.establishmentAddress.addressLine2
@@ -178,7 +178,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                       city = declarantDetails.establishmentAddress.addressLine3,
                       countryCode = declarantDetails.establishmentAddress.countryCode,
                       postalCode = declarantDetails.establishmentAddress.postalCode,
-                      telephone = None,
+                      telephoneNumber = None,
                       emailAddress = None
                     ),
                     contactDetails = ContactInformation(
@@ -207,7 +207,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                       contactPerson = None,
                       addressLine1 = consigneeDetails.establishmentAddress.addressLine1.some,
                       addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                      AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                      addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
                       street = Street.fromLines(
                         consigneeDetails.establishmentAddress.addressLine1.some,
                         consigneeDetails.establishmentAddress.addressLine2
@@ -215,7 +215,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                       city = consigneeDetails.establishmentAddress.addressLine3,
                       countryCode = consigneeDetails.establishmentAddress.countryCode,
                       postalCode = consigneeDetails.establishmentAddress.postalCode,
-                      telephone = None,
+                      telephoneNumber = None,
                       emailAddress = None
                     ),
                     contactDetails = ContactInformation(

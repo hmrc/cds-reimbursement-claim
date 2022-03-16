@@ -84,7 +84,7 @@ class C285ClaimMappingSpec
                   contactPerson = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.fullName.some,
                   addressLine1 = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1.some,
                   addressLine2 = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
-                  AddressLine3 = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
+                  addressLine3 = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
                   street = Street.fromLines(
                     c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1.some,
                     c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
@@ -93,7 +93,7 @@ class C285ClaimMappingSpec
                   postalCode = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode.value.some,
                   countryCode = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
                   emailAddress = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.emailAddress.value.some,
-                  telephone = None
+                  telephoneNumber = None
                 ),
                 contactInformation = c285ClaimRequest.claim.contactInformation.some
               ),
@@ -108,7 +108,7 @@ class C285ClaimMappingSpec
                     contactPerson = None,
                     addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
                     addressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2),
-                    AddressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+                    addressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
                     street = Street.fromLines(
                       maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
                       maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
@@ -118,7 +118,7 @@ class C285ClaimMappingSpec
                       .map(_.establishmentAddress.countryCode)
                       .getOrElse(Country.uk.code),
                     postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
-                    telephone = maybeContactDetails.flatMap(_.telephone),
+                    telephoneNumber = maybeContactDetails.flatMap(_.telephone),
                     emailAddress = maybeContactDetails.flatMap(_.emailAddress)
                   ),
                   contactInformation = ContactInformation(
@@ -164,7 +164,7 @@ class C285ClaimMappingSpec
                         contactPerson = None,
                         addressLine1 = declarantDetails.establishmentAddress.addressLine1.some,
                         addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                        AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                        addressLine3 = declarantDetails.establishmentAddress.addressLine3,
                         street = Street.fromLines(
                           declarantDetails.establishmentAddress.addressLine1.some,
                           declarantDetails.establishmentAddress.addressLine2
@@ -172,7 +172,7 @@ class C285ClaimMappingSpec
                         city = declarantDetails.establishmentAddress.addressLine3,
                         countryCode = declarantDetails.establishmentAddress.countryCode,
                         postalCode = declarantDetails.establishmentAddress.postalCode,
-                        telephone = None,
+                        telephoneNumber = None,
                         emailAddress = None
                       ),
                       contactDetails = ContactInformation(
@@ -201,7 +201,7 @@ class C285ClaimMappingSpec
                         contactPerson = None,
                         addressLine1 = consigneeDetails.establishmentAddress.addressLine1.some,
                         addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                        AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                        addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
                         street = Street.fromLines(
                           consigneeDetails.establishmentAddress.addressLine1.some,
                           consigneeDetails.establishmentAddress.addressLine2
@@ -209,7 +209,7 @@ class C285ClaimMappingSpec
                         city = consigneeDetails.establishmentAddress.addressLine3,
                         countryCode = consigneeDetails.establishmentAddress.countryCode,
                         postalCode = consigneeDetails.establishmentAddress.postalCode,
-                        telephone = None,
+                        telephoneNumber = None,
                         emailAddress = None
                       ),
                       contactDetails = ContactInformation(
@@ -299,7 +299,7 @@ class C285ClaimMappingSpec
                         contactPerson = None,
                         addressLine1 = declarantDetails.establishmentAddress.addressLine1.some,
                         addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                        AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                        addressLine3 = declarantDetails.establishmentAddress.addressLine3,
                         street = Street.fromLines(
                           declarantDetails.establishmentAddress.addressLine1.some,
                           declarantDetails.establishmentAddress.addressLine2
@@ -307,7 +307,7 @@ class C285ClaimMappingSpec
                         city = declarantDetails.establishmentAddress.addressLine3,
                         countryCode = declarantDetails.establishmentAddress.countryCode,
                         postalCode = declarantDetails.establishmentAddress.postalCode,
-                        telephone = None,
+                        telephoneNumber = None,
                         emailAddress = None
                       ),
                       contactDetails = ContactInformation(
@@ -336,7 +336,7 @@ class C285ClaimMappingSpec
                         contactPerson = None,
                         addressLine1 = consigneeDetails.establishmentAddress.addressLine1.some,
                         addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                        AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                        addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
                         street = Street.fromLines(
                           consigneeDetails.establishmentAddress.addressLine1.some,
                           consigneeDetails.establishmentAddress.addressLine2
@@ -344,7 +344,7 @@ class C285ClaimMappingSpec
                         city = consigneeDetails.establishmentAddress.addressLine3,
                         countryCode = consigneeDetails.establishmentAddress.countryCode,
                         postalCode = consigneeDetails.establishmentAddress.postalCode,
-                        telephone = None,
+                        telephoneNumber = None,
                         emailAddress = None
                       ),
                       contactDetails = ContactInformation(

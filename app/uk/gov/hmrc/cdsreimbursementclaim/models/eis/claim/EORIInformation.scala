@@ -54,14 +54,14 @@ object EORIInformation {
         contactPerson = None,
         addressLine1 = maybeEstablishmentAddressLine1,
         addressLine2 = maybeEstablishmentAddressLine2,
-        AddressLine3 = maybeEstablishmentAddressLine3,
+        addressLine3 = maybeEstablishmentAddressLine3,
         street = Street.fromLines(maybeEstablishmentAddressLine1, maybeEstablishmentAddressLine2),
         city = maybeEstablishmentAddressLine3,
         countryCode = maybeConsigneeDetails
           .map(_.establishmentAddress.countryCode)
           .getOrElse(Country.uk.code),
         postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
-        telephone = maybeTelephone,
+        telephoneNumber = maybeTelephone,
         emailAddress = maybeEmailAddress
       ),
       contactInformation = Some(
