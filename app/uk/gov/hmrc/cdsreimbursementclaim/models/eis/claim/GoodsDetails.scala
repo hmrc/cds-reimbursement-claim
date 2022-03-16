@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.InspectionAddressType
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 
 final case class GoodsDetails(
@@ -25,7 +24,7 @@ final case class GoodsDetails(
   isPrivateImporter: Option[YesNo] = None,
   placeOfImport: Option[String] = None,
   groundsForRepaymentApplication: Option[String] = None,
-  atTheImporterOrDeclarantAddress: Option[InspectionAddressType] = None,
+  atTheImporterOrDeclarantAddress: Option[String] = None,
   inspectionAddress: Option[InspectionAddress] = None,
   anySpecialCircumstances: Option[String] = None,
   dateOfInspection: Option[String] = None

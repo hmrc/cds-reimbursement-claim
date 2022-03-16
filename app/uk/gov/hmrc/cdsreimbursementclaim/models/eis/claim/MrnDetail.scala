@@ -85,7 +85,7 @@ object MrnDetail {
                     contactPerson = None,
                     addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
                     addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                    AddressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                    addressLine3 = declarantDetails.establishmentAddress.addressLine3,
                     street = Street.fromLines(
                       Option(declarantDetails.establishmentAddress.addressLine1),
                       declarantDetails.establishmentAddress.addressLine2
@@ -93,7 +93,7 @@ object MrnDetail {
                     city = declarantDetails.establishmentAddress.addressLine3,
                     countryCode = declarantDetails.establishmentAddress.countryCode,
                     postalCode = declarantDetails.establishmentAddress.postalCode,
-                    telephone = None,
+                    telephoneNumber = None,
                     emailAddress = None
                   ),
                   contactDetails = ContactInformation(
@@ -132,7 +132,7 @@ object MrnDetail {
                         contactPerson = None,
                         addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
                         addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                        AddressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                        addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
                         street = Street.fromLines(
                           Option(consigneeDetails.establishmentAddress.addressLine1),
                           consigneeDetails.establishmentAddress.addressLine2
@@ -140,7 +140,7 @@ object MrnDetail {
                         city = consigneeDetails.establishmentAddress.addressLine3,
                         countryCode = consigneeDetails.establishmentAddress.countryCode,
                         postalCode = consigneeDetails.establishmentAddress.postalCode,
-                        telephone = None,
+                        telephoneNumber = None,
                         emailAddress = None
                       ),
                       contactDetails = ContactInformation(

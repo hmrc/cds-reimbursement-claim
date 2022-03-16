@@ -49,7 +49,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
           descOfGoods = Some(claim.detailsOfRejectedGoods),
           anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
           dateOfInspection = Some(claim.inspectionDate.toIsoLocalDate),
-          atTheImporterOrDeclarantAddress = Some(claim.inspectionAddress.addressType),
+          atTheImporterOrDeclarantAddress = Some(claim.inspectionAddress.addressType.toTPI05DisplayString),
           inspectionAddress = Some(
             InspectionAddress(
               addressLine1 = claim.inspectionAddress.addressLine1,
@@ -71,12 +71,12 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
               contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
               addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
               addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-              AddressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+              addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
               street = claim.claimantInformation.establishmentAddress.street,
               city = claim.claimantInformation.establishmentAddress.city,
               countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
               postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-              telephone = claim.claimantInformation.establishmentAddress.telephoneNumber,
+              telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
               emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
             ),
             contactInformation = Some(claim.claimantInformation.contactInformation)

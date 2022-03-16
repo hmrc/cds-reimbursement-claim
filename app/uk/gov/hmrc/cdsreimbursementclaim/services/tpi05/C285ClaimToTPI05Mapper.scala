@@ -54,7 +54,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
               contactPerson = Option(request.claim.detailsRegisteredWithCdsAnswer.fullName),
               addressLine1 = Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
               addressLine2 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
-              AddressLine3 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
+              addressLine3 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
               street = Street.fromLines(
                 Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
                 request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
@@ -62,7 +62,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
               city = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
               postalCode = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode.value),
               countryCode = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
-              telephone = None,
+              telephoneNumber = None,
               emailAddress = Option(request.claim.detailsRegisteredWithCdsAnswer.emailAddress.value)
             ),
             contactInformation = Some(

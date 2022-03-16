@@ -22,12 +22,12 @@ final case class Address(
   contactPerson: Option[String],
   addressLine1: Option[String],
   addressLine2: Option[String],
-  AddressLine3: Option[String],
+  addressLine3: Option[String],
   street: Option[String],
   city: Option[String],
   countryCode: String,
   postalCode: Option[String],
-  telephone: Option[String],
+  telephoneNumber: Option[String],
   emailAddress: Option[String]
 )
 
