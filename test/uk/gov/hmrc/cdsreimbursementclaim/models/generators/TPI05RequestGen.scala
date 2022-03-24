@@ -111,6 +111,7 @@ object TPI05RequestGen {
     } yield InspectionAddress(
       addressLine1 = Some(s"$num $street"),
       addressLine2 = Some(addressLine2),
+      addressLine3 = None,
       city = Some(city),
       countryCode = Some(country.code),
       postalCode = Some(postalCode)

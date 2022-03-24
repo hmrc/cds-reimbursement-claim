@@ -54,6 +54,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
             InspectionAddress(
               addressLine1 = claim.inspectionAddress.addressLine1,
               addressLine2 = claim.inspectionAddress.addressLine2,
+              addressLine3 = claim.inspectionAddress.addressLine3,
               city = claim.inspectionAddress.city,
               countryCode = claim.inspectionAddress.countryCode,
               postalCode = claim.inspectionAddress.postalCode
