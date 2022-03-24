@@ -94,11 +94,11 @@ object RejectedGoodsClaimGen {
       postalCode            <- genPostcode
       inspectionAddressType <- genInspectionAddressType
     } yield InspectionAddress(
-      addressLine1 = s"$num $street",
-      addressLine2 = addressLine2,
-      city = city,
-      countryCode = country.code,
-      postalCode = postalCode,
+      addressLine1 = Some(s"$num $street"),
+      addressLine2 = Some(addressLine2),
+      city = Some(city),
+      countryCode = Some(country.code),
+      postalCode = Some(postalCode),
       addressType = inspectionAddressType
     )
 
