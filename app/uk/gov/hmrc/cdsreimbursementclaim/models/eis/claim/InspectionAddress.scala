@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Postcode
 final case class InspectionAddress(
   addressLine1: Option[String],
   addressLine2: Option[String],
+  addressLine3: Option[String],
   city: Option[String],
   countryCode: Option[String],
   postalCode: Option[Postcode]
