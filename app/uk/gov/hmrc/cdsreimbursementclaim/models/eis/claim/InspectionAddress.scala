@@ -21,11 +21,11 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Postcode
 
 final case class InspectionAddress(
-  addressLine1: String,
-  addressLine2: String,
-  city: String,
-  countryCode: String,
-  postalCode: Postcode
+  addressLine1: Option[String],
+  addressLine2: Option[String],
+  city: Option[String],
+  countryCode: Option[String],
+  postalCode: Option[Postcode]
 )
 
 object InspectionAddress {
