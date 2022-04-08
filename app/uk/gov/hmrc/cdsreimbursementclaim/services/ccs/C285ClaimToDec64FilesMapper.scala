@@ -33,11 +33,11 @@ class C285ClaimToDec64FilesMapper extends ClaimToDec64Mapper[C285ClaimRequest] {
             batchID = request.claim.id.toString,
             batchCount = index.toLong + 1,
             batchSize = request.claim.documents.size.toLong,
-            checksum = document.upscanSuccess.uploadDetails.checksum,
-            sourceLocation = document.upscanSuccess.downloadUrl,
-            sourceFileName = document.upscanSuccess.uploadDetails.fileName,
-            sourceFileMimeType = document.upscanSuccess.uploadDetails.fileMimeType,
-            fileSize = document.upscanSuccess.uploadDetails.size,
+            checksum = document.checksum,
+            sourceLocation = document.downloadUrl,
+            sourceFileName = document.fileName,
+            sourceFileMimeType = document.fileMimeType,
+            fileSize = document.size,
             properties = PropertiesType(
               List(
                 PropertyType("CaseReference", response.caseNumber),
@@ -45,10 +45,7 @@ class C285ClaimToDec64FilesMapper extends ClaimToDec64Mapper[C285ClaimRequest] {
                 PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
                 PropertyType("DeclarationType", "MRN"),
                 PropertyType("ApplicationName", "NDRC"),
-                PropertyType(
-                  "DocumentType",
-                  document.documentType.map(_.toDec64DisplayString).getOrElse("")
-                ),
+                PropertyType("DocumentType", document.documentType.toDec64DisplayString),
                 PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
               )
             )
