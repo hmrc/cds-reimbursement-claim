@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.magnolia._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.UploadDocument
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UploadDetails, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
 
@@ -25,6 +24,5 @@ object UpscanGen {
   implicit lazy val arbitraryUploadReference: Typeclass[UploadReference] = gen[UploadReference]
   implicit lazy val arbitraryUploadDetails: Typeclass[UploadDetails]     = gen[UploadDetails]
   implicit lazy val arbitraryUpscanSuccess: Typeclass[UpscanSuccess]     = gen[UpscanSuccess]
-  implicit lazy val arbitraryUploadDocument: Typeclass[UploadDocument]   = gen[UploadDocument]
   implicit lazy val arbitraryUpscanUpload: Typeclass[UpscanUpload]       = gen[UpscanUpload]
 }
