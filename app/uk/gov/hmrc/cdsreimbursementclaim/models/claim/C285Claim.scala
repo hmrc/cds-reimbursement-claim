@@ -36,7 +36,7 @@ final case class C285Claim(
   mrnContactAddressAnswer: Option[ContactAddress],
   basisOfClaimAnswer: BasisOfClaim,
   bankAccountDetailsAnswer: Option[BankAccountDetails],
-  documents: NonEmptyList[UploadDocument],
+  documents: NonEmptyList[EvidenceDocument],
   commodityDetailsAnswer: CommodityDetailsAnswer,
   displayDeclaration: Option[DisplayDeclaration],
   duplicateDisplayDeclaration: Option[DisplayDeclaration],

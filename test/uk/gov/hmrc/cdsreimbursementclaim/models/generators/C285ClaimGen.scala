@@ -27,8 +27,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimedReimbursementGen.genClaimedReimbursement
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.{genEmail, genUkPhoneNumber}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen.arbitraryUploadDocument
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import java.net.URL
 
 object C285ClaimGen {
 
@@ -87,6 +87,40 @@ object C285ClaimGen {
       whetherAddCompanyDetails
     )
 
+  lazy val genUrl: Gen[URL] =
+    for {
+      protocol <- Gen.oneOf("http", "https")
+      hostname <- genStringWithMaxSizeOfN(7)
+      domain   <- Gen.oneOf("com", "co.uk", "lv")
+    } yield new URL(s"$protocol://$hostname.$domain")
+
+  lazy val genFileName: Gen[String] = for {
+    name      <- genStringWithMaxSizeOfN(6)
+    extension <- Gen.oneOf("pdf", "doc", "csv")
+  } yield s"$name.$extension"
+
+  lazy val genEvidences: Gen[EvidenceDocument] =
+    for {
+      uuid         <- genUUID
+      url          <- genUrl
+      fileName     <- genFileName
+      size         <- Gen.chooseNum(10L, 1000L)
+      uploadTime   <- genLocalDateTime
+      documentType <- Gen.oneOf(UploadDocumentType.values)
+    } yield EvidenceDocument(
+      checksum = uuid.toString.replace("-", ""),
+      downloadUrl = url.toString,
+      fileName = fileName,
+      fileMimeType = fileName
+        .split(".")
+        .lastOption
+        .map(s => if (s == "pdf") s"application/$s" else s"text/$s")
+        .getOrElse("application/octet-stream"),
+      size = size,
+      uploadedOn = uploadTime,
+      documentType = documentType
+    )
+
   lazy val genC285Claim: Gen[C285Claim] = for {
     id                          <- genUUID
     typeOfClaim                 <- Gen.oneOf(TypeOfClaimAnswer.values)
@@ -102,7 +136,7 @@ object C285ClaimGen {
     basisOfClaim                <- genBasisOfClaim
     reimbursementMethod         <- Gen.oneOf(ReimbursementMethodAnswer.values)
     bankAccountDetails          <- Gen.option(genBankAccountDetails)
-    documents                   <- Gen.nonEmptyListOf(arbitraryUploadDocument.arbitrary).map(NonEmptyList.fromListUnsafe)
+    documents                   <- Gen.nonEmptyListOf(genEvidences).map(NonEmptyList.fromListUnsafe)
     commodityDetails            <- genRandomString
     claimedReimbursement        <- genClaimedReimbursement
     associated                  <- Gen
