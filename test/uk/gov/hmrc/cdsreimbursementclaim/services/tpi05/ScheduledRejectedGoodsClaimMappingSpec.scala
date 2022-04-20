@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, Reimbursement, ScheduledRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, ScheduledRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService.NDRC
@@ -38,6 +38,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.AmountPaidWithRefund
 
 class ScheduledRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
@@ -325,7 +326,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
           val rejectedGoodsClaim = details._1
           val displayDeclaration = details._2
 
-          val claims = Map("eu-duty" -> Map(taxCode -> Reimbursement(BigDecimal(7), BigDecimal(8))))
+          val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithRefund(BigDecimal(8), BigDecimal(7))))
 
           val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
 

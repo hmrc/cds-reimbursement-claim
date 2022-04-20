@@ -21,20 +21,20 @@ import play.api.libs.json.Format
 import play.api.libs.json.Json
 import cats.kernel.Semigroup
 
-final case class Reimbursement(paidAmount: BigDecimal, shouldOfPaid: BigDecimal)
+final case class AmountPaidWithCorrect(paidAmount: BigDecimal, correctAmount: BigDecimal)
 
-object Reimbursement {
+object AmountPaidWithCorrect {
 
-  val empty: Reimbursement = Reimbursement(0, 0)
+  val empty: AmountPaidWithCorrect = AmountPaidWithCorrect(0, 0)
 
-  implicit val semigroup: Semigroup[Reimbursement] =
-    (x: Reimbursement, y: Reimbursement) =>
-      Reimbursement(
+  implicit val semigroup: Semigroup[AmountPaidWithCorrect] =
+    (x: AmountPaidWithCorrect, y: AmountPaidWithCorrect) =>
+      AmountPaidWithCorrect(
         paidAmount = x.paidAmount + y.paidAmount,
-        shouldOfPaid = x.shouldOfPaid + y.shouldOfPaid
+        correctAmount = x.correctAmount + y.correctAmount
       )
 
-  implicit val equality: Eq[Reimbursement]   = Eq.fromUniversalEquals[Reimbursement]
-  implicit val format: Format[Reimbursement] = Json.format[Reimbursement]
+  implicit val equality: Eq[AmountPaidWithCorrect]   = Eq.fromUniversalEquals[AmountPaidWithCorrect]
+  implicit val format: Format[AmountPaidWithCorrect] = Json.format[AmountPaidWithCorrect]
 
 }

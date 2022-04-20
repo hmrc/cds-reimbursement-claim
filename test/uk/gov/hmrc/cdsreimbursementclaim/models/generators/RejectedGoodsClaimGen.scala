@@ -66,7 +66,7 @@ object RejectedGoodsClaimGen {
       )
       .map(_.toMap)
 
-  lazy val genScheduledReimbursementClaims: Gen[Map[String, Map[TaxCode, Reimbursement]]] =
+  lazy val genScheduledReimbursementClaims: Gen[Map[String, Map[TaxCode, AmountPaidWithRefund]]] =
     Gen
       .nonEmptyListOf(
         Gen
@@ -76,7 +76,7 @@ object RejectedGoodsClaimGen {
             Gen
               .nonEmptyListOf(
                 genTaxCode.flatMap(taxCode =>
-                  Gen.posNum[Long].map(num => (taxCode, Reimbursement(BigDecimal(num), BigDecimal(num + 1))))
+                  Gen.posNum[Long].map(num => (taxCode, AmountPaidWithRefund(BigDecimal(num + 1), BigDecimal(num))))
                 )
               )
               .map(list => id -> list.toMap)
