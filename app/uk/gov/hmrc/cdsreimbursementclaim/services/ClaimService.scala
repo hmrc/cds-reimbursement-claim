@@ -29,7 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, RejectedGoodsClaim, RejectedGoodsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
@@ -39,11 +39,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ScheduledRejectedGoodsClaim
 
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
@@ -61,8 +60,15 @@ trait ClaimService {
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
-    tpi05Binder: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
+    tpi05Binder: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse]
+
+  def submitMultipleRejectedGoodsClaim(claimRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitScheduledRejectedGoodsClaim(
@@ -95,13 +101,42 @@ class DefaultClaimService @Inject() (
   def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](claimRequest: RejectedGoodsClaimRequest[Claim])(implicit
     hc: HeaderCarrier,
     request: Request[_],
-    tpi05Binder: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
+    tpi05Binder: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     declarationService
       .getDeclaration(claimRequest.claim.leadMrn)
       .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
-      .flatMap(declaration => proceed((claimRequest.claim, declaration), claimRequest))
+      .flatMap(declaration => proceed((claimRequest.claim, List(declaration)), claimRequest))
+
+  def combineDeclarations(
+    mrn: MRN,
+    maybeDeclaration: EitherT[Future, Error, Option[DisplayDeclaration]],
+    declarations: EitherT[Future, Error, List[DisplayDeclaration]]
+  ): EitherT[Future, Error, List[DisplayDeclaration]] =
+    for {
+      decs <- declarations
+      dec  <- maybeDeclaration.subflatMap(aaa => aaa.toRight(Error(s"Could not retrieve display declaration $mrn")))
+    } yield dec :: decs
+
+  def obtainAcc14Declarations(mrns: List[MRN])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[DisplayDeclaration]] =
+    mrns.foldLeft(EitherT.rightT[Future, Error](List[DisplayDeclaration]())) { case (declarations, mrn) =>
+      val maybeDeclaration = declarationService.getDeclaration(mrn)
+      combineDeclarations(mrn, maybeDeclaration, declarations)
+    }
+
+  def submitMultipleRejectedGoodsClaim(
+    claimRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    obtainAcc14Declarations(claimRequest.claim.movementReferenceNumbers)
+      .flatMap(declarations => proceed((claimRequest.claim, declarations), claimRequest))
 
   def submitScheduledRejectedGoodsClaim(
     claimRequest: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]

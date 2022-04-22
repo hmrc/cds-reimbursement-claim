@@ -29,7 +29,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -62,7 +61,7 @@ class SubmitClaimController @Inject() (
   def submitMultipleRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]] {
       uploadDocumentsOnce {
-        claimService.submitRejectedGoodsClaim(_)
+        claimService.submitMultipleRejectedGoodsClaim(_)
       }
     }
   }
