@@ -17,10 +17,9 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler4, CallHandler5}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{Format, JsValue, Json}
-import play.api.mvc.{Headers, Request, WrappedRequest}
+import play.api.mvc.{Headers, Request}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
@@ -69,40 +68,49 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
     Helpers.stubControllerComponents()
   )
 
-  def mockC285ClaimSubmission(request: C285ClaimRequest)(
+  private def mockC285ClaimSubmission(request: C285ClaimRequest)(
     response: Either[Error, ClaimSubmitResponse]
-  ): CallHandler4[C285ClaimRequest, HeaderCarrier, Request[_], ClaimToTPI05Mapper[C285ClaimRequest], EitherT[
-    Future,
-    Error,
-    ClaimSubmitResponse
-  ]] =
+  ) =
     (mockClaimService
       .submitC285Claim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_], _: ClaimToTPI05Mapper[C285ClaimRequest]))
       .expects(request, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockRejectedGoodsClaimSubmission[Claim <: RejectedGoodsClaim](request: RejectedGoodsClaimRequest[Claim])(
+  private def mockRejectedGoodsClaimSubmission[Claim <: RejectedGoodsClaim](request: RejectedGoodsClaimRequest[Claim])(
     response: Either[Error, ClaimSubmitResponse]
-  ): CallHandler5[RejectedGoodsClaimRequest[Claim], HeaderCarrier, Request[_], ClaimToTPI05Mapper[
-    (Claim, DisplayDeclaration)
-  ], Format[RejectedGoodsClaimRequest[Claim]], EitherT[Future, Error, ClaimSubmitResponse]] =
+  ) =
     (
       mockClaimService
         .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest[Claim])(
           _: HeaderCarrier,
           _: Request[_],
-          _: ClaimToTPI05Mapper[(Claim, DisplayDeclaration)],
+          _: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
           _: Format[RejectedGoodsClaimRequest[Claim]]
         )
       )
       .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockScheduledRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
+  private def mockMultipleRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(
     response: Either[Error, ClaimSubmitResponse]
-  ): CallHandler4[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim], HeaderCarrier, Request[_], Format[
-    RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]
-  ], EitherT[Future, Error, ClaimSubmitResponse]] =
+  ) =
+    (
+      mockClaimService
+        .submitMultipleRejectedGoodsClaim(_: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+          _: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
+        )
+      )
+      .expects(request, *, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
+  private def mockScheduledRejectedGoodsClaimSubmission(
+    request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]
+  )(
+    response: Either[Error, ClaimSubmitResponse]
+  ) =
     (
       mockClaimService
         .submitScheduledRejectedGoodsClaim(_: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
@@ -114,12 +122,10 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(request, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockCcsRequestEnqueue[A](
+  private def mockCcsRequestEnqueue[A](
     submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
-  ): CallHandler4[A, ClaimSubmitResponse, HeaderCarrier, ClaimToDec64Mapper[A], EitherT[Future, Error, List[
-    WorkItem[CcsSubmissionRequest]
-  ]]] =
+  ) =
     (mockCcsSubmissionService
       .enqueue(_: A, _: ClaimSubmitResponse)(
         _: HeaderCarrier,
@@ -128,7 +134,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(submitClaimRequest, submitClaimResponse, *, *)
       .returning(EitherT.pure(List(ccsSubmissionRequestWorkItem)))
 
-  def fakeRequestWithJsonBody(body: JsValue): WrappedRequest[JsValue] =
+  private def fakeRequestWithJsonBody(body: JsValue) =
     request.withHeaders(Headers.apply(CONTENT_TYPE -> JSON)).withBody(body)
 
   "The controller" should {
@@ -162,7 +168,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       "handling Multiple C&E1779 claim request" in forAll {
         (request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
           inSequence {
-            mockRejectedGoodsClaimSubmission(request)(Right(response))
+            mockMultipleRejectedGoodsClaimSubmission(request)(Right(response))
             mockCcsRequestEnqueue(request, response)
           }
 
@@ -210,7 +216,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       "submission of the Multiple C&E1779 claim failed" in forAll {
         request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim] =>
           inSequence {
-            mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+            mockMultipleRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
           }
 
           val result = controller.submitMultipleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))

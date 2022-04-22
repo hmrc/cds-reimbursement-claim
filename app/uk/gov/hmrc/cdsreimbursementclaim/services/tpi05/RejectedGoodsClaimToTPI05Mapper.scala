@@ -23,17 +23,28 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
-    extends ClaimToTPI05Mapper[(Claim, DisplayDeclaration)] {
+    extends ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])] {
 
-  def map(details: (Claim, DisplayDeclaration)): Either[Error, EisSubmitClaimRequest] = {
+  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
+  override def map(
+    details: (Claim, List[DisplayDeclaration])
+  ): Either[Error, EisSubmitClaimRequest] = {
     val claim                 = details._1
-    val declaration           = details._2.displayResponseDetail
-    val maybeConsigneeDetails = declaration.consigneeDetails
+    val declarations          = details._2
+      .map(declaration => MRN(declaration.displayResponseDetail.declarationId) -> declaration.displayResponseDetail)
+      .toMap
+    val maybeConsigneeDetails = details._2.headOption.flatMap(_.displayResponseDetail.consigneeDetails)
+
+    val claimsOverMrns =
+      claim.getClaimsOverMrns.flatMap { case (mrn, taxesClaimed) =>
+        declarations.get(mrn).map(declaration => mrn -> ((taxesClaimed, declaration)))
+      }.toMap
 
     TPI05.request
       .forClaimOfType(CE1179)
@@ -85,7 +96,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
         )
       )
       .withMrnDetails(
-        claim.getClaimsOverMrns.map { case (mrn, claimedReimbursement) =>
+        claimsOverMrns.map { case (mrn, (claimedReimbursement, declaration)) =>
           MrnDetail.build
             .withMrnNumber(mrn)
             .withAcceptanceDate(declaration.acceptanceDate)
@@ -114,7 +125,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
                   }
               }.toList
             }
-        }
+        }.toList
       )
       .withDeclarationMode(claim.declarationMode)
       .withCaseType(claim.caseType)

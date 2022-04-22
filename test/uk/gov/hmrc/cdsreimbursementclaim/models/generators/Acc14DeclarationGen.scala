@@ -170,10 +170,12 @@ object Acc14DeclarationGen {
     btaSource                <- Gen.option(genRandomString)
     declarantDetails         <- genDeclarantDetails
     consigneeDetails         <- genConsigneeDetails
-    accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
+    numAccDetails            <- Gen.choose(1, 5)
+    accountDetails           <- Gen.option(Gen.listOfN(numAccDetails, genAccountDetails))
     bankDetails              <- genBankDetails
     maskedBankDetails        <- Gen.const(mask(bankDetails))
-    ndrcDetails              <- Gen.nonEmptyListOf(genNdrcDetails)
+    numNdrcDetails           <- Gen.choose(1, 5)
+    ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
   } yield DisplayDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,

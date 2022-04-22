@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.data.NonEmptySeq
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Format, JsPath}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
@@ -25,12 +24,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
-
 import java.time.LocalDate
+import play.api.libs.json.Reads.minLength
 import scala.collection.immutable.Seq
 
+@SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 final case class MultipleRejectedGoodsClaim(
-  movementReferenceNumbers: NonEmptySeq[MRN],
+  movementReferenceNumbers: List[MRN],
   claimantType: ClaimantType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfRejectedGoodsClaim,
@@ -71,7 +71,7 @@ object MultipleRejectedGoodsClaim {
   implicit val format: Format[MultipleRejectedGoodsClaim] =
     Format(
       (
-        (JsPath \ "movementReferenceNumbers").read[Seq[MRN]].map(NonEmptySeq.fromSeqUnsafe) and
+        (JsPath \ "movementReferenceNumbers").read[List[MRN]](minLength[List[MRN]](2)) and
           (JsPath \ "claimantType").read[ClaimantType] and
           (JsPath \ "claimantInformation").read[ClaimantInformation] and
           (JsPath \ "basisOfClaim").read[BasisOfRejectedGoodsClaim] and
@@ -86,7 +86,7 @@ object MultipleRejectedGoodsClaim {
           (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]]
       )(MultipleRejectedGoodsClaim(_, _, _, _, _, _, _, _, _, _, _, _, _)),
       (
-        (JsPath \ "movementReferenceNumbers").write[Seq[MRN]].contramap[NonEmptySeq[MRN]](_.toSeq) and
+        (JsPath \ "movementReferenceNumbers").write[List[MRN]] and
           (JsPath \ "claimantType").write[ClaimantType] and
           (JsPath \ "claimantInformation").write[ClaimantInformation] and
           (JsPath \ "basisOfClaim").write[BasisOfRejectedGoodsClaim] and

@@ -50,10 +50,8 @@ class SingleRejectedGoodsClaimMappingSpec
   "The Reject Goods claim mapper" should {
 
     "map a valid Single claim to TPI05 request" in forAll { details: (SingleRejectedGoodsClaim, DisplayDeclaration) =>
-      val claim       = details._1
-      val declaration = details._2
-
-      val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map(details)
+      val (claim, declaration) = details
+      val tpi05Request         = singleRejectedGoodsClaimToTPI05Mapper.map((claim, List(declaration)))
 
       inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
         common.originatingSystem should be(MDTP)
@@ -314,7 +312,7 @@ class SingleRejectedGoodsClaimMappingSpec
             )
           )
 
-          val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map((claim, declarationWithInvalidNdrcDetails))
+          val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map((claim, List(declarationWithInvalidNdrcDetails)))
 
           tpi05Request.left.map(
             _.value should be(
@@ -340,7 +338,7 @@ class SingleRejectedGoodsClaimMappingSpec
 
           val updatedDeclaration = ndrcLens.set(displayDeclaration)(None)
 
-          val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map((updatedClaim, updatedDeclaration))
+          val tpi05Request = singleRejectedGoodsClaimToTPI05Mapper.map((updatedClaim, List(updatedDeclaration)))
 
           tpi05Request.left.map(
             _.value should be(
