@@ -33,7 +33,7 @@ class RejectedGoodsClaimToDec64Mapper[Claim <: RejectedGoodsClaim]
             correlationID = UUID.randomUUID().toString,
             batchID = UUID.randomUUID().toString,
             batchCount = index.toLong + 1,
-            batchSize = request.claim.supportingEvidences.size.toLong,
+            batchSize = request.claim.documents.size.toLong,
             checksum = document.checksum,
             sourceLocation = document.downloadUrl,
             sourceFileName = document.fileName,
