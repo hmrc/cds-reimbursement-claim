@@ -40,7 +40,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
       .withBasisOfClaim(request.claim.basisOfClaimAnswer.toTPI05DisplayString)
       .withGoodsDetails(
         GoodsDetails(
-          descOfGoods = Some(request.claim.commodityDetailsAnswer.value),
+          descOfGoods = Some(request.claim.additionalDetailsAnswer.value),
           isPrivateImporter = Some(YesNo.basedOn(request.claim.declarantTypeAnswer))
         )
       )
