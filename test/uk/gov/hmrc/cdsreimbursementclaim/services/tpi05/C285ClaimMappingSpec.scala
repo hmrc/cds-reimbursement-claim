@@ -71,7 +71,7 @@ class C285ClaimMappingSpec
           'caseType (c285ClaimRequest.claim.caseType.some),
           'goodsDetails (
             GoodsDetails(
-              descOfGoods = c285ClaimRequest.claim.commodityDetailsAnswer.value.some,
+              descOfGoods = c285ClaimRequest.claim.additionalDetailsAnswer.value.some,
               isPrivateImporter = c285ClaimRequest.claim.isForPrivateImporter.some
             ).some
           ),

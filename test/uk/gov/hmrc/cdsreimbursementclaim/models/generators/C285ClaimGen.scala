@@ -137,7 +137,7 @@ object C285ClaimGen {
     reimbursementMethod         <- Gen.oneOf(ReimbursementMethodAnswer.values)
     bankAccountDetails          <- Gen.option(genBankAccountDetails)
     documents                   <- Gen.nonEmptyListOf(genEvidences).map(NonEmptyList.fromListUnsafe)
-    commodityDetails            <- genRandomString
+    additionalDetails           <- genRandomString
     claimedReimbursement        <- genClaimedReimbursement
     associated                  <- Gen
                                      .option(genMRN)
@@ -158,7 +158,7 @@ object C285ClaimGen {
     basisOfClaimAnswer = basisOfClaim,
     bankAccountDetailsAnswer = bankAccountDetails,
     documents = documents,
-    commodityDetailsAnswer = CommodityDetailsAnswer(commodityDetails),
+    additionalDetailsAnswer = AdditionalDetailsAnswer(additionalDetails),
     displayDeclaration = Some(displayDeclaration),
     duplicateDisplayDeclaration = duplicateDisplayDeclaration,
     importerEoriNumber = Some(ImporterEoriNumberAnswer(eori)),

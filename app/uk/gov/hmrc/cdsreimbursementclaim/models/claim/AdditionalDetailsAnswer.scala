@@ -18,8 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class CommodityDetailsAnswer(value: String) extends AnyVal
+final case class AdditionalDetailsAnswer(value: String) extends AnyVal
 
-object CommodityDetailsAnswer {
-  implicit val format: OFormat[CommodityDetailsAnswer] = Json.format[CommodityDetailsAnswer]
+object AdditionalDetailsAnswer {
+  implicit val format: OFormat[AdditionalDetailsAnswer] = Json.format[AdditionalDetailsAnswer]
 }

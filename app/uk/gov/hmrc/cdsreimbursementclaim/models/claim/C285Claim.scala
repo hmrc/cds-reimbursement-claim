@@ -37,7 +37,7 @@ final case class C285Claim(
   basisOfClaimAnswer: BasisOfClaim,
   bankAccountDetailsAnswer: Option[BankAccountDetails],
   documents: NonEmptyList[EvidenceDocument],
-  commodityDetailsAnswer: CommodityDetailsAnswer,
+  additionalDetailsAnswer: AdditionalDetailsAnswer,
   displayDeclaration: Option[DisplayDeclaration],
   duplicateDisplayDeclaration: Option[DisplayDeclaration],
   importerEoriNumber: Option[ImporterEoriNumberAnswer],
