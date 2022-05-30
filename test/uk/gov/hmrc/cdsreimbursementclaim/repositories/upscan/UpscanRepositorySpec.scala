@@ -29,6 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 import java.time.{Clock, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSupport {
 
   val config = Configuration(

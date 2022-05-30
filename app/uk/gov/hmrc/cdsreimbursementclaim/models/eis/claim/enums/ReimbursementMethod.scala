@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.Writes
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait ReimbursementMethod extends Product with Serializable
 
-object ReimbursementMethod {
+object ReimbursementMethod extends EnumerationFormat[ReimbursementMethod] {
 
   final case object Deferment extends ReimbursementMethod {
     override def toString: String = "Deferment"
@@ -36,6 +35,4 @@ object ReimbursementMethod {
   }
 
   lazy val values: Set[ReimbursementMethod] = Set(Deferment, BankTransfer, PayableOrder)
-
-  implicit val writes: Writes[ReimbursementMethod] = WriteEnumerationToString[ReimbursementMethod]
 }

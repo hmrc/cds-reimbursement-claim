@@ -44,9 +44,9 @@ lazy val microservice = Project(appName, file("."))
   )
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.12.12")
+  .settings(scalaVersion := "2.12.14")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -60,10 +60,12 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= List(
       "-Yrangepos",
       "-language:postfixOps",
-      "-Ypartial-unification"
+      "-Ypartial-unification",
+      "-Wconf:cat=unused-imports&site=<empty>:iv",
+      "-Wconf:cat=unused-imports&site=prod:iv",
+      "-Wconf:cat=unused-imports&site=upscan:iv"
     ),
-    Test / scalacOptions --= Seq("-Ywarn-value-discard"),
-    scalacOptions += "-P:silencer:pathFilters=routes"
+    Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)

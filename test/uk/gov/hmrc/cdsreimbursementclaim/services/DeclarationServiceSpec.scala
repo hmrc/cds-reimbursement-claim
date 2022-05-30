@@ -53,6 +53,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory with ScalaCheckPropertyChecks {
 
   val declarationConnectorMock: DeclarationConnector                   = mock[DeclarationConnector]

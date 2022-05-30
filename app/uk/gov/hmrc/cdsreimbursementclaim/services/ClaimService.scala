@@ -21,6 +21,7 @@ import cats.instances.future._
 import cats.instances.int._
 import cats.syntax.either._
 import cats.syntax.eq._
+import cats.syntax.option._
 import com.google.inject.ImplementedBy
 import play.api.http.Status.OK
 import play.api.libs.json.{Format, Json}
@@ -183,7 +184,7 @@ class DefaultClaimService @Inject() (
     hc: HeaderCarrier,
     request: Request[_]
   ): EitherT[Future, Error, Unit] = EitherT.fromEither[Future](
-    eisSubmitClaimRequest.postNewClaimsRequest.requestDetail.claimantEORI
+    eisSubmitClaimRequest.postNewClaimsRequest.requestDetail.claimantEORI.some
       .toRight(Error("Claimant EORI is missing"))
       .map { eori =>
         auditService.sendEvent(

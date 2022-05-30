@@ -41,6 +41,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockAuditService: AuditService = mock[AuditService]
