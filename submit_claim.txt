@@ -1,0 +1,42 @@
+title Submit Claim
+
+participant FE
+participant Controller
+participant "Claim Service"
+participant "Submission Service"
+participant "Audit Service"
+participant "Email Service"
+participant "Claim Connector"
+participant "CCS Submission Repo"
+participant "TPI05 Mapper"
+participant "DEC64 Mapper"
+
+FE->+Controller: Submit
+Controller->+TPI05 Mapper: map
+TPI05 Mapper->-Controller:
+Controller->+Claim Service: audit before
+Claim Service->+Audit Service: audit
+Audit Service->-Claim Service:
+Claim Service->-Controller:
+Controller->+Claim Service: Submit Claim and audit
+Claim Service->+Claim Connector: Submit Claim
+note right of Claim Connector: Make the required TPI05 Call
+Claim Connector->-Claim Service:
+Claim Service->+Audit Service: audit claim response
+Audit Service->-Claim Service:
+Claim Service->-Controller:
+Controller->+Claim Service: Prepare Submit Claim Response
+Claim Service->-Controller:
+Controller->+Email Service: Send Claim Confirmation Email Service"
+Email Service->-Controller:
+note over Controller, Submission Service: Queuing up the documents is defined\nin the uploadDocumentsOnce method
+Controller->+Submission Service: Enqueue Documents
+note over Claim Connector, DEC64 Mapper: The body of the subsequent DEC64 requests are generated here
+Submission Service->+DEC64 Mapper: map
+DEC64 Mapper->-Submission Service:
+loop Store documents in work item repo
+    Submission Service->+CCS Submission Repo: Store Document to upload
+    CCS Submission Repo->-Submission Service:
+end
+Submission Service->-Controller:
+Controller->-FE: Response
