@@ -22,7 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class ClaimantInformation(
   eori: Eori,
-  fullName: Option[String],
+  fullName: String, // also called Legal Name or CDS Full Name
   establishmentAddress: ContactInformation,
   contactInformation: ContactInformation
 )

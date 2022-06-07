@@ -26,7 +26,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, _}
+import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
@@ -48,6 +48,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class ClaimServiceSpec
     extends AnyWordSpec
     with ScalaCheckDrivenPropertyChecks

@@ -17,7 +17,9 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.data.NonEmptyList
+import cats.implicits.catsSyntaxTuple2Semigroupal
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.ContactInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, ConsigneeDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -85,6 +87,22 @@ final case class C285Claim(
       case _                          => totalClaimedDuty(claimedReimbursementsAnswer)
     }
   }
+
+  private def contactInformationFromMrn =
+    (mrnContactDetailsAnswer, mrnContactAddressAnswer)
+      .mapN(ContactInformation(_, _))
+
+  private def contactInformationFromClaimant =
+    declarantTypeAnswer match {
+      case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
+        ContactInformation.asPerClaimant(consigneeDetails)
+      case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
+        ContactInformation.asPerClaimant(declarantDetails)
+    }
+
+  def contactInformation: ContactInformation =
+    contactInformationFromMrn
+      .fold(contactInformationFromClaimant)(identity)
 }
 
 object C285Claim {

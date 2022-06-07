@@ -19,6 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 import cats.data.NonEmptyList
 import cats.implicits.catsSyntaxOptionId
 import org.scalacheck.Gen
+import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.Inside.inside
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -44,7 +45,8 @@ class C285ClaimMappingSpec
     with C285ClaimSupport
     with ScalaCheckDrivenPropertyChecks
     with Matchers
-    with OptionValues {
+    with OptionValues
+    with TypeCheckedTripleEquals {
 
   "The C285 claim mapper" should {
 
@@ -54,6 +56,9 @@ class C285ClaimMappingSpec
       inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
         common.originatingSystem should be(MDTP)
 
+        details.claimantEORI         should ===(c285ClaimRequest.signedInUserDetails.eori)
+        details.claimantEmailAddress should ===(c285ClaimRequest.signedInUserDetails.email.value)
+
         details should have(
           'CDFPayService (NDRC),
           'dateReceived (ISOLocalDate.now.some),
@@ -62,8 +67,6 @@ class C285ClaimMappingSpec
           'claimType (ClaimType.C285.some),
           'claimant (c285ClaimRequest.claim.claimant.some),
           'payeeIndicator (c285ClaimRequest.claim.claimant.some),
-          'claimantEORI (c285ClaimRequest.signedInUserDetails.eori.some),
-          'claimantEmailAddress (c285ClaimRequest.signedInUserDetails.email),
           'declarationMode (c285ClaimRequest.claim.declarationMode.some),
           'claimAmountTotal (c285ClaimRequest.claim.claimedAmountAsString.some),
           'reimbursementMethod (c285ClaimRequest.claim.reimbursementMethod.some),
@@ -78,8 +81,8 @@ class C285ClaimMappingSpec
           'EORIDetails (
             EoriDetails(
               agentEORIDetails = EORIInformation(
-                EORINumber = c285ClaimRequest.claim.declarantDetails.map(_.EORI),
-                CDSFullName = c285ClaimRequest.claim.declarantDetails.map(_.legalName),
+                EORINumber = c285ClaimRequest.claim.declarantDetails.map(_.EORI).value,
+                CDSFullName = c285ClaimRequest.claim.declarantDetails.map(_.legalName).value,
                 CDSEstablishmentAddress = Address(
                   contactPerson = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.fullName.some,
                   addressLine1 = c285ClaimRequest.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1.some,
@@ -102,8 +105,8 @@ class C285ClaimMappingSpec
                 val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                 EORIInformation(
-                  EORINumber = maybeConsigneeDetails.map(_.EORI),
-                  CDSFullName = maybeConsigneeDetails.map(_.legalName),
+                  EORINumber = maybeConsigneeDetails.map(_.EORI).value,
+                  CDSFullName = maybeConsigneeDetails.map(_.legalName).value,
                   CDSEstablishmentAddress = Address(
                     contactPerson = None,
                     addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
@@ -469,7 +472,7 @@ class C285ClaimMappingSpec
 
           val tpi05Request = c285ClaimToTPI05Mapper map missingConsigneeDetailsRequest
 
-          tpi05Request.left.map(_.value should be(s"Failed to build MRN detail - The consignee details are missing"))
+          tpi05Request.left.map(_.value should be(s"consignee EORINumber and CDSFullName are mandatory"))
         }
       }
 

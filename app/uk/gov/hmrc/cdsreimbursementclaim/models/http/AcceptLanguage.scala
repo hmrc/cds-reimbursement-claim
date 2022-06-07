@@ -26,6 +26,7 @@ object AcceptLanguage {
   case object EN extends AcceptLanguage
   case object CY extends AcceptLanguage
 
+  @SuppressWarnings(Array("org.wartremover.warts.PlatformDefault"))
   def fromHeaderCarrier(headerCarrier: HeaderCarrier): Option[AcceptLanguage] =
     headerCarrier.otherHeaders.toMap
       .map { case (k, v) => k.toLowerCase -> v.toLowerCase }

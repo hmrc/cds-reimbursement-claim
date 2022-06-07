@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 import cats.implicits._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, DeclarantTypeAnswer, TypeOfClaimAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails, ContactInformation}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, ReimbursementMethod, YesNo}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
@@ -55,18 +55,6 @@ trait C285ClaimSupport {
     def reimbursementMethod: ReimbursementMethod =
       if (claim.reimbursementMethodAnswer === CurrentMonthAdjustment) ReimbursementMethod.Deferment
       else ReimbursementMethod.BankTransfer
-
-    def contactInformation: ContactInformation = (for {
-      contactDetails <- claim.mrnContactDetailsAnswer
-      contactAddress <- claim.mrnContactAddressAnswer
-    } yield ContactInformation(contactDetails, contactAddress)) getOrElse {
-      claim.declarantTypeAnswer match {
-        case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
-          ContactInformation asPerClaimant claim.consigneeDetails
-        case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
-          ContactInformation asPerClaimant claim.declarantDetails
-      }
-    }
 
     def firstNonEmptyBankDetails(maybeBankDetails: Option[response.BankDetails]): Option[BankDetails] =
       (maybeBankDetails, claim.bankAccountDetailsAnswer) match {

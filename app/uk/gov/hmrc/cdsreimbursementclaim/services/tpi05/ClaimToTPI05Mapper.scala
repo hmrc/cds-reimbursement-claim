@@ -21,4 +21,5 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 
 trait ClaimToTPI05Mapper[Claim] {
   def map(claim: Claim): Either[Error, EisSubmitClaimRequest]
+
 }

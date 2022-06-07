@@ -95,6 +95,7 @@ object DefaultEmailConnector {
 
   implicit val sendEmailRequestWrites: Writes[SendEmailRequest] = Json.writes[SendEmailRequest]
 
+  @SuppressWarnings(Array("org.wartremover.warts.PlatformDefault"))
   def getEmailTemplate(language: AcceptLanguage, baseTemplateName: String): String =
     language match {
       case AcceptLanguage.EN => baseTemplateName

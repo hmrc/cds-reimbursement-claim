@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-@SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
+@SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactory with ScalaCheckPropertyChecks {
 
   val ccsSubmissionRepositoryMock: CcsSubmissionRepo = mock[CcsSubmissionRepo]

@@ -53,6 +53,7 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
     options = BSONDocument("expireAfterSeconds" -> cacheTtl.toSeconds)
   )
 
+  @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
     for {
       result <- super.ensureIndexes(ExecutionContext.global)

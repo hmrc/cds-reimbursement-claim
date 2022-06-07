@@ -40,8 +40,10 @@ class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTe
     )
   )
 
+  @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
   val repository = new DefaultUpscanRepository(reactiveMongoComponent, config)
 
+  @SuppressWarnings(Array("org.wartremover.warts.ThreadSleep"))
   override def beforeAll(): Unit = {
     super.beforeAll()
     Thread.sleep(1200) //allow indexing to complete

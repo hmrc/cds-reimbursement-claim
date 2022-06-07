@@ -105,7 +105,7 @@ object RejectedGoodsClaimGen {
 
   lazy val genClaimantInformation: Gen[ClaimantInformation] = for {
     eori               <- genEori
-    fullName           <- Gen.option(genRandomString)
+    fullName           <- genRandomString
     contactInformation <- genContactInformation
   } yield ClaimantInformation(eori, fullName, contactInformation, contactInformation)
 

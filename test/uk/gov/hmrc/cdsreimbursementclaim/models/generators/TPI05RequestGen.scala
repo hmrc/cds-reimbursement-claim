@@ -164,8 +164,8 @@ object TPI05RequestGen {
       establishmentAddress <- genAddress
       contactInformation   <- genContactInformation
     } yield EORIInformation(
-      EORINumber = Some(eori),
-      CDSFullName = Some(fullName),
+      EORINumber = eori,
+      CDSFullName = fullName,
       CDSEstablishmentAddress = establishmentAddress,
       contactInformation = Some(contactInformation)
     )
@@ -218,6 +218,7 @@ object TPI05RequestGen {
       claimant             <- Gen.oneOf(Claimant.values)
       claimantEORI         <- genEori
       claimantEmailAddress <- genEmail
+      claimantName         <- genAccountName.map(_.value)
       descOfGoods          <- genRandomString
       isPrivateImporter    <- Gen.oneOf(YesNo.values)
       eoriInformation      <- genEoriInformation(claimantEORI)
@@ -236,8 +237,9 @@ object TPI05RequestGen {
       basisOfClaim = Some(basisOfClaim.toTPI05DisplayString),
       claimant = Some(claimant),
       payeeIndicator = Some(claimant),
-      claimantEORI = Some(claimantEORI),
-      claimantEmailAddress = Some(claimantEmailAddress),
+      claimantEORI = claimantEORI,
+      claimantEmailAddress = claimantEmailAddress,
+      claimantName = claimantName,
       goodsDetails = Some(
         GoodsDetails(
           descOfGoods = Some(descOfGoods),
@@ -264,6 +266,7 @@ object TPI05RequestGen {
       claimant              <- Gen.oneOf(Claimant.values)
       claimantEORI          <- genEori
       claimantEmailAddress  <- genEmail
+      claimantName          <- genAccountName.map(_.value)
       descOfGoods           <- genRandomString
       specialCircumstances  <- genRandomString
       inspectionDate        <- genInspectionDate
@@ -283,8 +286,9 @@ object TPI05RequestGen {
       basisOfClaim = Some(basisOfClaim.toTPI05DisplayString),
       claimant = Some(claimant),
       payeeIndicator = Some(claimant),
-      claimantEORI = Some(claimantEORI),
-      claimantEmailAddress = Some(claimantEmailAddress),
+      claimantEORI = claimantEORI,
+      claimantEmailAddress = claimantEmailAddress,
+      claimantName = claimantName,
       goodsDetails = Some(
         GoodsDetails(
           descOfGoods = Some(descOfGoods),
