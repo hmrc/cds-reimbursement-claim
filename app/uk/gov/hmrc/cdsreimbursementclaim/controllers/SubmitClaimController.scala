@@ -74,6 +74,14 @@ class SubmitClaimController @Inject() (
     }
   }
 
+  def submitSecuritiesClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[SecuritiesClaimRequest[SecuritiesClaim]] {
+      uploadDocumentsOnce {
+        claimService.submitSecuritiesClaim(_)
+      }
+    }
+  }
+
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
   private def uploadDocumentsOnce[R](
     submit: R => EitherT[Future, Error, ClaimSubmitResponse]

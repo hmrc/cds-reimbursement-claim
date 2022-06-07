@@ -29,7 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
@@ -39,8 +39,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -77,6 +79,14 @@ trait ClaimService {
     hc: HeaderCarrier,
     request: Request[_],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse]
+
+  def submitSecuritiesClaim(
+    securitiesClaimRequest: SecuritiesClaimRequest[SecuritiesClaim]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_]
+//    ,claimRequestFormat: Format[SecuritiesClaimRequest[SecuritiesClaim]] //TODO: SecuritiesClaim to TPI05 mapper
   ): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
@@ -150,12 +160,21 @@ class DefaultClaimService @Inject() (
       .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
       .flatMap(declaration => proceed((claimRequest.claim, declaration), claimRequest))
 
+  def submitSecuritiesClaim(
+    securitiesClaimRequest: SecuritiesClaimRequest[SecuritiesClaim]
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_]
+//    ,claimRequestFormat: Format[SecuritiesClaimRequest[SecuritiesClaim]]
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    EitherT.left(Future.successful(Error(s"Not implemented")))
+
   private def proceed[R, A](claimRequest: R, auditable: A)(implicit
     hc: HeaderCarrier,
     request: Request[_],
     tpi05Binder: ClaimToTPI05Mapper[R],
     auditableFormat: Format[A]
-  ) = for {
+  ): EitherT[Future, Error, ClaimSubmitResponse] = for {
     eisSubmitRequest       <- EitherT
                                 .fromEither[Future](EisSubmitClaimRequest(claimRequest))
                                 .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
