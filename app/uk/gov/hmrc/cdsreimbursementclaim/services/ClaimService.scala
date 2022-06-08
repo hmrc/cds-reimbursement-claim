@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
@@ -83,11 +83,11 @@ trait ClaimService {
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitSecuritiesClaim(
-    securitiesClaimRequest: SecuritiesClaimRequest[SecuritiesClaim]
+    securitiesClaimRequest: SecuritiesClaimRequest
   )(implicit
     hc: HeaderCarrier,
-    request: Request[_]
-//    ,claimRequestFormat: Format[SecuritiesClaimRequest[SecuritiesClaim]] //TODO: SecuritiesClaim to TPI05 mapper
+    request: Request[_],
+    claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 }
 
@@ -162,11 +162,11 @@ class DefaultClaimService @Inject() (
       .flatMap(declaration => proceed((claimRequest.claim, declaration), claimRequest))
 
   def submitSecuritiesClaim(
-    securitiesClaimRequest: SecuritiesClaimRequest[SecuritiesClaim]
+    securitiesClaimRequest: SecuritiesClaimRequest
   )(implicit
     hc: HeaderCarrier,
-    request: Request[_]
-//    ,claimRequestFormat: Format[SecuritiesClaimRequest[SecuritiesClaim]]
+    request: Request[_],
+    claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     EitherT.left(Future.successful(Error(s"Not implemented")))
 

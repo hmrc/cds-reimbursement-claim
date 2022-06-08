@@ -30,5 +30,9 @@ object ClaimType extends EnumerationFormat[ClaimType] {
     override def toString: String = "C&E1179"
   }
 
-  lazy val values: Set[ClaimType] = Set(C285, CE1179)
+  final case object SECURITY extends ClaimType {
+    override def toString: String = "SECURITY"
+  }
+
+  lazy val values: Set[ClaimType] = Set(C285, CE1179, SECURITY)
 }

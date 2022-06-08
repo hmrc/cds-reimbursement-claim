@@ -18,12 +18,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Format, Json, OFormat}
 
-final case class SecuritiesClaimRequest[Claim <: SecuritiesClaimBase](claim: Claim)
+final case class SecuritiesClaimRequest(claim: SecuritiesClaim)
 
 object SecuritiesClaimRequest {
 
-  implicit def requestFormat[Claim <: SecuritiesClaimBase](implicit
-    claimFormat: Format[Claim]
-  ): OFormat[SecuritiesClaimRequest[Claim]] =
-    Json.format[SecuritiesClaimRequest[Claim]]
+  implicit def requestFormat(implicit claimFormat: Format[SecuritiesClaim]): OFormat[SecuritiesClaimRequest] =
+    Json.format[SecuritiesClaimRequest]
 }

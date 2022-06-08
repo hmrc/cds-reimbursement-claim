@@ -75,7 +75,7 @@ class SubmitClaimController @Inject() (
   }
 
   def submitSecuritiesClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[SecuritiesClaimRequest[SecuritiesClaim]] {
+    withJsonBody[SecuritiesClaimRequest] {
       uploadDocumentsOnce {
         claimService.submitSecuritiesClaim(_)
       }

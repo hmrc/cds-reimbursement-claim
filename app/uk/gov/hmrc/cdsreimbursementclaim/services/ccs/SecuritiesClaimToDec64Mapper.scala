@@ -17,23 +17,22 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, SecuritiesClaimBase, SecuritiesClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, SecuritiesClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
 
-class SecuritiesClaimToDec64Mapper[Claim <: SecuritiesClaimBase]
-    extends ClaimToDec64Mapper[SecuritiesClaimRequest[Claim]] {
+class SecuritiesClaimToDec64Mapper extends ClaimToDec64Mapper[SecuritiesClaimRequest] {
 
-  def map(request: SecuritiesClaimRequest[Claim], response: ClaimSubmitResponse): List[Envelope] =
-    request.claim.documents.zipWithIndex.map { case (document, index) =>
+  def map(request: SecuritiesClaimRequest, response: ClaimSubmitResponse): List[Envelope] =
+    request.claim.supportingEvidences.zipWithIndex.map { case (document, index) =>
       Envelope(
         Body(
           BatchFileInterfaceMetadata(
             correlationID = UUID.randomUUID().toString,
             batchID = UUID.randomUUID().toString,
             batchCount = index.toLong + 1,
-            batchSize = request.claim.documents.size.toLong,
+            batchSize = request.claim.supportingEvidences.size.toLong,
             checksum = document.checksum,
             sourceLocation = document.downloadUrl,
             sourceFileName = document.fileName,
@@ -43,7 +42,7 @@ class SecuritiesClaimToDec64Mapper[Claim <: SecuritiesClaimBase]
               List(
                 PropertyType("CaseReference", response.caseNumber),
                 PropertyType("Eori", request.claim.claimantInformation.eori.value),
-                PropertyType("DeclarationId", request.claim.mrn.value),
+                PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
                 PropertyType("DeclarationType", "MRN"),
                 PropertyType("ApplicationName", "NDRC"),
                 PropertyType("DocumentType", document.documentType.toDec64DisplayString),

@@ -31,4 +31,7 @@ package object tpi05 {
 
   implicit val scheduledRejectedGoodsClaimToTPI05Mapper: ScheduledRejectedGoodsClaimToTPI05Mapper =
     new ScheduledRejectedGoodsClaimToTPI05Mapper
+
+  implicit val securitiesClaimToTPI05Mapper: SecuritiesClaimToTPI05Mapper =
+    new SecuritiesClaimToTPI05Mapper
 }
