@@ -33,6 +33,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
 
   val claimSubmittedTemplateId = "template-claim-submitted"

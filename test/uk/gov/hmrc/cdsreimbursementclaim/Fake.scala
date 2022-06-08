@@ -26,6 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object Fake {
 
+  @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
   def login(
     user: AuthenticatedUser,
     timestamp: LocalDateTime,

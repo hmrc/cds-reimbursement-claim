@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import cats.Eq
-import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait YesNo extends Product with Serializable
 
-object YesNo {
+object YesNo extends EnumerationFormat[YesNo] {
 
   final case object No extends YesNo
   final case object Yes extends YesNo
@@ -33,10 +31,6 @@ object YesNo {
       case DeclarantTypeAnswer.Importer => Yes
       case _                            => No
     }
-
-  implicit val equality: Eq[YesNo] = Eq.fromUniversalEquals[YesNo]
-
-  implicit val writes: Writes[YesNo] = WriteEnumerationToString[YesNo]
 
   lazy val values: Set[YesNo] = Set(Yes, No)
 }

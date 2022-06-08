@@ -28,7 +28,7 @@ import java.time.LocalDate
 import play.api.libs.json.Reads.minLength
 import scala.collection.immutable.Seq
 
-@SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
+@SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 final case class MultipleRejectedGoodsClaim(
   movementReferenceNumbers: List[MRN],
   claimantType: ClaimantType,

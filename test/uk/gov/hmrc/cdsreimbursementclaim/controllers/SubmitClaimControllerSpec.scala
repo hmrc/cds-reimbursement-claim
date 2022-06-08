@@ -42,6 +42,7 @@ import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyChecks {
 
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()

@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ReimbursementMethodAnswer, TypeOfClaimAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait CaseType extends Product with Serializable
 
-object CaseType {
+object CaseType extends EnumerationFormat[CaseType] {
 
   final case object Individual extends CaseType
   final case object Bulk extends CaseType
@@ -38,6 +37,4 @@ object CaseType {
       case (_, CurrentMonthAdjustment)      => CaseType.CMA
       case _                                => CaseType.Individual
     }
-
-  implicit val writes: Writes[CaseType] = WriteEnumerationToString[CaseType]
 }

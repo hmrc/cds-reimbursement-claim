@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait DeclarationMode extends Product with Serializable
 
-object DeclarationMode {
+object DeclarationMode extends EnumerationFormat[DeclarationMode] {
 
   final case object ParentDeclaration extends DeclarationMode {
     override def toString: String = "Parent Declaration"
@@ -39,6 +38,4 @@ object DeclarationMode {
     }
 
   lazy val values: Set[DeclarationMode] = Set(ParentDeclaration, AllDeclaration)
-
-  implicit val writes: Writes[DeclarationMode] = WriteEnumerationToString[DeclarationMode]
 }

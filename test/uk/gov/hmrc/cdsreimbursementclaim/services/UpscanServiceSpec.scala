@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val timeout: Timeout                           = Timeout(FiniteDuration(5, TimeUnit.SECONDS))

@@ -31,6 +31,7 @@ import uk.gov.hmrc.workitem.{Failed, InProgress, PermanentlyFailed, WorkItem}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class CcsSubmissionRepoSpec extends AnyWordSpec with Matchers with MongoTestSupport {
 
   val config: Configuration = Configuration(
