@@ -25,7 +25,7 @@ import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
@@ -191,6 +191,19 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(response)
       }
+
+//      "handling securities claim request" in forAll { //TODO: 1718
+//        (request: SecuritiesClaimRequest, response: ClaimSubmitResponse) =>
+//          inSequence {
+//            mockSecurityClaimSubmission(request)(Right(response))
+//            mockCcsRequestEnqueue(request, response)
+//          }
+//
+//          val result = controller.submitSecuritiesClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+//
+//          status(result)        shouldBe OK
+//          contentAsJson(result) shouldBe Json.toJson(response)
+//      }
     }
 
     "fail" when {
@@ -233,6 +246,15 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           val result = controller.submitScheduledRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
           status(result) shouldBe INTERNAL_SERVER_ERROR
       }
+
+//      "submission of the securities claim failed" in forAll { request: SecuritiesClaimRequest => //TODO: 1718
+//        inSequence {
+//          mockSecurityClaimSubmission(request)(Left(Error("boom!")))
+//        }
+//
+//        val result = controller.submitSecuritiesClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+//        status(result) shouldBe INTERNAL_SERVER_ERROR
+//      }
     }
   }
 }

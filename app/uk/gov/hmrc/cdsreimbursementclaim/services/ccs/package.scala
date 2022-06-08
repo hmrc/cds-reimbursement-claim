@@ -31,4 +31,7 @@ package object ccs {
 
   implicit val scheduledCE1779ClaimToDec64FilesMapper: RejectedGoodsClaimToDec64Mapper[ScheduledRejectedGoodsClaim] =
     new RejectedGoodsClaimToDec64Mapper[ScheduledRejectedGoodsClaim]
+
+  implicit val securitiesClaimToDec64FilesMapper: SecuritiesClaimToDec64Mapper =
+    new SecuritiesClaimToDec64Mapper
 }

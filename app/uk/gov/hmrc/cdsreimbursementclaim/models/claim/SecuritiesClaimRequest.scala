@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
+import play.api.libs.json.{Format, Json, OFormat}
 
-sealed trait ClaimType extends Product with Serializable
+final case class SecuritiesClaimRequest(claim: SecuritiesClaim)
 
-object ClaimType extends EnumerationFormat[ClaimType] {
+object SecuritiesClaimRequest {
 
-  final case object C285 extends ClaimType {
-    override def toString: String = "C285"
-  }
-
-  final case object CE1179 extends ClaimType {
-    override def toString: String = "C&E1179"
-  }
-
-  final case object SECURITY extends ClaimType {
-    override def toString: String = "SECURITY"
-  }
-
-  lazy val values: Set[ClaimType] = Set(C285, CE1179, SECURITY)
+  implicit def requestFormat(implicit claimFormat: Format[SecuritiesClaim]): OFormat[SecuritiesClaimRequest] =
+    Json.format[SecuritiesClaimRequest]
 }
