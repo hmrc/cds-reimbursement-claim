@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia.{Typeclass, gen}
+import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimedReimbursementGen.genClaimedReimbursement
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genEmail
@@ -118,6 +119,4 @@ object SecuritiesClaimGen {
     eori  <- genEori
     name  <- genRandomString
   } yield SignedInUserDetails(Some(email), eori, email, ContactName(name)))
-
-  implicit lazy val arbitraryC285ClaimRequest: Typeclass[SecuritiesClaimRequest] = gen[SecuritiesClaimRequest]
 }

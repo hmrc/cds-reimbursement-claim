@@ -19,6 +19,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 import ai.x.play.json.Encoders.encoder
 import ai.x.play.json.Jsonx
 import play.api.libs.json._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecurityDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarationId, ProcedureCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIndicator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -49,7 +52,17 @@ final case class RequestDetail(
   goodsDetails: Option[GoodsDetails] = None,
   EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,
-  duplicateMRNDetails: Option[MrnDetail] = None
+  duplicateMRNDetails: Option[MrnDetail] = None,
+  // SecurityInfo
+  dateClaimReceived: Option[EisBasicDate] = None,
+  reasonForSecurity: Option[ReasonForSecurity] = None,
+  declarationId: Option[DeclarationId] = None,
+  procedureCode: Option[ProcedureCode] = None,
+  acceptanceDate: Option[EisBasicDate] = None,
+  declarantDetails: Option[MRNInformation] = None,
+  consigneeDetails: Option[MRNInformation] = None,
+  bankDetails: Option[BankDetails] = None,
+  securityDetails: List[SecurityDetail] = List.empty
 )
 
 object RequestDetail {

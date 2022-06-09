@@ -31,7 +31,7 @@ object AcceptanceDate {
 
   private val displayFormat: DateTimeFormatter    = DateTimeFormatter.ofPattern("d MMMM u")
   private val inputDateFormat: DateTimeFormatter  = DateTimeFormatter.ofPattern("u-M-d")
-  private val dateStringFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("uMMdd")
+  private val dateStringFormat: DateTimeFormatter = DateTimeFormatter.BASIC_ISO_DATE
 
   def fromDisplayFormat(value: String): Try[AcceptanceDate] =
     parse(value, displayFormat)

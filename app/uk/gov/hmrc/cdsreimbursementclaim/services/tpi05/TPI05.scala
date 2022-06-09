@@ -22,8 +22,9 @@ import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarationId, ProcedureCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -129,6 +130,33 @@ object TPI05 {
 
     def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
       copy(validatedRequest.map(_.copy(goodsDetails = Some(goodsDetails))))
+
+    def withSecurityInfo(
+      dateClaimReceived: Option[EisBasicDate],
+      reasonForSecurity: ReasonForSecurity,
+      declarationId: DeclarationId,
+      procedureCode: ProcedureCode,
+      acceptanceDate: AcceptanceDate,
+      declarantDetails: MRNInformation,
+      consigneeDetails: MRNInformation,
+      bankDetails: BankDetails,
+      securityDetails: List[SecurityDetail]
+    ): Builder =
+      copy(
+        validatedRequest.map(
+          _.copy(
+            dateClaimReceived = dateClaimReceived,
+            reasonForSecurity = Some(reasonForSecurity),
+            declarationId = Some(declarationId),
+            procedureCode = Some(procedureCode),
+            acceptanceDate = Some(EisBasicDate(acceptanceDate.value)),
+            declarantDetails = Some(declarantDetails),
+            consigneeDetails = Some(consigneeDetails),
+            bankDetails = Some(bankDetails),
+            securityDetails = securityDetails
+          )
+        )
+      )
 
     def verify: Either[CdsError, EisSubmitClaimRequest] =
       validatedRequest.toEither.map { requestDetail =>

@@ -18,15 +18,15 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class SecurityDetails(
+final case class SecurityDetail(
   securityDepositId: String,
   totalAmount: String,
   amountPaid: String,
   paymentMethod: String,
   paymentReference: String,
-  taxDetails: List[TaxDetails]
+  taxDetails: List[TaxDetail]
 )
 
-object SecurityDetails {
-  implicit val format: OFormat[SecurityDetails] = Json.format[SecurityDetails]
+object SecurityDetail {
+  implicit val format: OFormat[SecurityDetail] = Json.format[SecurityDetail]
 }
