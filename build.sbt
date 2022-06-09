@@ -52,7 +52,8 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
   )
   .settings(routesImport := Seq(
-    "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN"
+    "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN",
+    "uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity"
   ))
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
