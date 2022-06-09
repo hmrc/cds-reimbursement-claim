@@ -46,7 +46,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.12.14")
+  .settings(scalaVersion := "2.12.12")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -61,12 +61,10 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= List(
       "-Yrangepos",
       "-language:postfixOps",
-      "-Ypartial-unification",
-      "-Wconf:cat=unused-imports&site=<empty>:iv",
-      "-Wconf:cat=unused-imports&site=prod:iv",
-      "-Wconf:cat=unused-imports&site=upscan:iv"
+      "-Ypartial-unification"
     ),
-    Test / scalacOptions --= Seq("-Ywarn-value-discard")
+    Test / scalacOptions --= Seq("-Ywarn-value-discard"),
+    scalacOptions += "-P:silencer:pathFilters=routes"
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
