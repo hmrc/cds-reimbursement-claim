@@ -1,6 +1,7 @@
 # microservice specific routes
 
 GET         /declaration/:id                        uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declaration(id: MRN)
+GET         /declaration/:id/is-duplicate           uk.gov.hmrc.cdsreimbursementclaim.controllers.DuplicateClaimController.isDuplicate(id: MRN, reasonForSecurity: ReasonForSecurity)
 POST        /claims/c285                            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
 POST        /claims/rejected-goods-single           uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleRejectedGoodsClaim()
 POST        /claims/rejected-goods-multiple         uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitMultipleRejectedGoodsClaim()
