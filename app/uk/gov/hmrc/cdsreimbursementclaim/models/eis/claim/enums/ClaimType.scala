@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.Writes
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait ClaimType extends Product with Serializable
 
-object ClaimType {
+object ClaimType extends EnumerationFormat[ClaimType] {
 
   final case object C285 extends ClaimType {
     override def toString: String = "C285"
@@ -31,5 +30,9 @@ object ClaimType {
     override def toString: String = "C&E1179"
   }
 
-  implicit val writes: Writes[ClaimType] = WriteEnumerationToString[ClaimType]
+  final case object SECURITY extends ClaimType {
+    override def toString: String = "SECURITY"
+  }
+
+  lazy val values: Set[ClaimType] = Set(C285, CE1179, SECURITY)
 }

@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.http.{ContentTypes, HeaderNames, MimeTypes}
 import play.api.mvc.Codec
-import play.api.test.Helpers.{await, _}
+import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
@@ -34,6 +34,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
 
   "Ccs Connector" when {

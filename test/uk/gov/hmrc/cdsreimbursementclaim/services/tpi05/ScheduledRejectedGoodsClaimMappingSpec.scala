@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxOptionId
+import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.Inside.inside
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -45,7 +46,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
     with RejectedGoodsClaimSupport
     with ScalaCheckDrivenPropertyChecks
     with Matchers
-    with OptionValues {
+    with OptionValues
+    with TypeCheckedTripleEquals {
 
   "The Reject Goods claim mapper" should {
 
@@ -59,6 +61,11 @@ class ScheduledRejectedGoodsClaimMappingSpec
         inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
           common.originatingSystem should be(MDTP)
 
+          details.claimantEORI         should ===(claim.claimantInformation.eori)
+          details.claimantEmailAddress should ===(
+            claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
+          )
+
           details should have(
             'CDFPayService (NDRC),
             'dateReceived (ISOLocalDate.now.some),
@@ -67,8 +74,6 @@ class ScheduledRejectedGoodsClaimMappingSpec
             'claimType (ClaimType.CE1179.some),
             'claimant (claim.claimant.some),
             'payeeIndicator (claim.claimant.some),
-            'claimantEORI (claim.claimantInformation.eori.some),
-            'claimantEmailAddress (claim.claimantInformation.contactInformation.emailAddress.map(Email(_))),
             'claimAmountTotal (claim.claimedAmountAsString.some),
             'reimbursementMethod (claim.tpi05ReimbursementMethod.some),
             'basisOfClaim (claim.basisOfClaim.toTPI05DisplayString.some),
@@ -91,7 +96,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
             'EORIDetails (
               EoriDetails(
                 agentEORIDetails = EORIInformation(
-                  EORINumber = claim.claimantInformation.eori.some,
+                  EORINumber = claim.claimantInformation.eori,
                   CDSFullName = claim.claimantInformation.fullName,
                   CDSEstablishmentAddress = Address(
                     contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
@@ -112,8 +117,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
-                    EORINumber = maybeConsigneeDetails.map(_.EORI),
-                    CDSFullName = maybeConsigneeDetails.map(_.legalName),
+                    EORINumber = maybeConsigneeDetails.map(_.EORI).value,
+                    CDSFullName = maybeConsigneeDetails.map(_.legalName).value,
                     CDSEstablishmentAddress = Address(
                       contactPerson = None,
                       addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),

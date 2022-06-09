@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import play.api.libs.json.Writes
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, DeclarantTypeAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WriteEnumerationToString
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait Claimant extends Product with Serializable
 
-object Claimant {
+object Claimant extends EnumerationFormat[Claimant] {
 
   type PayeeIndicator = Claimant
 
@@ -44,6 +43,4 @@ object Claimant {
     }
 
   lazy val values: Set[PayeeIndicator] = Set(Importer, Representative)
-
-  implicit val writes: Writes[Claimant] = WriteEnumerationToString[Claimant]
 }

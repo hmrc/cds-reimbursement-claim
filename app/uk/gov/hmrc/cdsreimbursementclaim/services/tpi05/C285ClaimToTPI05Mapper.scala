@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.implicits.{catsSyntaxEq, catsSyntaxTuple2Semigroupal}
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, DeclarantTypeAnswer, Street}
+import cats.implicits.catsSyntaxEq
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
@@ -27,12 +27,21 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
 
-  def map(request: C285ClaimRequest): Either[Error, EisSubmitClaimRequest] =
-    TPI05.request
+  // todo CDSR-1795 TPI05 creation and validation - factor out common code
+  def map(request: C285ClaimRequest): Either[CdsError, EisSubmitClaimRequest] =
+    (for {
+      claimantEmail <- request.signedInUserDetails.email.toRight(
+                         CdsError("Email address is missing")
+                       ) // todo CDSR-1795 can we use verified email instead?
+      eoriDetails   <- getEoriDetails(request)
+    } yield TPI05
+      .request(
+        claimantEORI = request.signedInUserDetails.eori,
+        claimantEmailAddress = claimantEmail,
+        claimantName = request.signedInUserDetails.contactName.value
+      )
       .forClaimOfType(C285)
       .withClaimant(Claimant.basedOn(request.claim.declarantTypeAnswer))
-      .withClaimantEORI(request.signedInUserDetails.eori)
-      .withClaimantEmail(request.signedInUserDetails.email)
       .withClaimedAmount(request.claim.totalReimbursementAmount)
       .withReimbursementMethod(request.claim.reimbursementMethodAnswer)
       .withCaseType(CaseType.basedOn(request.claim.typeOfClaim, request.claim.reimbursementMethodAnswer))
@@ -44,72 +53,8 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
           isPrivateImporter = Some(YesNo.basedOn(request.claim.declarantTypeAnswer))
         )
       )
-      .withEORIDetails(
-        EoriDetails(
-          importerEORIDetails = EORIInformation.forConsignee(request.claim.consigneeDetails),
-          agentEORIDetails = EORIInformation(
-            EORINumber = request.claim.declarantDetails.map(_.EORI),
-            CDSFullName = request.claim.declarantDetails.map(_.legalName),
-            CDSEstablishmentAddress = Address(
-              contactPerson = Option(request.claim.detailsRegisteredWithCdsAnswer.fullName),
-              addressLine1 = Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
-              addressLine2 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
-              addressLine3 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
-              street = Street.fromLines(
-                Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
-                request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
-              ),
-              city = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
-              postalCode = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode.value),
-              countryCode = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
-              telephoneNumber = None,
-              emailAddress = Option(request.claim.detailsRegisteredWithCdsAnswer.emailAddress.value)
-            ),
-            contactInformation = Some(
-              (request.claim.mrnContactDetailsAnswer, request.claim.mrnContactAddressAnswer)
-                .mapN(ContactInformation(_, _))
-                .getOrElse(
-                  request.claim.declarantTypeAnswer match {
-                    case DeclarantTypeAnswer.Importer | DeclarantTypeAnswer.AssociatedWithImporterCompany =>
-                      ContactInformation.asPerClaimant(request.claim.consigneeDetails)
-                    case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany                          =>
-                      ContactInformation.asPerClaimant(request.claim.declarantDetails)
-                  }
-                )
-            )
-          )
-        )
-      )
-      .withMrnDetails(
-        request.claim.displayDeclaration.toList.flatMap { displayDeclaration =>
-          request.claim.multipleClaims.map { case (mrn, reimbursementClaim) =>
-            MrnDetail.build
-              .withMrnNumber(mrn)
-              .withAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate)
-              .withDeclarantReferenceNumber(displayDeclaration.displayResponseDetail.declarantReferenceNumber)
-              .withWhetherMainDeclarationReference(request.claim.movementReferenceNumber.value === mrn.value)
-              .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
-              .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-              .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
-              .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
-              .withFirstNonEmptyBankDetailsWhen(request.claim.movementReferenceNumber.value === mrn.value)(
-                displayDeclaration.displayResponseDetail.bankDetails,
-                request.claim.bankAccountDetailsAnswer
-              )
-              .withNdrcDetails(
-                reimbursementClaim.toList.map(reimbursement =>
-                  NdrcDetails.buildChecking(
-                    reimbursement.taxCode,
-                    reimbursement.paymentMethod,
-                    reimbursement.paymentReference,
-                    reimbursement.paidAmount.roundToTwoDecimalPlaces,
-                    reimbursement.claimAmount.roundToTwoDecimalPlaces
-                  )
-                )
-              )
-          }
-        }
-      )
+      .withEORIDetails(eoriDetails)
+      .withMrnDetails(getMrnDetails(request))
       .withMaybeDuplicateMrnDetails(
         request.claim.duplicateDisplayDeclaration.map(_.displayResponseDetail).map { displayDeclaration =>
           MrnDetail.build
@@ -133,6 +78,67 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
               }
             )
         }
+      )).flatMap(_.verify)
+
+  private def getEoriDetails(request: C285ClaimRequest): Either[CdsError, EoriDetails] =
+    for {
+      agentEoriNumber  <- request.claim.declarantDetails.map(_.EORI).toRight(CdsError("agent EORI is required"))
+      agentCdsFullName <-
+        request.claim.declarantDetails.map(_.legalName).toRight(CdsError("agent CDS Full Name is required"))
+      consigneeDetails <-
+        request.claim.consigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
+    } yield EoriDetails(
+      importerEORIDetails = EORIInformation.forConsignee(consigneeDetails),
+      agentEORIDetails = EORIInformation(
+        EORINumber = agentEoriNumber,
+        CDSFullName = agentCdsFullName,
+        CDSEstablishmentAddress = Address(
+          contactPerson = Option(request.claim.detailsRegisteredWithCdsAnswer.fullName),
+          addressLine1 = Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
+          addressLine2 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2,
+          addressLine3 = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line3,
+          street = Street.fromLines(
+            Option(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line1),
+            request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line2
+          ),
+          city = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.line4),
+          postalCode = Some(request.claim.detailsRegisteredWithCdsAnswer.contactAddress.postcode.value),
+          countryCode = request.claim.detailsRegisteredWithCdsAnswer.contactAddress.country.code,
+          telephoneNumber = None,
+          emailAddress = Option(request.claim.detailsRegisteredWithCdsAnswer.emailAddress.value)
+        ),
+        contactInformation = Some(request.claim.contactInformation)
       )
-      .verify
+    )
+
+  private def getMrnDetails(request: C285ClaimRequest) =
+    request.claim.displayDeclaration.toList.flatMap { displayDeclaration =>
+      request.claim.multipleClaims.map { case (mrn, reimbursementClaim) =>
+        MrnDetail.build
+          .withMrnNumber(mrn)
+          .withAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate)
+          .withDeclarantReferenceNumber(displayDeclaration.displayResponseDetail.declarantReferenceNumber)
+          .withWhetherMainDeclarationReference(request.claim.movementReferenceNumber.value === mrn.value)
+          .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
+          .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
+          .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
+          .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
+          .withFirstNonEmptyBankDetailsWhen(request.claim.movementReferenceNumber.value === mrn.value)(
+            displayDeclaration.displayResponseDetail.bankDetails,
+            request.claim.bankAccountDetailsAnswer
+          )
+          .withNdrcDetails(
+            reimbursementClaim.toList.map(reimbursement =>
+              NdrcDetails.buildChecking(
+                reimbursement.taxCode,
+                reimbursement.paymentMethod,
+                reimbursement.paymentReference,
+                reimbursement.paidAmount.roundToTwoDecimalPlaces,
+                reimbursement.claimAmount.roundToTwoDecimalPlaces
+              )
+            )
+          )
+      }
+    }
+
 }

@@ -20,7 +20,7 @@ import cats.data.Validated
 import cats.data.Validated.Valid
 import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate}
@@ -33,18 +33,21 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05 {
 
-  def request: Builder = Builder(
+  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
     Valid(
       RequestDetail(
         CDFPayService = CDFPayService.NDRC,
         dateReceived = Some(ISOLocalDate.now),
         customDeclarationType = Some(CustomDeclarationType.MRN),
-        claimDate = Some(ISOLocalDate.now)
+        claimDate = Some(ISOLocalDate.now),
+        claimantEORI = claimantEORI,
+        claimantEmailAddress = claimantEmailAddress,
+        claimantName = claimantName
       )
     )
   )
 
-  final case class Builder private (validatedRequest: Validated[Error, RequestDetail]) extends AnyVal {
+  final case class Builder private (validatedRequest: Validated[CdsError, RequestDetail]) extends AnyVal {
 
     def forClaimOfType(claimType: ClaimType): Builder =
       copy(validatedRequest.map(_.copy(claimType = Some(claimType))))
@@ -56,7 +59,7 @@ object TPI05 {
           request.copy(
             claimAmountTotal = Some(claimedAmount.roundToTwoDecimalPlaces.toString())
           ),
-          Error("Total reimbursement amount must be greater than zero")
+          CdsError("Total reimbursement amount must be greater than zero")
         )
       })
 
@@ -94,18 +97,6 @@ object TPI05 {
         )
       )
 
-    def withClaimantEmail(claimantEmailAddress: Option[Email]): Builder =
-      copy(validatedRequest.andThen { request =>
-        Validated.cond(
-          claimantEmailAddress.nonEmpty,
-          request.copy(claimantEmailAddress = claimantEmailAddress),
-          Error("Email address is missing")
-        )
-      })
-
-    def withClaimantEORI(eori: Eori): Builder =
-      copy(validatedRequest.map(_.copy(claimantEORI = Some(eori))))
-
     def withEORIDetails(eoriDetails: EoriDetails): Builder =
       copy(validatedRequest.map(_.copy(EORIDetails = Some(eoriDetails))))
 
@@ -120,7 +111,7 @@ object TPI05 {
             request.copy(MRNDetails = Some(details))
           }
           .leftMap { errors =>
-            Error(s"Failed to build MRN detail - ${errors.map(_.value).toList.distinct.mkString(";\n")}")
+            CdsError(s"Failed to build MRN detail - ${errors.map(_.value).toList.distinct.mkString(";\n")}")
           }
       })
 
@@ -132,14 +123,14 @@ object TPI05 {
           .sequence
           .map(maybeDetails => request.copy(duplicateMRNDetails = maybeDetails))
           .leftMap { errors =>
-            Error(s"Failed to build Duplicate MRN detail - ${errors.map(_.value).toList.distinct.mkString(";\n")}")
+            CdsError(s"Failed to build Duplicate MRN detail - ${errors.map(_.value).toList.distinct.mkString(";\n")}")
           }
       })
 
     def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
       copy(validatedRequest.map(_.copy(goodsDetails = Some(goodsDetails))))
 
-    def verify: Either[Error, EisSubmitClaimRequest] =
+    def verify: Either[CdsError, EisSubmitClaimRequest] =
       validatedRequest.toEither.map { requestDetail =>
         EisSubmitClaimRequest(
           PostNewClaimsRequest(

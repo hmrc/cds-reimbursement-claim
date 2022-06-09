@@ -36,6 +36,7 @@ import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class DeclarationControllerSpec extends ControllerSpec {
 
   val mockDeclarationService: DeclarationService = mock[DeclarationService]

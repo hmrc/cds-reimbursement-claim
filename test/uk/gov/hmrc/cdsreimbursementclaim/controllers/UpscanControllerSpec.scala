@@ -42,6 +42,7 @@ import java.time.{LocalDate, LocalDateTime, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyChecks {
 
   val mockUpscanService: UpscanService = mock[UpscanService]

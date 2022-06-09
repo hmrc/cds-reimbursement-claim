@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 
 import scala.annotation.implicitNotFound
@@ -29,7 +29,7 @@ final case class EisSubmitClaimRequest(
 object EisSubmitClaimRequest {
 
   @implicitNotFound("No implicit TPI05 mapper found for request object")
-  def apply[A](source: A)(implicit mapper: ClaimToTPI05Mapper[A]): Either[Error, EisSubmitClaimRequest] =
+  def apply[A](source: A)(implicit mapper: ClaimToTPI05Mapper[A]): Either[CdsError, EisSubmitClaimRequest] =
     mapper.map(source)
 
   implicit val format: OWrites[EisSubmitClaimRequest] = Json.writes[EisSubmitClaimRequest]

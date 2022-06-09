@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.json.{Json, OWrites}
+import play.api.libs.json.{Json, OWrites, Reads}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 
 final case class GoodsDetails(
@@ -31,5 +31,6 @@ final case class GoodsDetails(
 )
 
 object GoodsDetails {
+  implicit val reads: Reads[GoodsDetails]    = Json.reads[GoodsDetails]
   implicit val writes: OWrites[GoodsDetails] = Json.writes[GoodsDetails]
 }

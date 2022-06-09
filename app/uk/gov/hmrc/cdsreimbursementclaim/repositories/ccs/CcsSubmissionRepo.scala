@@ -89,6 +89,7 @@ class DefaultCcsSubmissionRepo @Inject() (
       options = BSONDocument("expireAfterSeconds" -> ttl)
     )
 
+  @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
     for {
       result <- super.ensureIndexes(ExecutionContext.global)

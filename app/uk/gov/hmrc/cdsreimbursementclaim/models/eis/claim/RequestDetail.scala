@@ -16,11 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import play.api.libs.json.{Json, OWrites}
+import ai.x.play.json.Encoders.encoder
+import ai.x.play.json.Jsonx
+import play.api.libs.json._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIndicator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
+
+import scala.annotation.nowarn
 
 final case class RequestDetail(
   CDFPayService: CDFPayService,
@@ -39,8 +43,9 @@ final case class RequestDetail(
   newEORI: Option[Eori] = None,
   newDAN: Option[String] = None,
   authorityTypeProvided: Option[String] = None,
-  claimantEORI: Option[Eori] = None,
-  claimantEmailAddress: Option[Email] = None,
+  claimantEORI: Eori,
+  claimantEmailAddress: Email,
+  claimantName: String,
   goodsDetails: Option[GoodsDetails] = None,
   EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,
@@ -48,6 +53,7 @@ final case class RequestDetail(
 )
 
 object RequestDetail {
-
-  implicit val writes: OWrites[RequestDetail] = Json.writes[RequestDetail]
+  @nowarn
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  implicit lazy val jsonFormat: OFormat[RequestDetail] = Jsonx.formatCaseClass[RequestDetail]
 }
