@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.EstablishmentAddress
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 final case class Address(
   contactPerson: Option[String],
@@ -32,5 +34,37 @@ final case class Address(
 )
 
 object Address {
+  def fromContactInformation(contactInformation: ContactInformation): Either[CdsError, Address] =
+    contactInformation.countryCode
+      .toRight(CdsError("country code is mandatory"))
+      .map { countryCode =>
+        Address(
+          contactPerson = contactInformation.contactPerson,
+          addressLine1 = contactInformation.addressLine1,
+          addressLine2 = contactInformation.addressLine2,
+          addressLine3 = contactInformation.addressLine3,
+          street = contactInformation.street,
+          city = contactInformation.city,
+          countryCode = countryCode,
+          postalCode = contactInformation.postalCode,
+          telephoneNumber = contactInformation.telephoneNumber,
+          emailAddress = contactInformation.emailAddress
+        )
+      }
+
+  def fromEstablishmentAddress(establishmentAddress: EstablishmentAddress): Address =
+    Address(
+      contactPerson = None,
+      addressLine1 = Some(establishmentAddress.addressLine1),
+      addressLine2 = establishmentAddress.addressLine2,
+      addressLine3 = establishmentAddress.addressLine3,
+      street = None,
+      city = None,
+      countryCode = establishmentAddress.countryCode,
+      postalCode = establishmentAddress.postalCode,
+      telephoneNumber = None,
+      emailAddress = None
+    )
+
   implicit val format: OFormat[Address] = Json.format[Address]
 }

@@ -1,4 +1,4 @@
-# cds-reimbursement-claim 
+# cds-reimbursement-claim
 
 This service provides a bridge between the `CDS Reimbursement Frontend` and external services.
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ContactAddress, ContactDetails, Street}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ClaimantDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ClaimantDetails, ConsigneeDetails, DeclarantDetails}
 
 final case class ContactInformation(
   contactPerson: Option[String],
@@ -72,6 +72,36 @@ object ContactInformation {
       emailAddress = maybeContactDetails.flatMap(_.emailAddress)
     )
   }
+
+  def fromDeclarantDetails(declarantDetails: DeclarantDetails): ContactInformation =
+    new ContactInformation(
+      contactPerson = declarantDetails.contactDetails.flatMap(_.contactName),
+      addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
+      addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+      addressLine3 = declarantDetails.establishmentAddress.addressLine3,
+      street = None,
+      city = None,
+      countryCode = Some(declarantDetails.establishmentAddress.countryCode),
+      postalCode = declarantDetails.establishmentAddress.postalCode,
+      telephoneNumber = None,
+      faxNumber = None,
+      emailAddress = declarantDetails.contactDetails.flatMap(_.emailAddress)
+    )
+
+  def fromConsigneeDetails(consigneeDetails: ConsigneeDetails): ContactInformation =
+    new ContactInformation(
+      contactPerson = consigneeDetails.contactDetails.flatMap(_.contactName),
+      addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
+      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+      addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+      street = None,
+      city = None,
+      countryCode = Some(consigneeDetails.establishmentAddress.countryCode),
+      postalCode = consigneeDetails.establishmentAddress.postalCode,
+      telephoneNumber = None,
+      faxNumber = None,
+      emailAddress = consigneeDetails.contactDetails.flatMap(_.emailAddress)
+    )
 
   implicit val format: OFormat[ContactInformation] = Json.format[ContactInformation]
 }

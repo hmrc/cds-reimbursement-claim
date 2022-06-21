@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.Format
+import uk.gov.hmrc.cdsreimbursementclaim.utils.SimpleStringFormat
 
-final case class TaxDetails(
-  taxType: String,
-  amount: String
-)
+final case class ProcedureCode(value: String) extends AnyVal
 
-object TaxDetails {
-  implicit val format: OFormat[TaxDetails] = Json.format[TaxDetails]
+object ProcedureCode {
+  implicit val accountNameFormat: Format[ProcedureCode] =
+    SimpleStringFormat(ProcedureCode(_), _.value)
 }
