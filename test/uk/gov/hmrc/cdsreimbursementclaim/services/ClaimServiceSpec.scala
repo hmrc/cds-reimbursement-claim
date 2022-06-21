@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler4, CallHandler6}
+import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3, CallHandler4, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -93,10 +93,10 @@ class ClaimServiceSpec
 
   def mockDeclarationRetrieving(mrn: MRN)(
     displayDeclaration: DisplayDeclaration
-  ): CallHandler2[MRN, HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
+  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
     (declarationServiceMock
-      .getDeclaration(_: MRN)(_: HeaderCarrier))
-      .expects(mrn, *)
+      .getDeclaration(_: MRN, _: Option[String])(_: HeaderCarrier))
+      .expects(mrn, *, *)
       .returning(EitherT.rightT(Some(displayDeclaration)))
 
   def mockClaimMapping[A](claim: A, eis: EisSubmitClaimRequest)(implicit

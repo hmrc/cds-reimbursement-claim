@@ -17,15 +17,17 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.CallHandler2
+import org.scalamock.handlers.CallHandler3
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -55,12 +57,12 @@ class DeclarationControllerSpec extends ControllerSpec {
     Helpers.stubControllerComponents()
   )
 
-  def mockDeclarationService(mrn: MRN)(
+  def mockDeclarationService(mrn: MRN, reasonForSecurity: Option[String] = None)(
     response: Either[Error, Option[DisplayDeclaration]]
-  ): CallHandler2[MRN, HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
+  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
     (mockDeclarationService
-      .getDeclaration(_: MRN)(_: HeaderCarrier))
-      .expects(mrn, *)
+      .getDeclaration(_: MRN, _: Option[String])(_: HeaderCarrier))
+      .expects(mrn, reasonForSecurity, *)
       .returning(EitherT.fromEither[Future](response))
 
   "Declaration Controller" when {
@@ -91,6 +93,42 @@ class DeclarationControllerSpec extends ControllerSpec {
         val mrn    = sample[MRN]
         mockDeclarationService(mrn)(Left(Error("error while getting declaration")))
         val result = controller.declaration(mrn)(request)
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "return 200 OK with a declaration JSON payload for a successful ACC-14 call for reasonForSecurity" in {
+        val mrn                  = sample[MRN]
+        val reasonForSecurity    = sample[ReasonForSecurity]
+        val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
+
+        mockDeclarationService(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody))
+
+        val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
+        status(result)        shouldBe OK
+        contentAsJson(result) shouldBe Json.toJson(expectedResponseBody)
+        contentAsJson(result)
+          .validate[DisplayDeclaration]
+          .get
+          .displayResponseDetail
+          .securityReason     shouldBe Some(reasonForSecurity.acc14Code)
+      }
+
+      "return 204 NO CONTENT if no declaration information comes back from a successful call to ACC-14 with reasonForSecurity" in {
+        val mrn               = sample[MRN]
+        val reasonForSecurity = sample[ReasonForSecurity]
+
+        mockDeclarationService(mrn, Some(reasonForSecurity.acc14Code))(Right(None))
+
+        val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
+        status(result) shouldBe NO_CONTENT
+      }
+
+      "return 500 when the ACC-14 call fails or is unsuccessful for a call with reasonForSecurity" in {
+        val mrn               = sample[MRN]
+        val reasonForSecurity = sample[ReasonForSecurity]
+
+        mockDeclarationService(mrn, Some(reasonForSecurity.acc14Code))(Left(Error("error while getting declaration")))
+        val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
