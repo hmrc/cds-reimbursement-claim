@@ -40,7 +40,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultDeclarationService])
 trait DeclarationService {
-  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[DisplayDeclaration]]
+  def getDeclaration(mrn: MRN, securityReason: Option[String] = None)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, Option[DisplayDeclaration]]
 }
 
 @Singleton
@@ -51,7 +53,9 @@ class DefaultDeclarationService @Inject() (
     extends DeclarationService
     with Logging {
 
-  def getDeclaration(mrn: MRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[DisplayDeclaration]] = {
+  def getDeclaration(mrn: MRN, securityReason: Option[String])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, Option[DisplayDeclaration]] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
@@ -61,7 +65,7 @@ class DefaultDeclarationService @Inject() (
         ),
         RequestDetail(
           mrn.value,
-          None
+          securityReason
         )
       )
     )

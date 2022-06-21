@@ -194,6 +194,39 @@ object Acc14DeclarationGen {
     )
   )
 
+  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[DisplayDeclaration] = for {
+    mrn                      <- genMRN
+    acceptanceDate           <- genAcceptanceDate
+    declarantReferenceNumber <- Gen.option(genRandomString)
+    btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
+    procedureCode            <- genStringWithMaxSizeOfN(5)
+    btaSource                <- Gen.option(genRandomString)
+    declarantDetails         <- genDeclarantDetails
+    consigneeDetails         <- genConsigneeDetails
+    numAccDetails            <- Gen.choose(1, 5)
+    accountDetails           <- Gen.option(Gen.listOfN(numAccDetails, genAccountDetails))
+    bankDetails              <- genBankDetails
+    maskedBankDetails        <- Gen.const(mask(bankDetails))
+    numNdrcDetails           <- Gen.choose(1, 5)
+    ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
+  } yield DisplayDeclaration(
+    DisplayResponseDetail(
+      declarationId = mrn.value,
+      acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
+      declarantReferenceNumber = declarantReferenceNumber,
+      securityReason = reasonForSecurity,
+      btaDueDate = btaDueDate,
+      procedureCode = procedureCode,
+      btaSource = btaSource,
+      declarantDetails = declarantDetails,
+      consigneeDetails = Some(consigneeDetails),
+      accountDetails = accountDetails,
+      bankDetails = Some(bankDetails),
+      maskedBankDetails = Some(maskedBankDetails),
+      ndrcDetails = Some(ndrcDetails)
+    )
+  )
+
   lazy val genResponseDetail: Gen[ResponseDetail] =
     for {
       mrn                      <- genMRN

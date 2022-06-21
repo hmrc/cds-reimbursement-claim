@@ -19,6 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -52,4 +54,32 @@ class DeclarationController @Inject() (
           }(declaration => Ok(Json.toJson(declaration)))
       )
   }
+
+  def declarationWithReasonForSecurity(id: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] =
+    authenticate.async { implicit request =>
+      declarationService
+        .getDeclaration(id, Some(reasonForSecurity.acc14Code))
+        .fold(
+          e => {
+            logger.warn(s"could not get declaration", e)
+            InternalServerError
+          },
+          maybeDisplayDeclaration =>
+            maybeDisplayDeclaration.fold {
+              logger.info(s"received no declaration information for ${id.value}")
+              NoContent
+            } { declaration: DisplayDeclaration =>
+              val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
+              val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
+              if (hasCorrectRfs) {
+                Ok(Json.toJson(declaration))
+              } else {
+                logger.info(
+                  s"Declaration security reason [$acc14SecurityReason] does not match expected ReasonForSecurity [${reasonForSecurity.acc14Code}]  "
+                )
+                NoContent
+              }
+            }
+        )
+    }
 }
