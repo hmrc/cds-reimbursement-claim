@@ -23,7 +23,7 @@ trait EisConnector {
 
   val config: ServicesConfig
 
-  val eisBearerToken: String = config.getString("eis.bearer-token")
+  lazy val eisBearerToken: String = config.getString("eis.bearer-token")
 
   def getExtraHeaders: Seq[(String, String)]
 

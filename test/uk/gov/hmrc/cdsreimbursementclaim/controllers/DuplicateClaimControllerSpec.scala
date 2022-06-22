@@ -16,33 +16,62 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
-import cats.implicits.catsSyntaxEq
+import java.time.LocalDateTime
+import cats.data.EitherT
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
+import play.api.test.{FakeRequest, Helpers}
 import play.api.test.Helpers.{contentAsJson, status}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
 import play.api.test.Helpers._
+import uk.gov.hmrc.cdsreimbursementclaim.Fake
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.ExistingDeclarationConnector
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
+import uk.gov.hmrc.http.HeaderCarrier
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class DuplicateClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyChecks {
 
-  val controller: DuplicateClaimController = instanceOf[DuplicateClaimController]
+  val mockExistingDeclarationConnector: ExistingDeclarationConnector = mock[ExistingDeclarationConnector]
+  implicit val headerCarrier: HeaderCarrier                          = HeaderCarrier()
+
+  val controller = new DuplicateClaimController(
+    authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
+    mockExistingDeclarationConnector,
+    Helpers.stubControllerComponents()
+  )
 
   "Duplicate Claim Controller" when {
     "handling a request to get duplicate claims" must {
       "return 200 OK with a declaration JSON payload for a successful TPI-04 call" in forAll {
-        (mrn: MRN, reason: ReasonForSecurity) =>
-          whenever(reason =!= ReasonForSecurity.AccountSales) { // Temporary restriction, this will be replaced in CDSR-1783
-            val response = ExistingClaim(false, None, None)
-            val result   = controller.isDuplicate(mrn, reason)(FakeRequest())
+        (mrn: MRN, reason: ReasonForSecurity, existingClaim: Boolean) =>
+          val response = ExistingClaim(existingClaim)
 
-            status(result)        shouldBe OK
-            contentAsJson(result) shouldBe Json.toJson(response)
-          }
+          (mockExistingDeclarationConnector
+            .getExistingDuplicateDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
+            .expects(mrn, reason, *)
+            .returning(EitherT.fromEither[Future](Right(response)))
+
+          val result = controller.isDuplicate(mrn, reason)(FakeRequest())
+
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
+
+      "return 500 when the TPI-04 call fails or is unsuccessful" in forAll { (mrn: MRN, reason: ReasonForSecurity) =>
+        (mockExistingDeclarationConnector
+          .getExistingDuplicateDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
+          .expects(mrn, reason, *)
+          .returning(EitherT.fromEither[Future](Left(Error("error while getting declaration"))))
+
+        val result = controller.isDuplicate(mrn, reason)(FakeRequest())
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }

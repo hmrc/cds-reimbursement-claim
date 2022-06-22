@@ -19,20 +19,34 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExistingClaimStatus, ReasonForSecurity}
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.ExistingDeclarationConnector
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class DuplicateClaimController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+class DuplicateClaimController @Inject() (
+  authenticate: AuthenticateActions,
+  existingDeclarationConnector: ExistingDeclarationConnector,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
+    with Logging {
 
-  def isDuplicate(mrn: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] = Action {
-    // Temporary result, this will be replaced in CDSR-1783
-    val sampleAnswer = reasonForSecurity match {
-      case ReasonForSecurity.AccountSales => ExistingClaim(true, Some(mrn.value), Some(ExistingClaimStatus.Open))
-      case _                              => ExistingClaim(false, None, None)
-    }
-    Ok(Json.toJson(sampleAnswer))
+  def isDuplicate(mrn: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] = authenticate.async {
+    implicit request =>
+      existingDeclarationConnector
+        .getExistingDuplicateDeclaration(mrn, reasonForSecurity)
+        .fold(
+          error => {
+            logger.warn(s"could not get duplicate declaration", error)
+            InternalServerError
+          },
+          duplicateDeclaration => Ok(Json.toJson(duplicateDeclaration))
+        )
   }
 }
