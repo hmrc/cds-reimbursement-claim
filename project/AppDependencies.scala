@@ -19,14 +19,15 @@ object AppDependencies {
 
   val test = Seq(
     "com.typesafe.play"          %% "play-test"                 % current          % Test,
-    "org.scalatest"              %% "scalatest"                 % "3.2.12"         % Test,
+    "org.scalatest"              %% "scalatest"                 % "3.2.3"          % Test,
     "org.scalamock"              %% "scalamock"                 % "5.1.0"          % Test,
     "org.scalatestplus"          %% "scalacheck-1-14"           % "3.2.0.0"        % Test,
     "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.1"          % Test,
     "org.scalatestplus.play"     %% "scalatestplus-play"        % "5.1.0"          % Test,
     "uk.gov.hmrc"                %% "reactivemongo-test"        % "5.0.0-play-28"  % Test,
     "com.github.chocpanda"       %% "scalacheck-magnolia"       % "0.5.1"          % Test,
-    "com.vladsch.flexmark"        % "flexmark-all"              % "0.62.2"         % "test, it",
+    "com.vladsch.flexmark"        % "flexmark-all"              % "0.36.8"         % "test, it",
+    "org.pegdown"                 % "pegdown"                   % "1.6.0"          % "test, it",
     "com.typesafe.akka"          %% "akka-testkit"              % "2.6.14"         % Test,
     "org.scala-lang.modules"     %% "scala-xml"                 % "1.3.0"          % Test
   )

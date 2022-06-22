@@ -16,15 +16,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ExistingClaimStatus
+import play.api.libs.json.{JsPath, Json, OWrites, Reads}
 
 final case class ExistingClaim(
-  claimFound: Boolean,
-  caseNumber: Option[String],
-  claimStatus: Option[ExistingClaimStatus]
+  claimFound: Boolean
 )
 
 object ExistingClaim {
   implicit val writes: OWrites[ExistingClaim] = Json.writes[ExistingClaim]
+
+  implicit val reads: Reads[ExistingClaim] =
+    (JsPath \ "getExistingClaimResponse" \ "responseCommon" \ "CDFPayCaseFound")
+      .read[Boolean]
+      .map(ExistingClaim(_))
 }

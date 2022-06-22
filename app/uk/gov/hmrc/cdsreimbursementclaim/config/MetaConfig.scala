@@ -19,7 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.config
 object MetaConfig {
 
   object Platform {
-    val MDTP = "MDTP"
+    val MDTP            = "MDTP"
+    val CDF_PAY_SERVICE = "SCTY"
   }
 
   object Dec64 {

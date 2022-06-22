@@ -40,6 +40,19 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
         result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
+  def mockPostObject[I, O](url: String, headers: Seq[(String, String)], body: I)(result: Option[O]) =
+    (mockHttp
+      .POST(_: String, _: I, _: Seq[(String, String)])(
+        _: Writes[I],
+        _: HttpReads[O],
+        _: HeaderCarrier,
+        _: ExecutionContext
+      ))
+      .expects(url, body, headers, *, *, *, *)
+      .returning(
+        result.fold[Future[O]](Future.failed(new Exception("Test exception message")))(Future.successful)
+      )
+
   def mockPostString[A](url: String, headers: Seq[(String, String)], body: String)(result: Option[HttpResponse]) =
     (mockHttp
       .POSTString(_: String, _: String, _: Seq[(String, String)])(

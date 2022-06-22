@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
 
 class ReasonForSecuritySpec extends AnyWordSpec with Matchers with ScalaCheckPropertyChecks {

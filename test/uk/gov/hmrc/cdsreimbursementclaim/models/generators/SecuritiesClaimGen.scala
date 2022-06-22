@@ -27,8 +27,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.gen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genClaimantInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
-
 import java.net.URL
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object SecuritiesClaimGen {
