@@ -62,7 +62,7 @@ final case class RequestDetail(
   declarantDetails: Option[MRNInformation] = None,
   consigneeDetails: Option[MRNInformation] = None,
   bankDetails: Option[BankDetails] = None,
-  securityDetails: List[SecurityDetail] = List.empty
+  securityDetails: Option[List[SecurityDetail]] = None
 )
 
 object RequestDetail {

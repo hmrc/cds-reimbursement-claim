@@ -21,18 +21,15 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{RequestCommon, TPI04Request}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ExistingClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.arbitraryRequestCommon
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -80,16 +77,12 @@ class ExistingDeclarationConnectorSpec
 
     "return an existing claim from the downstream service" in forAll {
       (
-        requestCommon: RequestCommon,
         mrn: MRN,
         reason: ReasonForSecurity,
         response: ExistingClaim
       ) =>
         mockPostObject(backEndUrl, explicitHeaders, *)(Some(response))
-        val req     = TPI04Request(requestCommon, mrn, reason)
-        val reqFull = Json.toJson(req)
-        println(s"The request object is `$req` and the full request is `$reqFull`")
-        val actual  = await(connector.getExistingDuplicateDeclaration(mrn, reason).value)
+        val actual = await(connector.getExistingDuplicateDeclaration(mrn, reason).value)
         actual shouldBe Right(response)
     }
   }
