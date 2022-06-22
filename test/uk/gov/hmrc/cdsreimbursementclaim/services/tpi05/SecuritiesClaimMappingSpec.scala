@@ -55,7 +55,7 @@ class SecuritiesClaimMappingSpec
             claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
           )
           detail.claimantName          should ===(claim.claimantInformation.contactInformation.contactPerson.value)
-          detail.securityDetails       should ===(claim.getSecurityDetails)
+          detail.securityDetails       should ===(Some(claim.getSecurityDetails))
       }
     }
   }

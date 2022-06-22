@@ -153,7 +153,7 @@ object TPI05 {
             declarantDetails = Some(declarantDetails),
             consigneeDetails = Some(consigneeDetails),
             bankDetails = Some(bankDetails),
-            securityDetails = securityDetails
+            securityDetails = Some(securityDetails)
           )
         )
       )
