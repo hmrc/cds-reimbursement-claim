@@ -218,7 +218,7 @@ object TPI05RequestGen {
       claimant             <- Gen.oneOf(Claimant.values)
       claimantEORI         <- genEori
       claimantEmailAddress <- genEmail
-      claimantName         <- genAccountName.map(_.value)
+//      claimantName         <- genAccountName.map(_.value)
       descOfGoods          <- genRandomString
       isPrivateImporter    <- Gen.oneOf(YesNo.values)
       eoriInformation      <- genEoriInformation(claimantEORI)
@@ -239,7 +239,7 @@ object TPI05RequestGen {
       payeeIndicator = Some(claimant),
       claimantEORI = claimantEORI,
       claimantEmailAddress = claimantEmailAddress,
-      claimantName = claimantName,
+//      claimantName = claimantName,
       goodsDetails = Some(
         GoodsDetails(
           descOfGoods = Some(descOfGoods),
@@ -266,7 +266,7 @@ object TPI05RequestGen {
       claimant              <- Gen.oneOf(Claimant.values)
       claimantEORI          <- genEori
       claimantEmailAddress  <- genEmail
-      claimantName          <- genAccountName.map(_.value)
+//      claimantName          <- genAccountName.map(_.value)
       descOfGoods           <- genRandomString
       specialCircumstances  <- genRandomString
       inspectionDate        <- genInspectionDate
@@ -288,7 +288,7 @@ object TPI05RequestGen {
       payeeIndicator = Some(claimant),
       claimantEORI = claimantEORI,
       claimantEmailAddress = claimantEmailAddress,
-      claimantName = claimantName,
+//      claimantName = claimantName,
       goodsDetails = Some(
         GoodsDetails(
           descOfGoods = Some(descOfGoods),

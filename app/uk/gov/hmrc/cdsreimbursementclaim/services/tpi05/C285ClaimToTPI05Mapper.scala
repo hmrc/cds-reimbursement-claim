@@ -37,8 +37,8 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
     } yield TPI05
       .request(
         claimantEORI = request.signedInUserDetails.eori,
-        claimantEmailAddress = claimantEmail,
-        claimantName = request.signedInUserDetails.contactName.value
+        claimantEmailAddress = claimantEmail //,
+//        claimantName = request.signedInUserDetails.contactName.value
       )
       .forClaimOfType(C285)
       .withClaimant(Claimant.basedOn(request.claim.declarantTypeAnswer))
