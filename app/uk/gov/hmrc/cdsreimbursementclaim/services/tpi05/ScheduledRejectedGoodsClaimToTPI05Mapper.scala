@@ -49,8 +49,8 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
-        claimantEmailAddress = claimantEmail,
-        claimantName = claimantName
+        claimantEmailAddress = claimantEmail //,
+//        claimantName = claimantName
       )
       .forClaimOfType(CE1179)
       .withClaimant(Claimant.basedOn(claim.claimantType))

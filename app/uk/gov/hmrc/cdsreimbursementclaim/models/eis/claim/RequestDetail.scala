@@ -48,7 +48,8 @@ final case class RequestDetail(
   authorityTypeProvided: Option[String] = None,
   claimantEORI: Eori,
   claimantEmailAddress: Email,
-  claimantName: String,
+// TODO: Reinstate when QA environment has been updated to all this.
+//  claimantName: String,
   goodsDetails: Option[GoodsDetails] = None,
   EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,

@@ -34,7 +34,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05 {
 
-  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
+// TODO: Reinstate when the QA environment has been updates with a later version of the TPI05 schema.
+//  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
+  def request(claimantEORI: Eori, claimantEmailAddress: Email): Builder = Builder(
     Valid(
       RequestDetail(
         CDFPayService = CDFPayService.NDRC,
@@ -42,8 +44,8 @@ object TPI05 {
         customDeclarationType = Some(CustomDeclarationType.MRN),
         claimDate = Some(ISOLocalDate.now),
         claimantEORI = claimantEORI,
-        claimantEmailAddress = claimantEmailAddress,
-        claimantName = claimantName
+        claimantEmailAddress = claimantEmailAddress //,
+//        claimantName = claimantName
       )
     )
   )
