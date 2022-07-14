@@ -73,7 +73,8 @@ object DefaultDeclarationTransformerService {
       accountDetails = responseDetail.accountDetails,
       bankDetails = responseDetail.bankDetails,
       maskedBankDetails = maskedBankDetails,
-      ndrcDetails = responseDetail.ndrcDetails
+      ndrcDetails = responseDetail.ndrcDetails,
+      securityDetails = responseDetail.securityDetails
     )
 
   def maskBankDetails(bankDetails: BankDetails): BankDetails = {

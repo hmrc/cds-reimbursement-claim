@@ -55,10 +55,10 @@ class DeclarationController @Inject() (
       )
   }
 
-  def declarationWithReasonForSecurity(id: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] =
+  def declarationWithReasonForSecurity(mrn: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] =
     authenticate.async { implicit request =>
       declarationService
-        .getDeclaration(id, Some(reasonForSecurity.acc14Code))
+        .getDeclaration(mrn, Some(reasonForSecurity.acc14Code))
         .fold(
           e => {
             logger.warn(s"could not get declaration", e)
@@ -66,7 +66,7 @@ class DeclarationController @Inject() (
           },
           maybeDisplayDeclaration =>
             maybeDisplayDeclaration.fold {
-              logger.info(s"received no declaration information for ${id.value}")
+              logger.info(s"received no declaration information for ${mrn.value} and ${reasonForSecurity.acc14Code}")
               NoContent
             } { declaration: DisplayDeclaration =>
               val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
@@ -74,8 +74,9 @@ class DeclarationController @Inject() (
               if (hasCorrectRfs) {
                 Ok(Json.toJson(declaration))
               } else {
-                logger.info(
-                  s"Declaration security reason [$acc14SecurityReason] does not match expected ReasonForSecurity [${reasonForSecurity.acc14Code}]  "
+                logger.error(
+                  s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
+                    .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
                 )
                 NoContent
               }
