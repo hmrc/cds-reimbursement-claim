@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BankDetails, ConsigneeDetails, DeclarantDetails, NdrcDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.SecurityDetails
 
 final case class DisplayResponseDetail(
   declarationId: String,
@@ -32,7 +33,8 @@ final case class DisplayResponseDetail(
   accountDetails: Option[List[AccountDetails]],
   bankDetails: Option[BankDetails],
   maskedBankDetails: Option[BankDetails],
-  ndrcDetails: Option[List[NdrcDetails]]
+  ndrcDetails: Option[List[NdrcDetails]],
+  securityDetails: Option[List[SecurityDetails]] = None
 )
 
 object DisplayResponseDetail {

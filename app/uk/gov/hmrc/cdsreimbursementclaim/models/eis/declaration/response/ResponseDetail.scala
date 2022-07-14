@@ -30,7 +30,8 @@ final case class ResponseDetail(
   consigneeDetails: Option[ConsigneeDetails],
   accountDetails: Option[List[AccountDetails]],
   bankDetails: Option[BankDetails],
-  ndrcDetails: Option[List[NdrcDetails]]
+  ndrcDetails: Option[List[NdrcDetails]],
+  securityDetails: Option[List[SecurityDetails]]
 )
 
 object ResponseDetail {

@@ -253,7 +253,38 @@ object Acc14DeclarationGen {
       consigneeDetails = consigneeDetails,
       accountDetails = accountDetails,
       bankDetails = bankDetails,
-      ndrcDetails = ndrcDetails
+      ndrcDetails = ndrcDetails,
+      securityDetails = None
+    )
+
+  lazy val genResponseDetailWithSecurities: Gen[ResponseDetail] =
+    for {
+      mrn                      <- genMRN
+      acceptanceDate           <- genLocalDate.map(_.toIsoLocalDate)
+      declarantReferenceNumber <- Gen.option(genRandomString)
+      securityReason           <- Gen.option(genRandomString)
+      btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
+      procedureCode            <- genStringWithMaxSizeOfN(5)
+      btaSource                <- Gen.option(genRandomString)
+      declarantDetails         <- genDeclarantDetails
+      consigneeDetails         <- Gen.option(genConsigneeDetails)
+      accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
+      bankDetails              <- Gen.option(genBankDetails)
+      securityDetails          <- Gen.option(Gen.nonEmptyListOf(genSecurityDetails))
+    } yield ResponseDetail(
+      declarationId = mrn.value,
+      acceptanceDate = acceptanceDate,
+      declarantReferenceNumber = declarantReferenceNumber,
+      securityReason = securityReason,
+      btaDueDate = btaDueDate,
+      procedureCode = procedureCode,
+      btaSource = btaSource,
+      declarantDetails = declarantDetails,
+      consigneeDetails = consigneeDetails,
+      accountDetails = accountDetails,
+      bankDetails = bankDetails,
+      ndrcDetails = None,
+      securityDetails = securityDetails
     )
 
   implicit lazy val arbitraryTaxDetails: Typeclass[TaxDetails] =
