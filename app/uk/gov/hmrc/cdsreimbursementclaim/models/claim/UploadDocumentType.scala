@@ -32,6 +32,14 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     override def toDec64DisplayString: String = "Packing List"
   }
 
+  case object ExportPackingList extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Packing List"
+  }
+
+  case object ImportPackingList extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Packing List"
+  }
+
   case object AirWayBill extends UploadDocumentType {
     override def toDec64DisplayString: String = "Air Waybill"
   }
@@ -41,6 +49,10 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
   }
 
   case object SubstituteEntry extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Substitute Entry"
+  }
+
+  case object SubstituteOrDiversionEntry extends UploadDocumentType {
     override def toDec64DisplayString: String = "Substitute Entry"
   }
 
@@ -60,7 +72,35 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     override def toDec64DisplayString: String = "Additional Supporting Documentation"
   }
 
+  case object QuotaLicense extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Additional Supporting Documentation"
+  }
+
+  case object ProofOfOrigin extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Additional Supporting Documentation"
+  }
+
+  case object ProofOfEligibility extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Additional Supporting Documentation"
+  }
+
+  case object BillOfDischarge3 extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Additional Supporting Documentation"
+  }
+
+  case object BillOfDischarge4 extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Additional Supporting Documentation"
+  }
+
   case object ImportAndExportDeclaration extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Import and Export Declaration"
+  }
+
+  case object ImportDeclaration extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Import and Export Declaration"
+  }
+
+  case object ExportDeclaration extends UploadDocumentType {
     override def toDec64DisplayString: String = "Import and Export Declaration"
   }
 
@@ -84,21 +124,41 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     override def toDec64DisplayString: String = "Other"
   }
 
+  case object SupportingEvidence extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Other"
+  }
+
+  case object CalculationWorksheetOrFinalSalesFigures extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Other"
+  }
+
   val values: Set[UploadDocumentType] = Set(
-    CommercialInvoice,
-    PackingList,
     AirWayBill,
     BillOfLading,
-    SubstituteEntry,
-    ScheduleOfMRNs,
-    ProofOfAuthority,
+    CommercialInvoice,
     CorrespondenceTrader,
-    AdditionalSupportingDocuments,
+    ImportDeclaration,
+    ExportDeclaration,
     ImportAndExportDeclaration,
+    PackingList,
+    ExportPackingList,
+    ImportPackingList,
+    ProofOfAuthority,
+    ProofOfEligibility,
+    ProofOfOrigin,
+    SubstituteEntry,
+    SubstituteOrDiversionEntry,
+    ScheduleOfMRNs,
+    Other,
     CalculationWorksheet,
+    CalculationWorksheetOrFinalSalesFigures,
     DocumentaryProofFaultyOrNotWhatOrdered,
     ProofOfExportOrDestruction,
+    AdditionalSupportingDocuments,
     LetterOfAuthority,
-    Other
+    SupportingEvidence,
+    BillOfDischarge3,
+    BillOfDischarge4,
+    QuotaLicense
   )
 }
