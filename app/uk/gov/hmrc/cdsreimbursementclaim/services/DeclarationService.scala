@@ -29,7 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{DeclarationResponse, DeclarationErrorResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -78,6 +78,11 @@ class DefaultDeclarationService @Inject() (
             declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
+        } else if (response.status === Status.BAD_REQUEST) {
+          val error = response.parseJSON[DecarlationErrorResponse]().leftMap(Error(_))
+
+          // More code to be added here
+        
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status}")
           Left(Error("call to get declaration failed"))
