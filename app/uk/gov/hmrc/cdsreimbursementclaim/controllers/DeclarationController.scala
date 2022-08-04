@@ -19,6 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationErrorCode.InvalidReasonForSecurityError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -74,11 +76,19 @@ class DeclarationController @Inject() (
               if (hasCorrectRfs) {
                 Ok(Json.toJson(declaration))
               } else {
-                logger.error(
+                logger.error( // this can happen if the user selects the wrong reason for security in the radio list,
+                  // do we need to log this?
                   s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
                     .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
                 )
-                NoContent
+                BadRequest(
+                  Json.toJson(
+                    GetDeclarationError(
+                      "Reason for security did not match the declaration",
+                      InvalidReasonForSecurityError
+                    )
+                  )
+                )
               }
             }
         )
