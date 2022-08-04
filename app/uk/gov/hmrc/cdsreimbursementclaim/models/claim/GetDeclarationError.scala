@@ -26,6 +26,21 @@ final case class GetDeclarationError(
 
 object GetDeclarationError {
   implicit val format: OFormat[GetDeclarationError] = Json.format[GetDeclarationError]
+
+  def invalidReasonForSecurity: GetDeclarationError = GetDeclarationError(
+    "Invalid reason for security",
+    GetDeclarationErrorCode.InvalidReasonForSecurityError
+  )
+
+  def declarationNotFound: GetDeclarationError = GetDeclarationError(
+    "No declaration found for the given MRN",
+    GetDeclarationErrorCode.DeclarationNotFoundError
+  )
+
+  def unexpetedError: GetDeclarationError = GetDeclarationError(
+    "Unexpected rrror",
+    GetDeclarationErrorCode.UnexpectedError
+  )
 }
 
 sealed class GetDeclarationErrorCode(val code: String)

@@ -26,10 +26,13 @@ import play.api.http.Status
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationErrorCode.InvalidReasonForSecurityError
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{DeclarationResponse, DeclarationErrorResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -55,7 +58,7 @@ class DefaultDeclarationService @Inject() (
 
   def getDeclaration(mrn: MRN, securityReason: Option[String])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Option[DisplayDeclaration]] = {
+  ): EitherT[Future, GetDeclarationError, DisplayDeclaration] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
@@ -79,13 +82,21 @@ class DefaultDeclarationService @Inject() (
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
         } else if (response.status === Status.BAD_REQUEST) {
-          val error = response.parseJSON[DecarlationErrorResponse]().leftMap(Error(_))
-
-          // More code to be added here
-        
+          response
+            .parseJSON[DeclarationErrorResponse]() match {
+            case Left(_) => GetDeclarationError.unexpetedError.asLeft[DisplayDeclaration]
+            case Right(errorResponse) => {
+              errorResponse.errorDetail.sourceFaultDetail.detail.toList match
+              {
+                case first :: Nil if (first.startsWith("072")) => GetDeclarationError.invalidReasonForSecurity
+                case first :: Nil if (first.startsWith("086")) => GetDeclarationError.declarationNotFound
+                case _ => GetDeclarationError.unexpetedError
+              }
+            }.asLeft[DisplayDeclaration]
+          }
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status}")
-          Left(Error("call to get declaration failed"))
+          Left(GetDeclarationError.unexpetedError)
         }
       }
   }
