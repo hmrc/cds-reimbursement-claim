@@ -37,8 +37,8 @@ object GetDeclarationError {
     GetDeclarationErrorCode.DeclarationNotFoundError
   )
 
-  def unexpetedError: GetDeclarationError = GetDeclarationError(
-    "Unexpected rrror",
+  def unexpectedError: GetDeclarationError = GetDeclarationError(
+    "Unexpected error",
     GetDeclarationErrorCode.UnexpectedError
   )
 }
@@ -47,7 +47,7 @@ sealed class GetDeclarationErrorCode(val code: String)
 
 object GetDeclarationErrorCode extends EnumerationFormat[GetDeclarationErrorCode] {
   case object InvalidReasonForSecurityError extends GetDeclarationErrorCode("InvalidReasonForSecurity")
-  case object DeclarationNotFoundError extends GetDeclarationErrorCode("InvalidReasonForSecurity")
+  case object DeclarationNotFoundError extends GetDeclarationErrorCode("DeclarationNotFound")
   case object UnexpectedError extends GetDeclarationErrorCode("UnexpectedError")
 
   override val values: Set[GetDeclarationErrorCode] = Set(

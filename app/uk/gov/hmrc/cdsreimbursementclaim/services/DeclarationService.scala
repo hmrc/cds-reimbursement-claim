@@ -27,7 +27,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationErrorCode.InvalidReasonForSecurityError
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
@@ -46,6 +45,10 @@ trait DeclarationService {
   def getDeclaration(mrn: MRN, securityReason: Option[String] = None)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[DisplayDeclaration]]
+
+  def getDeclarationWithErrorCodes(mrn: MRN, securityReason: Option[String] = None)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, GetDeclarationError, DisplayDeclaration]
 }
 
 @Singleton
@@ -58,7 +61,7 @@ class DefaultDeclarationService @Inject() (
 
   def getDeclaration(mrn: MRN, securityReason: Option[String])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, GetDeclarationError, DisplayDeclaration] = {
+  ): EitherT[Future, Error, Option[DisplayDeclaration]] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
@@ -78,25 +81,64 @@ class DefaultDeclarationService @Inject() (
       .subflatMap { response =>
         if (response.status === Status.OK) {
           for {
-            declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
+            declarationResponse <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
+        } else {
+          logger.warn(s"could not get declaration: http status: ${response.status}")
+          Left(Error("call to get declaration failed"))
+        }
+      }
+  }
+
+  def getDeclarationWithErrorCodes(mrn: MRN, securityReason: Option[String])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, GetDeclarationError, DisplayDeclaration] = {
+    val declarationRequest = DeclarationRequest(
+      OverpaymentDeclarationDisplayRequest(
+        RequestCommon(
+          Platform.MDTP,
+          ISO8601DateTime.now,
+          CorrelationId.compact
+        ),
+        RequestDetail(
+          mrn.value,
+          securityReason
+        )
+      )
+    )
+
+    declarationConnector
+      .getDeclaration(declarationRequest)
+      .leftMap(_ => GetDeclarationError.unexpectedError)
+      .subflatMap { response =>
+        if (response.status === Status.OK) {
+          val maybeDisplayDeclaration = for {
+            declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(_ => GetDeclarationError.unexpectedError)
+            maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
+          } yield maybeDisplayDeclaration
+
+          maybeDisplayDeclaration match {
+            case Right(None) => Left(GetDeclarationError.unexpectedError)
+            case Right(Some(displayDeclaration)) => Right(displayDeclaration)
+            case Left(_) => Left(GetDeclarationError.unexpectedError)
+          }
         } else if (response.status === Status.BAD_REQUEST) {
           response
             .parseJSON[DeclarationErrorResponse]() match {
-            case Left(_) => GetDeclarationError.unexpetedError.asLeft[DisplayDeclaration]
+            case Left(_) => GetDeclarationError.unexpectedError.asLeft[DisplayDeclaration]
             case Right(errorResponse) => {
               errorResponse.errorDetail.sourceFaultDetail.detail.toList match
               {
                 case first :: Nil if (first.startsWith("072")) => GetDeclarationError.invalidReasonForSecurity
                 case first :: Nil if (first.startsWith("086")) => GetDeclarationError.declarationNotFound
-                case _ => GetDeclarationError.unexpetedError
+                case _ => GetDeclarationError.unexpectedError
               }
             }.asLeft[DisplayDeclaration]
           }
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status}")
-          Left(GetDeclarationError.unexpetedError)
+          Left(GetDeclarationError.unexpectedError)
         }
       }
   }
