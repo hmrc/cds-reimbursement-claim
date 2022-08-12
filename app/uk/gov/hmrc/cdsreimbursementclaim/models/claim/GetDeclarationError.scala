@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class GetDeclarationError(val code: String)
+final case class GetDeclarationError(code: String)
 
 object GetDeclarationError {
   implicit val format: OFormat[GetDeclarationError] = Json.format[GetDeclarationError]
