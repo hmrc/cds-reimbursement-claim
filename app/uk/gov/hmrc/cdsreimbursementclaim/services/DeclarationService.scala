@@ -81,7 +81,7 @@ class DefaultDeclarationService @Inject() (
       .subflatMap { response =>
         if (response.status === Status.OK) {
           for {
-            declarationResponse <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
+            declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
         } else {
@@ -114,27 +114,28 @@ class DefaultDeclarationService @Inject() (
       .subflatMap { response =>
         if (response.status === Status.OK) {
           val maybeDisplayDeclaration = for {
-            declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(_ => GetDeclarationError.unexpectedError)
+            declarationResponse     <-
+              response.parseJSON[DeclarationResponse]().leftMap(_ => GetDeclarationError.unexpectedError)
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
 
           maybeDisplayDeclaration match {
-            case Right(None) => Left(GetDeclarationError.unexpectedError)
+            case Right(None)                     => Left(GetDeclarationError.unexpectedError)
             case Right(Some(displayDeclaration)) => Right(displayDeclaration)
-            case Left(_) => Left(GetDeclarationError.unexpectedError)
+            case Left(_)                         => Left(GetDeclarationError.unexpectedError)
           }
         } else if (response.status === Status.BAD_REQUEST) {
           response
             .parseJSON[DeclarationErrorResponse]() match {
-            case Left(_) => GetDeclarationError.unexpectedError.asLeft[DisplayDeclaration]
-            case Right(errorResponse) => {
-              errorResponse.errorDetail.sourceFaultDetail.detail.toList match
+            case Left(_)              => GetDeclarationError.unexpectedError.asLeft[DisplayDeclaration]
+            case Right(errorResponse) =>
               {
-                case first :: Nil if (first.startsWith("072")) => GetDeclarationError.invalidReasonForSecurity
-                case first :: Nil if (first.startsWith("086")) => GetDeclarationError.declarationNotFound
-                case _ => GetDeclarationError.unexpectedError
-              }
-            }.asLeft[DisplayDeclaration]
+                errorResponse.errorDetail.sourceFaultDetail.detail.toList match {
+                  case first :: Nil if first.startsWith("072") => GetDeclarationError.invalidReasonForSecurity
+                  case first :: Nil if first.startsWith("086") => GetDeclarationError.declarationNotFound
+                  case _                                       => GetDeclarationError.unexpectedError
+                }
+              }.asLeft[DisplayDeclaration]
           }
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status}")

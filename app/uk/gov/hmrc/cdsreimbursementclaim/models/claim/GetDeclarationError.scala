@@ -17,42 +17,19 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-final case class GetDeclarationError(
-  message: String,
-  code: GetDeclarationErrorCode
-)
+final case class GetDeclarationError(val code: String)
 
 object GetDeclarationError {
   implicit val format: OFormat[GetDeclarationError] = Json.format[GetDeclarationError]
 
-  def invalidReasonForSecurity: GetDeclarationError = GetDeclarationError(
-    "Invalid reason for security",
-    GetDeclarationErrorCode.InvalidReasonForSecurityError
-  )
+  val invalidReasonForSecurity: GetDeclarationError = GetDeclarationError("InvalidReasonForSecurity")
 
-  def declarationNotFound: GetDeclarationError = GetDeclarationError(
-    "No declaration found for the given MRN",
-    GetDeclarationErrorCode.DeclarationNotFoundError
-  )
+  val declarationNotFound: GetDeclarationError = GetDeclarationError("DeclarationNotFound")
 
-  def unexpectedError: GetDeclarationError = GetDeclarationError(
-    "Unexpected error",
-    GetDeclarationErrorCode.UnexpectedError
-  )
-}
+  val unexpectedError: GetDeclarationError = GetDeclarationError("UnexpectedError")
 
-sealed class GetDeclarationErrorCode(val code: String)
+  val mismatchRfs: GetDeclarationError = GetDeclarationError("MismatchRfs")
 
-object GetDeclarationErrorCode extends EnumerationFormat[GetDeclarationErrorCode] {
-  case object InvalidReasonForSecurityError extends GetDeclarationErrorCode("InvalidReasonForSecurity")
-  case object DeclarationNotFoundError extends GetDeclarationErrorCode("DeclarationNotFound")
-  case object UnexpectedError extends GetDeclarationErrorCode("UnexpectedError")
-
-  override val values: Set[GetDeclarationErrorCode] = Set(
-    InvalidReasonForSecurityError,
-    DeclarationNotFoundError,
-    UnexpectedError
-  )
+  val mismatchMrn: GetDeclarationError = GetDeclarationError("MismatchMrn")
 }

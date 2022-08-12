@@ -19,8 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{GetDeclarationError, GetDeclarationErrorCode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationErrorCode.InvalidReasonForSecurityError
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{GetDeclarationError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -62,35 +61,38 @@ class DeclarationController @Inject() (
       declarationService
         .getDeclarationWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))
         .fold(
-          (e: GetDeclarationError) => {
-            e.code match {
-              case GetDeclarationErrorCode.InvalidReasonForSecurityError => BadRequest(Json.toJson(e))
-              case GetDeclarationErrorCode.DeclarationNotFoundError => NotFound(Json.toJson(e))
-              case _ => InternalServerError(Json.toJson(e))
-            }
-          },
+          (e: GetDeclarationError) =>
+            e match {
+              case GetDeclarationError.invalidReasonForSecurity     => BadRequest(Json.toJson(e))
+              case GetDeclarationError.declarationNotFound          => BadRequest(Json.toJson(e))
+              case _                                                => InternalServerError(Json.toJson(e))
+            },
           (declaration: DisplayDeclaration) => {
             val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
-            val hasCorrectRfs = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
-            if (hasCorrectRfs) {
-              Ok(Json.toJson(declaration))
-            } else {
+            val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
+            val hasCorrectMrn = mrn.value.equals(MRN(declaration.displayResponseDetail.declarationId).value)
+            if (!hasCorrectRfs) {
               logger.error( // this can happen if the user selects the wrong reason for security in the radio list,
                 // do we need to log this?
-                s"[strange] declaration for ${mrn.value} have returned with security reason [${
-                  acc14SecurityReason
-                    .getOrElse("<none>")
-                }] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
+                s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
+                  .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
               )
               BadRequest(
                 Json.toJson(
-                  GetDeclarationError(
-                    "Reason for security did not match the declaration",
-                    InvalidReasonForSecurityError
-                  )
+                  GetDeclarationError.mismatchRfs
                 )
               )
+            } else if (!hasCorrectMrn) {
+              BadRequest(
+                Json.toJson(
+                  GetDeclarationError.mismatchMrn
+                )
+              )
+            }else {
+              Ok(Json.toJson(declaration))
             }
+
+            
           }
         )
     }

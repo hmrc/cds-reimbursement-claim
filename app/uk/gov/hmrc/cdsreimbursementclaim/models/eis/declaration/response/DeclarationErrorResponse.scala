@@ -26,13 +26,13 @@ object DeclarationErrorResponse {
 }
 
 final case class ErrorDetail(
-                              timestamp: Option[String],
-                              correlationId: Option[String],
-                              errorCode: Option[String],
-                              errorMessage: Option[String],
-                              source: Option[String],
-                              sourceFaultDetail: SourceFaultDetail
-                            )
+  timestamp: Option[String],
+  correlationId: Option[String],
+  errorCode: Option[String],
+  errorMessage: Option[String],
+  source: Option[String],
+  sourceFaultDetail: SourceFaultDetail
+)
 
 object ErrorDetail {
   implicit val format: OFormat[ErrorDetail] = Json.format[ErrorDetail]
