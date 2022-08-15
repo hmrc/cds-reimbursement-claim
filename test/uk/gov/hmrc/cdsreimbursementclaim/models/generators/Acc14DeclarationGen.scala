@@ -31,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.gen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.text.DecimalFormat
 
@@ -193,8 +194,9 @@ object Acc14DeclarationGen {
       ndrcDetails = Some(ndrcDetails)
     )
   )
-
-  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[DisplayDeclaration] = for {
+  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]):Gen[DisplayDeclaration] =
+    genDisplayDeclarationWithSecurityReason(reasonForSecurity, None)
+  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String], maybeMrn: Option[MRN]): Gen[DisplayDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -211,7 +213,7 @@ object Acc14DeclarationGen {
     ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
   } yield DisplayDeclaration(
     DisplayResponseDetail(
-      declarationId = mrn.value,
+      declarationId = maybeMrn.getOrElse(mrn).value,
       acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
       declarantReferenceNumber = declarantReferenceNumber,
       securityReason = reasonForSecurity,
