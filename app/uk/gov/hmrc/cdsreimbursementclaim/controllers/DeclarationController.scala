@@ -70,10 +70,10 @@ class DeclarationController @Inject() (
           (declaration: DisplayDeclaration) => {
             val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
             val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
-            val hasCorrectMrn = mrn.value.equals(MRN(declaration.displayResponseDetail.declarationId).value)
+            val suppliedMrn = MRN(declaration.displayResponseDetail.declarationId).value
+            val hasCorrectMrn = mrn.value.equals(suppliedMrn)
             if (!hasCorrectRfs) {
-              logger.error( // this can happen if the user selects the wrong reason for security in the radio list,
-                // do we need to log this?
+              logger.error(
                 s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
                   .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
               )
@@ -83,6 +83,9 @@ class DeclarationController @Inject() (
                 )
               )
             } else if (!hasCorrectMrn) {
+              logger.error(
+                s"[strange] The queried MRN: ${mrn.value} does not match the supplied MRN: ${suppliedMrn}"
+              )
               BadRequest(
                 Json.toJson(
                   GetDeclarationError.mismatchMrn
