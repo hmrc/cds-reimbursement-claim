@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
+import cats.implicits.catsSyntaxEq
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -58,29 +60,44 @@ class DeclarationController @Inject() (
   def declarationWithReasonForSecurity(mrn: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] =
     authenticate.async { implicit request =>
       declarationService
-        .getDeclaration(mrn, Some(reasonForSecurity.acc14Code))
+        .getDeclarationWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))
         .fold(
-          e => {
-            logger.warn(s"could not get declaration", e)
-            InternalServerError
-          },
-          maybeDisplayDeclaration =>
-            maybeDisplayDeclaration.fold {
-              logger.info(s"received no declaration information for ${mrn.value} and ${reasonForSecurity.acc14Code}")
-              NoContent
-            } { declaration: DisplayDeclaration =>
-              val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
-              val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
-              if (hasCorrectRfs) {
-                Ok(Json.toJson(declaration))
-              } else {
-                logger.error(
-                  s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
-                    .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
+          (e: GetDeclarationError) =>
+            e match {
+              case GetDeclarationError.invalidReasonForSecurity     => BadRequest(Json.toJson(e))
+              case GetDeclarationError.declarationNotFound          => BadRequest(Json.toJson(e))
+              case _                                                => InternalServerError(Json.toJson(e))
+            },
+          (declaration: DisplayDeclaration) => {
+            val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
+            val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
+            val suppliedMrn = MRN(declaration.displayResponseDetail.declarationId).value
+            val hasCorrectMrn = mrn.value === suppliedMrn
+            if (!hasCorrectRfs) {
+              logger.error(
+                s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
+                  .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
+              )
+              BadRequest(
+                Json.toJson(
+                  GetDeclarationError.mismatchRfs
                 )
-                NoContent
-              }
+              )
+            } else if (!hasCorrectMrn) {
+              logger.error(
+                s"[strange] The queried MRN: ${mrn.value} does not match the supplied MRN: ${suppliedMrn}"
+              )
+              BadRequest(
+                Json.toJson(
+                  GetDeclarationError.mismatchMrn
+                )
+              )
+            }else {
+              Ok(Json.toJson(declaration))
             }
+
+            
+          }
         )
     }
 }
