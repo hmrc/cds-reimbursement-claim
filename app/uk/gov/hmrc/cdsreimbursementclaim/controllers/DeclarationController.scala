@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
+import cats.implicits.catsSyntaxEq
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
@@ -71,7 +72,7 @@ class DeclarationController @Inject() (
             val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
             val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
             val suppliedMrn = MRN(declaration.displayResponseDetail.declarationId).value
-            val hasCorrectMrn = mrn.value.equals(suppliedMrn)
+            val hasCorrectMrn = mrn.value === suppliedMrn
             if (!hasCorrectRfs) {
               logger.error(
                 s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
