@@ -24,6 +24,7 @@ import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
@@ -65,6 +66,14 @@ class DeclarationControllerSpec extends ControllerSpec {
       .expects(mrn, reasonForSecurity, *)
       .returning(EitherT.fromEither[Future](response))
 
+  def mockDeclarationServiceWithErrorCodes(mrn: MRN, reasonForSecurity: Option[String] = None)(
+    response: Either[GetDeclarationError, DisplayDeclaration]
+  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, GetDeclarationError, DisplayDeclaration]] =
+    (mockDeclarationService
+      .getDeclarationWithErrorCodes(_: MRN, _: Option[String])(_: HeaderCarrier))
+      .expects(mrn, reasonForSecurity, *)
+      .returning(EitherT.fromEither[Future](response))
+
   "Declaration Controller" when {
 
     "handling a request to get a declaration" must {
@@ -99,9 +108,9 @@ class DeclarationControllerSpec extends ControllerSpec {
       "return 200 OK with a declaration JSON payload for a successful ACC-14 call for reasonForSecurity" in {
         val mrn                  = sample[MRN]
         val reasonForSecurity    = sample[ReasonForSecurity]
-        val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
+        val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code), Some(mrn)).sample
 
-        mockDeclarationService(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.get))
 
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
         status(result)        shouldBe OK
@@ -113,21 +122,34 @@ class DeclarationControllerSpec extends ControllerSpec {
           .securityReason     shouldBe Some(reasonForSecurity.acc14Code)
       }
 
-      "return 204 NO CONTENT if no declaration information comes back from a successful call to ACC-14 with reasonForSecurity" in {
+      "return 400 BAD REQUEST with mismatchMrn a declaration JSON payload for a successful ACC-14 call for reasonForSecurity" in {
+        val mrn = sample[MRN]
+        val reasonForSecurity = sample[ReasonForSecurity]
+        val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
+
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.get))
+
+        val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
+        status(result) shouldBe BAD_REQUEST
+        contentAsJson(result) shouldBe Json.toJson(GetDeclarationError.mismatchMrn)
+      }
+
+      "return 500 INTERNAL_SERVER_ERROR if no declaration information or error codes 072 or 086 comes back to ACC-14 with reasonForSecurity" in {
         val mrn               = sample[MRN]
         val reasonForSecurity = sample[ReasonForSecurity]
 
-        mockDeclarationService(mrn, Some(reasonForSecurity.acc14Code))(Right(None))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Left(GetDeclarationError.unexpectedError))
 
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
-        status(result) shouldBe NO_CONTENT
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsJson(result) shouldBe Json.toJson(GetDeclarationError.unexpectedError)
       }
 
       "return 500 when the ACC-14 call fails or is unsuccessful for a call with reasonForSecurity" in {
         val mrn               = sample[MRN]
         val reasonForSecurity = sample[ReasonForSecurity]
 
-        mockDeclarationService(mrn, Some(reasonForSecurity.acc14Code))(Left(Error("error while getting declaration")))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Left(GetDeclarationError.unexpectedError))
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }

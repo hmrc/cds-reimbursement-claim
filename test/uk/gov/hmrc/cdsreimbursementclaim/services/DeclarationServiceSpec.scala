@@ -42,6 +42,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
@@ -107,6 +108,24 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         }
       }
 
+      "return a declaration for getDeclarationWithErrorCodes" when {
+
+        "a successful http response is received" in forAll {
+          (
+            mrn: MRN,
+            declarationResponse: DeclarationResponse,
+            declaration: DisplayDeclaration
+          ) =>
+            inSequence {
+              mockDeclarationConnector(
+                Right(HttpResponse(200, Json.toJson(declarationResponse).toString(), Map.empty[String, Seq[String]]))
+              )
+              mockTransformDeclarationResponse(declarationResponse)(Right(Some(declaration)))
+            }
+            await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Right(declaration)
+        }
+      }
+
       "return an error" when {
 
         "an corrupt/invalid acc14 payload is received" in forAll { mrn: MRN =>
@@ -133,6 +152,58 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           }
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
         }
+      }
+    }
+
+    "return an error for getDeclarationWithErrorCodes" when {
+
+      "UnexpectedError: an corrupt/invalid acc14 payload is received" in forAll { mrn: MRN =>
+        inSequence {
+          mockDeclarationConnector(
+            Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
+          )
+        }
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.unexpectedError)
+      }
+
+      "UnexpectedError: a http status response other than 200 OK is received" in forAll { mrn: MRN =>
+        inSequence {
+          mockDeclarationConnector(
+            Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
+          )
+        }
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.unexpectedError)
+      }
+
+      "UnexpectedError: an unsuccessful http response is received" in forAll { mrn: MRN =>
+        inSequence {
+          mockDeclarationConnector(Left(Error("http bad request")))
+        }
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.unexpectedError)
+      }
+
+      "InvalidReasonForSecurity" in forAll { mrn: MRN =>
+          val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator(("072"))
+          inSequence {
+            mockDeclarationConnector(
+              Right(HttpResponse(400, Json.toJson(declarationErrorResponse).toString(), Map.empty[String, Seq[String]]))
+            )
+          }
+          await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.invalidReasonForSecurity)
+      }
+
+      "DeclarationNotFound" in forAll { mrn: MRN =>
+        val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator(("086"))
+        inSequence {
+          mockDeclarationConnector(
+            Right(HttpResponse(400, Json.toJson(declarationErrorResponse).toString(), Map.empty[String, Seq[String]]))
+          )
+        }
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.declarationNotFound)
+      }
+
+      def declarationErrorResponseGenerator(errorCode: String): DeclarationErrorResponse = {
+        DeclarationErrorResponse(ErrorDetail(None, None, None, None, None, SourceFaultDetail(List(errorCode))))
       }
     }
   }
