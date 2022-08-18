@@ -110,7 +110,7 @@ class DeclarationControllerSpec extends ControllerSpec {
         val reasonForSecurity    = sample[ReasonForSecurity]
         val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code), Some(mrn)).sample
 
-        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.get))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.orNull))
 
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
         status(result)        shouldBe OK
@@ -127,7 +127,7 @@ class DeclarationControllerSpec extends ControllerSpec {
         val reasonForSecurity = sample[ReasonForSecurity]
         val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
 
-        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.get))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.orNull))
 
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
         status(result) shouldBe BAD_REQUEST
