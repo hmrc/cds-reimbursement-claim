@@ -161,7 +161,7 @@ object Acc14DeclarationGen {
       taxDetails = taxDetails
     )
 
-  lazy val genDisplayDeclaration: Gen[DisplayDeclaration] = for {
+  lazy val genDisplayDeclaration: Gen[DisplayDeclaration]                                                 = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -194,9 +194,12 @@ object Acc14DeclarationGen {
       ndrcDetails = Some(ndrcDetails)
     )
   )
-  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]):Gen[DisplayDeclaration] =
+  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[DisplayDeclaration] =
     genDisplayDeclarationWithSecurityReason(reasonForSecurity, None)
-  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String], maybeMrn: Option[MRN]): Gen[DisplayDeclaration] = for {
+  def genDisplayDeclarationWithSecurityReason(
+    reasonForSecurity: Option[String],
+    maybeMrn: Option[MRN]
+  ): Gen[DisplayDeclaration]                                                                              = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)

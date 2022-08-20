@@ -64,15 +64,15 @@ class DeclarationController @Inject() (
         .fold(
           (e: GetDeclarationError) =>
             e match {
-              case GetDeclarationError.invalidReasonForSecurity     => BadRequest(Json.toJson(e))
-              case GetDeclarationError.declarationNotFound          => BadRequest(Json.toJson(e))
-              case _                                                => InternalServerError(Json.toJson(e))
+              case GetDeclarationError.invalidReasonForSecurity => BadRequest(Json.toJson(e))
+              case GetDeclarationError.declarationNotFound      => BadRequest(Json.toJson(e))
+              case _                                            => InternalServerError(Json.toJson(e))
             },
           (declaration: DisplayDeclaration) => {
             val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
             val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
-            val suppliedMrn = MRN(declaration.displayResponseDetail.declarationId).value
-            val hasCorrectMrn = mrn.value === suppliedMrn
+            val suppliedMrn                         = MRN(declaration.displayResponseDetail.declarationId).value
+            val hasCorrectMrn                       = mrn.value === suppliedMrn
             if (!hasCorrectRfs) {
               logger.error(
                 s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
@@ -85,18 +85,17 @@ class DeclarationController @Inject() (
               )
             } else if (!hasCorrectMrn) {
               logger.error(
-                s"[strange] The queried MRN: ${mrn.value} does not match the supplied MRN: ${suppliedMrn}"
+                s"[strange] The queried MRN: ${mrn.value} does not match the supplied MRN: $suppliedMrn"
               )
               BadRequest(
                 Json.toJson(
                   GetDeclarationError.mismatchMrn
                 )
               )
-            }else {
+            } else {
               Ok(Json.toJson(declaration))
             }
 
-            
           }
         )
     }

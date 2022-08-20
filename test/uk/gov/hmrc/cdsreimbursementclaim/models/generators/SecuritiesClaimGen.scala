@@ -29,6 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import java.net.URL
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object SecuritiesClaimGen {
@@ -99,6 +100,23 @@ object SecuritiesClaimGen {
     securitiesReclaims  <- genSecuritiesReclaims
     bankAccountDetails  <- Gen.option(genBankAccountDetails)
     documents           <- Gen.listOf(genEvidences)
+
+    temporaryAdmissionMethodOfDisposal <-
+      if (ReasonForSecurity.temporaryAdmissions.contains(reasonForSecurity))
+        Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values).map(Some.apply)
+      else
+        Gen.const(None)
+
+    exportMovementReferenceNumber <-
+      if (
+        ReasonForSecurity.temporaryAdmissions(reasonForSecurity) &&
+        temporaryAdmissionMethodOfDisposal.contains(
+          TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
+        )
+      ) genMRN.map(Some.apply)
+      else
+        Gen.const(None)
+
   } yield SecuritiesClaimRequest(
     SecuritiesClaim(
       movementReferenceNumber = mrn,
@@ -107,7 +125,9 @@ object SecuritiesClaimGen {
       reasonForSecurity = reasonForSecurity,
       securitiesReclaims = securitiesReclaims,
       bankAccountDetails = bankAccountDetails,
-      supportingEvidences = documents
+      supportingEvidences = documents,
+      exportMovementReferenceNumber = exportMovementReferenceNumber,
+      temporaryAdmissionMethodOfDisposal = temporaryAdmissionMethodOfDisposal
     )
   )
 

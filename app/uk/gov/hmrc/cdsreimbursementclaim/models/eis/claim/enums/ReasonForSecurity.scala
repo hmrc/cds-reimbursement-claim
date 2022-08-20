@@ -58,6 +58,14 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
       UKAPSafeguardDuties
     )
 
+  val temporaryAdmissions: Set[ReasonForSecurity] =
+    Set(
+      TemporaryAdmission2Y,
+      TemporaryAdmission6M,
+      TemporaryAdmission3M,
+      TemporaryAdmission2M
+    )
+
   implicit val binder: QueryStringBindable[ReasonForSecurity] = new QueryStringBindable[ReasonForSecurity] {
     private val strBinder: QueryStringBindable[String] = implicitly[QueryStringBindable[String]]
 

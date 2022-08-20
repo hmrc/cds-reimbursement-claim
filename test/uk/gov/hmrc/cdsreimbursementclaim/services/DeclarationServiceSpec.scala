@@ -163,7 +163,9 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
             Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
           )
         }
-        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.unexpectedError)
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
+          GetDeclarationError.unexpectedError
+        )
       }
 
       "UnexpectedError: a http status response other than 200 OK is received" in forAll { mrn: MRN =>
@@ -172,39 +174,46 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
             Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
           )
         }
-        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.unexpectedError)
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
+          GetDeclarationError.unexpectedError
+        )
       }
 
       "UnexpectedError: an unsuccessful http response is received" in forAll { mrn: MRN =>
         inSequence {
           mockDeclarationConnector(Left(Error("http bad request")))
         }
-        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.unexpectedError)
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
+          GetDeclarationError.unexpectedError
+        )
       }
 
       "InvalidReasonForSecurity" in forAll { mrn: MRN =>
-          val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator(("072"))
-          inSequence {
-            mockDeclarationConnector(
-              Right(HttpResponse(400, Json.toJson(declarationErrorResponse).toString(), Map.empty[String, Seq[String]]))
-            )
-          }
-          await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.invalidReasonForSecurity)
-      }
-
-      "DeclarationNotFound" in forAll { mrn: MRN =>
-        val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator(("086"))
+        val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator("072")
         inSequence {
           mockDeclarationConnector(
             Right(HttpResponse(400, Json.toJson(declarationErrorResponse).toString(), Map.empty[String, Seq[String]]))
           )
         }
-        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(GetDeclarationError.declarationNotFound)
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
+          GetDeclarationError.invalidReasonForSecurity
+        )
       }
 
-      def declarationErrorResponseGenerator(errorCode: String): DeclarationErrorResponse = {
-        DeclarationErrorResponse(ErrorDetail(None, None, None, None, None, SourceFaultDetail(List(errorCode))))
+      "DeclarationNotFound" in forAll { mrn: MRN =>
+        val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator("086")
+        inSequence {
+          mockDeclarationConnector(
+            Right(HttpResponse(400, Json.toJson(declarationErrorResponse).toString(), Map.empty[String, Seq[String]]))
+          )
+        }
+        await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
+          GetDeclarationError.declarationNotFound
+        )
       }
+
+      def declarationErrorResponseGenerator(errorCode: String): DeclarationErrorResponse =
+        DeclarationErrorResponse(ErrorDetail(None, None, None, None, None, SourceFaultDetail(List(errorCode))))
     }
   }
 }
