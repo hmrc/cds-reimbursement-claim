@@ -168,7 +168,7 @@ class DefaultClaimService @Inject() (
     request: Request[_],
     claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
-    EitherT.left(Future.successful(Error(s"Not implemented"))) //TODO: 1718
+    EitherT.left(Future.successful(Error(s"Securities claim TPI05 call not yet implemented"))) //TODO: 1718
 
   private def proceed[R, A](claimRequest: R, auditable: A)(implicit
     hc: HeaderCarrier,

@@ -132,6 +132,10 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     override def toDec64DisplayString: String = "Other"
   }
 
+  case object ClaimWorksheet extends UploadDocumentType {
+    override def toDec64DisplayString: String = "Other"
+  }
+
   val values: Set[UploadDocumentType] = Set(
     AirWayBill,
     BillOfLading,
@@ -159,6 +163,7 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     SupportingEvidence,
     BillOfDischarge3,
     BillOfDischarge4,
-    QuotaLicense
+    QuotaLicense,
+    ClaimWorksheet
   )
 }

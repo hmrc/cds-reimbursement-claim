@@ -108,7 +108,8 @@ class DeclarationControllerSpec extends ControllerSpec {
       "return 200 OK with a declaration JSON payload for a successful ACC-14 call for reasonForSecurity" in {
         val mrn                  = sample[MRN]
         val reasonForSecurity    = sample[ReasonForSecurity]
-        val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code), Some(mrn)).sample
+        val expectedResponseBody =
+          genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code), Some(mrn)).sample
 
         mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.orNull))
 
@@ -123,14 +124,14 @@ class DeclarationControllerSpec extends ControllerSpec {
       }
 
       "return 400 BAD REQUEST with mismatchMrn a declaration JSON payload for a successful ACC-14 call for reasonForSecurity" in {
-        val mrn = sample[MRN]
-        val reasonForSecurity = sample[ReasonForSecurity]
+        val mrn                  = sample[MRN]
+        val reasonForSecurity    = sample[ReasonForSecurity]
         val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
 
         mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.orNull))
 
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
-        status(result) shouldBe BAD_REQUEST
+        status(result)        shouldBe BAD_REQUEST
         contentAsJson(result) shouldBe Json.toJson(GetDeclarationError.mismatchMrn)
       }
 
@@ -138,10 +139,12 @@ class DeclarationControllerSpec extends ControllerSpec {
         val mrn               = sample[MRN]
         val reasonForSecurity = sample[ReasonForSecurity]
 
-        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Left(GetDeclarationError.unexpectedError))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(
+          Left(GetDeclarationError.unexpectedError)
+        )
 
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsJson(result) shouldBe Json.toJson(GetDeclarationError.unexpectedError)
       }
 
@@ -149,7 +152,9 @@ class DeclarationControllerSpec extends ControllerSpec {
         val mrn               = sample[MRN]
         val reasonForSecurity = sample[ReasonForSecurity]
 
-        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Left(GetDeclarationError.unexpectedError))
+        mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(
+          Left(GetDeclarationError.unexpectedError)
+        )
         val result = controller.declarationWithReasonForSecurity(mrn, reasonForSecurity)(request)
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }

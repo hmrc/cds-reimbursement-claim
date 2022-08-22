@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Format
+import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
@@ -29,7 +31,9 @@ final case class SecuritiesClaim(
   reasonForSecurity: ReasonForSecurity,
   securitiesReclaims: Map[String, Map[TaxCode, BigDecimal]],
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument],
+  temporaryAdmissionMethodOfDisposal: Option[TemporaryAdmissionMethodOfDisposal],
+  exportMovementReferenceNumber: Option[MRN]
 )
 
 object SecuritiesClaim {
