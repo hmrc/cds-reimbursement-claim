@@ -12,8 +12,6 @@ object AppDependencies {
     "com.github.kxbmap" %% "configs"                   % "0.6.1",
     "uk.gov.hmrc"       %% "work-item-repo"            % "8.0.0-play-28",
     "ru.tinkoff"        %% "phobos-core"               % "0.9.2",
-    compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-    "com.github.ghik"    % "silencer-lib"              % silencerVersion % Provided cross CrossVersion.full,
     "ai.x"              %% "play-json-extensions"      % "0.42.0"
   )
 
