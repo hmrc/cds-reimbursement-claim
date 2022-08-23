@@ -5,7 +5,7 @@ object AppDependencies {
   val silencerVersion = "1.7.0"
 
   val compile = Seq(
-    "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % "5.2.0",
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % "7.1.0",
     "uk.gov.hmrc"       %% "simple-reactivemongo"      % "8.0.0-play-28",
     "org.typelevel"     %% "cats-core"                 % "2.3.1",
     "org.julienrf"      %% "play-json-derived-codecs"  % "7.0.0",
@@ -28,7 +28,7 @@ object AppDependencies {
     "com.github.chocpanda"       %% "scalacheck-magnolia"       % "0.5.1"          % Test,
     "com.vladsch.flexmark"        % "flexmark-all"              % "0.36.8"         % "test, it",
     "org.pegdown"                 % "pegdown"                   % "1.6.0"          % "test, it",
-    "com.typesafe.akka"          %% "akka-testkit"              % "2.6.14"         % Test,
+    "com.typesafe.akka"          %% "akka-testkit"              % "2.6.19"         % Test,
     "org.scala-lang.modules"     %% "scala-xml"                 % "1.3.0"          % Test
   )
 }
