@@ -27,9 +27,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.gen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genClaimantInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
+
 import java.net.URL
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object SecuritiesClaimGen {
@@ -139,4 +141,14 @@ object SecuritiesClaimGen {
     eori  <- genEori
     name  <- genRandomString
   } yield SignedInUserDetails(Some(email), eori, email, ContactName(name)))
+
+  implicit lazy val genSecuritiesClaimAndDeclaration =
+    for {
+      securitiesClaim    <- genSecuritiesClaim.map(_.claim)
+      displayDeclaration <- genDisplayDeclaration
+    } yield (securitiesClaim, displayDeclaration)
+
+  implicit lazy val arbitrarySecuritiesClaimAndDeclaration =
+    Arbitrary(genSecuritiesClaimAndDeclaration)
+
 }

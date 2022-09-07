@@ -22,11 +22,12 @@ import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarationId, ProcedureCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BtaSource
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
@@ -36,7 +37,7 @@ object TPI05 {
 
 // TODO: Reinstate when the QA environment has been updates with a later version of the TPI05 schema.
 //  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
-  def request(claimantEORI: Eori, claimantEmailAddress: Email): Builder = Builder(
+  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: Option[String] = None): Builder = Builder(
     Valid(
       RequestDetail(
         CDFPayService = CDFPayService.NDRC,
@@ -44,8 +45,8 @@ object TPI05 {
         customDeclarationType = Some(CustomDeclarationType.MRN),
         claimDate = Some(ISOLocalDate.now),
         claimantEORI = claimantEORI,
-        claimantEmailAddress = claimantEmailAddress //,
-//        claimantName = claimantName
+        claimantEmailAddress = claimantEmailAddress,
+        claimantName = claimantName
       )
     )
   )
@@ -139,23 +140,35 @@ object TPI05 {
       declarationId: DeclarationId,
       procedureCode: ProcedureCode,
       acceptanceDate: AcceptanceDate,
+      declarantReferenceNumber: DeclarantReferenceNumber,
+      btaSource: BtaSource,
+      btaDueDate: EisBasicDate,
       declarantDetails: MRNInformation,
       consigneeDetails: MRNInformation,
+      accountDetails: List[AccountDetail],
       bankDetails: BankDetails,
       securityDetails: List[SecurityDetail]
     ): Builder =
       copy(
         validatedRequest.map(
           _.copy(
-            dateClaimReceived = dateClaimReceived,
-            reasonForSecurity = Some(reasonForSecurity),
-            declarationId = Some(declarationId),
-            procedureCode = Some(procedureCode),
-            acceptanceDate = Some(EisBasicDate(acceptanceDate.value)),
-            declarantDetails = Some(declarantDetails),
-            consigneeDetails = Some(consigneeDetails),
-            bankDetails = Some(bankDetails),
-            securityDetails = Some(securityDetails)
+            securityInfo = Some(
+              SecurityInfo(
+                dateClaimReceived = dateClaimReceived,
+                reasonForSecurity = Some(reasonForSecurity),
+                declarationId = Some(declarationId),
+                procedureCode = Some(procedureCode),
+                acceptanceDate = Some(EisBasicDate(acceptanceDate.value)),
+                declarantReferenceNumber = Some(declarantReferenceNumber),
+                btaSource = Some(btaSource),
+                btaDueDate = Some(btaDueDate),
+                declarantDetails = Some(declarantDetails),
+                consigneeDetails = Some(consigneeDetails),
+                accountDetails = Some(accountDetails),
+                bankDetails = Some(bankDetails),
+                securityDetails = Some(securityDetails)
+              )
+            )
           )
         )
       )

@@ -24,9 +24,10 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, PostNewClaimsRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen._
 
@@ -40,22 +41,22 @@ class SecuritiesClaimMappingSpec
 
   "The Securities claim mapper" should {
 
-    "map a valid Securities claim to TPI05 request" in forAll { (request: SecuritiesClaimRequest) =>
-      import request.claim
-      val tpi05Request = securitiesClaimToTPI05Mapper.map(claim)
+    "map a valid Securities claim to TPI05 request" in forAll { details: (SecuritiesClaim, DisplayDeclaration) =>
+      val (claim, declaration) = details
+      val tpi05Request         = securitiesClaimToTPI05Mapper.map((claim, declaration))
       inside(tpi05Request) {
         case Left(_)                                                            =>
           assert(claim.claimantInformation.contactInformation.countryCode.isEmpty)
         case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))) =>
-          common.originatingSystem     should ===(MDTP)
-          detail.customDeclarationType should ===(CustomDeclarationType.MRN.some)
-          detail.claimType             should ===(Some(ClaimType.SECURITY))
-          detail.claimantEORI          should ===(claim.claimantInformation.eori)
-          detail.claimantEmailAddress  should ===(
+          common.originatingSystem                       should ===(MDTP)
+          detail.customDeclarationType                   should ===(CustomDeclarationType.MRN.some)
+          detail.claimType                               should ===(Some(ClaimType.SECURITY))
+          detail.claimantEORI                            should ===(claim.claimantInformation.eori)
+          detail.claimantEmailAddress                    should ===(
             claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
           )
-//          detail.claimantName          should ===(claim.claimantInformation.contactInformation.contactPerson.value)
-          detail.securityDetails       should ===(Some(claim.getSecurityDetails))
+          detail.claimantName                            should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
+          detail.securityInfo.flatMap(_.securityDetails) should ===(Some(details.getSecurityDetails))
       }
     }
   }
