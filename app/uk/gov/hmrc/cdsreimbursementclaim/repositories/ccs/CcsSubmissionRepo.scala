@@ -21,20 +21,21 @@ import com.google.inject.ImplementedBy
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
+//import reactivemongo.api.indexes.{Index, IndexType}
+//import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.JavaToJoda
-import uk.gov.hmrc.cdsreimbursementclaim.repositories.CacheRepository
+//import uk.gov.hmrc.cdsreimbursementclaim.repositories.CacheRepository
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+//import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 import uk.gov.hmrc.workitem._
 
 import java.time.Clock
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration._
+//import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultCcsSubmissionRepo])
@@ -51,8 +52,8 @@ trait CcsSubmissionRepo {
 @Singleton
 class DefaultCcsSubmissionRepo @Inject() (
   reactiveMongoComponent: ReactiveMongoComponent,
-  configuration: Configuration,
-  servicesConfig: ServicesConfig
+  configuration: Configuration
+  //servicesConfig: ServicesConfig
 )(implicit ec: ExecutionContext)
     extends WorkItemRepository[CcsSubmissionRequest, BSONObjectID](
       collectionName = "ccs-submission-request-work-item",
@@ -76,24 +77,25 @@ class DefaultCcsSubmissionRepo @Inject() (
 
   override def inProgressRetryAfterProperty: String = "ccs.submission-poller.in-progress-retry-after"
 
-  private lazy val ttl = servicesConfig.getDuration("ccs.submission-poller.mongo.ttl").toSeconds
+  //private lazy val ttl = servicesConfig.getDuration("ccs.submission-poller.mongo.ttl").toSeconds
 
   private val retryPeriod = inProgressRetryAfter.getMillis.toInt
 
-  private val ttlIndexName: String = "receivedAtTime"
+  //private val ttlIndexName: String = "receivedAtTime"
 
-  private val ttlIndex: Index =
+  /*private val ttlIndex: Index =
     Index(
       key = Seq("receivedAt" -> IndexType.Ascending),
       name = Some(ttlIndexName),
       options = BSONDocument("expireAfterSeconds" -> ttl)
     )
+*/
 
   @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
     for {
       result <- super.ensureIndexes(ExecutionContext.global)
-      _      <- CacheRepository.setTtlIndex(ttlIndex, ttlIndexName, ttl.seconds, collection, logger)(ExecutionContext.global)
+      //_      <- CacheRepository.setTtlIndex(ttlIndex, ttlIndexName, ttl.seconds, collection, logger)(ExecutionContext.global)
     } yield result
 
   override def set(ccsSubmissionRequest: CcsSubmissionRequest): EitherT[Future, Error, WorkItem[CcsSubmissionRequest]] =

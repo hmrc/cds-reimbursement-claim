@@ -58,14 +58,8 @@ class UpscanController @Inject() (
             logger.warn(s"could not get upscan upload", e)
             InternalServerError
           },
-          {
-            case Some(upscanUpload) =>
-              Ok(Json.toJson(upscanUpload))
-            case None               =>
-              logger.info(
-                s"could not find an upscan upload with upload reference $uploadReference"
-              )
-              BadRequest
+          { a =>
+            Ok(Json.toJson(a))
           }
         )
     }
@@ -130,13 +124,7 @@ class UpscanController @Inject() (
     request: Request[JsValue]
   ): Future[Result] = {
     val result = for {
-      maybeUpscanUpload <- upscanService.readUpscanUpload(uploadReference)
-      upscanUpload      <- EitherT.fromOption(
-                             maybeUpscanUpload,
-                             Error(
-                               s"could not get upscan upload value from db for upload reference $uploadReference"
-                             )
-                           )
+      upscanUpload <- upscanService.readUpscanUpload(uploadReference)
       callBackResult    <- if (fileStatus === READY_FOR_DOWNLOAD)
                              EitherT.fromOption(
                                request.body.asOpt[UpscanSuccess],

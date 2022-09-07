@@ -17,26 +17,21 @@
 package uk.gov.hmrc.cdsreimbursementclaim.repositories
 
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import uk.gov.hmrc.mongo.{MongoConnector, MongoSpecSupport}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-trait MongoTestSupport extends MongoSpecSupport with BeforeAndAfterEach with BeforeAndAfterAll { this: Suite ⇒
-  val reactiveMongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {
+trait MongoTestSupport extends BeforeAndAfterEach with BeforeAndAfterAll { this: Suite ⇒
+  /*val reactiveMongoComponent: ReactiveMongoComponent = new ReactiveMongoComponent {
     override def mongoConnector: MongoConnector = mongoConnectorForTest
-  }
+  }*/
 
   abstract override def beforeEach(): Unit = {
     super.beforeEach()
-    mongo().drop()
+    //mongo().drop()
     ()
   }
 
   abstract override def afterAll(): Unit = {
     super.afterAll()
-    reactiveMongoComponent.mongoConnector.helper.driver.close(FiniteDuration(10, SECONDS))
+    //reactiveMongoComponent.mongoConnector.helper.driver.close(FiniteDuration(10, SECONDS))
   }
 }

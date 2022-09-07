@@ -16,30 +16,37 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.repositories
 
-import cats.data.EitherT
+/*import cats.data.EitherT
 import cats.instances.list._
 import cats.syntax.either._
 import org.joda.time.DateTime
+import org.mongodb.scala.MongoCollection
 import org.slf4j.Logger
 import play.api.libs.json._
 import reactivemongo.api.Cursor
-import reactivemongo.api.commands.WriteResult
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
+import reactivemongo.api.commands.WriteResult*/
+//import reactivemongo.api.indexes.{Index, IndexType}
+//import reactivemongo.bson.BSONDocument
+//import reactivemongo.bson.{BSONDocument, BSONObjectID}
+/*import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.ListUtils._
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.dateTimeWrite
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
+import uk.gov.hmrc.cdsreimbursementclaim.models.ListUtils._*/
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
+//import uk.gov.hmrc.mongo.cache.MongoCacheRepository
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+//import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.dateTimeWrite
+//import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
-import java.time.LocalDateTime
+//import java.time.LocalDateTime
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
+import scala.concurrent.ExecutionContext
+//import scala.concurrent.{ExecutionContext, Future}
+//import scala.util.control.NonFatal
 
-trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
+//trait CacheRepository[A] extends MongoCacheRepository[A, BSONObjectID] {
+trait CacheRepository[A] {
+  this: PlayMongoRepository[A] with Logging =>
 
   implicit val ec: ExecutionContext
 
@@ -47,21 +54,23 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
   val cacheTtlIndexName: String
   val objName: String
 
-  private lazy val cacheTtlIndex = Index(
+  /*private lazy val cacheTtlIndex                                              = Index(
     key = Seq("lastUpdated" → IndexType.Ascending),
     name = Some(cacheTtlIndexName),
     options = BSONDocument("expireAfterSeconds" -> cacheTtl.toSeconds)
-  )
-
+  )*/
+  /*
   @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
     for {
-      result <- super.ensureIndexes(ExecutionContext.global)
+      result <- ensureIndexes(ExecutionContext.global)
       _      <- CacheRepository.setTtlIndex(cacheTtlIndex, cacheTtlIndexName, cacheTtl, collection, logger)(
                   ExecutionContext.global
                 )
     } yield result
 
+   */
+  /*
   def set(id: String, value: A, overrideLastUpdatedTime: Option[LocalDateTime] = None): Future[Either[Error, Unit]] =
     preservingMdc {
       withCurrentTime { time =>
@@ -88,8 +97,8 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
             Left(Error(e))
           }
       }
-    }
-
+    }*/
+  /*
   def findAll(ids: List[String]): Future[Either[Error, List[A]]] =
     preservingMdc {
       collection
@@ -117,6 +126,8 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
         }
     }
 
+   */
+  /*
   def find(id: String): Future[Either[Error, Option[A]]] =
     preservingMdc {
       collection
@@ -133,14 +144,15 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
           Left(Error(exception))
         }
     }
-
+   */
+  /*
   private def readJson(jsObject: JsObject): Either[String, Option[A]] =
     (jsObject \ objName)
       .validateOpt[A]
       .asEither
       .leftMap(e ⇒ s"Could not parse session data from mongo: ${e.mkString("; ")}")
-
-  private def toJodaDateTime(dateTime: LocalDateTime): org.joda.time.DateTime =
+   */
+  /*private def toJodaDateTime(dateTime: LocalDateTime): org.joda.time.DateTime =
     new org.joda.time.DateTime(
       dateTime.getYear,
       dateTime.getMonthValue,
@@ -149,16 +161,13 @@ trait CacheRepository[A] extends ReactiveRepository[A, BSONObjectID] {
       dateTime.getMinute,
       dateTime.getSecond
     )
-
-}
-
-object CacheRepository {
-
+*/
+  /* todo CDSR-1911
   def setTtlIndex(
     ttlIndex: Index,
     ttlIndexName: String,
     ttl: FiniteDuration,
-    collection: JSONCollection,
+    collection: MongoCollection[A],
     logger: Logger
   )(implicit ex: ExecutionContext): Future[WriteResult] = {
     def dropInvalidIndexes(): Future[Unit] =
@@ -185,5 +194,5 @@ object CacheRepository {
         result
       }
   }
-
+   */
 }
