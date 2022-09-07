@@ -24,7 +24,7 @@ final case class SecurityDetail(
   amountPaid: String,
   paymentMethod: String,
   paymentReference: String,
-  taxDetails: List[TaxDetail]
+  taxReclaimDetails: List[TaxReclaimDetail]
 )
 
 object SecurityDetail {

@@ -30,6 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CMAEligibleGen.genWhe
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genContactDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen.genReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
@@ -161,7 +162,7 @@ object Acc14DeclarationGen {
       taxDetails = taxDetails
     )
 
-  lazy val genDisplayDeclaration: Gen[DisplayDeclaration]                                                 = for {
+  lazy val genDisplayDeclaration: Gen[DisplayDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -192,6 +193,42 @@ object Acc14DeclarationGen {
       bankDetails = Some(bankDetails),
       maskedBankDetails = Some(maskedBankDetails),
       ndrcDetails = Some(ndrcDetails)
+    )
+  )
+
+  lazy val genDisplayDeclarationWithSecurities: Gen[DisplayDeclaration]                                   = for {
+    mrn                      <- genMRN
+    acceptanceDate           <- genAcceptanceDate
+    declarantReferenceNumber <- Gen.option(genRandomString)
+    securityReason           <- Gen.some(genReasonForSecurity.map(_.acc14Code))
+    btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
+    procedureCode            <- genStringWithMaxSizeOfN(5)
+    btaSource                <- Gen.option(genRandomString)
+    declarantDetails         <- genDeclarantDetails
+    consigneeDetails         <- genConsigneeDetails
+    numAccDetails            <- Gen.choose(1, 5)
+    accountDetails           <- Gen.option(Gen.listOfN(numAccDetails, genAccountDetails))
+    bankDetails              <- genBankDetails
+    maskedBankDetails        <- Gen.const(mask(bankDetails))
+    numNdrcDetails           <- Gen.choose(1, 5)
+    ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
+    securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails))
+  } yield DisplayDeclaration(
+    DisplayResponseDetail(
+      declarationId = mrn.value,
+      acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
+      declarantReferenceNumber = declarantReferenceNumber,
+      securityReason = securityReason,
+      btaDueDate = btaDueDate,
+      procedureCode = procedureCode,
+      btaSource = btaSource,
+      declarantDetails = declarantDetails,
+      consigneeDetails = Some(consigneeDetails),
+      accountDetails = accountDetails,
+      bankDetails = Some(bankDetails),
+      maskedBankDetails = Some(maskedBankDetails),
+      ndrcDetails = Some(ndrcDetails),
+      securityDetails = securityDetails
     )
   )
   def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[DisplayDeclaration] =
@@ -267,15 +304,15 @@ object Acc14DeclarationGen {
       mrn                      <- genMRN
       acceptanceDate           <- genLocalDate.map(_.toIsoLocalDate)
       declarantReferenceNumber <- Gen.option(genRandomString)
-      securityReason           <- Gen.option(genRandomString)
-      btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
+      securityReason           <- Gen.some(genRandomString)
       procedureCode            <- genStringWithMaxSizeOfN(5)
+      btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
       btaSource                <- Gen.option(genRandomString)
       declarantDetails         <- genDeclarantDetails
       consigneeDetails         <- Gen.option(genConsigneeDetails)
       accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
-      bankDetails              <- Gen.option(genBankDetails)
-      securityDetails          <- Gen.option(Gen.nonEmptyListOf(genSecurityDetails))
+      bankDetails              <- Gen.some(genBankDetails)
+      securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails))
     } yield ResponseDetail(
       declarationId = mrn.value,
       acceptanceDate = acceptanceDate,

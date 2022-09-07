@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantRefer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CDFPayService, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BtaSource
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
@@ -37,7 +37,11 @@ object TPI05 {
 
 // TODO: Reinstate when the QA environment has been updates with a later version of the TPI05 schema.
 //  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
-  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: Option[String] = None): Builder = Builder(
+  def request(
+    claimantEORI: Eori,
+    claimantEmailAddress: Email,
+    claimantName: Option[String] = None
+  ): Builder = Builder(
     Valid(
       RequestDetail(
         CDFPayService = CDFPayService.NDRC,
@@ -141,17 +145,20 @@ object TPI05 {
       procedureCode: ProcedureCode,
       acceptanceDate: AcceptanceDate,
       declarantReferenceNumber: DeclarantReferenceNumber,
-      btaSource: BtaSource,
-      btaDueDate: EisBasicDate,
+      btaSource: Option[BtaSource],
+      btaDueDate: Option[EisBasicDate],
       declarantDetails: MRNInformation,
       consigneeDetails: MRNInformation,
-      accountDetails: List[AccountDetail],
+      accountDetails: Option[List[AccountDetail]],
       bankDetails: BankDetails,
-      securityDetails: List[SecurityDetail]
+      securityDetails: List[SecurityDetail],
+      reimbursementMethod: ReimbursementMethod
     ): Builder =
       copy(
         validatedRequest.map(
           _.copy(
+            CDFPayService = CDFPayService.SCTY,
+            reimbursementMethod = Some(reimbursementMethod),
             securityInfo = Some(
               SecurityInfo(
                 dateClaimReceived = dateClaimReceived,
@@ -160,11 +167,11 @@ object TPI05 {
                 procedureCode = Some(procedureCode),
                 acceptanceDate = Some(EisBasicDate(acceptanceDate.value)),
                 declarantReferenceNumber = Some(declarantReferenceNumber),
-                btaSource = Some(btaSource),
-                btaDueDate = Some(btaDueDate),
+                btaSource = btaSource,
+                btaDueDate = btaDueDate,
                 declarantDetails = Some(declarantDetails),
                 consigneeDetails = Some(consigneeDetails),
-                accountDetails = Some(accountDetails),
+                accountDetails = accountDetails,
                 bankDetails = Some(bankDetails),
                 securityDetails = Some(securityDetails)
               )

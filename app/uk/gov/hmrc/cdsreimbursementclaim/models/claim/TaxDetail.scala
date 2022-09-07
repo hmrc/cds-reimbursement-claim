@@ -26,3 +26,13 @@ final case class TaxDetail(
 object TaxDetail {
   implicit val format: OFormat[TaxDetail] = Json.format[TaxDetail]
 }
+
+final case class TaxReclaimDetail(
+  taxType: String,
+  amount: String,
+  claimAmount: String
+)
+
+object TaxReclaimDetail {
+  implicit val format: OFormat[TaxReclaimDetail] = Json.format[TaxReclaimDetail]
+}

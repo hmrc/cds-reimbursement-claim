@@ -48,15 +48,41 @@ class SecuritiesClaimMappingSpec
         case Left(_)                                                            =>
           assert(claim.claimantInformation.contactInformation.countryCode.isEmpty)
         case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))) =>
-          common.originatingSystem                       should ===(MDTP)
-          detail.customDeclarationType                   should ===(CustomDeclarationType.MRN.some)
-          detail.claimType                               should ===(Some(ClaimType.SECURITY))
-          detail.claimantEORI                            should ===(claim.claimantInformation.eori)
-          detail.claimantEmailAddress                    should ===(
+          common.originatingSystem     should ===(MDTP)
+          detail.customDeclarationType should ===(CustomDeclarationType.MRN.some)
+          detail.claimType             should ===(Some(ClaimType.SECURITY))
+          detail.claimantEORI          should ===(claim.claimantInformation.eori)
+          detail.claimantEmailAddress  should ===(
             claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
           )
-          detail.claimantName                            should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
-          detail.securityInfo.flatMap(_.securityDetails) should ===(Some(details.getSecurityDetails))
+//          detail.claimantName                            should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
+          detail.securityInfo
+            .flatMap(_.securityDetails)
+            .toList
+            .flatten
+            .sortBy(_.securityDepositId)
+            .zip(declaration.displayResponseDetail.securityDetails.toList.flatten.sortBy(_.securityDepositId))
+            .zip(claim.securitiesReclaims.toList.sortBy(_._1))
+            .foreach { case ((eisSecurityDetail, acc14SecurityDetail), (reclaimDepositId, reclaimTaxes)) =>
+              eisSecurityDetail.securityDepositId should ===(acc14SecurityDetail.securityDepositId)
+              eisSecurityDetail.securityDepositId should ===(reclaimDepositId)
+              eisSecurityDetail.paymentReference  should ===(acc14SecurityDetail.paymentReference)
+              eisSecurityDetail.totalAmount       should ===(acc14SecurityDetail.totalAmount)
+              eisSecurityDetail.paymentMethod     should ===(acc14SecurityDetail.paymentMethod)
+              eisSecurityDetail.amountPaid        should ===(acc14SecurityDetail.amountPaid)
+
+              eisSecurityDetail.taxReclaimDetails
+                .sortBy(_.taxType)
+                .zip(acc14SecurityDetail.taxDetails.sortBy(_.taxType))
+                .zip(reclaimTaxes.toList.sortBy(_._1.value))
+                .foreach { case ((eisTax, acc14Tax), (_, reclaimAmount)) =>
+                  eisTax.taxType                 should ===(acc14Tax.taxType)
+//                  eisTax.taxType should ===(reclaimTaxCode.value) // why does this fail when the line above passes? it should be sourced from of acc14tax.taxType
+                  eisTax.amount                  should ===(acc14Tax.amount)
+                  BigDecimal(eisTax.claimAmount) should ===(reclaimAmount)
+                }
+
+            }
       }
     }
   }

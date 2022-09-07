@@ -31,7 +31,8 @@ object ClaimType extends EnumerationFormat[ClaimType] {
   }
 
   final case object SECURITY extends ClaimType {
-    override def toString: String = "SECURITY"
+    override def toString: String =
+      "SECURITY" // Should this be "SCTY" ? (https://confluence.tools.tax.service.gov.uk/display/CDSR/Data+Point+Mapping#DataPointMapping-SecuritiesBackendMappings)
   }
 
   lazy val values: Set[ClaimType] = Set(C285, CE1179, SECURITY)

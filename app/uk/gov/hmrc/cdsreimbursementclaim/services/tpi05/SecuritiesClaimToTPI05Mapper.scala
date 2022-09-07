@@ -20,12 +20,12 @@ import cats.implicits.catsSyntaxEq
 import cats.syntax.either._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.{Consignee, Declarant}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, TaxCode, TaxDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, TaxCode, TaxReclaimDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, ConsigneeDetails, DeclarantDetails, SecurityDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, ConsigneeDetails, DeclarantDetails, SecurityDetails, TaxDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.SECURITY
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
@@ -56,17 +56,10 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       declarantReferenceNumber <- displayDeclaration.displayResponseDetail.declarantReferenceNumber.toRight(
                                     CdsError("declarant reference number is mandatory")
                                   )
-      btaSource                <- displayDeclaration.displayResponseDetail.btaSource.toRight(
-                                    CdsError("bta source is mandatory")
-                                  )
-      btaDueDate               <- displayDeclaration.displayResponseDetail.btaDueDate
-                                    .map(LocalDate.parse)
-                                    .toRight(
-                                      CdsError("bta due date is mandatory")
-                                    )
-      accountDetails           <- displayDeclaration.displayResponseDetail.accountDetails.toRight(
-                                    CdsError("account details are mandatory is mandatory")
-                                  )
+      btaSource                 = displayDeclaration.displayResponseDetail.btaSource
+      btaDueDate                = displayDeclaration.displayResponseDetail.btaDueDate
+                                    .flatMap(EisBasicDate.parse(_).toOption)
+      accountDetails            = displayDeclaration.displayResponseDetail.accountDetails
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -83,35 +76,41 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         ProcedureCode(displayDeclaration.displayResponseDetail.procedureCode),
         acceptanceDate,
         DeclarantReferenceNumber(declarantReferenceNumber),
-        BtaSource(btaSource),
-        EisBasicDate(btaDueDate),
+        btaSource.map(BtaSource(_)),
+        btaDueDate,
         declarantDetails,
         consigneeDetails,
-        accountDetails.map(acc =>
-          AccountDetail(
-            accountType = acc.accountType,
-            accountNumber = acc.accountNumber,
-            EORI = acc.eori,
-            legalName = acc.legalName,
-            contactDetails = acc.contactDetails.map(contact =>
-              ContactInformation(
-                contactPerson = contact.contactName, // is this mapping correct?
-                addressLine1 = contact.addressLine1,
-                addressLine2 = contact.addressLine2,
-                addressLine3 = contact.addressLine3,
-                street = None,
-                city = None,
-                countryCode = contact.countryCode,
-                postalCode = contact.postalCode,
-                telephoneNumber = contact.telephone,
-                faxNumber = None,
-                emailAddress = contact.emailAddress
+        accountDetails.map(
+          _.map(acc =>
+            AccountDetail(
+              accountType = acc.accountType,
+              accountNumber = acc.accountNumber,
+              EORI = acc.eori,
+              legalName = acc.legalName,
+              contactDetails = acc.contactDetails.map(contact =>
+                ContactInformation(
+                  contactPerson = contact.contactName, // is this mapping correct?
+                  addressLine1 = contact.addressLine1,
+                  addressLine2 = contact.addressLine2,
+                  addressLine3 = contact.addressLine3,
+                  street = None,
+                  city = None,
+                  countryCode = contact.countryCode,
+                  postalCode = contact.postalCode,
+                  telephoneNumber = contact.telephone,
+                  faxNumber = None,
+                  emailAddress = contact.emailAddress
+                )
               )
             )
           )
         ),
-        getBankDetails(claim.claimantType, claim.bankAccountDetails),
-        securityDetails
+        getBankDetails(
+          claim.claimantType,
+          claim.bankAccountDetails
+        ), // do we need both consignee and declarant details? (https://confluence.tools.tax.service.gov.uk/display/CDSR/Data+Point+Mapping#DataPointMapping-SecuritiesBackendMappings)
+        securityDetails,
+        ReimbursementMethod.BankTransfer
       )).flatMap(x => x.verify)
   }
 
@@ -134,7 +133,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
           amountPaid = security.amountPaid,
           paymentMethod = security.paymentMethod,
           paymentReference = security.paymentReference,
-          getTaxDetails(reclaims)
+          getTaxDetails(security.taxDetails, reclaims)
         )
       }
     }.toList
@@ -145,6 +144,15 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       Right(securityDetails.flatMap(_.toList))
   }
 
-  private def getTaxDetails(claimItems: Map[TaxCode, BigDecimal]): List[TaxDetail] =
-    claimItems.map { case (taxType, amount) => TaxDetail(taxType.value, amount.toString) }.toList
+  private def getTaxDetails(
+    depositTaxes: List[TaxDetails],
+    claimItems: Map[TaxCode, BigDecimal]
+  ): List[TaxReclaimDetail] =
+    depositTaxes
+      .sortBy(_.taxType)
+      .filter(dt => claimItems.keys.exists(_.value === dt.taxType))
+      .zip(claimItems.toList.sortBy(_._1.value))
+      .map { case (TaxDetails(taxType, amount), (_, claimAmount)) =>
+        TaxReclaimDetail(taxType, amount, claimAmount.toString())
+      }
 }

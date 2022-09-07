@@ -17,32 +17,48 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, TaxCode, TaxDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, TaxCode, TaxReclaimDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.TaxDetails
 
 trait SecuritiesClaimSupport {
 
-  implicit class SecuritiesClaimOps(details: (SecuritiesClaim, DisplayDeclaration)) {
-    val (claim, _) = details
+  implicit class SecuritiesClaimOps(claimAndDeclaration: (SecuritiesClaim, DisplayDeclaration)) {
+    val (claim, declaration) = claimAndDeclaration
 
     def claimant: Claimant =
       if (claim.claimantType === ClaimantType.Consignee) Importer else Representative
+//
+//    def getSecurityDetails: List[SecurityDetail] =
+//      claim.securitiesReclaims.map { a =>
+//        SecurityDetail(
+//          a._1,
+//          a._2.values.sum.toString,
+//          amountPaid = "todo",
+//          paymentMethod = "todo",
+//          paymentReference = "todo",
+//          getTaxDetails(
+//            declaration.displayResponseDetail.securityDetails
+//              .flatMap(_.find(_.securityDepositId == a._1))
+//              .map(_.taxDetails)
+//              .getOrElse(Nil),
+//            a._2
+//          )
+//        )
+//      }.toList
 
-    def getSecurityDetails: List[SecurityDetail] =
-      claim.securitiesReclaims.map { a =>
-        SecurityDetail(
-          a._1,
-          a._2.values.sum.toString,
-          amountPaid = "todo",
-          paymentMethod = "todo",
-          paymentReference = "todo",
-          getTaxDetails(a._2)
-        )
-      }.toList
-
-    private def getTaxDetails(claimItems: Map[TaxCode, BigDecimal]): List[TaxDetail] =
-      claimItems.map(a => TaxDetail(a._1.value, a._2.toString)).toList
+    def getTaxDetails(
+      depositTaxes: List[TaxDetails],
+      claimItems: Map[TaxCode, BigDecimal]
+    ): List[TaxReclaimDetail] =
+      depositTaxes
+        .sortBy(_.taxType)
+        .filter(dt => claimItems.keys.exists(_.value === dt.taxType))
+        .zip(claimItems.toList.sortBy(_._1.value))
+        .map { case (TaxDetails(taxType, amount), (_, claimAmount)) =>
+          TaxReclaimDetail(taxType, amount, claimAmount.toString())
+        }
   }
 }

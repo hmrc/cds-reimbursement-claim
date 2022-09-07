@@ -29,9 +29,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 
 import java.net.URL
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclarationWithSecurities
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object SecuritiesClaimGen {
@@ -144,8 +143,16 @@ object SecuritiesClaimGen {
 
   implicit lazy val genSecuritiesClaimAndDeclaration =
     for {
-      securitiesClaim    <- genSecuritiesClaim.map(_.claim)
-      displayDeclaration <- genDisplayDeclaration
+
+      displayDeclaration <- genDisplayDeclarationWithSecurities
+      securityDetails     = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      taxDetails          = securityDetails.map(x => (x.securityDepositId, x.taxDetails)).toMap
+      reclaims            = taxDetails.mapValues(_.map(x => (TaxCode.getOrFail(x.taxType), BigDecimal(x.amount))).toMap)
+      securitiesClaim    <- genSecuritiesClaim.map(
+                              _.claim.copy(
+                                securitiesReclaims = reclaims
+                              )
+                            )
     } yield (securitiesClaim, displayDeclaration)
 
   implicit lazy val arbitrarySecuritiesClaimAndDeclaration =
