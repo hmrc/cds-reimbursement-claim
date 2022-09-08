@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.repositories
+//package uk.gov.hmrc.cdsreimbursementclaim.repositories
 
 /*import cats.data.EitherT
 import cats.instances.list._
@@ -34,18 +34,18 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ListUtils._*/
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 //import uk.gov.hmrc.mongo.cache.MongoCacheRepository
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+//import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 //import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.dateTimeWrite
 //import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 //import java.time.LocalDateTime
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.ExecutionContext
+//import scala.concurrent.duration.FiniteDuration
+//import scala.concurrent.ExecutionContext
 //import scala.concurrent.{ExecutionContext, Future}
 //import scala.util.control.NonFatal
 
 //trait CacheRepository[A] extends MongoCacheRepository[A, BSONObjectID] {
-trait CacheRepository[A] {
+/*trait CacheRepository[A] {
   this: PlayMongoRepository[A] with Logging =>
 
   implicit val ec: ExecutionContext
@@ -196,3 +196,4 @@ trait CacheRepository[A] {
   }
    */
 }
+*/

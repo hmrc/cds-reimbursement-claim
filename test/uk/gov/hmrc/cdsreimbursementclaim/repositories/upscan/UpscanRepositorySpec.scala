@@ -40,7 +40,7 @@ class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSuppo
     )
   )
 
-  val repository = new DefaultUpscanRepository(reactiveMongoComponent, config)
+  val repository: UpscanRepository = ??? //new DefaultUpscanRepository(reactiveMongoComponent, config)
 
   "Upscan Repository" when {
     "inserting" should {

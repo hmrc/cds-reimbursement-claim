@@ -53,18 +53,20 @@ class CcsSubmissionRepoSpec extends AnyWordSpec with Matchers with MongoTestSupp
     )
   )
 
-  val repository = new DefaultCcsSubmissionRepo(
+  val repository: CcsSubmissionRepo = ???
+  /** new DefaultCcsSubmissionRepo(
     reactiveMongoComponent,
     config,
     new ServicesConfig(config)
-  )
+  )*/
 
   "CcsSubmission Repo" when {
 
     "set" should {
       "insert a ccs submission request" in {
         val ccsSubmissionRequest = sample[CcsSubmissionRequest]
-        await(repository.set(ccsSubmissionRequest).value).map(item => item.item) shouldBe Right(ccsSubmissionRequest)
+        //await(repository.set(ccsSubmissionRequest).value).map(item => item.item) shouldBe Right(ccsSubmissionRequest)
+        assert(false)
       }
     }
 
@@ -72,17 +74,22 @@ class CcsSubmissionRepoSpec extends AnyWordSpec with Matchers with MongoTestSupp
       "return some work item if one exists" in {
 
         val ccsSubmissionRequest = sample[CcsSubmissionRequest]
-        await(repository.set(ccsSubmissionRequest).value).map(item => item.item) shouldBe Right(ccsSubmissionRequest)
+        //await(repository.set(ccsSubmissionRequest).value).map(item => item.item) shouldBe Right(ccsSubmissionRequest)
+        assert(false)
 
-        await(repository.get.value).map(maybeWorkItem => maybeWorkItem.map(workItem => workItem.item)) shouldBe Right(
+        /*await(repository.get.value).map(maybeWorkItem => maybeWorkItem.map(workItem => workItem.item)) shouldBe Right(
           Some(ccsSubmissionRequest)
-        )
+        )*/
+        assert(false)
+
 
       }
       "return none if no work item exists " in {
-        await(
+        assert(false)
+
+        /*await(
           repository.get.value
-        ).map(mw => mw.map(s => s.item)) shouldBe Right(None)
+        ).map(mw => mw.map(s => s.item)) shouldBe Right(None)*/
       }
     }
 
@@ -90,9 +97,11 @@ class CcsSubmissionRepoSpec extends AnyWordSpec with Matchers with MongoTestSupp
 
       "update the work item status" in {
         val ccsSubmissionRequest                                    = sample[CcsSubmissionRequest]
-        val workItem: Either[Error, WorkItem[CcsSubmissionRequest]] =
+        /*val workItem: Either[Error, WorkItem[CcsSubmissionRequest]] =
           await(repository.set(ccsSubmissionRequest).value)
-        workItem.map(wi => await(repository.setProcessingStatus(wi.id, Failed).value) shouldBe Right(true))
+        workItem.map(wi => await(repository.setProcessingStatus(wi.id, Failed).value) shouldBe Right(true))*/
+        assert(false)
+
       }
 
     }
@@ -100,11 +109,15 @@ class CcsSubmissionRepoSpec extends AnyWordSpec with Matchers with MongoTestSupp
     "set result status" should {
       "update the work item status" in {
         val ccsSubmissionRequest                                    = sample[CcsSubmissionRequest]
-        val workItem: Either[Error, WorkItem[CcsSubmissionRequest]] =
+        /*val workItem: Either[Error, WorkItem[CcsSubmissionRequest]] =
           await(repository.set(ccsSubmissionRequest).value)
         val _                                                       =
           workItem.map(wi => await(repository.setProcessingStatus(wi.id, InProgress).value))
         workItem.map(wi => await(repository.setResultStatus(wi.id, PermanentlyFailed).value) shouldBe Right(true))
+
+         */
+        assert(false)
+
       }
     }
   }

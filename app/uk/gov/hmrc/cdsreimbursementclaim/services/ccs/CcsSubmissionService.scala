@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import reactivemongo.bson.BSONObjectID
+import org.mongodb.scala.bson.ObjectId
 import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -28,7 +28,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
-import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
+import uk.gov.hmrc.mongo.cache.CacheItem
+import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus}
 
 import scala.concurrent.Future
 
@@ -41,13 +42,13 @@ trait CcsSubmissionService {
   )(implicit
     hc: HeaderCarrier,
     claimToDec64Mapper: ClaimToDec64Mapper[A]
-  ): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]]
+  ): EitherT[Future, Error, List[CacheItem]]
 
-  def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]]
+  def dequeue: EitherT[Future, Error, Option[CacheItem]]
 
-  def setProcessingStatus(id: BSONObjectID, status: ProcessingStatus): EitherT[Future, Error, Boolean]
+  def setProcessingStatus(id: ObjectId, status: ProcessingStatus): EitherT[Future, Error, Boolean]
 
-  def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean]
+  def setResultStatus(id: ObjectId, status: ResultStatus): EitherT[Future, Error, Boolean]
 
   def submitToCcs(ccsSubmissionPayload: CcsSubmissionPayload)(implicit
     hc: HeaderCarrier
@@ -77,9 +78,9 @@ class DefaultCcsSubmissionService @Inject() (
   )(implicit
     hc: HeaderCarrier,
     claimToDec64FilesMapper: ClaimToDec64Mapper[A]
-  ): EitherT[Future, Error, List[WorkItem[CcsSubmissionRequest]]] = {
+  ): EitherT[Future, Error, List[CacheItem]] = {
 
-    val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
+    val queueCcsSubmissions: List[EitherT[Future, Error, CacheItem]] =
       claimToDec64FilesMapper
         .map(submitClaimRequest, submitClaimResponse)
         .map(data =>
@@ -91,12 +92,12 @@ class DefaultCcsSubmissionService @Inject() (
     queueCcsSubmissions.sequence
   }
 
-  override def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]] = ccsSubmissionRepo.get
+  override def dequeue: EitherT[Future, Error, Option[CacheItem]] = ???//ccsSubmissionRepo.get
 
-  override def setProcessingStatus(id: BSONObjectID, status: ProcessingStatus): EitherT[Future, Error, Boolean] =
+  override def setProcessingStatus(id: ObjectId, status: ProcessingStatus): EitherT[Future, Error, Boolean] =
     ccsSubmissionRepo.setProcessingStatus(id, status)
 
-  override def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean] =
+  override def setResultStatus(id: ObjectId, status: ResultStatus): EitherT[Future, Error, Boolean] =
     ccsSubmissionRepo.setResultStatus(id, status)
 
 }

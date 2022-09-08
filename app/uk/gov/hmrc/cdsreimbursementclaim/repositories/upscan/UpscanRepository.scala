@@ -58,7 +58,6 @@ object UpscanRepository {
     }
 
 }
-//  val cacheTtl: FiniteDuration = config.underlying.get[FiniteDuration]("mongodb.upscan.expiry-time").value
 @Singleton
 class DefaultUpscanRepository @Inject() (
   mongoComponent: MongoComponent,
@@ -73,14 +72,9 @@ class DefaultUpscanRepository @Inject() (
       replaceIndexes = true,
       timestampSupport = timestampSupport,
       cacheIdType = upscanCacheId
-      //UpscanUpload.format,
-      //ReactiveMongoFormats.objectIdFormats
     )
     with UpscanRepository {
 
-  //override val cacheTtlIndexName: String = "upscan-cache-ttl"
-
-  //override val objName: String = "upscan"
   val objName: DataKey[UpscanUpload] = DataKey[UpscanUpload]("upscan")
 
   val cacheTtl: FiniteDuration = config.underlying.get[FiniteDuration]("mongodb.upscan.expiry-time").value

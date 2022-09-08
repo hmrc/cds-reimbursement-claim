@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import cats.data.EitherT
+import org.mongodb.scala.bson.ObjectId
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Headers, Request}
@@ -36,9 +37,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.workitem.WorkItem
+import uk.gov.hmrc.mongo.cache.CacheItem
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -53,7 +54,9 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
   val mockClaimService: ClaimService                 = mock[ClaimService]
   val mockCcsSubmissionService: CcsSubmissionService = mock[CcsSubmissionService]
 
-  val ccsSubmissionRequestWorkItem: WorkItem[CcsSubmissionRequest] = sample[WorkItem[CcsSubmissionRequest]]
+  val ccsSubmissionRequest: CcsSubmissionRequest = sample[CcsSubmissionRequest]
+  val ccsSubmissionRequestCacheItem: CacheItem =
+    CacheItem(new ObjectId().toString, CcsSubmissionRequest.ccsSubmissionRequestFormat.writes(ccsSubmissionRequest), Instant.now(), Instant.now())
 
   val request = new AuthenticatedRequest(
     Fake.user,
@@ -133,7 +136,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         _: ClaimToDec64Mapper[A]
       ))
       .expects(submitClaimRequest, submitClaimResponse, *, *)
-      .returning(EitherT.pure(List(ccsSubmissionRequestWorkItem)))
+      .returning(EitherT.pure(List(ccsSubmissionRequestCacheItem)))
 
   private def fakeRequestWithJsonBody(body: JsValue) =
     request.withHeaders(Headers.apply(CONTENT_TYPE -> JSON)).withBody(body)

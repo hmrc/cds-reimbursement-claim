@@ -16,99 +16,71 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs
 
-import cats.data.EitherT
+import cats.data._
+import cats.implicits._
 import com.google.inject.ImplementedBy
-import org.joda.time.DateTime
+import configs.syntax._
+import org.mongodb.scala.bson.ObjectId
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
-//import reactivemongo.api.indexes.{Index, IndexType}
-//import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
+import uk.gov.hmrc.mongo.cache.{CacheIdType, CacheItem, DataKey, MongoCacheRepository}
+
+import scala.concurrent.duration.FiniteDuration
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.JavaToJoda
-//import uk.gov.hmrc.cdsreimbursementclaim.repositories.CacheRepository
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
-//import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 import uk.gov.hmrc.workitem._
 
-import java.time.Clock
 import javax.inject.{Inject, Singleton}
-//import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[DefaultCcsSubmissionRepo])
 trait CcsSubmissionRepo {
-  def set(ccsSubmissionRequest: CcsSubmissionRequest): EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]
-  def get: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]]
+  def set(ccsSubmissionRequest: CcsSubmissionRequest): EitherT[Future, Error, CacheItem]
+  def get: EitherT[Future, Error, Option[CcsSubmissionRequest]]
   def setProcessingStatus(
-    id: BSONObjectID,
+    id: ObjectId,
     status: ProcessingStatus
   ): EitherT[Future, Error, Boolean]
-  def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean]
+  def setResultStatus(id: ObjectId, status: ResultStatus): EitherT[Future, Error, Boolean]
+}
+object CcsSubmissionRepo {
+  implicit val ccsSubmissionCacheId: CacheIdType[ObjectId] =
+    new CacheIdType[ObjectId] {
+      def run: ObjectId => String = a => a.toString
+    }
 }
 
 @Singleton
 class DefaultCcsSubmissionRepo @Inject() (
-  reactiveMongoComponent: ReactiveMongoComponent,
-  configuration: Configuration
-  //servicesConfig: ServicesConfig
+  mongoComponent: MongoComponent,
+  timestampSupport: TimestampSupport,
+  config: Configuration
 )(implicit ec: ExecutionContext)
-    extends WorkItemRepository[CcsSubmissionRequest, BSONObjectID](
-      collectionName = "ccs-submission-request-work-item",
-      mongo = reactiveMongoComponent.mongoConnector.db,
-      itemFormat = CcsSubmissionRequest.workItemFormat,
-      configuration.underlying
+  extends MongoCacheRepository[ObjectId] (
+    mongoComponent = mongoComponent,
+    collectionName = "ccs-submission-request",
+    ttl = config.underlying.get[FiniteDuration]("mongodb.work-item.expiry-time").value,
+    replaceIndexes = true,
+    timestampSupport = timestampSupport,
+    cacheIdType      = CcsSubmissionRepo.ccsSubmissionCacheId
     )
     with CcsSubmissionRepo {
 
-  override def now: DateTime = Clock.systemUTC().nowAsJoda
+  val dataKey: DataKey[CcsSubmissionRequest] = DataKey[CcsSubmissionRequest]("ccs-submission-request")
 
-  override def workItemFields: WorkItemFieldNames =
-    new WorkItemFieldNames {
-      val receivedAt   = "receivedAt"
-      val updatedAt    = "updatedAt"
-      val availableAt  = "availableAt"
-      val status       = "status"
-      val id           = "_id"
-      val failureCount = "failureCount"
-    }
-
-  override def inProgressRetryAfterProperty: String = "ccs.submission-poller.in-progress-retry-after"
+  lazy val inProgressRetryAfter: FiniteDuration = config.underlying.get[FiniteDuration]("ccs.submission-poller.in-progress-retry-after").value
 
   //private lazy val ttl = servicesConfig.getDuration("ccs.submission-poller.mongo.ttl").toSeconds
 
-  private val retryPeriod = inProgressRetryAfter.getMillis.toInt
+  //private val retryPeriod = inProgressRetryAfter.getMillis.toInt
 
-  //private val ttlIndexName: String = "receivedAtTime"
+  override def set(ccsSubmissionRequest: CcsSubmissionRequest): EitherT[Future, Error, CacheItem] =
+    OptionT.liftF(
+      put(new ObjectId())(dataKey, ccsSubmissionRequest))
+      .toRight(Error(s"failed to insert ${ccsSubmissionRequest.toString} into cache"))
 
-  /*private val ttlIndex: Index =
-    Index(
-      key = Seq("receivedAt" -> IndexType.Ascending),
-      name = Some(ttlIndexName),
-      options = BSONDocument("expireAfterSeconds" -> ttl)
-    )
-*/
-
-  @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
-    for {
-      result <- super.ensureIndexes(ExecutionContext.global)
-      //_      <- CacheRepository.setTtlIndex(ttlIndex, ttlIndexName, ttl.seconds, collection, logger)(ExecutionContext.global)
-    } yield result
-
-  override def set(ccsSubmissionRequest: CcsSubmissionRequest): EitherT[Future, Error, WorkItem[CcsSubmissionRequest]] =
-    EitherT[Future, Error, WorkItem[CcsSubmissionRequest]](
-      preservingMdc {
-        pushNew(ccsSubmissionRequest, now, (_: CcsSubmissionRequest) => ToDo).map(item => Right(item)).recover {
-          case exception: Exception => Left(Error(exception))
-        }
-      }
-    )
-
-  override def get: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]] =
-    EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]](
+  override def get: EitherT[Future, Error, Option[CcsSubmissionRequest]] = ???
+/*    EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]](
       preservingMdc {
         super
           .pullOutstanding(failedBefore = now.minusMillis(retryPeriod), availableBefore = now)
@@ -118,12 +90,13 @@ class DefaultCcsSubmissionRepo @Inject() (
           }
       }
     )
+  }*/
 
   override def setProcessingStatus(
-    id: BSONObjectID,
+    id: ObjectId,
     status: ProcessingStatus
-  ): EitherT[Future, Error, Boolean] =
-    EitherT[Future, Error, Boolean](
+  ): EitherT[Future, Error, Boolean] = ???
+/*    EitherT[Future, Error, Boolean](
       preservingMdc {
         markAs(id, status, Some(now.plusMillis(retryPeriod)))
           .map(result => Right(result))
@@ -132,13 +105,13 @@ class DefaultCcsSubmissionRepo @Inject() (
           }
       }
     )
-
-  override def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean] =
-    EitherT[Future, Error, Boolean](
+*/
+  override def setResultStatus(id: ObjectId, status: ResultStatus): EitherT[Future, Error, Boolean] = ???
+ /*   EitherT[Future, Error, Boolean](
       preservingMdc {
         complete(id, status).map(result => Right(result)).recover { case exception: Exception =>
           Left(Error(exception))
         }
       }
-    )
+    )*/
 }

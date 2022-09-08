@@ -17,32 +17,31 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import akka.actor.{ActorSystem, Cancellable}
-import cats.data.EitherT
-import cats.syntax.eq._
+//import cats.data.EitherT
+//import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.http.Status
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
-import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionPoller.OnCompleteHandler
+//import play.api.http.Status
+//import uk.gov.hmrc.cdsreimbursementclaim.models.Error
+//import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
+//import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionPoller.OnCompleteHandler
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.workitem.{Failed, PermanentlyFailed, Succeeded, WorkItem}
+import uk.gov.hmrc.workitem.WorkItem
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
+//import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Random
 
 @Singleton
 class CcsSubmissionPoller @Inject() (
   actorSystem: ActorSystem,
-  ccsSubmissionService: CcsSubmissionService,
+  //ccsSubmissionService: CcsSubmissionService,
   ccsSubmissionPollerExecutionContext: CcsSubmissionPollerExecutionContext,
   servicesConfig: ServicesConfig,
-  onCompleteHandler: OnCompleteHandler
-)(implicit
-  executionContext: CcsSubmissionPollerExecutionContext
+  //onCompleteHandler: OnCompleteHandler
+)(//implicit executionContext: CcsSubmissionPollerExecutionContext
 ) extends Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -58,7 +57,7 @@ class CcsSubmissionPoller @Inject() (
   private val pollerInterval: FiniteDuration =
     FiniteDuration(servicesConfig.getDuration("ccs.submission-poller.interval").toMillis, TimeUnit.MILLISECONDS)
 
-  private val failureCountLimit: Int = servicesConfig.getInt("ccs.submission-poller.failure-count-limit")
+  //private val failureCountLimit: Int = servicesConfig.getInt("ccs.submission-poller.failure-count-limit")
 
   val _: Cancellable =
     actorSystem.scheduler.scheduleAtFixedRate(jitteredInitialDelay, pollerInterval)(run())(
@@ -73,7 +72,7 @@ class CcsSubmissionPoller @Inject() (
     poller()
   }
 
-  def poller(): Unit = {
+  def poller(): Unit = ???/*{
     val result: EitherT[Future, Error, Unit] = ccsSubmissionService.dequeue.semiflatMap {
       case Some(workItem) =>
         if (workItem.failureCount === failureCountLimit) {
@@ -112,7 +111,7 @@ class CcsSubmissionPoller @Inject() (
     }
 
     result.value.onComplete(_ => onCompleteHandler.onComplete())
-  }
+  }*/
 
 }
 

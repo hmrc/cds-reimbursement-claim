@@ -6,7 +6,6 @@ object AppDependencies {
 
   val compile = Seq(
     "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % "7.1.0",
-    //"uk.gov.hmrc"       %% "simple-reactivemongo"      % "8.0.0-play-28",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        % hmrcMongoVersion,
     "org.typelevel"     %% "cats-core"                 % "2.3.1",
     "org.julienrf"      %% "play-json-derived-codecs"  % "7.0.0",
@@ -23,7 +22,6 @@ object AppDependencies {
     "org.scalatestplus"          %% "scalacheck-1-14"           % "3.2.0.0"        % Test,
     "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.1"          % Test,
     "org.scalatestplus.play"     %% "scalatestplus-play"        % "5.1.0"          % Test,
-    //"uk.gov.hmrc"                %% "reactivemongo-test"        % "5.0.0-play-28"  % Test,
     "uk.gov.hmrc.mongo"          %% "hmrc-mongo-test-play-28"   % hmrcMongoVersion % Test,
     "com.github.chocpanda"       %% "scalacheck-magnolia"       % "0.5.1"          % Test,
     "com.vladsch.flexmark"        % "flexmark-all"              % "0.36.8"         % "test, it",
