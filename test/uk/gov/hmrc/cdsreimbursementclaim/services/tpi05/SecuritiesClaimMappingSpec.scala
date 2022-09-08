@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CustomDeclarationType
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, PostNewClaimsRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -50,28 +50,28 @@ class SecuritiesClaimMappingSpec
         case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))) =>
           common.originatingSystem     should ===(MDTP)
           detail.customDeclarationType should ===(CustomDeclarationType.MRN.some)
-          detail.claimType             should ===(Some(ClaimType.SECURITY))
+          detail.claimType             should ===(None)
           detail.claimantEORI          should ===(claim.claimantInformation.eori)
           detail.claimantEmailAddress  should ===(
             claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
           )
-//          detail.claimantName                            should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
-          detail.securityInfo
+          detail.claimantName          should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
+          detail.security
             .flatMap(_.securityDetails)
             .toList
             .flatten
-            .sortBy(_.securityDepositId)
+            .sortBy(_.securityDepositID)
             .zip(declaration.displayResponseDetail.securityDetails.toList.flatten.sortBy(_.securityDepositId))
             .zip(claim.securitiesReclaims.toList.sortBy(_._1))
             .foreach { case ((eisSecurityDetail, acc14SecurityDetail), (reclaimDepositId, reclaimTaxes)) =>
-              eisSecurityDetail.securityDepositId should ===(acc14SecurityDetail.securityDepositId)
-              eisSecurityDetail.securityDepositId should ===(reclaimDepositId)
+              eisSecurityDetail.securityDepositID should ===(acc14SecurityDetail.securityDepositId)
+              eisSecurityDetail.securityDepositID should ===(reclaimDepositId)
               eisSecurityDetail.paymentReference  should ===(acc14SecurityDetail.paymentReference)
               eisSecurityDetail.totalAmount       should ===(acc14SecurityDetail.totalAmount)
               eisSecurityDetail.paymentMethod     should ===(acc14SecurityDetail.paymentMethod)
               eisSecurityDetail.amountPaid        should ===(acc14SecurityDetail.amountPaid)
 
-              eisSecurityDetail.taxReclaimDetails
+              eisSecurityDetail.taxDetails
                 .sortBy(_.taxType)
                 .zip(acc14SecurityDetail.taxDetails.sortBy(_.taxType))
                 .zip(reclaimTaxes.toList.sortBy(_._1.value))

@@ -40,7 +40,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
         claimantEmailAddress = claimantEmail //,
 //        claimantName = request.signedInUserDetails.contactName.value
       )
-      .forClaimOfType(C285)
+      .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(request.claim.declarantTypeAnswer))
       .withClaimedAmount(request.claim.totalReimbursementAmount)
       .withReimbursementMethod(request.claim.reimbursementMethodAnswer)

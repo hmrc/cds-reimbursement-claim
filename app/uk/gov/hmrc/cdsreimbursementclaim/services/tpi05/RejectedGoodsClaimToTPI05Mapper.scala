@@ -57,7 +57,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
         claimantEmailAddress = claimantEmail //,
 //        claimantName = claimantName
       )
-      .forClaimOfType(CE1179)
+      .forClaimOfType(Some(CE1179))
       .withClaimant(Claimant.basedOn(claim.claimantType))
       .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)

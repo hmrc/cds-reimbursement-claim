@@ -20,18 +20,17 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecurityDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BtaSource
 
 final case class SecurityInfo(
   dateClaimReceived: Option[EisBasicDate] = None,
-  reasonForSecurity: Option[ReasonForSecurity] = None,
-  declarationId: Option[DeclarationId] = None,
+  reasonForSecurity: Option[String] = None,
+  declarationID: Option[DeclarationId] = None,
   procedureCode: Option[ProcedureCode] = None,
   acceptanceDate: Option[EisBasicDate] = None,
   declarantReferenceNumber: Option[DeclarantReferenceNumber] = None,
-  btaSource: Option[BtaSource] = None,
-  btaDueDate: Option[EisBasicDate] = None,
+  BTASource: Option[BtaSource] = None,
+  BTADueDate: Option[EisBasicDate] = None,
   declarantDetails: Option[MRNInformation] = None,
   consigneeDetails: Option[MRNInformation] = None,
   accountDetails: Option[List[AccountDetail]] = None,

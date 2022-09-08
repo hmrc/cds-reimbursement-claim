@@ -24,7 +24,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesC
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, ConsigneeDetails, DeclarantDetails, SecurityDetails, TaxDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.SECURITY
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -37,36 +36,35 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   def map(request: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, displayDeclaration) = request
     (for {
-      email                    <- claim.claimantInformation.contactInformation.emailAddress.toRight(
-                                    CdsError("claimant email address is mandatory")
-                                  )
-      claimantName             <- claim.claimantInformation.contactInformation.contactPerson.toRight(
-                                    CdsError("claimant contact name is mandatory")
-                                  )
-      claimantEmail             = Email(email)
-      claimedAmount             = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
-      declarantDetails         <- DeclarantDetails.fromClaimantInformation(claim.claimantInformation)
-      consigneeDetails         <- ConsigneeDetails.fromClaimantInformation(claim.claimantInformation)
-      securities                = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      securityDetails          <- getSecurityDetails(securities, claim.securitiesReclaims)
-      acceptanceDate           <- AcceptanceDate
-                                    .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
-                                    .toEither
-                                    .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
-      declarantReferenceNumber <- displayDeclaration.displayResponseDetail.declarantReferenceNumber.toRight(
-                                    CdsError("declarant reference number is mandatory")
-                                  )
-      btaSource                 = displayDeclaration.displayResponseDetail.btaSource
-      btaDueDate                = displayDeclaration.displayResponseDetail.btaDueDate
-                                    .flatMap(EisBasicDate.parse(_).toOption)
-      accountDetails            = displayDeclaration.displayResponseDetail.accountDetails
+      email                   <- claim.claimantInformation.contactInformation.emailAddress.toRight(
+                                   CdsError("claimant email address is mandatory")
+                                 )
+      claimantName            <- claim.claimantInformation.contactInformation.contactPerson.toRight(
+                                   CdsError("claimant contact name is mandatory")
+                                 )
+      claimantEmail            = Email(email)
+      claimedAmount            = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
+      declarantDetails        <- DeclarantDetails.fromClaimantInformation(claim.claimantInformation)
+      consigneeDetails        <- ConsigneeDetails.fromClaimantInformation(claim.claimantInformation)
+      securities               = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      securityDetails         <- getSecurityDetails(securities, claim.securitiesReclaims)
+      acceptanceDate          <- AcceptanceDate
+                                   .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                                   .toEither
+                                   .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
+      declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber
+      btaSource                = displayDeclaration.displayResponseDetail.btaSource
+      btaDueDate               = displayDeclaration.displayResponseDetail.btaDueDate
+                                   .flatMap(EisBasicDate.parse(_).toOption)
+      accountDetails           = displayDeclaration.displayResponseDetail.accountDetails
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
-        claimantEmailAddress = claimantEmail
-//          claimantName = claimantName
+        claimantEmailAddress = claimantEmail,
+        claimantName = Some(claimantName),
+        useExistingPaymentMethod = Some(claim.bankAccountDetails.isEmpty)
       )
-      .forClaimOfType(SECURITY)
+      .forClaimOfType(None)
       .withClaimedAmount(claimedAmount)
       .withClaimant(Claimant.basedOn(claim.claimantType))
       .withSecurityInfo(
@@ -75,40 +73,16 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         DeclarationId(claim.movementReferenceNumber.value),
         ProcedureCode(displayDeclaration.displayResponseDetail.procedureCode),
         acceptanceDate,
-        DeclarantReferenceNumber(declarantReferenceNumber),
+        declarantReferenceNumber.map(DeclarantReferenceNumber(_)),
         btaSource.map(BtaSource(_)),
         btaDueDate,
         declarantDetails,
         consigneeDetails,
-        accountDetails.map(
-          _.map(acc =>
-            AccountDetail(
-              accountType = acc.accountType,
-              accountNumber = acc.accountNumber,
-              EORI = acc.eori,
-              legalName = acc.legalName,
-              contactDetails = acc.contactDetails.map(contact =>
-                ContactInformation(
-                  contactPerson = contact.contactName, // is this mapping correct?
-                  addressLine1 = contact.addressLine1,
-                  addressLine2 = contact.addressLine2,
-                  addressLine3 = contact.addressLine3,
-                  street = None,
-                  city = None,
-                  countryCode = contact.countryCode,
-                  postalCode = contact.postalCode,
-                  telephoneNumber = contact.telephone,
-                  faxNumber = None,
-                  emailAddress = contact.emailAddress
-                )
-              )
-            )
-          )
-        ),
+        accountDetails,
         getBankDetails(
           claim.claimantType,
           claim.bankAccountDetails
-        ), // do we need both consignee and declarant details? (https://confluence.tools.tax.service.gov.uk/display/CDSR/Data+Point+Mapping#DataPointMapping-SecuritiesBackendMappings)
+        ),
         securityDetails,
         ReimbursementMethod.BankTransfer
       )).flatMap(x => x.verify)
@@ -149,8 +123,8 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     claimItems: Map[TaxCode, BigDecimal]
   ): List[TaxReclaimDetail] =
     depositTaxes
-      .sortBy(_.taxType)
       .filter(dt => claimItems.keys.exists(_.value === dt.taxType))
+      .sortBy(_.taxType)
       .zip(claimItems.toList.sortBy(_._1.value))
       .map { case (TaxDetails(taxType, amount), (_, claimAmount)) =>
         TaxReclaimDetail(taxType, amount, claimAmount.toString())

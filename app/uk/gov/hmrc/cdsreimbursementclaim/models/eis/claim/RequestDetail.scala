@@ -36,6 +36,7 @@ final case class RequestDetail(
   claimDate: Option[String] = None,
   claimAmountTotal: Option[String] = None,
   disposalMethod: Option[String] = None,
+  useExistingPaymentMethod: Option[Boolean] = None,
   reimbursementMethod: Option[ReimbursementMethod] = None,
   basisOfClaim: Option[String] = None,
   claimant: Option[Claimant] = None,
@@ -45,13 +46,13 @@ final case class RequestDetail(
   authorityTypeProvided: Option[String] = None,
   claimantEORI: Eori,
   claimantEmailAddress: Email,
-// TODO: Reinstate when QA environment has been updated to all this.
+  // TODO: Reinstate when QA environment has been updated to all this.
   claimantName: Option[String] = None,
   goodsDetails: Option[GoodsDetails] = None,
   EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,
   duplicateMRNDetails: Option[MrnDetail] = None,
-  securityInfo: Option[SecurityInfo] = None
+  security: Option[SecurityInfo] = None
 )
 
 object RequestDetail {
