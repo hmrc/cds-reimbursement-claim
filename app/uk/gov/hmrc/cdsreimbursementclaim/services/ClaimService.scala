@@ -181,7 +181,7 @@ class DefaultClaimService @Inject() (
     request: Request[_],
     tpi05Binder: ClaimToTPI05Mapper[R],
     auditableFormat: Format[A]
-  ): EitherT[Future, Error, ClaimSubmitResponse] = {
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
     for {
       eisSubmitRequest       <- EitherT
                                   .fromEither[Future](EisSubmitClaimRequest(claimRequest))
@@ -199,7 +199,6 @@ class DefaultClaimService @Inject() (
                                     EitherT.pure[Future, Error](())
                                   }
     } yield claimResponse
-  }
 
   private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
     EitherT.fromOption[Future](

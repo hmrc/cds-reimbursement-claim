@@ -69,23 +69,26 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       .withClaimedAmount(claimedAmount)
       .withClaimant(Claimant.basedOn(claim.claimantType))
       .withSecurityInfo(
-        Some(EisBasicDate(LocalDate.now)),
-        claim.reasonForSecurity,
-        DeclarationId(claim.movementReferenceNumber.value),
-        ProcedureCode(displayDeclaration.displayResponseDetail.procedureCode),
-        acceptanceDate,
-        declarantReferenceNumber.map(DeclarantReferenceNumber(_)),
-        btaSource.map(BtaSource(_)),
-        btaDueDate,
-        declarantDetails,
-        consigneeDetails,
-        accountDetails,
-        getBankDetails(
+        dateClaimReceived = Some(EisBasicDate(LocalDate.now)),
+        reasonForSecurity = claim.reasonForSecurity,
+        declarationId = DeclarationId(claim.movementReferenceNumber.value),
+        procedureCode = ProcedureCode(displayDeclaration.displayResponseDetail.procedureCode),
+        acceptanceDate = acceptanceDate,
+        declarantReferenceNumber = declarantReferenceNumber.map(DeclarantReferenceNumber(_)),
+        btaSource = btaSource.map(BtaSource(_)),
+        btaDueDate = btaDueDate,
+        declarantDetails = declarantDetails,
+        consigneeDetails = consigneeDetails,
+        accountDetails = accountDetails,
+        bankDetails = getBankDetails(
           claim.claimantType,
           claim.bankAccountDetails
         ),
-        securityDetails,
-        ReimbursementMethod.BankTransfer // securityDeposits.map(_.paymentMethod) // How should we derive this?
+        securityDetails = securityDetails,
+        reimbursementMethod = claim.bankAccountDetails match {
+          case Some(_) => ReimbursementMethod.BankTransfer
+          case None    => ReimbursementMethod.GeneralGuarantee // this needs business clarification
+        }
       )).flatMap(x => x.verify)
   }
 
