@@ -57,6 +57,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       btaDueDate               = displayDeclaration.displayResponseDetail.btaDueDate
                                    .flatMap(EisBasicDate.parse(_).toOption)
       accountDetails           = displayDeclaration.displayResponseDetail.accountDetails
+      securityDeposits         = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -84,7 +85,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
           claim.bankAccountDetails
         ),
         securityDetails,
-        ReimbursementMethod.BankTransfer
+        ReimbursementMethod.BankTransfer // securityDeposits.map(_.paymentMethod) // How should we derive this?
       )).flatMap(x => x.verify)
   }
 

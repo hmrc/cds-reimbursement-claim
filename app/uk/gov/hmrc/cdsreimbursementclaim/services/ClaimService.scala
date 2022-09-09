@@ -182,7 +182,6 @@ class DefaultClaimService @Inject() (
     tpi05Binder: ClaimToTPI05Mapper[R],
     auditableFormat: Format[A]
   ): EitherT[Future, Error, ClaimSubmitResponse] = {
-    logger.warn(claimRequest.toString)
     for {
       eisSubmitRequest       <- EitherT
                                   .fromEither[Future](EisSubmitClaimRequest(claimRequest))
@@ -240,7 +239,6 @@ class DefaultClaimService @Inject() (
           submitClaimRequest,
           eisSubmitClaimRequest
         )
-        logger.warn(s"Securities claim response: ${httpResponse.status} ${httpResponse.body}")
         Either.cond(
           httpResponse.status === OK,
           httpResponse, {
