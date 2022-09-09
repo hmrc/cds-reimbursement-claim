@@ -58,6 +58,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                    .flatMap(EisBasicDate.parse(_).toOption)
       accountDetails           = displayDeclaration.displayResponseDetail.accountDetails
       securityDeposits         = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      reimbursementMethod      <- getReimbursementMethod(claim.bankAccountDetails, securityDeposits)
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -85,11 +86,21 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
           claim.bankAccountDetails
         ),
         securityDetails = securityDetails,
-        reimbursementMethod = claim.bankAccountDetails match {
-          case Some(_) => ReimbursementMethod.BankTransfer
-          case None    => ReimbursementMethod.GeneralGuarantee // this needs business clarification
-        }
+        reimbursementMethod = reimbursementMethod
       )).flatMap(x => x.verify)
+  }
+
+  private def getReimbursementMethod(bankAccountDetails: Option[BankAccountDetails], securityDeposits: List[SecurityDetails]): Either[CdsError, ReimbursementMethod] = {
+    securityDeposits.map(_.paymentMethod).groupBy(x => x).keys match {
+      case "001" :: Nil => Right(ReimbursementMethod.BankTransfer)
+      case "004" :: Nil => Right(ReimbursementMethod.GeneralGuarantee)
+      case "005" :: Nil => Right(ReimbursementMethod.IndividualGuarantee)
+      case Nil => Left(CdsError("No security deposits"))
+      case _ => bankAccountDetails match {
+        case Some(_) => Right(ReimbursementMethod.BankTransfer)
+        case None => Left(CdsError("Could not determine reimbursement method"))
+      }
+    }
   }
 
   private def getBankDetails(claimantType: ClaimantType, bankAccountDetails: Option[BankAccountDetails]): BankDetails =
