@@ -145,19 +145,19 @@ object Acc14DeclarationGen {
     contactDetails = Some(contactDetails)
   )
 
-  lazy val genSecurityDetails: Gen[SecurityDetails] =
+  def genSecurityDetails(paymentMethod: Option[String] = None): Gen[SecurityDetails] =
     for {
-      securityDepositId <- genRandomString
-      totalAmount       <- genBigDecimal
-      amountPaid        <- genBigDecimal
-      paymentMethod     <- genPaymentMethod
-      paymentReference  <- genRandomString
-      taxDetails        <- Gen.nonEmptyListOf(genTaxDetails)
+      securityDepositId      <- genRandomString
+      totalAmount            <- genBigDecimal
+      amountPaid             <- genBigDecimal
+      generatedPaymentMethod <- genPaymentMethod
+      paymentReference       <- genRandomString
+      taxDetails             <- Gen.nonEmptyListOf(genTaxDetails)
     } yield SecurityDetails(
       securityDepositId = securityDepositId,
       totalAmount = totalAmount.toString(),
       amountPaid = amountPaid.toString(),
-      paymentMethod = paymentMethod,
+      paymentMethod = paymentMethod.getOrElse(generatedPaymentMethod),
       paymentReference = paymentReference,
       taxDetails = taxDetails
     )
@@ -212,7 +212,8 @@ object Acc14DeclarationGen {
     maskedBankDetails        <- Gen.const(mask(bankDetails))
     numNdrcDetails           <- Gen.choose(1, 5)
     ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
-    securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails))
+    paymentMethod            <- Gen.oneOf("001", "004", "005")
+    securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails(Some(paymentMethod))))
   } yield DisplayDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,
@@ -312,7 +313,7 @@ object Acc14DeclarationGen {
       consigneeDetails         <- Gen.option(genConsigneeDetails)
       accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
       bankDetails              <- Gen.some(genBankDetails)
-      securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails))
+      securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails()))
     } yield ResponseDetail(
       declarationId = mrn.value,
       acceptanceDate = acceptanceDate,
@@ -345,7 +346,7 @@ object Acc14DeclarationGen {
     Arbitrary(genConsigneeDetails)
 
   implicit lazy val arbitrarySecurityDetails: Typeclass[SecurityDetails] =
-    Arbitrary(genSecurityDetails)
+    Arbitrary(genSecurityDetails())
 
   implicit lazy val arbitraryDisplayDeclaration: Typeclass[DisplayDeclaration] =
     Arbitrary(genDisplayDeclaration)

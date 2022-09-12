@@ -152,15 +152,12 @@ object TPI05 {
       declarantDetails: MRNInformation,
       consigneeDetails: MRNInformation,
       accountDetails: Option[List[AccountDetails]],
-      bankDetails: BankDetails,
-      securityDetails: List[SecurityDetail],
-      reimbursementMethod: ReimbursementMethod
+      securityDetails: List[SecurityDetail]
     ): Builder =
       copy(
         validatedRequest.map(
           _.copy(
             CDFPayService = CDFPayService.SCTY,
-            reimbursementMethod = Some(reimbursementMethod),
             security = Some(
               SecurityInfo(
                 dateClaimReceived = dateClaimReceived,
@@ -198,8 +195,26 @@ object TPI05 {
                     )
                   )
                 ),
-                bankDetails = Some(bankDetails),
                 securityDetails = Some(securityDetails)
+              )
+            )
+          )
+        )
+      )
+
+    def withSecurityPaymentDetails(
+      bankDetails: Option[BankDetails],
+      reimbursementMethod: Option[ReimbursementMethod],
+      useExistingPaymentMethod: Option[Boolean]
+    ): Builder =
+      copy(
+        validatedRequest.map(x =>
+          x.copy(
+            reimbursementMethod = reimbursementMethod,
+            useExistingPaymentMethod = useExistingPaymentMethod,
+            security = x.security.map(
+              _.copy(
+                bankDetails = bankDetails
               )
             )
           )

@@ -36,29 +36,31 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   def map(request: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, displayDeclaration) = request
     (for {
-      email                   <- claim.claimantInformation.contactInformation.emailAddress.toRight(
-                                   CdsError("claimant email address is mandatory")
-                                 )
-      claimantName            <- claim.claimantInformation.contactInformation.contactPerson.toRight(
-                                   CdsError("claimant contact name is mandatory")
-                                 )
-      claimantEmail            = Email(email)
-      claimedAmount            = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
-      declarantDetails        <- DeclarantDetails.fromClaimantInformation(claim.claimantInformation)
-      consigneeDetails        <- ConsigneeDetails.fromClaimantInformation(claim.claimantInformation)
-      securities               = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      securityDetails         <- getSecurityDetails(securities, claim.securitiesReclaims)
-      acceptanceDate          <- AcceptanceDate
-                                   .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
-                                   .toEither
-                                   .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
-      declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber
-      btaSource                = displayDeclaration.displayResponseDetail.btaSource
-      btaDueDate               = displayDeclaration.displayResponseDetail.btaDueDate
-                                   .flatMap(EisBasicDate.parse(_).toOption)
-      accountDetails           = displayDeclaration.displayResponseDetail.accountDetails
-      securityDeposits         = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      reimbursementMethod      <- getReimbursementMethod(claim.bankAccountDetails, securityDeposits)
+      email                                                        <- claim.claimantInformation.contactInformation.emailAddress.toRight(
+                                                                        CdsError("claimant email address is mandatory")
+                                                                      )
+      claimantName                                                 <- claim.claimantInformation.contactInformation.contactPerson.toRight(
+                                                                        CdsError("claimant contact name is mandatory")
+                                                                      )
+      claimantEmail                                                 = Email(email)
+      claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
+      declarantDetails                                             <- DeclarantDetails.fromClaimantInformation(claim.claimantInformation)
+      consigneeDetails                                             <- ConsigneeDetails.fromClaimantInformation(claim.claimantInformation)
+      securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
+      acceptanceDate                                               <- AcceptanceDate
+                                                                        .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                                                                        .toEither
+                                                                        .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
+      declarantReferenceNumber                                      = displayDeclaration.displayResponseDetail.declarantReferenceNumber
+      btaSource                                                     = displayDeclaration.displayResponseDetail.btaSource
+      btaDueDate                                                    = displayDeclaration.displayResponseDetail.btaDueDate
+                                                                        .flatMap(EisBasicDate.parse(_).toOption)
+      accountDetails                                                = displayDeclaration.displayResponseDetail.accountDetails
+      securityDeposits                                              = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      securityPaymentDetails                                       <-
+        getSecurityPaymentDetails(claim.claimantType, claim.bankAccountDetails, securityDeposits)
+      (bankDetails, useExistingPaymentDetails, reimbursementMethod) = securityPaymentDetails
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -81,25 +83,31 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         declarantDetails = declarantDetails,
         consigneeDetails = consigneeDetails,
         accountDetails = accountDetails,
-        bankDetails = getBankDetails(
-          claim.claimantType,
-          claim.bankAccountDetails
-        ),
-        securityDetails = securityDetails,
-        reimbursementMethod = reimbursementMethod
+        securityDetails = securityDetails
+      )
+      .withSecurityPaymentDetails(
+        reimbursementMethod = reimbursementMethod,
+        useExistingPaymentMethod = useExistingPaymentDetails,
+        bankDetails = bankDetails
       )).flatMap(x => x.verify)
   }
 
-  private def getReimbursementMethod(bankAccountDetails: Option[BankAccountDetails], securityDeposits: List[SecurityDetails]): Either[CdsError, ReimbursementMethod] = {
+  private def getSecurityPaymentDetails(
+    claimantType: ClaimantType,
+    bankAccountDetails: Option[BankAccountDetails],
+    securityDeposits: List[SecurityDetails]
+  ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] = {
+    val bankDetails = getBankDetails(claimantType, bankAccountDetails)
     securityDeposits.map(_.paymentMethod).groupBy(x => x).keys match {
-      case "001" :: Nil => Right(ReimbursementMethod.BankTransfer)
-      case "004" :: Nil => Right(ReimbursementMethod.GeneralGuarantee)
-      case "005" :: Nil => Right(ReimbursementMethod.IndividualGuarantee)
-      case Nil => Left(CdsError("No security deposits"))
-      case _ => bankAccountDetails match {
-        case Some(_) => Right(ReimbursementMethod.BankTransfer)
-        case None => Left(CdsError("Could not determine reimbursement method"))
-      }
+      case "001" :: Nil => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
+      case "004" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
+      case "005" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
+      case Nil          => Left(CdsError("No security deposits"))
+      case _            =>
+        bankAccountDetails match {
+          case Some(_) => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
+          case None    => Left(CdsError("Could not determine payment method"))
+        }
     }
   }
 
