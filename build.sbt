@@ -28,7 +28,9 @@ lazy val wartremoverSettings =
 
 lazy val scoverageSettings =
   Seq(
-    ScoverageKeys.coverageExcludedFiles := (Compile / managedSourceDirectories).value.map(d => s"${d.getPath}/.*").mkString(";"),
+    ScoverageKeys.coverageExcludedFiles := (Compile / managedSourceDirectories).value
+      .map(d => s"${d.getPath}/.*")
+      .mkString(";"),
     ScoverageKeys.coverageExcludedPackages := "<empty>;.*(config|views).*",
     ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageMinimumBranchTotal := 73,
@@ -46,25 +48,31 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.12.12")
+  .settings(scalaVersion := "2.12.14")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
   )
-  .settings(routesImport := Seq(
-    "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN",
-    "uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity"
-  ))
+  .settings(
+    routesImport := Seq(
+      "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN",
+      "uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity"
+    )
+  )
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
     addCompilerPlugin(scalafixSemanticdb),
     scalacOptions ++= List(
       "-Yrangepos",
       "-language:postfixOps",
-      "-Ypartial-unification"
+      "-Ypartial-unification",
+      "-Wconf:cat=unused-imports&site=<empty>:iv",
+      "-Wconf:cat=unused-imports&site=prod:iv",
+      "-Wconf:cat=unused-imports&site=upscan:iv",
+      "-Wconf:cat=unused-imports&site=testOnlyDoNotUseInAppConf:iv",
+      "-Wconf:cat=unused-privates&site=testOnlyDoNotUseInAppConf.Routes.defaultPrefix:iv"
     ),
-    Test / scalacOptions --= Seq("-Ywarn-value-discard"),
-    scalacOptions += "-P:silencer:pathFilters=routes"
+    Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
