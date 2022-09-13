@@ -22,11 +22,12 @@ import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarationId, ProcedureCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CDFPayService, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BtaSource}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
@@ -36,7 +37,12 @@ object TPI05 {
 
 // TODO: Reinstate when the QA environment has been updates with a later version of the TPI05 schema.
 //  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
-  def request(claimantEORI: Eori, claimantEmailAddress: Email): Builder = Builder(
+  def request(
+    claimantEORI: Eori,
+    claimantEmailAddress: Email,
+    claimantName: Option[String] = None,
+    useExistingPaymentMethod: Option[Boolean] = None
+  ): Builder = Builder(
     Valid(
       RequestDetail(
         CDFPayService = CDFPayService.NDRC,
@@ -44,16 +50,17 @@ object TPI05 {
         customDeclarationType = Some(CustomDeclarationType.MRN),
         claimDate = Some(ISOLocalDate.now),
         claimantEORI = claimantEORI,
-        claimantEmailAddress = claimantEmailAddress //,
-//        claimantName = claimantName
+        claimantEmailAddress = claimantEmailAddress,
+        claimantName = claimantName,
+        useExistingPaymentMethod = useExistingPaymentMethod
       )
     )
   )
 
   final case class Builder private (validatedRequest: Validated[CdsError, RequestDetail]) extends AnyVal {
 
-    def forClaimOfType(claimType: ClaimType): Builder =
-      copy(validatedRequest.map(_.copy(claimType = Some(claimType))))
+    def forClaimOfType(claimType: Option[ClaimType]): Builder =
+      copy(validatedRequest.map(_.copy(claimType = claimType)))
 
     def withClaimedAmount(claimedAmount: BigDecimal): Builder =
       copy(validatedRequest.andThen { request =>
@@ -139,23 +146,77 @@ object TPI05 {
       declarationId: DeclarationId,
       procedureCode: ProcedureCode,
       acceptanceDate: AcceptanceDate,
+      declarantReferenceNumber: Option[DeclarantReferenceNumber],
+      btaSource: Option[BtaSource],
+      btaDueDate: Option[EisBasicDate],
       declarantDetails: MRNInformation,
       consigneeDetails: MRNInformation,
-      bankDetails: BankDetails,
+      accountDetails: Option[List[AccountDetails]],
       securityDetails: List[SecurityDetail]
     ): Builder =
       copy(
         validatedRequest.map(
           _.copy(
-            dateClaimReceived = dateClaimReceived,
-            reasonForSecurity = Some(reasonForSecurity),
-            declarationId = Some(declarationId),
-            procedureCode = Some(procedureCode),
-            acceptanceDate = Some(EisBasicDate(acceptanceDate.value)),
-            declarantDetails = Some(declarantDetails),
-            consigneeDetails = Some(consigneeDetails),
-            bankDetails = Some(bankDetails),
-            securityDetails = Some(securityDetails)
+            CDFPayService = CDFPayService.SCTY,
+            security = Some(
+              SecurityInfo(
+                dateClaimReceived = dateClaimReceived,
+                reasonForSecurity = Some(reasonForSecurity.acc14Code),
+                declarationID = Some(declarationId),
+                procedureCode = Some(procedureCode),
+                acceptanceDate = Some(EisBasicDate(acceptanceDate.value)),
+                declarantReferenceNumber = declarantReferenceNumber,
+                BTASource = btaSource,
+                BTADueDate = btaDueDate,
+                declarantDetails = Some(declarantDetails),
+                consigneeDetails = Some(consigneeDetails),
+                accountDetails = accountDetails.map(
+                  _.map(acc =>
+                    AccountDetail(
+                      accountType = acc.accountType,
+                      accountNumber = acc.accountNumber,
+                      EORI = acc.eori,
+                      legalName = acc.legalName,
+                      contactDetails = acc.contactDetails.map(contact =>
+                        ContactInformation(
+                          contactPerson = contact.contactName,
+                          addressLine1 = contact.addressLine1,
+                          addressLine2 = contact.addressLine2,
+                          addressLine3 = contact.addressLine3,
+                          street = None,
+                          city = None,
+                          countryCode = contact.countryCode,
+                          postalCode = contact.postalCode,
+                          telephoneNumber = contact.telephone,
+                          faxNumber = None,
+                          emailAddress = contact.emailAddress
+                        )
+                      )
+                    )
+                  )
+                ),
+                securityDetails = Some(securityDetails)
+              )
+            )
+          )
+        )
+      )
+
+    def withSecurityPaymentDetails(
+      bankDetails: Option[BankDetails],
+      reimbursementMethod: Option[ReimbursementMethod],
+      useExistingPaymentMethod: Option[Boolean]
+    ): Builder =
+      copy(
+        validatedRequest.map(x =>
+          x.copy(
+            reimbursementMethod = reimbursementMethod,
+            useExistingPaymentMethod = useExistingPaymentMethod,
+            security = x.security.map(
+              _.copy(
+                bankDetails = bankDetails
+              )
+            )
           )
         )
       )

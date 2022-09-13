@@ -30,6 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CMAEligibleGen.genWhe
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genContactDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen.genReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
@@ -69,7 +70,7 @@ object Acc14DeclarationGen {
 
   lazy val genTaxDetails: Gen[TaxDetails] = for {
     taxType <- genTaxCode.map(_.value)
-    amount  <- genBigDecimal
+    amount  <- Gen.choose(1, 100).map(BigDecimal(_))
   } yield TaxDetails(
     taxType = taxType,
     amount = amount.toString()
@@ -149,9 +150,9 @@ object Acc14DeclarationGen {
       securityDepositId <- genRandomString
       totalAmount       <- genBigDecimal
       amountPaid        <- genBigDecimal
-      paymentMethod     <- genPaymentMethod
+      paymentMethod     <- Gen.oneOf("001", "004", "005")
       paymentReference  <- genRandomString
-      taxDetails        <- Gen.nonEmptyListOf(genTaxDetails)
+      taxDetails        <- Gen.nonEmptyMap(genTaxDetails.map(t => (t.taxType, t))).map(_.values.toList)
     } yield SecurityDetails(
       securityDepositId = securityDepositId,
       totalAmount = totalAmount.toString(),
@@ -161,7 +162,7 @@ object Acc14DeclarationGen {
       taxDetails = taxDetails
     )
 
-  lazy val genDisplayDeclaration: Gen[DisplayDeclaration]                                                 = for {
+  lazy val genDisplayDeclaration: Gen[DisplayDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -192,6 +193,49 @@ object Acc14DeclarationGen {
       bankDetails = Some(bankDetails),
       maskedBankDetails = Some(maskedBankDetails),
       ndrcDetails = Some(ndrcDetails)
+    )
+  )
+
+  lazy val genDisplayDeclarationWithSecurities: Gen[DisplayDeclaration] = for {
+    mrn                      <- genMRN
+    acceptanceDate           <- genAcceptanceDate
+    declarantReferenceNumber <- Gen.option(genRandomString)
+    securityReason           <- Gen.some(genReasonForSecurity.map(_.acc14Code))
+    btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
+    procedureCode            <- genStringWithMaxSizeOfN(5)
+    btaSource                <- Gen.option(genRandomString)
+    declarantDetails         <- genDeclarantDetails
+    consigneeDetails         <- genConsigneeDetails
+    numAccDetails            <- Gen.choose(1, 5)
+    accountDetails           <- Gen.option(Gen.listOfN(numAccDetails, genAccountDetails))
+    bankDetails              <- genBankDetails
+    maskedBankDetails        <- Gen.const(mask(bankDetails))
+    numNdrcDetails           <- Gen.choose(1, 5)
+    ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
+    paymentMethod            <- Gen.oneOf("001", "004", "005")
+    securityDetails          <- Gen.some(
+                                  Gen
+                                    .nonEmptyListOf(genSecurityDetails)
+                                    .map(_.groupBy(_.securityDepositId).values.map(_.headOption.toList).toList.flatten)
+                                    .map(_.map(_.copy(paymentMethod = paymentMethod)))
+                                )
+
+  } yield DisplayDeclaration(
+    DisplayResponseDetail(
+      declarationId = mrn.value,
+      acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
+      declarantReferenceNumber = declarantReferenceNumber,
+      securityReason = securityReason,
+      btaDueDate = btaDueDate,
+      procedureCode = procedureCode,
+      btaSource = btaSource,
+      declarantDetails = declarantDetails,
+      consigneeDetails = Some(consigneeDetails),
+      accountDetails = accountDetails,
+      bankDetails = Some(bankDetails),
+      maskedBankDetails = Some(maskedBankDetails),
+      ndrcDetails = Some(ndrcDetails),
+      securityDetails = securityDetails
     )
   )
   def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[DisplayDeclaration] =
@@ -260,36 +304,6 @@ object Acc14DeclarationGen {
       bankDetails = bankDetails,
       ndrcDetails = ndrcDetails,
       securityDetails = None
-    )
-
-  lazy val genResponseDetailWithSecurities: Gen[ResponseDetail] =
-    for {
-      mrn                      <- genMRN
-      acceptanceDate           <- genLocalDate.map(_.toIsoLocalDate)
-      declarantReferenceNumber <- Gen.option(genRandomString)
-      securityReason           <- Gen.option(genRandomString)
-      btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
-      procedureCode            <- genStringWithMaxSizeOfN(5)
-      btaSource                <- Gen.option(genRandomString)
-      declarantDetails         <- genDeclarantDetails
-      consigneeDetails         <- Gen.option(genConsigneeDetails)
-      accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
-      bankDetails              <- Gen.option(genBankDetails)
-      securityDetails          <- Gen.option(Gen.nonEmptyListOf(genSecurityDetails))
-    } yield ResponseDetail(
-      declarationId = mrn.value,
-      acceptanceDate = acceptanceDate,
-      declarantReferenceNumber = declarantReferenceNumber,
-      securityReason = securityReason,
-      btaDueDate = btaDueDate,
-      procedureCode = procedureCode,
-      btaSource = btaSource,
-      declarantDetails = declarantDetails,
-      consigneeDetails = consigneeDetails,
-      accountDetails = accountDetails,
-      bankDetails = bankDetails,
-      ndrcDetails = None,
-      securityDetails = securityDetails
     )
 
   implicit lazy val arbitraryTaxDetails: Typeclass[TaxDetails] =

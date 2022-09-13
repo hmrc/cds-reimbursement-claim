@@ -168,30 +168,37 @@ class DefaultClaimService @Inject() (
     request: Request[_],
     claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
-    EitherT.left(Future.successful(Error(s"Securities claim TPI05 call not yet implemented"))) //TODO: 1718
+    declarationService
+      .getDeclaration(
+        securitiesClaimRequest.claim.movementReferenceNumber,
+        Some(securitiesClaimRequest.claim.reasonForSecurity.acc14Code)
+      )
+      .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
+      .flatMap(declaration => proceed((securitiesClaimRequest.claim, declaration), securitiesClaimRequest))
 
   private def proceed[R, A](claimRequest: R, auditable: A)(implicit
     hc: HeaderCarrier,
     request: Request[_],
     tpi05Binder: ClaimToTPI05Mapper[R],
     auditableFormat: Format[A]
-  ): EitherT[Future, Error, ClaimSubmitResponse] = for {
-    eisSubmitRequest       <- EitherT
-                                .fromEither[Future](EisSubmitClaimRequest(claimRequest))
-                                .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
-    _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
-    returnHttpResponse     <- submitClaimAndAudit(auditable, eisSubmitRequest)
-    eisSubmitClaimResponse <- EitherT.fromEither[Future](
-                                returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
-                              )
-    claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
-    _                      <- createEmailRequest(eisSubmitRequest)
-                                .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
-                                .leftFlatMap { e =>
-                                  logger.warn("could not send claim submission confirmation email or audit event", e)
-                                  EitherT.pure[Future, Error](())
-                                }
-  } yield claimResponse
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    for {
+      eisSubmitRequest       <- EitherT
+                                  .fromEither[Future](EisSubmitClaimRequest(claimRequest))
+                                  .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
+      _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
+      returnHttpResponse     <- submitClaimAndAudit(auditable, eisSubmitRequest)
+      eisSubmitClaimResponse <- EitherT.fromEither[Future](
+                                  returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
+                                )
+      claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
+      _                      <- createEmailRequest(eisSubmitRequest)
+                                  .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
+                                  .leftFlatMap { e =>
+                                    logger.warn("could not send claim submission confirmation email or audit event", e)
+                                    EitherT.pure[Future, Error](())
+                                  }
+    } yield claimResponse
 
   private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
     EitherT.fromOption[Future](
@@ -231,7 +238,6 @@ class DefaultClaimService @Inject() (
           submitClaimRequest,
           eisSubmitClaimRequest
         )
-
         Either.cond(
           httpResponse.status === OK,
           httpResponse, {
