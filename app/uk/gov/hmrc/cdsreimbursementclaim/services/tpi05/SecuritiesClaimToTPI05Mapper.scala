@@ -98,7 +98,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     securityDeposits: List[SecurityDetails]
   ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] = {
     val bankDetails = getBankDetails(claimantType, bankAccountDetails)
-    securityDeposits.map(_.paymentMethod).groupBy(x => x).keys match {
+    securityDeposits.map(_.paymentMethod).toSet.toList match {
       case "001" :: Nil => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
       case "004" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
       case "005" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
@@ -123,20 +123,26 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     securitiesReclaims: Map[String, Map[TaxCode, BigDecimal]]
   ): Either[CdsError, List[SecurityDetail]] = {
     val securityDetails = securitiesReclaims.map { case (depositId, reclaims) =>
-      securities.find(_.securityDepositId === depositId).map { security =>
-        SecurityDetail(
-          depositId,
-          totalAmount = security.totalAmount,
-          amountPaid = security.amountPaid,
-          paymentMethod = security.paymentMethod,
-          paymentReference = security.paymentReference,
-          getTaxDetails(security.taxDetails, reclaims)
+      securities.find(_.securityDepositId === depositId).flatMap { security =>
+        getTaxDetails(security.taxDetails, reclaims).map(taxDetails =>
+          SecurityDetail(
+            depositId,
+            totalAmount = security.totalAmount,
+            amountPaid = security.amountPaid,
+            paymentMethod = security.paymentMethod,
+            paymentReference = security.paymentReference,
+            taxDetails = taxDetails
+          )
         )
       }
     }.toList
 
     if (securityDetails.contains(None))
-      Left(CdsError("[STRANGE] security reclaim for a deposit not present in the declaration"))
+      Left(
+        CdsError(
+          "[STRANGE] security reclaim for a deposit not present in the declaration, or reclaim for tax code not present in declaration"
+        )
+      )
     else
       Right(securityDetails.flatMap(_.toList))
   }
@@ -144,12 +150,21 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   private def getTaxDetails(
     depositTaxes: List[TaxDetails],
     claimItems: Map[TaxCode, BigDecimal]
-  ): List[TaxReclaimDetail] =
-    depositTaxes
-      .filter(dt => claimItems.keys.exists(_.value === dt.taxType))
-      .sortBy(_.taxType)
-      .zip(claimItems.toList.sortBy(_._1.value))
-      .map { case (TaxDetails(taxType, amount), (_, claimAmount)) =>
-        TaxReclaimDetail(taxType, amount, claimAmount.toString())
+  ): Option[List[TaxReclaimDetail]] = {
+    val reclaims = claimItems.toList
+      .sortBy { case (taxType, _) => taxType.value }
+      .map { case (taxType, reclaimAmount) =>
+        ((taxType, reclaimAmount), depositTaxes.find(_.taxType === taxType.value))
       }
+      .map {
+        case ((_, claimAmount), Some(TaxDetails(taxType, amount))) =>
+          Some(TaxReclaimDetail(taxType, amount, claimAmount.toString()))
+        case ((_, _), None)                                        => None
+      }
+
+    if (reclaims.contains(None))
+      None
+    else
+      Some(reclaims.flatMap(_.toList))
+  }
 }

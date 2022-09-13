@@ -152,7 +152,7 @@ object Acc14DeclarationGen {
       amountPaid             <- genBigDecimal
       generatedPaymentMethod <- genPaymentMethod
       paymentReference       <- genRandomString
-      taxDetails             <- Gen.nonEmptyListOf(genTaxDetails)
+      taxDetails             <- Gen.nonEmptyMap(genTaxDetails.map(t => (t.taxType, t))).map(_.values.toList)
     } yield SecurityDetails(
       securityDepositId = securityDepositId,
       totalAmount = totalAmount.toString(),

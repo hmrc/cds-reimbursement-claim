@@ -73,13 +73,20 @@ class SecuritiesClaimMappingSpec
 
               eisSecurityDetail.taxDetails
                 .sortBy(_.taxType)
-                .zip(acc14SecurityDetail.taxDetails.sortBy(_.taxType))
+                .zip(
+                  acc14SecurityDetail.taxDetails
+                    .filter(t => reclaimTaxes.keys.exists(_.value === t.taxType))
+                    .sortBy(_.taxType)
+                )
                 .zip(reclaimTaxes.toList.sortBy(_._1.value))
-                .foreach { case ((eisTax, acc14Tax), (_, reclaimAmount)) =>
-                  eisTax.taxType                 should ===(acc14Tax.taxType)
-//                  eisTax.taxType should ===(reclaimTaxCode.value) // why does this fail when the line above passes? it should be sourced from of acc14tax.taxType
-                  eisTax.amount                  should ===(acc14Tax.amount)
-                  BigDecimal(eisTax.claimAmount) should ===(reclaimAmount)
+                .foreach { case ((eisTax, acc14Tax), (reclaimTaxCode, reclaimAmount)) =>
+                  List(eisTax.taxType, acc14Tax.taxType, reclaimTaxCode.value) should ===(
+                    List(eisTax.taxType, eisTax.taxType, eisTax.taxType)
+                  )
+//                  eisTax.taxType                 should ===(acc14Tax.taxType)
+//                  eisTax.taxType                 should ===(reclaimTaxCode.value) // why does this fail when the line above passes? it should be sourced from of acc14tax.taxType
+                  eisTax.amount                                                should ===(acc14Tax.amount)
+                  BigDecimal(eisTax.claimAmount)                               should ===(reclaimAmount)
                 }
 
             }
