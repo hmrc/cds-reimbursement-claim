@@ -306,36 +306,6 @@ object Acc14DeclarationGen {
       securityDetails = None
     )
 
-  lazy val genResponseDetailWithSecurities: Gen[ResponseDetail] =
-    for {
-      mrn                      <- genMRN
-      acceptanceDate           <- genLocalDate.map(_.toIsoLocalDate)
-      declarantReferenceNumber <- Gen.option(genRandomString)
-      securityReason           <- Gen.some(genRandomString)
-      procedureCode            <- genStringWithMaxSizeOfN(5)
-      btaDueDate               <- Gen.option(genLocalDate.map(_.toIsoLocalDate))
-      btaSource                <- Gen.option(genRandomString)
-      declarantDetails         <- genDeclarantDetails
-      consigneeDetails         <- Gen.option(genConsigneeDetails)
-      accountDetails           <- Gen.option(Gen.nonEmptyListOf(genAccountDetails))
-      bankDetails              <- Gen.some(genBankDetails)
-      securityDetails          <- Gen.some(Gen.nonEmptyListOf(genSecurityDetails))
-    } yield ResponseDetail(
-      declarationId = mrn.value,
-      acceptanceDate = acceptanceDate,
-      declarantReferenceNumber = declarantReferenceNumber,
-      securityReason = securityReason,
-      btaDueDate = btaDueDate,
-      procedureCode = procedureCode,
-      btaSource = btaSource,
-      declarantDetails = declarantDetails,
-      consigneeDetails = consigneeDetails,
-      accountDetails = accountDetails,
-      bankDetails = bankDetails,
-      ndrcDetails = None,
-      securityDetails = securityDetails
-    )
-
   implicit lazy val arbitraryTaxDetails: Typeclass[TaxDetails] =
     Arbitrary(genTaxDetails)
 
