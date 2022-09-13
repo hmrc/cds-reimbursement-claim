@@ -28,6 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 
 import java.time.{Clock, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.mongo.CurrentTimestampSupport
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSupport {
@@ -40,7 +41,7 @@ class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSuppo
     )
   )
 
-  val repository = new DefaultUpscanRepository(reactiveMongoComponent, config)
+  val repository = new DefaultUpscanRepository(mongoComponent, new CurrentTimestampSupport(), config)
 
   "Upscan Repository" when {
     "inserting" should {
@@ -79,27 +80,5 @@ class UpscanRepositorySpec extends AnyWordSpec with Matchers with MongoTestSuppo
       }
     }
 
-    "selecting upscan upload documents" should {
-      "select an upscan upload document if it exists" in {
-
-        val upscanUpload  = sample[UpscanUpload].copy(uploadedOn = LocalDateTime.now(Clock.systemUTC()))
-        val upscanUpload2 = sample[UpscanUpload].copy(uploadedOn = LocalDateTime.now(Clock.systemUTC()))
-
-        await(repository.insert(upscanUpload).value)  shouldBe Right(())
-        await(repository.insert(upscanUpload2).value) shouldBe Right(())
-
-        await(
-          repository
-            .select(upscanUpload.uploadReference)
-            .value
-        ) shouldBe Right(Some(upscanUpload))
-
-        await(repository.selectAll(List(upscanUpload.uploadReference, upscanUpload2.uploadReference)).value)
-          .map(_.toSet) shouldBe Right(
-          Set(upscanUpload, upscanUpload2)
-        )
-
-      }
-    }
   }
 }

@@ -18,16 +18,18 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import cats.data.{EitherT, NonEmptyList}
+import cats.data.EitherT
+import cats.data.NonEmptyList
 import cats.syntax.all._
-import org.joda.time.DateTime
-import org.scalamock.handlers.{CallHandler0, CallHandler1, CallHandler2}
+import org.bson.types.ObjectId
+import org.scalamock.handlers.CallHandler0
+import org.scalamock.handlers.CallHandler1
+import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.test.Helpers.await
-import reactivemongo.bson.BSONObjectID
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
@@ -41,9 +43,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.toUUIDString
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
-import uk.gov.hmrc.workitem._
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.HeaderNames
+import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.Failed
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.PermanentlyFailed
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.ToDo
+import uk.gov.hmrc.mongo.workitem._
 
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
@@ -173,19 +181,19 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
       .expects(*)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockSetProcessingStatus(id: BSONObjectID, status: ProcessingStatus)(
+  def mockSetProcessingStatus(id: ObjectId, status: ProcessingStatus)(
     response: Either[Error, Boolean]
-  ): CallHandler2[BSONObjectID, ProcessingStatus, EitherT[Future, models.Error, Boolean]] =
+  ): CallHandler2[ObjectId, ProcessingStatus, EitherT[Future, models.Error, Boolean]] =
     (ccsSubmissionRepositoryMock
-      .setProcessingStatus(_: BSONObjectID, _: ProcessingStatus))
+      .setProcessingStatus(_: ObjectId, _: ProcessingStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockSetResultStatus(id: BSONObjectID, status: ResultStatus)(
+  def mockSetResultStatus(id: ObjectId, status: ResultStatus)(
     response: Either[Error, Boolean]
-  ): CallHandler2[BSONObjectID, ResultStatus, EitherT[Future, models.Error, Boolean]] =
+  ): CallHandler2[ObjectId, ResultStatus, EitherT[Future, models.Error, Boolean]] =
     (ccsSubmissionRepositoryMock
-      .setResultStatus(_: BSONObjectID, _: ResultStatus))
+      .setResultStatus(_: ObjectId, _: ResultStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
 
@@ -241,10 +249,10 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
           )
 
           val workItem = WorkItem(
-            id = BSONObjectID.generate(),
-            receivedAt = DateTime.now(),
-            updatedAt = DateTime.now(),
-            availableAt = DateTime.now(),
+            id = new ObjectId(),
+            receivedAt = Instant.now(),
+            updatedAt = Instant.now(),
+            availableAt = Instant.now(),
             status = ToDo,
             failureCount = 0,
             item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
@@ -282,10 +290,10 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
           )
 
           val workItem = WorkItem(
-            id = BSONObjectID.generate(),
-            receivedAt = DateTime.now(),
-            updatedAt = DateTime.now(),
-            availableAt = DateTime.now(),
+            id = new ObjectId(),
+            receivedAt = Instant.now(),
+            updatedAt = Instant.now(),
+            availableAt = Instant.now(),
             status = ToDo,
             failureCount = 0,
             item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
@@ -324,10 +332,10 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
         )
 
         val workItem = WorkItem(
-          id = BSONObjectID.generate(),
-          receivedAt = DateTime.now(),
-          updatedAt = DateTime.now(),
-          availableAt = DateTime.now(),
+          id = new ObjectId(),
+          receivedAt = Instant.now(),
+          updatedAt = Instant.now(),
+          availableAt = Instant.now(),
           status = ToDo,
           failureCount = 0,
           item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))

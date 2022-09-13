@@ -24,11 +24,12 @@ import play.api.Configuration
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{UploadReference, UpscanUpload}
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UploadReference
+import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanUpload
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
+import uk.gov.hmrc.mongo.CurrentTimestampSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 @Ignore
 class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTestSupport {
@@ -41,14 +42,7 @@ class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTe
   )
 
   @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-  val repository = new DefaultUpscanRepository(reactiveMongoComponent, config)
-
-  @SuppressWarnings(Array("org.wartremover.warts.ThreadSleep"))
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    Thread.sleep(1200) //allow indexing to complete
-    reactiveMongoComponent.mongoConnector.helper.driver.close(FiniteDuration(10, SECONDS))
-  }
+  val repository = new DefaultUpscanRepository(mongoComponent, new CurrentTimestampSupport(), config)
 
   "Upscan Repository" when {
     "inserting" should {
@@ -78,15 +72,6 @@ class UpscanRepositoryFailureSpec extends AnyWordSpec with Matchers with MongoTe
       }
     }
 
-    "selecting all upscan upload documents" should {
-      "return an error if there is a failure" in {
-        await(
-          repository
-            .selectAll(List(sample[UploadReference]))
-            .value
-        ).isLeft shouldBe true
-      }
-    }
   }
 
 }

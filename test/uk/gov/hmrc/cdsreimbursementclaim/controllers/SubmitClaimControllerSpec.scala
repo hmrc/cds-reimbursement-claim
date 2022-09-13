@@ -36,7 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.workitem.WorkItem
+import uk.gov.hmrc.mongo.workitem.WorkItem
 
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global

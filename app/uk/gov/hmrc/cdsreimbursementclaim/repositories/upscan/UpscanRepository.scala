@@ -18,18 +18,17 @@ package uk.gov.hmrc.cdsreimbursementclaim.repositories.upscan
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import configs.syntax._
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan._
-import uk.gov.hmrc.cdsreimbursementclaim.repositories.CacheRepository
-import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.cache.MongoCacheRepository
+import uk.gov.hmrc.mongo.cache.CacheIdType
+import uk.gov.hmrc.mongo.TimestampSupport
+import uk.gov.hmrc.mongo.cache.DataKey
 
 @ImplementedBy(classOf[DefaultUpscanRepository])
 trait UpscanRepository {
@@ -47,61 +46,61 @@ trait UpscanRepository {
     upscanUpload: UpscanUpload
   ): EitherT[Future, Error, Unit]
 
-  def selectAll(
-    uploadReference: List[UploadReference]
-  ): EitherT[Future, Error, List[UpscanUpload]]
+  // def selectAll(
+  //   uploadReference: List[UploadReference]
+  // ): EitherT[Future, Error, List[UpscanUpload]]
 
 }
 
 @Singleton
-class DefaultUpscanRepository @Inject() (mongo: ReactiveMongoComponent, config: Configuration)(implicit
+class DefaultUpscanRepository @Inject() (
+  mongoComponent: MongoComponent,
+  timestampSupport: TimestampSupport,
+  configuration: Configuration
+)(implicit
   val ec: ExecutionContext
-) extends ReactiveRepository[UpscanUpload, BSONObjectID](
+) extends MongoCacheRepository(
+      mongoComponent = mongoComponent,
       collectionName = "upscan",
-      mongo = mongo.mongoConnector.db,
-      UpscanUpload.format,
-      ReactiveMongoFormats.objectIdFormats
+      ttl = configuration.get[FiniteDuration]("mongodb.upscan.expiry-time"),
+      timestampSupport = timestampSupport,
+      cacheIdType = CacheIdType.SimpleCacheId
     )
-    with UpscanRepository
-    with CacheRepository[UpscanUpload] {
+    with UpscanRepository {
 
-  override val cacheTtlIndexName: String = "upscan-cache-ttl"
-
-  override val objName: String = "upscan"
-
-  val cacheTtl: FiniteDuration = config.underlying.get[FiniteDuration]("mongodb.upscan.expiry-time").value
+  val dataKey: DataKey[UpscanUpload] = DataKey("upload")
 
   override def insert(
     upscanUpload: UpscanUpload
   ): EitherT[Future, Error, Unit] =
     EitherT(
-      set(
-        upscanUpload.uploadReference.value,
-        upscanUpload,
-        Some(upscanUpload.uploadedOn)
-      )
+      put(upscanUpload.uploadReference.value)(dataKey, upscanUpload)
+        .map(_ => Right(()))
+        .recover { case e ⇒ Left(Error(e)) }
     )
 
   override def select(
     uploadReference: UploadReference
   ): EitherT[Future, Error, Option[UpscanUpload]] =
-    EitherT(find(uploadReference.value))
+    EitherT(
+      get(uploadReference.value)(dataKey)
+        .map(opt => Right(opt))
+        .recover { case e ⇒ Left(Error(e)) }
+    )
 
   override def update(
     uploadReference: UploadReference,
     upscanUpload: UpscanUpload
   ): EitherT[Future, Error, Unit] =
     EitherT(
-      set(
-        uploadReference.value,
-        upscanUpload,
-        Some(upscanUpload.uploadedOn)
-      )
+      put(uploadReference.value)(dataKey, upscanUpload)
+        .map(_ => Right(()))
+        .recover { case e ⇒ Left(Error(e)) }
     )
 
-  override def selectAll(
-    uploadReference: List[UploadReference]
-  ): EitherT[Future, Error, List[UpscanUpload]] =
-    EitherT(findAll(uploadReference.map(_.value)))
+  // override def selectAll(
+  //   uploadReference: List[UploadReference]
+  // ): EitherT[Future, Error, List[UpscanUpload]] =
+  //   EitherT(findAll(uploadReference.map(_.value)))
 
 }

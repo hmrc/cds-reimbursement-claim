@@ -57,14 +57,6 @@ class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
       .expects(uploadReference)
       .returning(EitherT[Future, Error, Option[UpscanUpload]](Future.successful(response)))
 
-  def mockReadUpscanUploads(uploadReferences: List[UploadReference])(
-    response: Either[Error, List[UpscanUpload]]
-  ): CallHandler1[List[UploadReference], EitherT[Future, Error, List[UpscanUpload]]] =
-    (mockUpscanRepository
-      .selectAll(_: List[UploadReference]))
-      .expects(uploadReferences)
-      .returning(EitherT[Future, Error, List[UpscanUpload]](Future.successful(response)))
-
   def mockUpdateUpscanUpload(
     uploadReference: UploadReference,
     upscanUpload: UpscanUpload
@@ -106,21 +98,6 @@ class UpscanServiceSpec extends AnyWordSpec with Matchers with MockFactory {
         "it successfully reads the data" in {
           mockReadUpscanUpload(upscanUpload.uploadReference)(Right(Some(upscanUpload)))
           await(service.readUpscanUpload(upscanUpload.uploadReference).value) shouldBe Right(Some(upscanUpload))
-        }
-      }
-    }
-
-    "it receives a request to read a upscan uploads" must {
-      "return an error" when {
-        "there is a mongo exception" in {
-          mockReadUpscanUploads(List(upscanUpload.uploadReference))(Left(Error("Connection error")))
-          await(service.readUpscanUploads(List(upscanUpload.uploadReference)).value).isLeft shouldBe true
-        }
-      }
-      "return some upscan upload" when {
-        "it successfully reads the data" in {
-          mockReadUpscanUploads(List(upscanUpload.uploadReference))(Right(List(upscanUpload)))
-          await(service.readUpscanUploads(List(upscanUpload.uploadReference)).value) shouldBe Right(List(upscanUpload))
         }
       }
     }
