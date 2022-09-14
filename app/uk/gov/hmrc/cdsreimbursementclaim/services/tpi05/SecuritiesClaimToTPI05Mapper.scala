@@ -65,7 +65,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       .request(
         claimantEORI = claim.claimantInformation.eori,
         claimantEmailAddress = claimantEmail,
-        claimantName = Some(claimantName),
+        claimantName = claimantName,
         useExistingPaymentMethod = Some(claim.bankAccountDetails.isEmpty)
       )
       .forClaimOfType(None)
