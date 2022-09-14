@@ -40,7 +40,7 @@ object TPI05 {
   def request(
     claimantEORI: Eori,
     claimantEmailAddress: Email,
-    claimantName: Option[String] = None,
+    claimantName: String,
     useExistingPaymentMethod: Option[Boolean] = None
   ): Builder = Builder(
     Valid(
@@ -51,7 +51,7 @@ object TPI05 {
         claimDate = Some(ISOLocalDate.now),
         claimantEORI = claimantEORI,
         claimantEmailAddress = claimantEmailAddress,
-        claimantName = claimantName,
+        claimantName = Some(claimantName),
         useExistingPaymentMethod = useExistingPaymentMethod
       )
     )
