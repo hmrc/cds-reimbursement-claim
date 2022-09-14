@@ -24,8 +24,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-import scala.annotation.nowarn
-
 final case class RequestDetail(
   CDFPayService: CDFPayService,
   dateReceived: Option[String] = None,
@@ -56,7 +54,6 @@ final case class RequestDetail(
 )
 
 object RequestDetail {
-  @nowarn
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit lazy val jsonFormat: OFormat[RequestDetail] = Jsonx.formatCaseClass[RequestDetail]
 }

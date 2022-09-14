@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
-import play.api.libs.json.{Format, Json, OFormat}
-import uk.gov.hmrc.workitem.WorkItem
+import play.api.libs.json.OFormat
+import play.api.libs.json.Json
 
 final case class CcsSubmissionRequest(payload: String, headers: Seq[(String, String)])
 
 object CcsSubmissionRequest {
-  implicit val ccsSubmissionRequestFormat: OFormat[CcsSubmissionRequest] = Json.format
-  val workItemFormat: Format[WorkItem[CcsSubmissionRequest]]             = WorkItem.workItemMongoFormat[CcsSubmissionRequest]
+  implicit val ccsSubmissionRequestFormat: OFormat[CcsSubmissionRequest] =
+    Json.format[CcsSubmissionRequest]
+
 }

@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import reactivemongo.bson.BSONObjectID
 import ru.tinkoff.phobos.encoding.XmlEncoder
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -28,9 +27,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
-import uk.gov.hmrc.workitem.{ProcessingStatus, ResultStatus, WorkItem}
+import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 
 import scala.concurrent.Future
+import org.bson.types.ObjectId
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
@@ -45,9 +45,9 @@ trait CcsSubmissionService {
 
   def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]]
 
-  def setProcessingStatus(id: BSONObjectID, status: ProcessingStatus): EitherT[Future, Error, Boolean]
+  def setProcessingStatus(id: ObjectId, status: ProcessingStatus): EitherT[Future, Error, Boolean]
 
-  def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean]
+  def setResultStatus(id: ObjectId, status: ResultStatus): EitherT[Future, Error, Boolean]
 
   def submitToCcs(ccsSubmissionPayload: CcsSubmissionPayload)(implicit
     hc: HeaderCarrier
@@ -93,10 +93,10 @@ class DefaultCcsSubmissionService @Inject() (
 
   override def dequeue: EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]] = ccsSubmissionRepo.get
 
-  override def setProcessingStatus(id: BSONObjectID, status: ProcessingStatus): EitherT[Future, Error, Boolean] =
+  override def setProcessingStatus(id: ObjectId, status: ProcessingStatus): EitherT[Future, Error, Boolean] =
     ccsSubmissionRepo.setProcessingStatus(id, status)
 
-  override def setResultStatus(id: BSONObjectID, status: ResultStatus): EitherT[Future, Error, Boolean] =
+  override def setResultStatus(id: ObjectId, status: ResultStatus): EitherT[Future, Error, Boolean] =
     ccsSubmissionRepo.setResultStatus(id, status)
 
 }

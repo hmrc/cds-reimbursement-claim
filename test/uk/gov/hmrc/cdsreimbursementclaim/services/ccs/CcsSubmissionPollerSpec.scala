@@ -28,7 +28,7 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
-import reactivemongo.bson.BSONObjectID
+import org.bson.types.ObjectId
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
@@ -38,7 +38,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionPoller.OnCompleteHandler
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.workitem._
+import uk.gov.hmrc.mongo.workitem._
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, PermanentlyFailed, Succeeded, ToDo}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
@@ -108,19 +109,19 @@ class CcsSubmissionPollerSpec
       .expects(ccsSubmissionPayload, *)
       .returning(EitherT.fromEither(response))
 
-  def mockSetProcessingStatus(id: BSONObjectID, status: ProcessingStatus)(
+  def mockSetProcessingStatus(id: ObjectId, status: ProcessingStatus)(
     response: Either[Error, Boolean]
-  ): CallHandler2[BSONObjectID, ProcessingStatus, EitherT[Future, models.Error, Boolean]] =
+  ): CallHandler2[ObjectId, ProcessingStatus, EitherT[Future, models.Error, Boolean]] =
     (mockCcsSubmissionService
-      .setProcessingStatus(_: BSONObjectID, _: ProcessingStatus))
+      .setProcessingStatus(_: ObjectId, _: ProcessingStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
 
-  def mockSetResultStatus(id: BSONObjectID, status: ResultStatus)(
+  def mockSetResultStatus(id: ObjectId, status: ResultStatus)(
     response: Either[Error, Boolean]
-  ): CallHandler2[BSONObjectID, ResultStatus, EitherT[Future, models.Error, Boolean]] =
+  ): CallHandler2[ObjectId, ResultStatus, EitherT[Future, models.Error, Boolean]] =
     (mockCcsSubmissionService
-      .setResultStatus(_: BSONObjectID, _: ResultStatus))
+      .setResultStatus(_: ObjectId, _: ResultStatus))
       .expects(id, status)
       .returning(EitherT.fromEither[Future](response))
 

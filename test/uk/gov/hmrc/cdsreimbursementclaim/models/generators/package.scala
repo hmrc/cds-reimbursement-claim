@@ -20,7 +20,7 @@ import akka.util.ByteString
 import org.joda.time.DateTime
 import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
-import reactivemongo.bson.BSONObjectID
+import org.bson.types.ObjectId
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import java.util.UUID
@@ -75,11 +75,11 @@ package object generators {
   implicit lazy val arbitraryUUID: Arbitrary[UUID] =
     Arbitrary(genUUID)
 
-  implicit lazy val bsonObjectId: Arbitrary[BSONObjectID] =
+  implicit lazy val ObjectId: Arbitrary[ObjectId] =
     Arbitrary(
       Gen
         .choose(0L, 10000L)
-        .map(_ => BSONObjectID.generate())
+        .map(_ => new ObjectId())
     )
 
   lazy val genBigDecimal: Gen[BigDecimal] =

@@ -24,6 +24,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.repositories.upscan.UpscanRepository
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @ImplementedBy(classOf[UpscanServiceImpl])
 trait UpscanService {
@@ -70,5 +71,15 @@ class UpscanServiceImpl @Inject() (
   override def readUpscanUploads(
     uploadReferences: List[UploadReference]
   ): EitherT[Future, Error, List[UpscanUpload]] =
-    upscanRepository.selectAll(uploadReferences)
+    EitherT(
+      Future
+        .sequence(
+          uploadReferences
+            .map(ref => readUpscanUpload(ref).value)
+        )
+        .map { list =>
+          if (list.exists(_.isLeft)) Left(Error("Error reading some of the uploads"))
+          else Right(list.collect { case Right(Some(upload)) => upload })
+        }
+    )
 }

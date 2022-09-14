@@ -27,7 +27,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionPoller.OnComp
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.workitem.{Failed, PermanentlyFailed, Succeeded, WorkItem}
+import uk.gov.hmrc.mongo.workitem.WorkItem
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, PermanentlyFailed, Succeeded}
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future

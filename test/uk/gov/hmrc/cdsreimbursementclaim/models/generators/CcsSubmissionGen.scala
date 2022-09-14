@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
-import uk.gov.hmrc.workitem.WorkItem
+import uk.gov.hmrc.mongo.workitem.WorkItem
 
 object CcsSubmissionGen {
 
