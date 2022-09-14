@@ -46,10 +46,6 @@ trait UpscanRepository {
     upscanUpload: UpscanUpload
   ): EitherT[Future, Error, Unit]
 
-  // def selectAll(
-  //   uploadReference: List[UploadReference]
-  // ): EitherT[Future, Error, List[UpscanUpload]]
-
 }
 
 @Singleton
@@ -97,10 +93,5 @@ class DefaultUpscanRepository @Inject() (
         .map(_ => Right(()))
         .recover { case e ⇒ Left(Error(e)) }
     )
-
-  // override def selectAll(
-  //   uploadReference: List[UploadReference]
-  // ): EitherT[Future, Error, List[UpscanUpload]] =
-  //   EitherT(findAll(uploadReference.map(_.value)))
 
 }
