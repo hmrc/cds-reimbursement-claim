@@ -82,6 +82,11 @@ object TPI05 {
     def withDisposalMethod(methodOfDisposal: MethodOfDisposal): Builder =
       copy(validatedRequest.map(_.copy(disposalMethod = Some(methodOfDisposal.toTPI05DisplayString))))
 
+    def withTemporaryAdmissionMethodOfDisposal(
+      temporaryAdmissionMethodOfDisposalDetail: Option[TemporaryAdmissionMethodOfDisposalDetail]
+    ): Builder =
+      copy(validatedRequest.map(_.copy(methodOfDisposals = temporaryAdmissionMethodOfDisposalDetail)))
+
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(
         validatedRequest.map(
@@ -220,6 +225,9 @@ object TPI05 {
           )
         )
       )
+
+    def withReimbursementParty(reimbursementParty: ReimbursementParty): Builder =
+      copy(validatedRequest.map(x => x.copy(reimbursementParty = Some(reimbursementParty))))
 
     def verify: Either[CdsError, EisSubmitClaimRequest] =
       validatedRequest.toEither.map { requestDetail =>

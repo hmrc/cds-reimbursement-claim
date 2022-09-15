@@ -22,17 +22,33 @@ sealed trait TemporaryAdmissionMethodOfDisposal
 
 object TemporaryAdmissionMethodOfDisposal extends EnumerationFormat[TemporaryAdmissionMethodOfDisposal] {
 
-  case object ExportedInSingleShipment extends TemporaryAdmissionMethodOfDisposal
-  case object ExportedInMultipleShipments extends TemporaryAdmissionMethodOfDisposal
-  case object DeclaredToOtherTraderUnderTemporaryAdmission extends TemporaryAdmissionMethodOfDisposal
-  case object DeclaredToFreeCirculation extends TemporaryAdmissionMethodOfDisposal
-  case object DeclaredToInwardProcessingRelief extends TemporaryAdmissionMethodOfDisposal
-  case object DeclaredToEndUse extends TemporaryAdmissionMethodOfDisposal
-  case object DeclaredToAFreeZone extends TemporaryAdmissionMethodOfDisposal
-  case object DeclaredToACustomsWarehouse extends TemporaryAdmissionMethodOfDisposal
-  case object Destroyed extends TemporaryAdmissionMethodOfDisposal
-  case object MultipleDisposalMethodsWereUsed extends TemporaryAdmissionMethodOfDisposal
-  case object Other extends TemporaryAdmissionMethodOfDisposal
+  case object ExportedInSingleShipment extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Export: Single Shipment"
+  }
+  case object ExportedInMultipleShipments extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Export: Multiple Shipments"
+  }
+  case object DeclaredToOtherTraderUnderTemporaryAdmission extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Other Temporary Admission"
+  }
+  case object DeclaredToFreeCirculation extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Free Circulation/Home Use"
+  }
+  case object DeclaredToInwardProcessingRelief extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Inward Processing Relief"
+  }
+  case object DeclaredToEndUse extends TemporaryAdmissionMethodOfDisposal { override def toString: String = "End Use" }
+  case object DeclaredToAFreeZone extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Free Zone"
+  }
+  case object DeclaredToACustomsWarehouse extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Customs Warehouse"
+  }
+  case object Destroyed extends TemporaryAdmissionMethodOfDisposal { override def toString: String = "Destroyed" }
+  case object MultipleDisposalMethodsWereUsed extends TemporaryAdmissionMethodOfDisposal {
+    override def toString: String = "Mixed"
+  }
+  case object Other extends TemporaryAdmissionMethodOfDisposal { override def toString: String = "Other" }
 
   override val values: Set[TemporaryAdmissionMethodOfDisposal] =
     Set(
@@ -47,5 +63,11 @@ object TemporaryAdmissionMethodOfDisposal extends EnumerationFormat[TemporaryAdm
       Destroyed,
       Other,
       MultipleDisposalMethodsWereUsed
+    )
+
+  val requiresMrn: Set[TemporaryAdmissionMethodOfDisposal] =
+    Set(
+      ExportedInSingleShipment,
+      ExportedInMultipleShipments
     )
 }

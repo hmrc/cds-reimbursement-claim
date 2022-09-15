@@ -38,6 +38,7 @@ final case class RequestDetail(
   disposalMethod: Option[String] = None,
   useExistingPaymentMethod: Option[Boolean] = None,
   reimbursementMethod: Option[ReimbursementMethod] = None,
+  reimbursementParty: Option[ReimbursementParty] = None,
   basisOfClaim: Option[String] = None,
   claimant: Option[Claimant] = None,
   payeeIndicator: Option[PayeeIndicator] = None,
@@ -52,6 +53,7 @@ final case class RequestDetail(
   EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,
   duplicateMRNDetails: Option[MrnDetail] = None,
+  methodOfDisposals: Option[TemporaryAdmissionMethodOfDisposalDetail] = None,
   security: Option[SecurityInfo] = None
 )
 

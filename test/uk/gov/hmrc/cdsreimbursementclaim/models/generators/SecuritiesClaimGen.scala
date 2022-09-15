@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
+import cats.implicits.toFunctorOps
 import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
@@ -104,7 +105,7 @@ object SecuritiesClaimGen {
 
     temporaryAdmissionMethodOfDisposal <-
       if (ReasonForSecurity.temporaryAdmissions.contains(reasonForSecurity))
-        Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values).map(Some.apply)
+        Gen.some(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values))
       else
         Gen.const(None)
 
@@ -147,7 +148,15 @@ object SecuritiesClaimGen {
       displayDeclaration <- genDisplayDeclarationWithSecurities
       securityDetails     = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       taxDetails          = securityDetails.map(x => (x.securityDepositId, x.taxDetails)).toMap
-      reclaims            = taxDetails.mapValues(_.map(x => (TaxCode.getOrFail(x.taxType), BigDecimal(x.amount))).toMap)
+      randomDivisor      <- Gen.choose(0.1, 1)
+      reclaims            = taxDetails.mapValues(
+                              _.map(x =>
+                                (
+                                  TaxCode.getOrFail(x.taxType),
+                                  BigDecimal(x.amount) / randomDivisor
+                                )
+                              ).toMap
+                            )
       securitiesClaim    <- genSecuritiesClaim.map(
                               _.claim.copy(
                                 securitiesReclaims = reclaims
@@ -157,5 +166,26 @@ object SecuritiesClaimGen {
 
   implicit lazy val arbitrarySecuritiesClaimAndDeclaration =
     Arbitrary(genSecuritiesClaimAndDeclaration)
+
+  implicit lazy val genTempAdmissionSecuritiesClaimAndDeclaration =
+    for {
+      reasonForSecurity                     <- Gen.oneOf(ReasonForSecurity.temporaryAdmissions)
+      methodOfDisposal                      <- Gen.some(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values))
+      exportMrn                             <- methodOfDisposal
+                                                 .filter(TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(_))
+                                                 .as(Gen.some(genMRN))
+                                                 .getOrElse(Gen.const(None))
+      (securitiesClaim, displayDeclaration) <- genSecuritiesClaimAndDeclaration.map {
+                                                 case (securitiesClaim, displayDeclaration) =>
+                                                   (
+                                                     securitiesClaim.copy(
+                                                       reasonForSecurity = reasonForSecurity,
+                                                       temporaryAdmissionMethodOfDisposal = methodOfDisposal,
+                                                       exportMovementReferenceNumber = exportMrn
+                                                     ),
+                                                     displayDeclaration
+                                                   )
+                                               }
+    } yield (securitiesClaim, displayDeclaration)
 
 }
