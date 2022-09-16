@@ -25,32 +25,32 @@ sealed trait TemporaryAdmissionMethodOfDisposal {
 object TemporaryAdmissionMethodOfDisposal extends EnumerationFormat[TemporaryAdmissionMethodOfDisposal] {
 
   case object ExportedInSingleShipment extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Export: Single Shipment"
+    val eisCode: String = "Export: Single Shipment"
   }
   case object ExportedInMultipleShipments extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Export: Multiple Shipments"
+    val eisCode: String = "Export: Multiple Shipments"
   }
   case object DeclaredToOtherTraderUnderTemporaryAdmission extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Other Temporary Admission"
+    val eisCode: String = "Other Temporary Admission"
   }
   case object DeclaredToFreeCirculation extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Free Circulation/Home Use"
+    val eisCode: String = "Free Circulation/Home Use"
   }
   case object DeclaredToInwardProcessingRelief extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Inward Processing Relief"
+    val eisCode: String = "Inward Processing Relief"
   }
-  case object DeclaredToEndUse extends TemporaryAdmissionMethodOfDisposal { lazy val eisCode: String = "End Use" }
+  case object DeclaredToEndUse extends TemporaryAdmissionMethodOfDisposal { val eisCode: String = "End Use" }
   case object DeclaredToAFreeZone extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Free Zone"
+    val eisCode: String = "Free Zone"
   }
   case object DeclaredToACustomsWarehouse extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Customs Warehouse"
+    val eisCode: String = "Customs Warehouse"
   }
-  case object Destroyed extends TemporaryAdmissionMethodOfDisposal { lazy val eisCode: String = "Destroyed" }
+  case object Destroyed extends TemporaryAdmissionMethodOfDisposal { val eisCode: String = "Destroyed" }
   case object MultipleDisposalMethodsWereUsed extends TemporaryAdmissionMethodOfDisposal {
-    lazy val eisCode: String = "Mixed"
+    val eisCode: String = "Mixed"
   }
-  case object Other extends TemporaryAdmissionMethodOfDisposal { lazy val eisCode: String = "Other" }
+  case object Other extends TemporaryAdmissionMethodOfDisposal { val eisCode: String = "Other" }
 
   override val values: Set[TemporaryAdmissionMethodOfDisposal] =
     Set(
