@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
+package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ExportMRN
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
-final case class TemporaryAdmissionMethodOfDisposalDetail(
-  disposalMethod: String,
-  exportMRNs: Option[List[ExportMRN]]
-)
+final case class ExportMRN(MRNNumber: MRN)
 
-object TemporaryAdmissionMethodOfDisposalDetail {
-  implicit val format: OFormat[TemporaryAdmissionMethodOfDisposalDetail] =
-    Json.format[TemporaryAdmissionMethodOfDisposalDetail]
+object ExportMRN {
+  implicit val format: OFormat[ExportMRN] = Json.format[ExportMRN]
 }

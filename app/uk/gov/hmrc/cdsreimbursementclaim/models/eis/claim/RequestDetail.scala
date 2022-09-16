@@ -53,7 +53,7 @@ final case class RequestDetail(
   EORIDetails: Option[EoriDetails] = None,
   MRNDetails: Option[List[MrnDetail]] = None,
   duplicateMRNDetails: Option[MrnDetail] = None,
-  methodOfDisposals: Option[TemporaryAdmissionMethodOfDisposalDetail] = None,
+  methodOfDisposals: Option[List[TemporaryAdmissionMethodOfDisposalDetail]] = None,
   security: Option[SecurityInfo] = None
 )
 

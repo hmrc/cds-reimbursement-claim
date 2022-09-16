@@ -106,9 +106,13 @@ class SecuritiesClaimMappingSpec
       val tpi05Request         = securitiesClaimToTPI05Mapper.map((claim, declaration))
       isValid(claim, declaration, tpi05Request)
       tpi05Request.map { case EisSubmitClaimRequest(PostNewClaimsRequest(_, detail)) =>
-        detail.methodOfDisposals.isDefined             should ===(true)
-        detail.methodOfDisposals.map(_.disposalMethod) should ===(claim.temporaryAdmissionMethodOfDisposal)
-        detail.methodOfDisposals.flatMap(_.exportMRNs) should ===(claim.exportMovementReferenceNumber.map(List(_)))
+        detail.methodOfDisposals.isDefined                                                           should ===(true)
+        detail.methodOfDisposals.flatMap(_.headOption.map(_.disposalMethod))                         should ===(
+          claim.temporaryAdmissionMethodOfDisposal.map(_.eisCode)
+        )
+        detail.methodOfDisposals.flatMap(_.headOption.flatMap(_.exportMRNs.map(_.map(_.MRNNumber)))) should ===(
+          claim.exportMovementReferenceNumber.map(List(_))
+        )
       }
     }
   }
