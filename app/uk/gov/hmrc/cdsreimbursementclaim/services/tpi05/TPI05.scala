@@ -85,7 +85,7 @@ object TPI05 {
     def withTemporaryAdmissionMethodOfDisposal(
       temporaryAdmissionMethodOfDisposalDetail: Option[TemporaryAdmissionMethodOfDisposalDetail]
     ): Builder =
-      copy(validatedRequest.map(_.copy(methodOfDisposals = temporaryAdmissionMethodOfDisposalDetail)))
+      copy(validatedRequest.map(_.copy(methodOfDisposals = temporaryAdmissionMethodOfDisposalDetail.map(List(_)))))
 
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(

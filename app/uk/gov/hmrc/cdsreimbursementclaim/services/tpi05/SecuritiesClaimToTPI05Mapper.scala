@@ -24,7 +24,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesC
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, SecurityDetails, TaxDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ReimbursementMethod, ReimbursementParty}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
@@ -36,35 +37,61 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   def map(request: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, displayDeclaration) = request
     (for {
-      email                   <- claim.claimantInformation.contactInformation.emailAddress.toRight(
-                                   CdsError("claimant email address is mandatory")
-                                 )
-      claimantName            <- claim.claimantInformation.contactInformation.contactPerson.toRight(
-                                   CdsError("claimant contact name is mandatory")
-                                 )
-      claimantEmail            = Email(email)
-      claimedAmount            = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
-      declarantDetails         = MRNInformation.fromDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      consigneeDetails         = displayDeclaration.displayResponseDetail.consigneeDetails
-                                   .map(MRNInformation.fromConsigneeDetails(_))
-                                   .getOrElse(declarantDetails)
-      securities               = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      securityDetails         <- getSecurityDetails(securities, claim.securitiesReclaims)
-      acceptanceDate          <- AcceptanceDate
-                                   .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
-                                   .toEither
-                                   .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
-      declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber
-      btaSource                = displayDeclaration.displayResponseDetail.btaSource
-      btaDueDate               = displayDeclaration.displayResponseDetail.btaDueDate
-                                   .flatMap(EisBasicDate.parse(_).toOption)
-      accountDetails           = displayDeclaration.displayResponseDetail.accountDetails
-      securityDeposits         = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      methodOfDisposalDetail   =
-        claim.temporaryAdmissionMethodOfDisposal.map(
-          TemporaryAdmissionMethodOfDisposalDetail(_, claim.exportMovementReferenceNumber.map(List(_)))
-        )
-
+      email                                                        <- claim.claimantInformation.contactInformation.emailAddress.toRight(
+                                                                        CdsError("claimant email address is mandatory")
+                                                                      )
+      claimantName                                                 <- claim.claimantInformation.contactInformation.contactPerson.toRight(
+                                                                        CdsError("claimant contact name is mandatory")
+                                                                      )
+      claimantEmail                                                 = Email(email)
+      claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
+      declarantDetails                                              = MRNInformation.fromDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
+      consigneeDetails                                              = displayDeclaration.displayResponseDetail.consigneeDetails
+                                                                        .map(MRNInformation.fromConsigneeDetails(_))
+                                                                        .getOrElse(declarantDetails)
+      securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
+      acceptanceDate                                               <- AcceptanceDate
+                                                                        .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                                                                        .toEither
+                                                                        .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
+      declarantReferenceNumber                                      = displayDeclaration.displayResponseDetail.declarantReferenceNumber
+      btaSource                                                     = displayDeclaration.displayResponseDetail.btaSource
+      btaDueDate                                                    = displayDeclaration.displayResponseDetail.btaDueDate
+                                                                        .flatMap(EisBasicDate.parse(_).toOption)
+      accountDetails                                                = displayDeclaration.displayResponseDetail.accountDetails
+      securityDeposits                                              = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      methodOfDisposalDetail                                       <- (claim.temporaryAdmissionMethodOfDisposal, claim.exportMovementReferenceNumber) match {
+                                                                        case (Some(ExportedInSingleShipment), None)    =>
+                                                                          Left(
+                                                                            CdsError("Export MRN must be provided when disposal method is single shipment")
+                                                                          )
+                                                                        case (Some(ExportedInMultipleShipments), None) =>
+                                                                          Left(
+                                                                            CdsError("Export MRN must be provided when disposal method is single shipment")
+                                                                          )
+                                                                        case (Some(exportMethod), Some(_))
+                                                                            if !TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(exportMethod) =>
+                                                                          Left(CdsError("Unexpected export MRN supplied"))
+                                                                        case (Some(_), _)
+                                                                            if !ReasonForSecurity.temporaryAdmissions.contains(claim.reasonForSecurity) =>
+                                                                          Left(CdsError("Unexpected disposal method for non-temporary-admission security"))
+                                                                        case (None, _)
+                                                                            if ReasonForSecurity.temporaryAdmissions.contains(claim.reasonForSecurity) =>
+                                                                          Left(CdsError("disposal method missing"))
+                                                                        case (Some(disposalMethod), None)              =>
+                                                                          Right(Some(TemporaryAdmissionMethodOfDisposalDetail(disposalMethod.eisCode, None)))
+                                                                        case (Some(disposalMethod), Some(exportMRN))   =>
+                                                                          Right(
+                                                                            Some(
+                                                                              TemporaryAdmissionMethodOfDisposalDetail(
+                                                                                disposalMethod.eisCode,
+                                                                                Some(List(ExportMRN(exportMRN)))
+                                                                              )
+                                                                            )
+                                                                          )
+                                                                        case (None, None)                              => Right(None)
+                                                                      }
       securityPaymentDetails                                       <-
         getSecurityPaymentDetails(claim.claimantType, claim.bankAccountDetails, securityDeposits)
       (bankDetails, useExistingPaymentDetails, reimbursementMethod) = securityPaymentDetails
