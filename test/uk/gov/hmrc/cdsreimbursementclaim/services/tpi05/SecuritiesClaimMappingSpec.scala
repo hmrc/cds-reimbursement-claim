@@ -22,6 +22,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import play.api.i18n.Lang.logger
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CustomDeclarationType
@@ -45,7 +46,8 @@ class SecuritiesClaimMappingSpec
     result: Either[Error, EisSubmitClaimRequest]
   ): Unit =
     result match {
-      case Left(_)                                                            =>
+      case Left(error)                                                        =>
+        logger.warn(s"Error message: $error")
         assert(claim.claimantInformation.contactInformation.countryCode.isEmpty)
         ()
       case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))) =>
