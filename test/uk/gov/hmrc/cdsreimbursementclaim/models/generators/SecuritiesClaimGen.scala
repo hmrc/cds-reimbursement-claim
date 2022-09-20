@@ -112,8 +112,8 @@ object SecuritiesClaimGen {
     exportMovementReferenceNumber <-
       if (
         ReasonForSecurity.temporaryAdmissions(reasonForSecurity) &&
-        temporaryAdmissionMethodOfDisposal.contains(
-          TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
+        temporaryAdmissionMethodOfDisposal.exists(
+          TemporaryAdmissionMethodOfDisposal.requiresMrn(_)
         )
       ) genMRN.map(Some.apply)
       else

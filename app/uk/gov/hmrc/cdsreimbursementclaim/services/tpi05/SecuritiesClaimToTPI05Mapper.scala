@@ -68,7 +68,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                           )
                                                                         case (Some(ExportedInMultipleShipments), None) =>
                                                                           Left(
-                                                                            CdsError("Export MRN must be provided when disposal method is single shipment")
+                                                                            CdsError("Export MRN must be provided when disposal method is multiple shipments")
                                                                           )
                                                                         case (Some(exportMethod), Some(_))
                                                                             if !TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(exportMethod) =>
