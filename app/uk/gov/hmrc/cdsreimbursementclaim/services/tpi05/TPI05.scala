@@ -208,7 +208,7 @@ object TPI05 {
       )
 
     def withSecurityPaymentDetails(
-      bankDetails: Option[BankDetails],
+      bankDetails: BankDetails,
       reimbursementMethod: Option[ReimbursementMethod],
       useExistingPaymentMethod: Option[Boolean]
     ): Builder =
