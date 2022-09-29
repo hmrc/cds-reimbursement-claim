@@ -19,25 +19,25 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 import play.api.mvc.QueryStringBindable
 
-sealed class ReasonForSecurity(val acc14Code: String)
+sealed class ReasonForSecurity(val acc14Code: String, val dec64DisplayString: String)
 
 object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
 
-  case object AccountSales extends ReasonForSecurity("ACS")
-  case object CommunitySystemsOfDutyRelief extends ReasonForSecurity("MDC")
-  case object EndUseRelief extends ReasonForSecurity("ENU")
-  case object InwardProcessingRelief extends ReasonForSecurity("IPR")
-  case object ManualOverrideDeposit extends ReasonForSecurity("MOD")
-  case object MissingLicenseQuota extends ReasonForSecurity("MDL")
-  case object MissingPreferenceCertificate extends ReasonForSecurity("MDP")
-  case object OutwardProcessingRelief extends ReasonForSecurity("OPR")
-  case object RevenueDispute extends ReasonForSecurity("RED")
-  case object TemporaryAdmission2Y extends ReasonForSecurity("T24")
-  case object TemporaryAdmission6M extends ReasonForSecurity("TA6")
-  case object TemporaryAdmission3M extends ReasonForSecurity("TA3")
-  case object TemporaryAdmission2M extends ReasonForSecurity("TA2")
-  case object UKAPEntryPrice extends ReasonForSecurity("CEP")
-  case object UKAPSafeguardDuties extends ReasonForSecurity("CSD")
+  case object AccountSales extends ReasonForSecurity("ACS", "CAP Account Sales")
+  case object CommunitySystemsOfDutyRelief extends ReasonForSecurity("MDC", "Missing Document: CSDR")
+  case object EndUseRelief extends ReasonForSecurity("ENU", "End Use")
+  case object InwardProcessingRelief extends ReasonForSecurity("IPR", "Inward Processing Relief")
+  case object ManualOverrideDeposit extends ReasonForSecurity("MOD", "Manual Override Deposit")
+  case object MissingLicenseQuota extends ReasonForSecurity("MDL", "Missing Document Licence Quota")
+  case object MissingPreferenceCertificate extends ReasonForSecurity("MDP", "Missing Document Preference")
+  case object OutwardProcessingRelief extends ReasonForSecurity("OPR", "Outward Processing Relief")
+  case object RevenueDispute extends ReasonForSecurity("RED", "Revenue Dispute")
+  case object TemporaryAdmission2Y extends ReasonForSecurity("T24", "Temporary Admission (2 years Expiration)")
+  case object TemporaryAdmission6M extends ReasonForSecurity("TA6", "Temporary Admission (6 months Expiration)")
+  case object TemporaryAdmission3M extends ReasonForSecurity("TA3", "Temporary Admission (3 months Expiration)")
+  case object TemporaryAdmission2M extends ReasonForSecurity("TA2", "Temporary Admission (2 months Expiration)")
+  case object UKAPEntryPrice extends ReasonForSecurity("CEP", "CAP Entry Price")
+  case object UKAPSafeguardDuties extends ReasonForSecurity("CSD", "CAP Safeguard Duties")
 
   override val values: Set[ReasonForSecurity] =
     Set(

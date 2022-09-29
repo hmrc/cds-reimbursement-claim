@@ -44,7 +44,8 @@ class SecuritiesClaimToDec64Mapper extends ClaimToDec64Mapper[SecuritiesClaimReq
                 PropertyType("Eori", request.claim.claimantInformation.eori.value),
                 PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
                 PropertyType("DeclarationType", "MRN"),
-                PropertyType("ApplicationName", "NDRC"),
+                PropertyType("RFS", request.claim.reasonForSecurity.dec64DisplayString),
+                PropertyType("ApplicationName", "Securities"),
                 PropertyType("DocumentType", document.documentType.toDec64DisplayString),
                 PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
               )
