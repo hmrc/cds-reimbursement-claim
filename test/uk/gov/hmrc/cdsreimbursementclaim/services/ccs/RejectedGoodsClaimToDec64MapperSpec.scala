@@ -33,6 +33,19 @@ class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with
 
         dec64Request.map { envelope =>
           envelope.Body.BatchFileInterfaceMetadata.batchSize shouldBe journey.supportingEvidences.size
+          envelope.Body.BatchFileInterfaceMetadata.properties.property
+            .map(p => p.name)                                  should contain.allOf(
+            "CaseReference",
+            "Eori",
+            "DeclarationId",
+            "DeclarationType",
+            "ApplicationName",
+            "DocumentType"
+          )
+          envelope.Body.BatchFileInterfaceMetadata.properties.property
+            .map(p => (p.name, p.value))                       should contain(
+            "ApplicationName" -> "NDRC"
+          )
         }
     }
 
@@ -43,6 +56,19 @@ class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with
 
         dec64Request.map { envelope =>
           envelope.Body.BatchFileInterfaceMetadata.batchSize shouldBe journey.supportingEvidences.size
+          envelope.Body.BatchFileInterfaceMetadata.properties.property
+            .map(p => p.name)                                  should contain.allOf(
+            "CaseReference",
+            "Eori",
+            "DeclarationId",
+            "DeclarationType",
+            "ApplicationName",
+            "DocumentType"
+          )
+          envelope.Body.BatchFileInterfaceMetadata.properties.property
+            .map(p => (p.name, p.value))                       should contain(
+            "ApplicationName" -> "NDRC"
+          )
         }
     }
 
@@ -53,6 +79,19 @@ class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with
 
         dec64Request.map { envelope =>
           envelope.Body.BatchFileInterfaceMetadata.batchSize shouldBe journey.supportingEvidences.size + 1
+          envelope.Body.BatchFileInterfaceMetadata.properties.property
+            .map(p => p.name)                                  should contain.allOf(
+            "CaseReference",
+            "Eori",
+            "DeclarationId",
+            "DeclarationType",
+            "ApplicationName",
+            "DocumentType"
+          )
+          envelope.Body.BatchFileInterfaceMetadata.properties.property
+            .map(p => (p.name, p.value))                       should contain(
+            "ApplicationName" -> "NDRC"
+          )
         }
     }
   }
