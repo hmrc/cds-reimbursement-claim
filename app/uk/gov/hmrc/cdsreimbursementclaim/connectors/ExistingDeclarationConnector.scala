@@ -44,7 +44,7 @@ class ExistingDeclarationConnector @Inject() (
     with Logging {
 
   private lazy val baseUrl = config.baseUrl("declaration")
-  private lazy val url     = s"$baseUrl/prsup/PRRestService/CDFPay/v1/GetExistingDuplicateClaims"
+  private lazy val url     = s"$baseUrl/prsup/PRRestService/CDFPAY/v1/GetExistingClaim"
 
   def getExistingDuplicateDeclaration(
     mrn: MRN,
