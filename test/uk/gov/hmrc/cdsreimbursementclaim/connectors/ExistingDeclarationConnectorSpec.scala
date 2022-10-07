@@ -70,7 +70,7 @@ class ExistingDeclarationConnectorSpec
   )
 
   "Existing Declaration Connector" should {
-    val backEndUrl = s"$baseUrl/prsup/PRRestService/CDFPAY/v1/GetExistingClaim"
+    val backEndUrl = s"$baseUrl/tpi/getduplicateclaim/v1"
 
     (mockConfig.getString(_: String)).expects(*).returning("test-token")
     mockBaseUrl
