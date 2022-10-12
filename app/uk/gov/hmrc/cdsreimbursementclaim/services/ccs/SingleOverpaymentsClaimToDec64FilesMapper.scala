@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, SingleOverpaymentsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, SingleOverpaymentsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
