@@ -32,7 +32,7 @@ class TPI04RequestSpec extends AnyWordSpec with Matchers with ScalaCheckProperty
     "serialise properly" in forAll { (mrn: MRN, reasonForSecurity: ReasonForSecurity, requestCommon: RequestCommon) =>
       val tpi04Request = TPI04Request(requestCommon, mrn, reasonForSecurity)
       Json.toJson(tpi04Request) shouldBe Json.obj(
-        "getDuplicateClaimRequest" -> Json.obj(
+        "getExistingClaimRequest" -> Json.obj(
           "requestCommon" -> Json.obj(
             "originatingSystem"        -> "MDTP",
             "receiptDate"              -> requestCommon.receiptDate,

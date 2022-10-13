@@ -27,7 +27,7 @@ object TPI04Request {
   implicit val tpi04RequestWrites: Writes[TPI04Request] = new Writes[TPI04Request] {
     override def writes(o: TPI04Request): JsValue =
       Json.obj(
-        "getDuplicateClaimRequest" -> Json.obj(
+        "getExistingClaimRequest" -> Json.obj(
           "requestCommon" -> Json.toJson(o.requestCommon),
           "requestDetail" -> Json.obj(
             "CDFPayService"     -> Platform.CDF_PAY_SERVICE,
