@@ -82,7 +82,7 @@ class ExistingDeclarationConnectorSpec
         response: ExistingClaim
       ) =>
         mockPostObject(backEndUrl, explicitHeaders, *)(Some(response))
-        val actual = await(connector.getExistingDuplicateDeclaration(mrn, reason).value)
+        val actual = await(connector.checkExistingDeclaration(mrn, reason).value)
         actual shouldBe Right(response)
     }
   }

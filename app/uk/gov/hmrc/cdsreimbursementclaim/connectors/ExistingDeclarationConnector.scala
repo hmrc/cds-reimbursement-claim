@@ -46,7 +46,7 @@ class ExistingDeclarationConnector @Inject() (
   private lazy val baseUrl = config.baseUrl("declaration")
   private lazy val url     = s"$baseUrl/tpi/getexistingclaim/v1"
 
-  def getExistingDuplicateDeclaration(
+  def checkExistingDeclaration(
     mrn: MRN,
     reasonForSecurity: ReasonForSecurity
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, ExistingClaim] = {

@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class DuplicateClaimController @Inject() (
+class ExistingClaimController @Inject() (
   authenticate: AuthenticateActions,
   existingDeclarationConnector: ExistingDeclarationConnector,
   cc: ControllerComponents
@@ -37,16 +37,16 @@ class DuplicateClaimController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def isDuplicate(mrn: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] = authenticate.async {
+  def claimExists(mrn: MRN, reasonForSecurity: ReasonForSecurity): Action[AnyContent] = authenticate.async {
     implicit request =>
       existingDeclarationConnector
-        .getExistingDuplicateDeclaration(mrn, reasonForSecurity)
+        .checkExistingDeclaration(mrn, reasonForSecurity)
         .fold(
           error => {
-            logger.warn(s"could not get duplicate declaration", error)
+            logger.warn(s"could not get existing declaration", error)
             InternalServerError
           },
-          duplicateDeclaration => Ok(Json.toJson(duplicateDeclaration))
+          existingDeclaration => Ok(Json.toJson(existingDeclaration))
         )
   }
 }

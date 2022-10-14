@@ -40,24 +40,24 @@ class DuplicateClaimControllerSpec extends ControllerSpec with ScalaCheckPropert
   val mockExistingDeclarationConnector: ExistingDeclarationConnector = mock[ExistingDeclarationConnector]
   implicit val headerCarrier: HeaderCarrier                          = HeaderCarrier()
 
-  val controller = new DuplicateClaimController(
+  val controller = new ExistingClaimController(
     authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
     mockExistingDeclarationConnector,
     Helpers.stubControllerComponents()
   )
 
-  "Duplicate Claim Controller" when {
-    "handling a request to get duplicate claims" must {
+  "Existing Claim Controller" when {
+    "handling a request to get existing claims" must {
       "return 200 OK with a declaration JSON payload for a successful TPI-04 call" in forAll {
         (mrn: MRN, reason: ReasonForSecurity, existingClaim: Boolean) =>
           val response = ExistingClaim(existingClaim)
 
           (mockExistingDeclarationConnector
-            .getExistingDuplicateDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
+            .checkExistingDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
             .expects(mrn, reason, *)
             .returning(EitherT.fromEither[Future](Right(response)))
 
-          val result = controller.isDuplicate(mrn, reason)(FakeRequest())
+          val result = controller.claimExists(mrn, reason)(FakeRequest())
 
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(response)
@@ -65,11 +65,11 @@ class DuplicateClaimControllerSpec extends ControllerSpec with ScalaCheckPropert
 
       "return 500 when the TPI-04 call fails or is unsuccessful" in forAll { (mrn: MRN, reason: ReasonForSecurity) =>
         (mockExistingDeclarationConnector
-          .getExistingDuplicateDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
+          .checkExistingDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
           .expects(mrn, reason, *)
           .returning(EitherT.fromEither[Future](Left(Error("error while getting declaration"))))
 
-        val result = controller.isDuplicate(mrn, reason)(FakeRequest())
+        val result = controller.claimExists(mrn, reason)(FakeRequest())
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
