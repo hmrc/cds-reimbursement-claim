@@ -18,7 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
 import cats.syntax.either._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.{Consignee, Declarant}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, TaxCode, TaxReclaimDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate}
@@ -29,8 +28,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExportMRN, Reas
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
 import java.time.LocalDate
+import cats.data.Validated.Valid
+import cats.data.Validated.Invalid
 
 class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)] {
 
@@ -95,7 +97,12 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       selectedSecurityDeposits                                      =
         securityDeposits.filter(deposit => claim.securitiesReclaims.exists(_._1 === deposit.securityDepositId))
       securityPaymentDetails                                       <-
-        getSecurityPaymentDetails(claim.claimantType, claim.bankAccountDetails, selectedSecurityDeposits)
+        getSecurityPaymentDetails(
+          claim.claimantType,
+          claim.bankAccountDetails,
+          displayDeclaration.displayResponseDetail.bankDetails,
+          selectedSecurityDeposits
+        )
       (bankDetails, useExistingPaymentDetails, reimbursementMethod) = securityPaymentDetails
     } yield TPI05
       .request(
@@ -135,27 +142,32 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   private def getSecurityPaymentDetails(
     claimantType: ClaimantType,
     bankAccountDetails: Option[BankAccountDetails],
+    maybeBankDetails: Option[response.BankDetails],
     securityDeposits: List[SecurityDetails]
-  ): Either[CdsError, (BankDetails, Option[Boolean], Option[ReimbursementMethod])] = {
-    val bankDetails = getBankDetails(claimantType, bankAccountDetails)
-    securityDeposits.map(_.paymentMethod).toSet.toList match {
-      case "001" :: Nil => Right((bankDetails, Some(true), None))
-      case "004" :: Nil => Right((BankDetails(None, None), Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
-      case "005" :: Nil => Right((BankDetails(None, None), Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
-      case Nil          => Left(CdsError("No security deposits"))
-      case _            =>
-        bankAccountDetails match {
-          case Some(_) => Right((bankDetails, Some(true), None))
-          case None    => Left(CdsError("Could not determine payment method"))
-        }
+  ): Either[CdsError, (BankDetails, Option[Boolean], Option[ReimbursementMethod])] =
+    getBankDetails(claimantType, bankAccountDetails, maybeBankDetails).flatMap { bankDetails =>
+      securityDeposits.map(_.paymentMethod).toSet.toList match {
+        case "001" :: Nil => Right((bankDetails, Some(true), None))
+        case "004" :: Nil => Right((BankDetails(None, None), Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
+        case "005" :: Nil =>
+          Right((BankDetails(None, None), Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
+        case Nil          => Left(CdsError("No security deposits"))
+        case _            =>
+          bankAccountDetails match {
+            case Some(_) => Right((bankDetails, Some(true), None))
+            case None    => Left(CdsError("Could not determine payment method"))
+          }
+      }
     }
-  }
 
-  private def getBankDetails(claimantType: ClaimantType, bankAccountDetails: Option[BankAccountDetails]): BankDetails =
-    claimantType match {
-      case Consignee => BankDetails(bankAccountDetails.map(BankDetail.from), None)
-      case Declarant => BankDetails(None, bankAccountDetails.map(BankDetail.from))
-      case _         => BankDetails(None, None)
+  private def getBankDetails(
+    claimantType: ClaimantType,
+    bankAccountDetails: Option[BankAccountDetails],
+    maybeBankDetails: Option[response.BankDetails]
+  ): Either[CdsError, BankDetails] =
+    MrnDetail.build.withFirstNonEmptyBankDetails(maybeBankDetails, bankAccountDetails).validated match {
+      case Valid(a)   => Right(a.bankDetails.getOrElse(BankDetails(None, None)))
+      case Invalid(e) => Left(e.head)
     }
 
   private def getSecurityDetails(
