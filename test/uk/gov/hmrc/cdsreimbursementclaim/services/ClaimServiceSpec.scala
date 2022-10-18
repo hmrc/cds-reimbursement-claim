@@ -17,12 +17,14 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxTuple2Semigroupal
 import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3, CallHandler4, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import play.api.i18n.Lang.logger
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -32,17 +34,18 @@ import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleOverpaymentsClaim, SingleOverpaymentsClaimRequest, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -79,6 +82,9 @@ class ClaimServiceSpec
 
   implicit val c285ClaimMapper: ClaimToTPI05Mapper[C285ClaimRequest] =
     mock[ClaimToTPI05Mapper[C285ClaimRequest]]
+
+  implicit val overpaymentsSingleClaimMapper: OverpaymentsSingleClaimToTPI05Mapper =
+    mock[OverpaymentsSingleClaimToTPI05Mapper]
 
   implicit val singleRejectedGoodsClaimMapper
     : ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])] =
@@ -220,6 +226,8 @@ class ClaimServiceSpec
 
           await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
+
+//t
 
       "successfully submit a Single Rejected Goods claim" in forAll {
         (
