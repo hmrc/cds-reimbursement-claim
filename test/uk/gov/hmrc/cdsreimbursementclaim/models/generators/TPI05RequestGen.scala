@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
+import cats.implicits.catsSyntaxTuple2Semigroupal
 import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
@@ -315,6 +316,11 @@ object TPI05RequestGen {
         acknowledgementReference = acknowledgementReference
       )
     }
+
+  lazy val genC285EisRequest = for {
+    common <- genRequestCommon
+    detail <- genC285ClaimRequestDetail
+  } yield EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))
 
   implicit lazy val arbitraryRequestCommon: Typeclass[RequestCommon] =
     Arbitrary(genRequestCommon)

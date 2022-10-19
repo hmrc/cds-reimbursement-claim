@@ -227,7 +227,58 @@ class ClaimServiceSpec
           await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
       }
 
-//t
+      "successfully submit a Single Overpayments claim" in forAll(genOverpaymentsSingleClaim, genC285EisRequest) {
+        (
+          singleOverpaymentsClaimData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]),
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val (claim, declaration, duplicateDeclaration) = singleOverpaymentsClaimData
+          val responseJsonBody                           = Json.parse(
+            """
+                |{
+                |    "postNewClaimsResponse": {
+                |        "responseCommon": {
+                |            "status": "OK",
+                |            "processingDate": "2021-01-20T12:07540Z",
+                |            "CDFPayService": "NDRC",
+                |            "CDFPayCaseNumber": "4374422408"
+                |        }
+                |    }
+                |}
+                |""".stripMargin
+          )
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+
+          logger.warn(s"MOCKED BASIS OF CLAIM: ${claim.basisOfClaim}")
+          logger.warn(s"MOCKED DUPLICATE MRN:  ${claim.duplicateMovementReferenceNumber}")
+          logger.warn(s"MOCKED DUPLICATE DECLARATION:  $duplicateDeclaration")
+          inSequence {
+            mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
+            (overpaymentsSingleClaimMapper
+              .map(_: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])))
+              .expects((claim, declaration, duplicateDeclaration))
+              .returning(Right(eisRequest))
+            (claim.duplicateMovementReferenceNumber, duplicateDeclaration).mapN(
+              mockDeclarationRetrieving(_)(_)
+            )
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = SingleOverpaymentsClaimRequest(claim),
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(
+            claimService.submitSingleOverpaymentsClaim(SingleOverpaymentsClaimRequest(claim)).value
+          ) shouldBe Right(submitClaimResponse)
+      }
 
       "successfully submit a Single Rejected Goods claim" in forAll {
         (

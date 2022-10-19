@@ -244,6 +244,15 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
+      "submission of the single overpayments claim failed" in forAll { request: SingleOverpaymentsClaimRequest =>
+        inSequence {
+          mockSingleOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
+        }
+
+        val result = controller.submitSingleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
       "submission of the Single C&E1779 claim failed" in forAll {
         request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim] =>
           inSequence {
