@@ -25,32 +25,36 @@ import java.util.UUID
 class C285ClaimToDec64FilesMapper extends ClaimToDec64Mapper[C285ClaimRequest] {
 
   def map(request: C285ClaimRequest, response: ClaimSubmitResponse): List[Envelope] =
-    request.claim.documents.zipWithIndex.map { case (document, index) =>
-      Envelope(
-        Body(
-          BatchFileInterfaceMetadata(
-            correlationID = UUID.randomUUID().toString,
-            batchID = request.claim.id.toString,
-            batchCount = index.toLong + 1,
-            batchSize = request.claim.documents.size.toLong,
-            checksum = document.checksum,
-            sourceLocation = document.downloadUrl,
-            sourceFileName = document.fileName,
-            sourceFileMimeType = document.fileMimeType,
-            fileSize = document.size,
-            properties = PropertiesType(
-              List(
-                PropertyType("CaseReference", response.caseNumber),
-                PropertyType("Eori", request.signedInUserDetails.eori.value),
-                PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
-                PropertyType("DeclarationType", "MRN"),
-                PropertyType("ApplicationName", "NDRC"),
-                PropertyType("DocumentType", document.documentType.toDec64DisplayString),
-                PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
+    request.claim.documents
+      .getOrElse(Nil)
+      .zipWithIndex
+      .map { case (document, index) =>
+        Envelope(
+          Body(
+            BatchFileInterfaceMetadata(
+              correlationID = UUID.randomUUID().toString,
+              batchID = request.claim.id.toString,
+              batchCount = index.toLong + 1,
+              batchSize = request.claim.documents.getOrElse(Nil).size.toLong,
+              checksum = document.checksum,
+              sourceLocation = document.downloadUrl,
+              sourceFileName = document.fileName,
+              sourceFileMimeType = document.fileMimeType,
+              fileSize = document.size,
+              properties = PropertiesType(
+                List(
+                  PropertyType("CaseReference", response.caseNumber),
+                  PropertyType("Eori", request.signedInUserDetails.eori.value),
+                  PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
+                  PropertyType("DeclarationType", "MRN"),
+                  PropertyType("ApplicationName", "NDRC"),
+                  PropertyType("DocumentType", document.documentType.toDec64DisplayString),
+                  PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
+                )
               )
             )
           )
         )
-      )
-    }.toList
+      }
+      .toList
 }
