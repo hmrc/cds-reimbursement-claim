@@ -24,7 +24,6 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import play.api.i18n.Lang.logger
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -250,9 +249,6 @@ class ClaimServiceSpec
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
 
-          logger.warn(s"MOCKED BASIS OF CLAIM: ${claim.basisOfClaim}")
-          logger.warn(s"MOCKED DUPLICATE MRN:  ${claim.duplicateMovementReferenceNumber}")
-          logger.warn(s"MOCKED DUPLICATE DECLARATION:  $duplicateDeclaration")
           inSequence {
             mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
             (overpaymentsSingleClaimMapper

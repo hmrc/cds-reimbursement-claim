@@ -61,8 +61,8 @@ trait C285ClaimSupport {
         case (_, Some(bankAccountDetails)) =>
           Some(
             BankDetails(
-              consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
-              declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+              Some(BankDetail.from(bankAccountDetails)),
+              Some(BankDetail.from(bankAccountDetails))
             )
           )
         case (Some(acc14BankDetails), _)   =>

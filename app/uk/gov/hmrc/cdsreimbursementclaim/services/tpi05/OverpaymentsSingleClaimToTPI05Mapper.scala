@@ -26,6 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclarati
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
 class OverpaymentsSingleClaimToTPI05Mapper
@@ -81,14 +82,15 @@ class OverpaymentsSingleClaimToTPI05Mapper
       .withEORIDetails(eoriDetails)
       .withMrnDetails(getMrnDetails(claim, declaration) :: Nil)
       .withMaybeDuplicateMrnDetails(
-        duplicateDeclaration.map(d => getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId))))
+        duplicateDeclaration.map(d => getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId)), false))
       )).flatMap(_.verify)
   }
 
   private def getMrnDetails(
     claim: SingleOverpaymentsClaim,
     displayDeclaration: DisplayDeclaration,
-    mrn: Option[MRN] = None
+    mrn: Option[MRN] = None,
+    includeAccountDetails: Boolean = true
   ) = {
     val nrdcDetails: List[DeclarationNdrcDetails] =
       displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten.sortBy(x => TaxCode.getOrFail(x.taxType))
@@ -100,7 +102,7 @@ class OverpaymentsSingleClaimToTPI05Mapper
       .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
       .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
       .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
-      .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
+      .withAccountDetails(if (includeAccountDetails) displayDeclaration.displayResponseDetail.accountDetails else None)
       .withFirstNonEmptyBankDetails(
         displayDeclaration.displayResponseDetail.bankDetails,
         claim.bankAccountDetails
@@ -113,8 +115,8 @@ class OverpaymentsSingleClaimToTPI05Mapper
           taxCode,
           ndrcDetails.paymentMethod,
           ndrcDetails.paymentReference,
-          BigDecimal(ndrcDetails.amount),
-          reclaimAmount
+          BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
+          reclaimAmount.roundToTwoDecimalPlaces
         )
       )
 

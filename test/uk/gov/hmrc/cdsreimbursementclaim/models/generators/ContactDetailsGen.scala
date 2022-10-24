@@ -59,7 +59,7 @@ object ContactDetailsGen {
       addressLine3 <- Gen.option(genStringWithMaxSizeOfN(10))
       addressLine4 <- Gen.option(genStringWithMaxSizeOfN(10))
       postalCode   <- Gen.option(genPostcode)
-      countryCode  <- Gen.option(genCountry.map(_.code))
+      countryCode  <- Gen.some(genCountry.map(_.code))
       telephone    <- Gen.option(genUkPhoneNumber.map(_.value))
       emailAddress <- Gen.option(genEmail.map(_.value))
     } yield ContactDetails(
