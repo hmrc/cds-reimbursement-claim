@@ -136,7 +136,7 @@ object C285ClaimGen {
     basisOfClaim                <- genBasisOfClaim
     reimbursementMethod         <- Gen.oneOf(ReimbursementMethodAnswer.values)
     bankAccountDetails          <- Gen.option(genBankAccountDetails)
-    documents                   <- Gen.nonEmptyListOf(genEvidences).map(NonEmptyList.fromListUnsafe)
+    documents                   <- Gen.option(Gen.listOf(genEvidences.sample.toList))
     additionalDetails           <- genRandomString
     claimedReimbursement        <- genClaimedReimbursement
     associated                  <- Gen

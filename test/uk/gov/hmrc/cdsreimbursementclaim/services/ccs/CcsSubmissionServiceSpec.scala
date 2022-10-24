@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import cats.data.EitherT
-import cats.data.NonEmptyList
 import cats.syntax.all._
 import org.bson.types.ObjectId
 import org.scalamock.handlers.CallHandler0
@@ -225,14 +224,14 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
       "enqueue the C285 claim request" in forAll {
         (claimSubmitRequest: C285ClaimRequest, claimSubmitResponse: ClaimSubmitResponse) =>
           val documentLens          = lens[C285ClaimRequest].claim.documents
-          val evidence              = claimSubmitRequest.claim.documents.head
-          val singleDocumentRequest = documentLens.set(claimSubmitRequest)(NonEmptyList.one(evidence))
+          val evidence              = claimSubmitRequest.claim.documents.toList.flatten.head
+          val singleDocumentRequest = documentLens.set(claimSubmitRequest)(Option(List(evidence)))
 
           val dec64payload = makeDec64XmlPayload(
             correlationId = UUID.randomUUID().toString,
             batchId = singleDocumentRequest.claim.id,
-            batchSize = singleDocumentRequest.claim.documents.size.toLong,
-            batchCount = singleDocumentRequest.claim.documents.size.toLong,
+            batchSize = singleDocumentRequest.claim.documents.size,
+            batchCount = singleDocumentRequest.claim.documents.size,
             checksum = evidence.checksum,
             fileSize = evidence.size,
             caseReference = claimSubmitResponse.caseNumber,
