@@ -83,7 +83,7 @@ object ContactInformation {
       city = None,
       countryCode = Some(declarantDetails.establishmentAddress.countryCode),
       postalCode = declarantDetails.establishmentAddress.postalCode,
-      telephoneNumber = None,
+      telephoneNumber = declarantDetails.contactDetails.map(_.telephone.getOrElse(None)),
       faxNumber = None,
       emailAddress = declarantDetails.contactDetails.flatMap(_.emailAddress)
     )
@@ -98,7 +98,7 @@ object ContactInformation {
       city = None,
       countryCode = Some(consigneeDetails.establishmentAddress.countryCode),
       postalCode = consigneeDetails.establishmentAddress.postalCode,
-      telephoneNumber = None,
+      telephoneNumber = consigneeDetails.contactDetails.map(_.telephone.getOrElse(None)),
       faxNumber = None,
       emailAddress = consigneeDetails.contactDetails.flatMap(_.emailAddress)
     )
