@@ -177,7 +177,10 @@ object Acc14DeclarationGen {
     bankDetails              <- genBankDetails
     maskedBankDetails        <- Gen.const(mask(bankDetails))
     numNdrcDetails           <- Gen.choose(1, 5)
-    ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
+    ndrcDetails              <- Gen
+                                  .listOfN(numNdrcDetails, genNdrcDetails)
+                                  .map(_.groupBy(_.taxType).values.map(_.headOption.toList).flatten.toList)
+
   } yield DisplayDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,

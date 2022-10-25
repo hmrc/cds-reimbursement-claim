@@ -193,4 +193,11 @@ object TaxCode {
   implicit val equality: Eq[TaxCode] = Eq.fromUniversalEquals[TaxCode]
 
   implicit val format: Format[TaxCode] = SimpleStringFormat(getOrFail, _.value)
+
+  implicit val ordering: Ordering[TaxCode] =
+    Ordering.fromLessThan { (t1: TaxCode, t2: TaxCode) =>
+      val a = if (t1.value.head.isLetter) "0" + t1.value else t1.value
+      val b = if (t2.value.head.isLetter) "0" + t2.value else t2.value
+      implicitly[Ordering[String]].lt(a, b)
+    }
 }

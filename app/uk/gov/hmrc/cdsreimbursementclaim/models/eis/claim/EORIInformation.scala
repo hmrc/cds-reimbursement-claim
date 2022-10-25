@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, Street}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ConsigneeDetails, ContactDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ConsigneeDetails, ContactDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
@@ -132,6 +132,35 @@ object EORIInformation {
       )
     )
   }
+
+  def forDeclarant(
+    declarantDetails: DeclarantDetails,
+    contactInformation: Option[ContactInformation]
+  ): Either[CdsError, EORIInformation] =
+    for {
+      countryCode <- declarantDetails.contactDetails
+                       .flatMap(_.countryCode)
+                       .toRight(CdsError("Country code not present in ACC14 response"))
+    } yield EORIInformation(
+      EORINumber = declarantDetails.EORI,
+      CDSFullName = declarantDetails.legalName,
+      CDSEstablishmentAddress = Address(
+        contactPerson = declarantDetails.contactDetails.flatMap(_.contactName),
+        addressLine1 = declarantDetails.contactDetails.flatMap(_.addressLine1),
+        addressLine2 = declarantDetails.contactDetails.flatMap(_.addressLine2),
+        addressLine3 = declarantDetails.contactDetails.flatMap(_.addressLine3),
+        street = Street.fromLines(
+          declarantDetails.contactDetails.flatMap(_.addressLine1),
+          declarantDetails.contactDetails.flatMap(_.addressLine2)
+        ),
+        city = declarantDetails.contactDetails.flatMap(_.addressLine4),
+        postalCode = declarantDetails.contactDetails.flatMap(_.postalCode),
+        countryCode = countryCode,
+        telephoneNumber = None, // declarantDetails.contactDetails.flatMap(_.telephone),
+        emailAddress = declarantDetails.contactDetails.flatMap(_.emailAddress)
+      ),
+      contactInformation = contactInformation
+    )
 
   implicit val format: OFormat[EORIInformation] = Json.format[EORIInformation]
 }

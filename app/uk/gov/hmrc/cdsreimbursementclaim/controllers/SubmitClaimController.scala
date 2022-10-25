@@ -50,6 +50,14 @@ class SubmitClaimController @Inject() (
     }
   }
 
+  def submitSingleOverpaymentsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[SingleOverpaymentsClaimRequest] {
+      uploadDocumentsOnce {
+        claimService.submitSingleOverpaymentsClaim(_)
+      }
+    }
+  }
+
   def submitSingleRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]] {
       uploadDocumentsOnce {

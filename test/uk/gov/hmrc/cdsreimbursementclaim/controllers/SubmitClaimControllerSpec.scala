@@ -31,10 +31,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
@@ -74,6 +75,20 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
   ) =
     (mockClaimService
       .submitC285Claim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_], _: ClaimToTPI05Mapper[C285ClaimRequest]))
+      .expects(request, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
+  private def mockSingleOverpaymentsClaimSubmission(request: SingleOverpaymentsClaimRequest)(
+    response: Either[Error, ClaimSubmitResponse]
+  ) =
+    (
+      mockClaimService
+        .submitSingleOverpaymentsClaim(_: SingleOverpaymentsClaimRequest)(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: OverpaymentsSingleClaimToTPI05Mapper
+        )
+      )
       .expects(request, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
@@ -153,6 +168,18 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         contentAsJson(result) shouldBe Json.toJson(response)
       }
 
+      "handling Overpayments single claim request" in forAll {
+        (request: SingleOverpaymentsClaimRequest, response: ClaimSubmitResponse) =>
+          inSequence {
+            mockSingleOverpaymentsClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
+
+          val result = controller.submitSingleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
+
       "handling Single C&E1779 claim request" in forAll {
         (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
           inSequence {
@@ -214,6 +241,15 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         }
 
         val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(request)))
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "submission of the single overpayments claim failed" in forAll { request: SingleOverpaymentsClaimRequest =>
+        inSequence {
+          mockSingleOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
+        }
+
+        val result = controller.submitSingleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
