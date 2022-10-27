@@ -150,17 +150,17 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     bankAccountDetails: Option[BankAccountDetails],
     maybeBankDetails: Option[response.BankDetails],
     securityDeposits: List[SecurityDetails]
-  ): Either[CdsError, (BankDetails, Option[Boolean], Option[ReimbursementMethod])] =
+  ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] =
     getBankDetails(claimantType, bankAccountDetails, maybeBankDetails).flatMap { bankDetails =>
       securityDeposits.map(_.paymentMethod).toSet.toList match {
-        case "001" :: Nil => Right((bankDetails, Some(true), None))
-        case "004" :: Nil => Right((BankDetails(None, None), Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
+        case "001" :: Nil => Right((Some(bankDetails), Some(true), None))
+        case "004" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
         case "005" :: Nil =>
-          Right((BankDetails(None, None), Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
+          Right((None, Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
         case Nil          => Left(CdsError("No security deposits"))
         case _            =>
           bankAccountDetails match {
-            case Some(_) => Right((bankDetails, Some(true), None))
+            case Some(_) => Right((Some(bankDetails), Some(true), None))
             case None    => Left(CdsError("Could not determine payment method"))
           }
       }
