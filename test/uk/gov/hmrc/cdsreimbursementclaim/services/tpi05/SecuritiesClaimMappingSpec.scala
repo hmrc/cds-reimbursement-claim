@@ -59,6 +59,20 @@ class SecuritiesClaimMappingSpec
           claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
         )
         detail.claimantName          should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
+        detail.MRNDetails.toList.flatten
+          .map(_.consigneeDetails.map(_.contactDetails))
+          .zip(declaration.displayResponseDetail.consigneeDetails.flatMap(_.contactDetails) :: Nil)
+          .foreach { case (Some(eisContactDetails), Some(acc14ContactDetails)) =>
+            eisContactDetails.addressLine1    should ===(acc14ContactDetails.addressLine1)
+            eisContactDetails.addressLine2    should ===(acc14ContactDetails.addressLine2)
+            eisContactDetails.addressLine3    should ===(acc14ContactDetails.addressLine3)
+            eisContactDetails.contactPerson   should ===(acc14ContactDetails.contactName)
+            eisContactDetails.telephoneNumber should ===(acc14ContactDetails.telephone)
+            eisContactDetails.city            should ===(acc14ContactDetails.addressLine3)
+            eisContactDetails.countryCode     should ===(acc14ContactDetails.countryCode)
+            eisContactDetails.emailAddress    should ===(acc14ContactDetails.emailAddress)
+            eisContactDetails.faxNumber       should ===(None)
+          }
         detail.security
           .flatMap(_.securityDetails)
           .toList

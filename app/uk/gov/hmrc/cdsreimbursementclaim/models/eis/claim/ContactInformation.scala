@@ -76,13 +76,16 @@ object ContactInformation {
   def fromDeclarantDetails(declarantDetails: DeclarantDetails): ContactInformation =
     new ContactInformation(
       contactPerson = declarantDetails.contactDetails.flatMap(_.contactName),
-      addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
-      addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-      addressLine3 = declarantDetails.establishmentAddress.addressLine3,
-      street = None,
-      city = None,
-      countryCode = Some(declarantDetails.establishmentAddress.countryCode),
-      postalCode = declarantDetails.establishmentAddress.postalCode,
+      addressLine1 = declarantDetails.contactDetails.flatMap(_.addressLine1),
+      addressLine2 = declarantDetails.contactDetails.flatMap(_.addressLine2),
+      addressLine3 = declarantDetails.contactDetails.flatMap(_.addressLine3),
+      street = Street.fromLines(
+        declarantDetails.contactDetails.flatMap(_.addressLine1),
+        declarantDetails.contactDetails.flatMap(_.addressLine2)
+      ),
+      city = declarantDetails.contactDetails.flatMap(_.addressLine3),
+      countryCode = declarantDetails.contactDetails.flatMap(_.countryCode),
+      postalCode = declarantDetails.contactDetails.flatMap(_.postalCode),
       telephoneNumber = declarantDetails.contactDetails.flatMap(_.telephone),
       faxNumber = None,
       emailAddress = declarantDetails.contactDetails.flatMap(_.emailAddress)
@@ -91,13 +94,16 @@ object ContactInformation {
   def fromConsigneeDetails(consigneeDetails: ConsigneeDetails): ContactInformation =
     new ContactInformation(
       contactPerson = consigneeDetails.contactDetails.flatMap(_.contactName),
-      addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
-      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-      addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-      street = None,
-      city = None,
-      countryCode = Some(consigneeDetails.establishmentAddress.countryCode),
-      postalCode = consigneeDetails.establishmentAddress.postalCode,
+      addressLine1 = consigneeDetails.contactDetails.flatMap(_.addressLine1),
+      addressLine2 = consigneeDetails.contactDetails.flatMap(_.addressLine2),
+      addressLine3 = consigneeDetails.contactDetails.flatMap(_.addressLine3),
+      street = Street.fromLines(
+        consigneeDetails.contactDetails.flatMap(_.addressLine1),
+        consigneeDetails.contactDetails.flatMap(_.addressLine2)
+      ),
+      city = consigneeDetails.contactDetails.flatMap(_.addressLine3),
+      countryCode = consigneeDetails.contactDetails.flatMap(_.countryCode),
+      postalCode = consigneeDetails.contactDetails.flatMap(_.postalCode),
       telephoneNumber = consigneeDetails.contactDetails.flatMap(_.telephone),
       faxNumber = None,
       emailAddress = consigneeDetails.contactDetails.flatMap(_.emailAddress)
