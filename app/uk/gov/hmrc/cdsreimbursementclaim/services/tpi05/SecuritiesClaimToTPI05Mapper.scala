@@ -47,7 +47,13 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                       )
       claimantEmail                                                 = Email(email)
       claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
+      _                                                            <- displayDeclaration.displayResponseDetail.declarantDetails.contactDetails.toRight(
+                                                                        CdsError("The declarant contact information is missing")
+                                                                      )
       declarantDetails                                              = MRNInformation.fromDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
+      _                                                            <- displayDeclaration.displayResponseDetail.consigneeDetails
+                                                                        .map(_.contactDetails.toRight(CdsError("The consignee contact information is missing")).map(_ => ()))
+                                                                        .getOrElse(().asRight)
       consigneeDetails                                              = displayDeclaration.displayResponseDetail.consigneeDetails
                                                                         .map(MRNInformation.fromConsigneeDetails(_))
                                                                         .getOrElse(declarantDetails)
