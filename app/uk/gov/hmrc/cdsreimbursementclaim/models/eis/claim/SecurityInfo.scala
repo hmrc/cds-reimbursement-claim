@@ -34,7 +34,7 @@ final case class SecurityInfo(
   declarantDetails: Option[MRNInformation] = None,
   consigneeDetails: Option[MRNInformation] = None,
   accountDetails: Option[List[AccountDetail]] = None,
-  bankDetails: BankDetails = BankDetails(None, None),
+  bankDetails: Option[BankDetails] = None,
   securityDetails: Option[List[SecurityDetail]] = None
 )
 
