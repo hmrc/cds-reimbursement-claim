@@ -30,12 +30,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper, SecuritiesClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
@@ -224,7 +224,7 @@ class DefaultClaimService @Inject() (
                                   returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                                 )
       claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
-      _                      <- createEmailRequest(tpi05Binder)(claimRequest, eisSubmitRequest)
+      _                      <- createEmailRequest(claimRequest, eisSubmitRequest)
                                   .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
                                   .leftFlatMap { e =>
                                     logger.warn("could not send claim submission confirmation email or audit event", e)
@@ -232,9 +232,26 @@ class DefaultClaimService @Inject() (
                                   }
     } yield claimResponse
 
-  private def createEmailRequest[R](tpi05Binder: ClaimToTPI05Mapper[R])(claim: R, eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
+  private def createEmailRequest[R](
+    claim: R,
+    eisSubmitClaimRequest: EisSubmitClaimRequest
+  ): EitherT[Future, Error, EmailRequest] =
     EitherT.fromOption[Future](
-      tpi05Binder.getEmailRequest(claim).orElse(EmailRequest.fromDetail(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail)),
+      EmailRequest(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail)
+        .orElse(claim match {
+          case (securitiesClaim: SecuritiesClaim, _) =>
+            for {
+              claimantEmailAddress <- securitiesClaim.claimantInformation.contactInformation.emailAddress
+              contactPerson        <- securitiesClaim.claimantInformation.contactInformation.contactPerson
+              claimTotalAmount      =
+                securitiesClaim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
+            } yield EmailRequest(
+              Email(claimantEmailAddress),
+              contactPerson,
+              claimTotalAmount
+            )
+          case _                                     => None
+        }),
       Error("Cannot create Email request because required fields missing")
     )
 

@@ -28,15 +28,12 @@ final case class EmailRequest(
 
 object EmailRequest {
 
-  def fromDetail(details: RequestDetail): Option[EmailRequest] = (
+  def apply(details: RequestDetail): Option[EmailRequest] = (
     details.EORIDetails
       .flatMap(_.agentEORIDetails.contactInformation)
       .flatMap(_.contactPerson),
     details.claimAmountTotal.map(BigDecimal(_))
   ) mapN (EmailRequest(details.claimantEmailAddress, _, _))
-
-  def apply(contactPerson: String, claimTotalAmount: BigDecimal, claimantEmailAddress: Email): EmailRequest =
-    EmailRequest(claimantEmailAddress, contactPerson, claimTotalAmount)
 
   implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
 }

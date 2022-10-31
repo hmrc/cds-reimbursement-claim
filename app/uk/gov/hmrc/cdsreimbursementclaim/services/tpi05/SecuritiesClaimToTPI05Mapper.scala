@@ -226,18 +226,4 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       Some(reclaims.flatMap(_.toList))
   }
 
-  def getEmailRequest(claim:  (SecuritiesClaim, DisplayDeclaration)): Option[EmailRequest] = {
-    val (securitiesClaim, _) = claim
-
-    for {
-      claimantEmailAddress <- securitiesClaim.claimantInformation.contactInformation.emailAddress
-      contactPerson <- securitiesClaim.claimantInformation.contactInformation.contactPerson
-      claimTotalAmount = securitiesClaim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
-    } yield
-      EmailRequest(
-        contactPerson,
-        claimTotalAmount,
-        claimantEmailAddress,
-      )
-  }
 }

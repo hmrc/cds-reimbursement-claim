@@ -22,5 +22,4 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 
 trait ClaimToTPI05Mapper[Claim] {
   def map(claim: Claim): Either[Error, EisSubmitClaimRequest]
-  def getEmailRequest(claim: Claim): Option[EmailRequest] = None
 }
