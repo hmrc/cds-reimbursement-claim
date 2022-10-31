@@ -34,12 +34,16 @@ object ReimbursementMethod extends EnumerationFormat[ReimbursementMethod] {
     override def toString: String = "Payable Order"
   }
 
-  final case object GeneralGuarantee extends ReimbursementMethod {
-    override def toString: String = "General Guarantee"
+  final case object Guarantee extends ReimbursementMethod {
+    override def toString: String = "Guarantee"
   }
 
-  final case object IndividualGuarantee extends ReimbursementMethod {
-    override def toString: String = "Individual Guarantee"
+  final case object DutyDefermentAccount extends ReimbursementMethod {
+    override def toString: String = "Duty Deferment Account"
+  }
+
+  final case object CashAccount extends ReimbursementMethod {
+    override def toString: String = "Cash Account"
   }
 
   lazy val values: Set[ReimbursementMethod] = Set(Deferment, BankTransfer, PayableOrder)
