@@ -224,7 +224,7 @@ class DefaultClaimService @Inject() (
                                   returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                                 )
       claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
-      _                      <- createEmailRequest(eisSubmitRequest)
+      _                      <- createEmailRequest(tpi05Binder)(claimRequest, eisSubmitRequest)
                                   .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
                                   .leftFlatMap { e =>
                                     logger.warn("could not send claim submission confirmation email or audit event", e)
@@ -232,9 +232,9 @@ class DefaultClaimService @Inject() (
                                   }
     } yield claimResponse
 
-  private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
+  private def createEmailRequest[R](tpi05Binder: ClaimToTPI05Mapper[R])(claim: R, eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
     EitherT.fromOption[Future](
-      EmailRequest(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail),
+      tpi05Binder.getEmailRequest(claim).orElse(EmailRequest.fromDetail(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail)),
       Error("Cannot create Email request because required fields missing")
     )
 

@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
@@ -224,5 +224,20 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       None
     else
       Some(reclaims.flatMap(_.toList))
+  }
+
+  def getEmailRequest(claim:  (SecuritiesClaim, DisplayDeclaration)): Option[EmailRequest] = {
+    val (securitiesClaim, _) = claim
+
+    for {
+      claimantEmailAddress <- securitiesClaim.claimantInformation.contactInformation.emailAddress
+      contactPerson <- securitiesClaim.claimantInformation.contactInformation.contactPerson
+      claimTotalAmount = securitiesClaim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
+    } yield
+      EmailRequest(
+        contactPerson,
+        claimTotalAmount,
+        claimantEmailAddress,
+      )
   }
 }
