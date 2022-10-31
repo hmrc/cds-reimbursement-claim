@@ -153,20 +153,24 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] =
     getBankDetails(claimantType, bankAccountDetails, maybeBankDetails).flatMap { implicit bankDetails =>
       securityDeposits.map(_.paymentMethod).distinct match {
-        case paymentMethods @ _ :: otherPaymentMethods
-          if otherPaymentMethods.nonEmpty => bankDetailsOrError(bankAccountDetails, s"Multiple payment methods returned: [${paymentMethods.mkString(", ")}]")
-        case "001" :: Nil => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
-        case "002" :: Nil => Right((None, Some(true), Some(ReimbursementMethod.DutyDefermentAccount)))
-        case "003" :: Nil => Right((None, Some(true), Some(ReimbursementMethod.CashAccount)))
-        case "004" :: Nil |
-             "005" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.Guarantee)))
-        case unsupported :: Nil => bankDetailsOrError(bankAccountDetails, s"Could not determine payment method [$unsupported]")
-        case Nil          => Left(CdsError("No security deposits"))
+        case paymentMethods @ _ :: otherPaymentMethods if otherPaymentMethods.nonEmpty =>
+          bankDetailsOrError(
+            bankAccountDetails,
+            s"Multiple payment methods returned: [${paymentMethods.mkString(", ")}]"
+          )
+        case "001" :: Nil                                                              => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
+        case "002" :: Nil                                                              => Right((None, Some(true), Some(ReimbursementMethod.Deferment)))
+        case "004" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
+        case "005" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
+        case unsupported :: Nil                                                        =>
+          bankDetailsOrError(bankAccountDetails, s"Could not determine payment method [$unsupported]")
+        case Nil                                                                       => Left(CdsError("No security deposits"))
       }
     }
 
-  private def bankDetailsOrError(bankAccountDetails: Option[BankAccountDetails],  errorMessage: String)
-                                (implicit bankDetails: BankDetails): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] =
+  private def bankDetailsOrError(bankAccountDetails: Option[BankAccountDetails], errorMessage: String)(implicit
+    bankDetails: BankDetails
+  ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] =
     bankAccountDetails match {
       case Some(_) => Right((Some(bankDetails), Some(true), None))
       case None    => Left(CdsError(errorMessage))
