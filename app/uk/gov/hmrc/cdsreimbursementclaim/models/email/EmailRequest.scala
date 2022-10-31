@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.email
 
 import cats.implicits.catsSyntaxTuple2Semigroupal
+import play.api.i18n.Lang.logger
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.RequestDetail
 
@@ -28,12 +29,24 @@ final case class EmailRequest(
 
 object EmailRequest {
 
-  def apply(details: RequestDetail): Option[EmailRequest] = (
-    details.EORIDetails
-      .flatMap(_.agentEORIDetails.contactInformation)
-      .flatMap(_.contactPerson),
-    details.claimAmountTotal.map(BigDecimal(_))
-  ) mapN (EmailRequest(details.claimantEmailAddress, _, _))
+  def apply(details: RequestDetail): Option[EmailRequest] = {
+    val maybeEmailRequest = (
+      details.EORIDetails
+        .flatMap(_.agentEORIDetails.contactInformation)
+        .flatMap(_.contactPerson),
+      details.claimAmountTotal.map(BigDecimal(_))
+    ) mapN (EmailRequest(details.claimantEmailAddress, _, _))
+
+    if (maybeEmailRequest.isEmpty) {
+      logger.warn(s"EMAIL REQUEST CANNOT BE CREATED: (" +
+        s"${details.EORIDetails.flatMap(_.agentEORIDetails.contactInformation).flatMap(_.contactPerson)}," +
+        s"${details.claimAmountTotal}," +
+        s"${details.claimantEmailAddress}," +
+        s")")
+    }
+
+    maybeEmailRequest
+  }
 
   implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
 }
