@@ -173,7 +173,8 @@ object MrnDetail {
       maybeBankDetails: Option[response.BankDetails],
       maybeBankAccountDetails: Option[BankAccountDetails]
     ): Builder = {
-      def tryToFindNonEmpty = (maybeBankDetails, maybeBankAccountDetails) match {
+
+      def selectBankDetails = (maybeBankDetails, maybeBankAccountDetails) match {
         case (_, Some(bankAccountDetails)) =>
           Some(
             BankDetails(
@@ -191,11 +192,7 @@ object MrnDetail {
         case _                             => None
       }
 
-      copy(validated.andThen { mrnDetails =>
-        tryToFindNonEmpty
-          .toValidNel(Error("Missing bank details"))
-          .map(bankDetails => mrnDetails.copy(bankDetails = Some(bankDetails)))
-      })
+      copy(validated.map(_.copy(bankDetails = selectBankDetails)))
     }
 
     def withAccountDetails(maybeAccountDetails: Option[List[AccountDetails]]): Builder =
