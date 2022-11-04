@@ -22,6 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
@@ -79,6 +80,21 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
             )
         }
       )).flatMap(_.verify)
+
+  override def mapEmailRequest(claim: C285ClaimRequest): Either[CdsError, EmailRequest] =
+    for {
+      email       <- claim.claim.contactInformation.emailAddress.toRight(
+                       CdsError("no email address provided with claim")
+                     )
+      contactName <- claim.claim.contactInformation.contactPerson.toRight(
+                       CdsError("no contact nam perovided with claim")
+                     )
+      claimAmount  = claim.claim.claims.map(_.claimAmount).toList.sum
+    } yield EmailRequest(
+      Email(email),
+      contactName,
+      claimAmount
+    )
 
   private def getEoriDetails(request: C285ClaimRequest): Either[CdsError, EoriDetails] =
     for {

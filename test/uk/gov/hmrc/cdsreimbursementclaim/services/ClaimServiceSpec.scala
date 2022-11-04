@@ -36,7 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, S
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleOverpaymentsClaim, SingleOverpaymentsClaimRequest, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen._
@@ -112,6 +112,14 @@ class ClaimServiceSpec
       .expects(claim)
       .returning(Right(eis))
 
+  def mockClaimEmailRequestMapping[A](claim: A, emailRequest: EmailRequest)(implicit
+    claimMapper: ClaimToTPI05Mapper[A]
+  ): CallHandler1[A, Either[Error, EmailRequest]] =
+    (claimMapper
+      .mapEmailRequest(_: A))
+      .expects(claim)
+      .returning(Right(emailRequest))
+
   def mockSubmitClaim(eisSubmitClaimRequest: EisSubmitClaimRequest)(
     response: Either[Error, HttpResponse]
   ): CallHandler2[EisSubmitClaimRequest, HeaderCarrier, EitherT[Future, Error, HttpResponse]] =
@@ -170,7 +178,7 @@ class ClaimServiceSpec
       .returning(())
 
   def mockSendClaimSubmitConfirmationEmail(
-    eisSubmitClaimRequest: EisSubmitClaimRequest,
+    emailRequest: EmailRequest,
     submitClaimResponse: ClaimSubmitResponse
   )(
     response: Either[Error, Unit]
@@ -178,7 +186,7 @@ class ClaimServiceSpec
     (emailServiceMock
       .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[_]))
       .expects(
-        EmailRequest(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail).value,
+        emailRequest,
         submitClaimResponse,
         *,
         *
@@ -207,6 +215,11 @@ class ClaimServiceSpec
           )
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(c285ClaimRequest.claim.contactInformation.emailAddress.value),
+            c285ClaimRequest.claim.contactInformation.contactPerson.value,
+            c285ClaimRequest.claim.totalReimbursementAmount
+          )
 
           inSequence {
             mockClaimMapping(c285ClaimRequest, eisRequest)
@@ -220,7 +233,8 @@ class ClaimServiceSpec
               submitClaimRequest = c285ClaimRequest,
               eisSubmitClaimRequest = eisRequest
             )
-            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+            mockClaimEmailRequestMapping(c285ClaimRequest, emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
           await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
@@ -248,6 +262,11 @@ class ClaimServiceSpec
           )
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(claim.claimantInformation.contactInformation.emailAddress.value),
+            claim.claimantInformation.contactInformation.contactPerson.value,
+            claim.reimbursementClaims.values.sum
+          )
 
           inSequence {
             mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
@@ -268,7 +287,8 @@ class ClaimServiceSpec
               submitClaimRequest = SingleOverpaymentsClaimRequest(claim),
               eisSubmitClaimRequest = eisRequest
             )
-            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+            mockClaimEmailRequestMapping(singleOverpaymentsClaimData, emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
           await(
@@ -298,6 +318,11 @@ class ClaimServiceSpec
           )
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(ce1779ClaimRequest.claim.claimantInformation.contactInformation.emailAddress.value),
+            ce1779ClaimRequest.claim.claimantInformation.contactInformation.contactPerson.value,
+            ce1779ClaimRequest.claim.reimbursementClaims.values.sum
+          )
 
           inSequence {
             mockDeclarationRetrieving(ce1779ClaimRequest.claim.leadMrn)(displayDeclaration)
@@ -312,7 +337,8 @@ class ClaimServiceSpec
               submitClaimRequest = ce1779ClaimRequest,
               eisSubmitClaimRequest = eisRequest
             )
-            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+            mockClaimEmailRequestMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
           await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)
@@ -342,6 +368,11 @@ class ClaimServiceSpec
           )
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(claim.claimantInformation.contactInformation.emailAddress.value),
+            claim.claimantInformation.contactInformation.contactPerson.value,
+            claim.reimbursementClaims.values.flatMap(_.values).sum
+          )
 
           inSequence {
             details._2.foreach { dd =>
@@ -359,7 +390,8 @@ class ClaimServiceSpec
               submitClaimRequest = RejectedGoodsClaimRequest(details._1),
               eisSubmitClaimRequest = eisRequest
             )
-            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Right(()))
+            mockClaimEmailRequestMapping((claim, declarations), emailRequest)(multipleRejectedGoodsClaimMapper)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
           await(
@@ -385,6 +417,11 @@ class ClaimServiceSpec
           )
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(c285ClaimRequest.claim.contactInformation.emailAddress.value),
+            c285ClaimRequest.claim.contactInformation.contactPerson.value,
+            c285ClaimRequest.claim.totalReimbursementAmount
+          )
 
           inSequence {
             mockClaimMapping(c285ClaimRequest, eisRequest)
@@ -398,7 +435,8 @@ class ClaimServiceSpec
               c285ClaimRequest,
               eisRequest
             )
-            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Left(Error("some error")))
+            mockClaimEmailRequestMapping(c285ClaimRequest, emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left(Error("some error")))
           }
 
           await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
@@ -426,6 +464,11 @@ class ClaimServiceSpec
           )
 
           val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(ce1779ClaimRequest.claim.claimantInformation.contactInformation.emailAddress.value),
+            ce1779ClaimRequest.claim.claimantInformation.contactInformation.contactPerson.value,
+            ce1779ClaimRequest.claim.reimbursementClaims.values.sum
+          )
 
           inSequence {
             mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(displayDeclaration)
@@ -440,7 +483,8 @@ class ClaimServiceSpec
               ce1779ClaimRequest,
               eisRequest
             )
-            mockSendClaimSubmitConfirmationEmail(eisRequest, submitClaimResponse)(Left(Error("some error")))
+            mockClaimEmailRequestMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left(Error("some error")))
           }
 
           await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)

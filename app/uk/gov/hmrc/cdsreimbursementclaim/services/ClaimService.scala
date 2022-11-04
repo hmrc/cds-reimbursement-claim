@@ -224,19 +224,14 @@ class DefaultClaimService @Inject() (
                                   returnHttpResponse.parseJSON[EisSubmitClaimResponse]().leftMap(Error(_))
                                 )
       claimResponse          <- prepareSubmitClaimResponse(eisSubmitClaimResponse)
-      _                      <- createEmailRequest(eisSubmitRequest)
-                                  .flatMap(emailService.sendClaimConfirmationEmail(_, claimResponse))
+      emailRequest           <- EitherT.fromEither[Future](tpi05Binder.mapEmailRequest(claimRequest))
+      _                      <- emailService
+                                  .sendClaimConfirmationEmail(emailRequest, claimResponse)
                                   .leftFlatMap { e =>
-                                    logger.warn("could not send claim submission confirmation email or audit event", e)
+                                    logger.error(s"could not send claim submission confirmation email or audit event $e")
                                     EitherT.pure[Future, Error](())
                                   }
     } yield claimResponse
-
-  private def createEmailRequest(eisSubmitClaimRequest: EisSubmitClaimRequest): EitherT[Future, Error, EmailRequest] =
-    EitherT.fromOption[Future](
-      EmailRequest(eisSubmitClaimRequest.postNewClaimsRequest.requestDetail),
-      Error("Cannot create Email request because required fields missing")
-    )
 
   private def auditClaimBeforeSubmit(eisSubmitClaimRequest: EisSubmitClaimRequest)(implicit
     hc: HeaderCarrier,
