@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
@@ -55,7 +55,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                         .map(_.contactDetails.toRight(CdsError("The consignee contact information is missing")).map(_ => ()))
                                                                         .getOrElse(().asRight)
       consigneeDetails                                              = displayDeclaration.displayResponseDetail.consigneeDetails
-                                                                        .map(MRNInformation.fromConsigneeDetails(_))
+                                                                        .map(MRNInformation.fromConsigneeDetails)
                                                                         .getOrElse(declarantDetails)
       securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
@@ -145,6 +145,23 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       .withTemporaryAdmissionMethodOfDisposal(methodOfDisposalDetail)).flatMap(x => x.verify)
   }
 
+  override def mapEmailRequest(claim: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EmailRequest] = {
+    val (securitiesClaim, _) = claim
+    for {
+      email       <- securitiesClaim.claimantInformation.contactInformation.emailAddress.toRight(
+                       CdsError("no email address provided with claim")
+                     )
+      contactName <- securitiesClaim.claimantInformation.contactInformation.contactPerson.toRight(
+                       CdsError("no contact nam perovided with claim")
+                     )
+      claimAmount  = securitiesClaim.securitiesReclaims.values.flatMap(_.values).sum
+    } yield EmailRequest(
+      Email(email),
+      contactName,
+      claimAmount
+    )
+  }
+
   private def getSecurityPaymentDetails(
     claimantType: ClaimantType,
     bankAccountDetails: Option[BankAccountDetails],
@@ -152,7 +169,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     securityDeposits: List[SecurityDetails]
   ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] =
     getBankDetails(claimantType, bankAccountDetails, maybeBankDetails).flatMap { bankDetails =>
-      securityDeposits.map(_.paymentMethod).toSet.toList match {
+      securityDeposits.map(_.paymentMethod).distinct match {
         case "001" :: Nil => Right((Some(bankDetails), Some(true), None))
         case "004" :: Nil => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
         case "005" :: Nil =>

@@ -18,8 +18,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 
 trait ClaimToTPI05Mapper[Claim] {
   def map(claim: Claim): Either[Error, EisSubmitClaimRequest]
+  def mapEmailRequest(claim: Claim): Either[Error, EmailRequest]
 
 }

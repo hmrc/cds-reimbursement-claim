@@ -25,7 +25,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
@@ -68,6 +68,23 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
       .withMrnDetails(getMrnDetails(claim, declarations))
       .withDeclarationMode(claim.declarationMode)
       .withCaseType(claim.caseType)).flatMap(_.verify)
+  }
+
+  override def mapEmailRequest(claim: (Claim, List[DisplayDeclaration])): Either[CdsError, EmailRequest] = {
+    val (rejectedGoodsClaim, _) = claim
+    for {
+      email       <- rejectedGoodsClaim.claimantInformation.contactInformation.emailAddress.toRight(
+                       CdsError("no email address provided with claim")
+                     )
+      contactName <- rejectedGoodsClaim.claimantInformation.contactInformation.contactPerson.toRight(
+                       CdsError("no contact nam perovided with claim")
+                     )
+      claimAmount  = rejectedGoodsClaim.totalReimbursementAmount
+    } yield EmailRequest(
+      Email(email),
+      contactName,
+      claimAmount
+    )
   }
 
   private def getGoodsDetails(claim: Claim) =
