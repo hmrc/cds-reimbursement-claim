@@ -35,6 +35,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleCla
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.workitem.WorkItem
@@ -73,9 +74,16 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
   private def mockC285ClaimSubmission(request: C285ClaimRequest)(
     response: Either[Error, ClaimSubmitResponse]
   ) =
-    (mockClaimService
-      .submitC285Claim(_: C285ClaimRequest)(_: HeaderCarrier, _: Request[_], _: ClaimToTPI05Mapper[C285ClaimRequest]))
-      .expects(request, *, *, *)
+    (
+      mockClaimService
+        .submitC285Claim(_: C285ClaimRequest)(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: ClaimToTPI05Mapper[C285ClaimRequest],
+          _: ClaimToEmailMapper[C285ClaimRequest]
+        )
+      )
+      .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockSingleOverpaymentsClaimSubmission(request: SingleOverpaymentsClaimRequest)(
@@ -86,10 +94,11 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitSingleOverpaymentsClaim(_: SingleOverpaymentsClaimRequest)(
           _: HeaderCarrier,
           _: Request[_],
-          _: OverpaymentsSingleClaimToTPI05Mapper
+          _: OverpaymentsSingleClaimToTPI05Mapper,
+          _: OverpaymentsSingleClaimToEmailMapper
         )
       )
-      .expects(request, *, *, *)
+      .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockRejectedGoodsClaimSubmission[Claim <: RejectedGoodsClaim](request: RejectedGoodsClaimRequest[Claim])(
@@ -101,10 +110,11 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           _: HeaderCarrier,
           _: Request[_],
           _: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
+          _: ClaimToEmailMapper[(Claim, List[DisplayDeclaration])],
           _: Format[RejectedGoodsClaimRequest[Claim]]
         )
       )
-      .expects(request, *, *, *, *)
+      .expects(request, *, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockMultipleRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(
@@ -116,10 +126,11 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           _: HeaderCarrier,
           _: Request[_],
           _: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+          _: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
           _: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
         )
       )
-      .expects(request, *, *, *, *)
+      .expects(request, *, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockScheduledRejectedGoodsClaimSubmission(
@@ -132,10 +143,11 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitScheduledRejectedGoodsClaim(_: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
           _: HeaderCarrier,
           _: Request[_],
+          _: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
           _: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
         )
       )
-      .expects(request, *, *, *)
+      .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockCcsRequestEnqueue[A](

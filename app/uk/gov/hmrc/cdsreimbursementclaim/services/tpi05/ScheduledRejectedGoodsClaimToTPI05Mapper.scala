@@ -65,25 +65,6 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
       .withCaseType(claim.caseType)).flatMap(_.verify)
   }
 
-  override def mapEmailRequest(
-    claim: (ScheduledRejectedGoodsClaim, DisplayDeclaration)
-  ): Either[CdsError, EmailRequest] = {
-    val (scheduledRejectedGoodsClaim, _) = claim
-    for {
-      email       <- scheduledRejectedGoodsClaim.claimantInformation.contactInformation.emailAddress.toRight(
-                       CdsError("no email address provided with claim")
-                     )
-      contactName <- scheduledRejectedGoodsClaim.claimantInformation.contactInformation.contactPerson.toRight(
-                       CdsError("no contact nam perovided with claim")
-                     )
-      claimAmount  = scheduledRejectedGoodsClaim.totalReimbursementAmount
-    } yield EmailRequest(
-      Email(email),
-      contactName,
-      claimAmount
-    )
-  }
-
   private def getGoodsDetails(claim: ScheduledRejectedGoodsClaim) =
     GoodsDetails(
       descOfGoods = Some(claim.detailsOfRejectedGoods),

@@ -86,25 +86,6 @@ class OverpaymentsSingleClaimToTPI05Mapper
       )).flatMap(_.verify)
   }
 
-  override def mapEmailRequest(
-    claim: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])
-  ): Either[CdsError, EmailRequest] = {
-    val (singleOverpaymentsClaim, _, _) = claim
-    for {
-      email       <- singleOverpaymentsClaim.claimantInformation.contactInformation.emailAddress.toRight(
-                       CdsError("no email address provided with claim")
-                     )
-      contactName <- singleOverpaymentsClaim.claimantInformation.contactInformation.contactPerson.toRight(
-                       CdsError("no contact nam perovided with claim")
-                     )
-      claimAmount  = singleOverpaymentsClaim.reimbursementClaims.values.sum
-    } yield EmailRequest(
-      Email(email),
-      contactName,
-      claimAmount
-    )
-  }
-
   private def getMrnDetails(
     claim: SingleOverpaymentsClaim,
     displayDeclaration: DisplayDeclaration,

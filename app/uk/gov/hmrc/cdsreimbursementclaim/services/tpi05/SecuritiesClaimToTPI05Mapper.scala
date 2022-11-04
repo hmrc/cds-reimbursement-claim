@@ -145,23 +145,6 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       .withTemporaryAdmissionMethodOfDisposal(methodOfDisposalDetail)).flatMap(x => x.verify)
   }
 
-  override def mapEmailRequest(claim: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EmailRequest] = {
-    val (securitiesClaim, _) = claim
-    for {
-      email       <- securitiesClaim.claimantInformation.contactInformation.emailAddress.toRight(
-                       CdsError("no email address provided with claim")
-                     )
-      contactName <- securitiesClaim.claimantInformation.contactInformation.contactPerson.toRight(
-                       CdsError("no contact nam perovided with claim")
-                     )
-      claimAmount  = securitiesClaim.securitiesReclaims.values.flatMap(_.values).sum
-    } yield EmailRequest(
-      Email(email),
-      contactName,
-      claimAmount
-    )
-  }
-
   private def getSecurityPaymentDetails(
     claimantType: ClaimantType,
     bankAccountDetails: Option[BankAccountDetails],

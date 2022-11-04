@@ -44,6 +44,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -93,6 +94,20 @@ class ClaimServiceSpec
     : ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
     mock[ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])]]
 
+  implicit val c285ClaimEmailMapperMock: ClaimToEmailMapper[C285ClaimRequest] =
+    mock[ClaimToEmailMapper[C285ClaimRequest]]
+
+  implicit val overpaymentsSingleClaimEmailMapperMock: OverpaymentsSingleClaimToEmailMapper =
+    mock[OverpaymentsSingleClaimToEmailMapper]
+
+  implicit val singleRejectedGoodsClaimEmailMapperMock
+    : ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])] =
+    mock[ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])]]
+
+  implicit val multipleRejectedGoodsClaimEmailMapperMock
+    : ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+    mock[ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])]]
+
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
     PropertyCheckConfiguration(minSuccessful = 1)
 
@@ -113,10 +128,10 @@ class ClaimServiceSpec
       .returning(Right(eis))
 
   def mockClaimEmailRequestMapping[A](claim: A, emailRequest: EmailRequest)(implicit
-    claimMapper: ClaimToTPI05Mapper[A]
+    claimMapper: ClaimToEmailMapper[A]
   ): CallHandler1[A, Either[Error, EmailRequest]] =
     (claimMapper
-      .mapEmailRequest(_: A))
+      .map(_: A))
       .expects(claim)
       .returning(Right(emailRequest))
 
@@ -390,7 +405,7 @@ class ClaimServiceSpec
               submitClaimRequest = RejectedGoodsClaimRequest(details._1),
               eisSubmitClaimRequest = eisRequest
             )
-            mockClaimEmailRequestMapping((claim, declarations), emailRequest)(multipleRejectedGoodsClaimMapper)
+            mockClaimEmailRequestMapping((claim, declarations), emailRequest)
             mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
