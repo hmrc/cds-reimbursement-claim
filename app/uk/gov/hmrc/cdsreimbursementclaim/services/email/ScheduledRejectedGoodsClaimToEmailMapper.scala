@@ -31,7 +31,7 @@ class ScheduledRejectedGoodsClaimToEmailMapper
                        CdsError("no email address provided with claim")
                      )
       contactName <- scheduledRejectedGoodsClaim.claimantInformation.contactInformation.contactPerson.toRight(
-                       CdsError("no contact nam perovided with claim")
+                       CdsError("no contact name provided with claim")
                      )
       claimAmount  = scheduledRejectedGoodsClaim.totalReimbursementAmount
     } yield EmailRequest(

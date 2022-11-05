@@ -30,7 +30,7 @@ class SecuritiesClaimToEmailMapper extends ClaimToEmailMapper[(SecuritiesClaim, 
                        CdsError("no email address provided with claim")
                      )
       contactName <- securitiesClaim.claimantInformation.contactInformation.contactPerson.toRight(
-                       CdsError("no contact nam perovided with claim")
+                       CdsError("no contact name provided with claim")
                      )
       claimAmount  = securitiesClaim.securitiesReclaims.values.flatMap(_.values).sum
     } yield EmailRequest(

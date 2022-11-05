@@ -27,7 +27,7 @@ class C285ClaimToEmailMapper extends ClaimToEmailMapper[C285ClaimRequest] {
                        CdsError("no email address provided with claim")
                      )
       contactName <- claim.claim.contactInformation.contactPerson.toRight(
-                       CdsError("no contact nam perovided with claim")
+                       CdsError("no contact name provided with claim")
                      )
       claimAmount  = claim.claim.claims.map(_.claimAmount).toList.sum
     } yield EmailRequest(
