@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
+package uk.gov.hmrc.cdsreimbursementclaim.services.email
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
-trait ClaimToTPI05Mapper[Claim] {
-  def map(claim: Claim): Either[Error, EisSubmitClaimRequest]
+trait ClaimToEmailMapper[Claim] {
+  def map(claim: Claim): Either[CdsError, EmailRequest]
 }

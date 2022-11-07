@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
@@ -55,7 +55,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                         .map(_.contactDetails.toRight(CdsError("The consignee contact information is missing")).map(_ => ()))
                                                                         .getOrElse(().asRight)
       consigneeDetails                                              = displayDeclaration.displayResponseDetail.consigneeDetails
-                                                                        .map(MRNInformation.fromConsigneeDetails(_))
+                                                                        .map(MRNInformation.fromConsigneeDetails)
                                                                         .getOrElse(declarantDetails)
       securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
