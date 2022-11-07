@@ -16,22 +16,33 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import cats.implicits.catsSyntaxTuple2Semigroupal
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.scalacheck.magnolia._
-import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{ISO8601DateTime, ISOLocalDate, TemporalAccessorOps}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISOLocalDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.{C285, CE1179}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.{genAccountName, genAccountNumber, genSortCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.genCountry
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.genPostcode
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genAccountName
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genAccountNumber
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genSortCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen.genBasisOfClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CMAEligibleGen.genWhetherCMAEligible
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.{genEmail, genUkPhoneNumber}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genEmail
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genUkPhoneNumber
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.genEori
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.genMRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genPaymentMethod
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.{genBasisOfRejectedGoodsClaim, genInspectionAddressType, genInspectionDate, genMethodOfDisposal}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genBasisOfRejectedGoodsClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genInspectionAddressType
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genInspectionDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genMethodOfDisposal
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
