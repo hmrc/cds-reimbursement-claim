@@ -24,28 +24,41 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.ImplementedBy
 import play.api.http.Status.OK
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Format
+import play.api.libs.json.Json
 import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285ClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MultipleRejectedGoodsClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ScheduledRejectedGoodsClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SingleOverpaymentsClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimEvent
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimResponseEvent
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.ClaimToEmailMapper
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.OverpaymentsSingleClaimToEmailMapper
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.OverpaymentsSingleClaimToTPI05Mapper
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.HttpResponse
 
-import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-
-import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Inject
+import javax.inject.Singleton
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.util.Try
 
 @ImplementedBy(classOf[DefaultClaimService])

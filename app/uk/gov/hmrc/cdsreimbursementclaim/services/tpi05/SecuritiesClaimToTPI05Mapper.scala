@@ -16,23 +16,38 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
+import cats.data.Validated.Invalid
+import cats.data.Validated.Valid
 import cats.implicits.catsSyntaxEq
 import cats.syntax.either._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, TaxCode, TaxReclaimDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, SecurityDetails, TaxDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecurityDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxReclaimDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.DeclarantReferenceNumber
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.DeclarationId
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.ProcedureCode
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ExportMRN
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementParty
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInMultipleShipments
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BtaSource
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.SecurityDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.TaxDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 import java.time.LocalDate
-import cats.data.Validated.Valid
-import cats.data.Validated.Invalid
 
 class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)] {
 
@@ -159,7 +174,8 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
             s"Multiple payment methods returned: [${paymentMethods.mkString(", ")}]"
           )
         case "001" :: Nil                                                              => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
-        case "002" :: Nil                                                              => Right((None, Some(true), Some(ReimbursementMethod.Deferment)))
+        case "002" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.Deferment)))
+        case "003" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.PayableOrder)))
         case "004" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
         case "005" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
         case unsupported :: Nil                                                        =>
