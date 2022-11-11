@@ -173,9 +173,9 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
             bankAccountDetails,
             s"Multiple payment methods returned: [${paymentMethods.mkString(", ")}]"
           )
-        case "001" :: Nil                                                              => Right((Some(bankDetails), Some(true), Some(ReimbursementMethod.BankTransfer)))
-        case "002" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.Deferment)))
-        case "003" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.PayableOrder)))
+        case "001" :: Nil                                                              => Right((Some(bankDetails), Some(true), None))
+        case "002" :: Nil                                                              => Right((Some(bankDetails), Some(true), None))
+        case "003" :: Nil                                                              => Right((Some(bankDetails), Some(true), None))
         case "004" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.GeneralGuarantee)))
         case "005" :: Nil                                                              => Right((None, Some(false), Some(ReimbursementMethod.IndividualGuarantee)))
         case unsupported :: Nil                                                        =>
