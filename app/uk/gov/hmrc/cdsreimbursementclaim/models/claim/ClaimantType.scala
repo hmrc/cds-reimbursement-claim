@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed trait ClaimantType extends Product with Serializable
+sealed trait ClaimantType
 
 object ClaimantType extends EnumerationFormat[ClaimantType] {
 

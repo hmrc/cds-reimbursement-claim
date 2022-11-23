@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
 
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Reads, Writes}
 
-sealed trait CDFPayService
+final case class NDRCCase(
+  NDRCDetail: NDRCDetail,
+  NDRCAmounts: NDRCAmounts
+)
 
-object CDFPayService extends EnumerationFormat[CDFPayService] {
+object NDRCCase {
+  implicit val reads: Reads[NDRCCase] =
+    (JsPath.read[NDRCDetail] and JsPath.read[NDRCAmounts])(NDRCCase.apply _)
 
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  lazy val values: Set[CDFPayService] = Set(NDRC, SCTY)
+  implicit val writes: Writes[NDRCCase] =
+    (JsPath.write[NDRCDetail] and JsPath.write[NDRCAmounts])(unlift(NDRCCase.unapply))
 }

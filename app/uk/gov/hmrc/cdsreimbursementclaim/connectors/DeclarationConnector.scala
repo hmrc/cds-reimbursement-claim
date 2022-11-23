@@ -52,7 +52,7 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: Servi
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[DeclarationRequest, HttpResponse](getDeclarationUrl, declarationRequest, getExplicitHeaders)(
+        .POST[DeclarationRequest, HttpResponse](getDeclarationUrl, declarationRequest, getEISRequiredHeaders)(
           implicitly[Writes[DeclarationRequest]],
           HttpReads[HttpResponse],
           hc,

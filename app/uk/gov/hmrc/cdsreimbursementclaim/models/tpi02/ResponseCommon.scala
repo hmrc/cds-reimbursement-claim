@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02
 
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
+import play.api.libs.json.{Json, OFormat}
 
-sealed trait CDFPayService
+final case class ResponseCommon(
+  status: String,
+  processingDate: String,
+  correlationId: Option[String],
+  errorMessage: Option[String],
+  returnParameters: Option[List[ReturnParameter]]
+)
 
-object CDFPayService extends EnumerationFormat[CDFPayService] {
-
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  lazy val values: Set[CDFPayService] = Set(NDRC, SCTY)
+object ResponseCommon {
+  implicit val format: OFormat[ResponseCommon] = Json.format[ResponseCommon]
 }

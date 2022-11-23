@@ -1,0 +1,16 @@
+{
+  "getPostClearanceCasesResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "processingDate": "2022-01-31T09:45:20Z",
+      "correlationID": "1682aaa9-d212-46ba-852e-43c2d01faf21",
+      "errorMessage": "Invalid EORI",
+      "returnParameters": [
+        {
+          "paramName": "POSITION",
+          "paramValue": "FAIL"
+        }
+      ]
+    }
+  }
+}

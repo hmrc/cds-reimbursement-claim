@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02
 
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
+import cats.syntax.eq._
+import play.api.libs.json.{Json, OFormat}
 
-sealed trait CDFPayService
+final case class GetSpecificCaseResponse(responseCommon: ResponseCommon, responseDetail: Option[ResponseDetail]) {
+  val mdtpError: Boolean = responseCommon.returnParameters.exists(_.exists(_.paramName === "POSITION"))
+}
 
-object CDFPayService extends EnumerationFormat[CDFPayService] {
-
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  lazy val values: Set[CDFPayService] = Set(NDRC, SCTY)
+object GetSpecificCaseResponse {
+  implicit val format: OFormat[GetSpecificCaseResponse] = Json.format[GetSpecificCaseResponse]
 }

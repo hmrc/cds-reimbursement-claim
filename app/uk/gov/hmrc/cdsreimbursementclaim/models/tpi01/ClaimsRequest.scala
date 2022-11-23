@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
-import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
+import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-sealed trait CDFPayService
+final case class ClaimsRequest(eori: Eori, appType: String)
 
-object CDFPayService extends EnumerationFormat[CDFPayService] {
-
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
-
-  lazy val values: Set[CDFPayService] = Set(NDRC, SCTY)
+object ClaimsRequest {
+  implicit val format: Format[ClaimsRequest] = Json.format[ClaimsRequest]
 }

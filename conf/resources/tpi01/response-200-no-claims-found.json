@@ -1,0 +1,12 @@
+{
+  "getPostClearanceCasesResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "processingDate": "2022-01-31T09:45:20Z"
+    },
+    "responseDetail": {
+      "NDRCCasesFound": false,
+      "SCTYCasesFound": false
+    }
+  }
+}

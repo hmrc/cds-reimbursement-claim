@@ -50,7 +50,7 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(submitClaimRequest), getExplicitHeaders)(
+        .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(submitClaimRequest), getEISRequiredHeaders)(
           implicitly[Writes[JsValue]],
           HttpReads[HttpResponse],
           hc,

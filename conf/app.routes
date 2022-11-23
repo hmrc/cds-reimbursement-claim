@@ -1,11 +1,15 @@
 # microservice specific routes
 
-GET         /declaration/:id                        uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declaration(id: MRN)
-GET         /declaration/:id/reason-for-security    uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declarationWithReasonForSecurity(id: MRN, reasonForSecurity: ReasonForSecurity)
-GET         /declaration/:id/claim-exists           uk.gov.hmrc.cdsreimbursementclaim.controllers.ExistingClaimController.claimExists(id: MRN, reasonForSecurity: ReasonForSecurity)
-POST        /claims/c285                            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
-POST        /claims/overpayments-single             uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleOverpaymentsClaim()
-POST        /claims/rejected-goods-single           uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleRejectedGoodsClaim()
-POST        /claims/rejected-goods-multiple         uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitMultipleRejectedGoodsClaim()
-POST        /claims/rejected-goods-scheduled        uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitScheduledRejectedGoodsClaim()
-POST        /claims/securities                      uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSecuritiesClaim()
+GET         /declaration/:id                         uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declaration(id: MRN)
+GET         /declaration/:id/reason-for-security     uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declarationWithReasonForSecurity(id: MRN, reasonForSecurity: ReasonForSecurity)
+GET         /declaration/:id/claim-exists            uk.gov.hmrc.cdsreimbursementclaim.controllers.ExistingClaimController.claimExists(id: MRN, reasonForSecurity: ReasonForSecurity)
+
+GET         /claims                                  uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getClaims(eori: Eori, claimsSelector: ClaimsSelector ?= ClaimsSelector.All)
+GET         /claims/:cdfPayService/:cdfPayCaseNumber uk.gov.hmrc.cdsreimbursementclaim.controllers.GetSpecificClaimController.getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)
+
+POST        /claims/c285                             uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
+POST        /claims/overpayments-single              uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleOverpaymentsClaim()
+POST        /claims/rejected-goods-single            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleRejectedGoodsClaim()
+POST        /claims/rejected-goods-multiple          uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitMultipleRejectedGoodsClaim()
+POST        /claims/rejected-goods-scheduled         uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitScheduledRejectedGoodsClaim()
+POST        /claims/securities                       uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSecuritiesClaim()

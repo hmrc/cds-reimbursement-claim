@@ -1,0 +1,14 @@
+{
+  "errorDetail": {
+    "timestamp": "2018-08-08T13:57:53Z",
+    "correlationId": "1682aaa9-d212-46ba-852e-43c2d01faf21",
+    "errorCode": "500",
+    "errorMessage": "Error connecting to the server",
+    "source": "Backend",
+    "sourceFaultDetail": {
+      "detail": [
+        "101504 - Send timeout"
+      ]
+    }
+  }
+}

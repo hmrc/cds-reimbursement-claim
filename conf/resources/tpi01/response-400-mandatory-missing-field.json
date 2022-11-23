@@ -1,0 +1,11 @@
+{
+  "errorDetail": {
+    "timestamp": "2018-08-08T13:57:53Z",
+    "correlationId": "1682aaa9-d212-46ba-852e-43c2d01faf21",
+    "errorCode": "400",
+    "errorMessage":  "Invalid message",
+    "source": "ct-api",
+    "sourceFaultDetail": {"detail": ["\"[[string '' is too short (length: 0, required minimum: 1)]]\""]
+    }
+  }
+}

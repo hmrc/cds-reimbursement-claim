@@ -27,7 +27,7 @@ trait EisConnector {
 
   def getExtraHeaders: Seq[(String, String)]
 
-  def getExplicitHeaders: Seq[(String, String)] =
+  def getEISRequiredHeaders: Seq[(String, String)] =
     getExtraHeaders ++ Seq(HeaderNames.AUTHORIZATION -> s"Bearer $eisBearerToken")
 
 }
