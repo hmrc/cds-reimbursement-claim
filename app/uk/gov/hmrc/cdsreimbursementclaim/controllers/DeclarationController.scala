@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import cats.implicits.catsSyntaxEq
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateWithUserActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class DeclarationController @Inject() (
-  authenticate: AuthenticateActions,
+  authenticate: AuthenticateWithUserActions,
   declarationService: DeclarationService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)

@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits.toFlatMapOps
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateWithUserActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
 class SubmitClaimController @Inject() (
-  authenticate: AuthenticateActions,
+  authenticate: AuthenticateWithUserActions,
   claimService: ClaimService,
   ccsSubmissionService: CcsSubmissionService,
   cc: ControllerComponents

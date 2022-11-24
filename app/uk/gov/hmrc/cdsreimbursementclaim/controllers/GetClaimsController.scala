@@ -24,10 +24,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.GetClaimsService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
+@Singleton
 class GetClaimsController @Inject() (service: GetClaimsService, cc: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {

@@ -29,7 +29,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActionBuilder, AuthenticateActions, AuthenticatedRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateWithUserActionBuilder, AuthenticateWithUserActions, AuthenticatedUserRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.UpscanGen._
@@ -52,7 +52,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-  val builder = new AuthenticateActionBuilder(
+  val builder = new AuthenticateWithUserActionBuilder(
     mockAuthConnector,
     new BodyParsers.Default()(NoMaterializer),
     executionContext
@@ -61,7 +61,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
   override val overrideBindings: List[GuiceableModule] =
     List(
       bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[AuthenticateActions].toInstance(Fake.login(Fake.user, fixedTimestamp)),
+      bind[AuthenticateWithUserActions].toInstance(Fake.login(Fake.user, fixedTimestamp)),
       bind[UpscanService].toInstance(mockUpscanService)
     )
 
@@ -104,7 +104,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
       .expects(uploadReferences)
       .returning(EitherT[Future, Error, List[UpscanUpload]](Future.successful(response)))
 
-  val request = new AuthenticatedRequest(
+  val request = new AuthenticatedUserRequest(
     Fake.user,
     LocalDateTime.now(),
     headerCarrier,
@@ -128,7 +128,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
       "return an internal server error if the backend call fails" in {
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -144,7 +144,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
       "return a bad request if the store descriptor structure is corrupted" in {
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -163,7 +163,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
         val upscanUpload = sample[UpscanUpload]
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -183,7 +183,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
       "return an internal server error if the upload reference cannot be found" in {
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -198,7 +198,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
       "return an internal server error if the backend call fails" in {
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -213,7 +213,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
 
       "return a bad request if the JSON body cannot be parsed" in {
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -229,7 +229,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
         val upscanUpload = sample[UpscanUpload]
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -268,7 +268,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
              |""".stripMargin
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -303,7 +303,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
             |""".stripMargin
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -335,7 +335,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
             |""".stripMargin
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -445,7 +445,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
             |""".stripMargin
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,
@@ -476,7 +476,7 @@ class UpscanControllerSpec extends ControllerSpec with ScalaCheckDrivenPropertyC
             |""".stripMargin
 
         val request =
-          new AuthenticatedRequest(
+          new AuthenticatedUserRequest(
             Fake.user,
             LocalDateTime.now(),
             headerCarrier,

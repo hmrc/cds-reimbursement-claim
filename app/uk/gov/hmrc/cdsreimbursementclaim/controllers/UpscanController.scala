@@ -23,7 +23,7 @@ import cats.syntax.eq._
 import com.google.inject.Inject
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc._
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateWithUserActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.UpscanCallBack.{UpscanFailure, UpscanSuccess}
 import uk.gov.hmrc.cdsreimbursementclaim.models.upscan.{GetUpscanUploadsRequest, GetUpscanUploadsResponse, UploadReference, UpscanUpload}
@@ -38,7 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UpscanController @Inject() (
-  authenticate: AuthenticateActions,
+  authenticate: AuthenticateWithUserActions,
   upscanService: UpscanService,
   cc: ControllerComponents
 )(implicit
