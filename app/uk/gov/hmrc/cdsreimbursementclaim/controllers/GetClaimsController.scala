@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, ErrorResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsResponse, ClaimsSelector, ErrorResponse, GetReimbursementClaimsResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetClaimsService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -37,17 +37,17 @@ class GetClaimsController @Inject() (service: GetClaimsService, cc: ControllerCo
       service
         .getClaims(eori, claimsSelector)
         .map {
-          case Right(Some(response)) =>
-            Ok(Json.obj("claims" -> Json.toJson(response)))
+          case Right(GetReimbursementClaimsResponse(responseCommon, Some(responseDetail))) =>
+            Ok(Json.obj("claims" -> Json.toJson(ClaimsResponse.fromTpi01Response(responseDetail))))
 
-          case Right(None)           =>
-            NotFound
+          case Right(GetReimbursementClaimsResponse(responseCommon, None))                 =>
+            BadRequest(Json.toJson(responseCommon))
 
           case Left(ErrorResponse(status, errorDetails)) =>
             if (status < 499)
               BadRequest(Json.toJson(errorDetails))
             else
-              InternalServerError(Json.toJson(errorDetails))
+              ServiceUnavailable(Json.toJson(errorDetails))
         }
         .recover {
           case ex if ex.getMessage.contains("JSON validation") =>
@@ -56,7 +56,7 @@ class GetClaimsController @Inject() (service: GetClaimsService, cc: ControllerCo
 
           case NonFatal(error) =>
             logger.error(s"getClaims failed: ${error.getMessage}")
-            InternalServerError
+            ServiceUnavailable(error.getMessage)
         }
     }
 }

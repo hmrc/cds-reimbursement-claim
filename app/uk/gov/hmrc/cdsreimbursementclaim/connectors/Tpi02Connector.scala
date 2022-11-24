@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import play.api.libs.json.{JsNumber, JsObject}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{GetSpecificCaseRequest, Request, RequestCommon, RequestDetail, Response}
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseRequest, Request, RequestCommon, RequestDetail, Response}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
@@ -34,12 +34,14 @@ class Tpi02Connector @Inject() (
     extends EisConnector
     with JsonHeaders {
 
+  import Tpi02Connector._
+
   private val getSpecificClaimUrl: String =
     s"${config.baseUrl("claim")}/tpi/getspecificclaim/v1"
 
   def getSpecificClaim(cdfPayService: String, cdfPayCaseNumber: String)(implicit
     hc: HeaderCarrier
-  ): Future[Response] = {
+  ): Future[Either[ErrorResponse, Response]] = {
 
     val requestCommon = RequestCommon(
       receiptDate = RFC7231DateTime.now,
@@ -54,6 +56,25 @@ class Tpi02Connector @Inject() (
       )
     )
 
-    http.POST[Request, Response](getSpecificClaimUrl, request, getEISRequiredHeaders)
+    http.POST[Request, Either[ErrorResponse, Response]](getSpecificClaimUrl, request, getEISRequiredHeaders)
   }
+}
+
+object Tpi02Connector {
+
+  implicit val reads: HttpReads[Either[ErrorResponse, Response]] =
+    new HttpReads[Either[ErrorResponse, Response]] {
+
+      override def read(method: String, url: String, response: HttpResponse): Either[ErrorResponse, Response] =
+        response.json
+          .asOpt[Response]
+          .toRight(
+            (response.json
+              .asOpt[JsObject]
+              .flatMap(_.+("status" -> JsNumber(response.status)).asOpt[ErrorResponse])
+              .getOrElse(ErrorResponse(response.status, None)))
+          )
+
+    }
+
 }

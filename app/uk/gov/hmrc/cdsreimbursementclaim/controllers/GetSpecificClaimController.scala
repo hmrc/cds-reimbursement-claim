@@ -19,6 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseResponse, SpecificClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetSpecificClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -37,16 +38,26 @@ class GetSpecificClaimController @Inject() (service: GetSpecificClaimService, cc
       service
         .getSpecificClaim(cdfPayService, cdfPayCaseNumber)
         .map {
-          case Some(value) => Ok(Json.toJson(value))
-          case None        => NoContent
+          case Right(GetSpecificCaseResponse(responseCommon, Some(responseDetail))) =>
+            Ok(Json.toJson(SpecificClaimResponse.fromTpi02Response(responseDetail)))
+
+          case Right(GetSpecificCaseResponse(responseCommon, None)) =>
+            BadRequest(Json.toJson(responseCommon))
+
+          case Left(ErrorResponse(status, errorDetails)) =>
+            if (status < 499)
+              BadRequest(Json.toJson(errorDetails))
+            else
+              ServiceUnavailable(Json.toJson(errorDetails))
         }
         .recover {
           case ex if ex.getMessage.contains("JSON validation") =>
             logger.error(s"getSpecificClaim failed: ${ex.getMessage}")
-            InternalServerError("JSON Validation Error")
-          case NonFatal(error)                                 =>
+            BadRequest(ex.getMessage)
+
+          case NonFatal(error) =>
             logger.error(s"getSpecificClaim failed: ${error.getMessage}")
-            ServiceUnavailable
+            ServiceUnavailable(error.getMessage)
         }
     }
 }

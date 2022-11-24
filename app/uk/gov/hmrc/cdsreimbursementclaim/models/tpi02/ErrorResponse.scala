@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class ErrorResponse(errorDetail: ErrorDetail)
+final case class ErrorResponse(status: Int, errorDetail: Option[ErrorDetail])
 
 object ErrorResponse {
   implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
