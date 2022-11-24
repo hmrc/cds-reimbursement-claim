@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, _}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.TestDataFromFile
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{TestDataFromFile, ValidateEisHeaders}
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -34,12 +34,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc.Result
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector {
+class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with ValidateEisHeaders {
 
   "TP01Connector" when {
     "handling request for claims" must {
       "get the 200 NDRC claims response" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case r @ POST(p"/tpi/getreimbursementclaims/v1") =>
+          validateEisHeaders(r.headers)
           Tpi01TestData.tpi01Response200NdrcResult
         } {
           givenTpi01Connector { connector =>
@@ -202,33 +203,33 @@ object Tpi01TestData extends TestDataFromFile {
   private val jsonContentType = HeaderNames.CONTENT_TYPE -> MimeTypes.JSON
 
   lazy val tpi01Response200NdrcResult: Result =
-    Results.Ok(testDataFromFile("conf/resources/tpi01/response-200-NDRC.json")).withHeaders(jsonContentType)
+    Results.Ok(contentOfFile("conf/resources/tpi01/response-200-NDRC.json")).withHeaders(jsonContentType)
 
   lazy val tpi01Response200SctyResult: Result =
-    Results.Ok(testDataFromFile("conf/resources/tpi01/response-200-SCTY.json")).withHeaders(jsonContentType)
+    Results.Ok(contentOfFile("conf/resources/tpi01/response-200-SCTY.json")).withHeaders(jsonContentType)
 
   lazy val tpi01Response200NdcrAndSctyResult: Result =
-    Results.Ok(testDataFromFile("conf/resources/tpi01/response-200-NDRC-SCTY.json")).withHeaders(jsonContentType)
+    Results.Ok(contentOfFile("conf/resources/tpi01/response-200-NDRC-SCTY.json")).withHeaders(jsonContentType)
 
   lazy val tpi01Response200NoClaimsResult: Result =
-    Results.Ok(testDataFromFile("conf/resources/tpi01/response-200-no-claims-found.json")).withHeaders(jsonContentType)
+    Results.Ok(contentOfFile("conf/resources/tpi01/response-200-no-claims-found.json")).withHeaders(jsonContentType)
 
   lazy val tpi01Response200InvalidEoriResult =
-    Results.Ok(testDataFromFile("conf/resources/tpi01/response-200-invalid-eori.json")).withHeaders(jsonContentType)
+    Results.Ok(contentOfFile("conf/resources/tpi01/response-200-invalid-eori.json")).withHeaders(jsonContentType)
 
   lazy val tpi01Response400MissingFieldResult =
     Results
-      .BadRequest(testDataFromFile("conf/resources/tpi01/response-400-mandatory-missing-field.json"))
+      .BadRequest(contentOfFile("conf/resources/tpi01/response-400-mandatory-missing-field.json"))
       .withHeaders(jsonContentType)
 
   lazy val tpi01Response400PatternErrorResult =
     Results
-      .BadRequest(testDataFromFile("conf/resources/tpi01/response-400-pattern-error.json"))
+      .BadRequest(contentOfFile("conf/resources/tpi01/response-400-pattern-error.json"))
       .withHeaders(jsonContentType)
 
   lazy val tpi01Response500SystemTimeoutErrorResult =
     Results
-      .InternalServerError(testDataFromFile("conf/resources/tpi01/response-500-system-timeout.json"))
+      .InternalServerError(contentOfFile("conf/resources/tpi01/response-500-system-timeout.json"))
       .withHeaders(jsonContentType)
 
 }

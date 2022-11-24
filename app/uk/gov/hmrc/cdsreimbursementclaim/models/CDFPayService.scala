@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 

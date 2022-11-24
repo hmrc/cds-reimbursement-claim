@@ -29,7 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, SingleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService.NDRC
+import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}

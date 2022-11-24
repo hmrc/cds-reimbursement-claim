@@ -19,6 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 import play.api.libs.json.{JsNumber, JsObject}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
+import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseRequest, Request, RequestCommon, RequestDetail, Response}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
@@ -39,7 +40,7 @@ class Tpi02Connector @Inject() (
   private val getSpecificClaimUrl: String =
     s"${config.baseUrl("claim")}/tpi/getspecificclaim/v1"
 
-  def getSpecificClaim(cdfPayService: String, cdfPayCaseNumber: String)(implicit
+  def getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)(implicit
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, Response]] = {
 
@@ -52,7 +53,7 @@ class Tpi02Connector @Inject() (
     val request = Request(
       GetSpecificCaseRequest(
         requestCommon,
-        RequestDetail(cdfPayService, cdfPayCaseNumber)
+        RequestDetail(cdfPayService.toString, cdfPayCaseNumber)
       )
     )
 

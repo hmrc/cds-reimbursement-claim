@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService
+import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseResponse, SpecificClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetSpecificClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging

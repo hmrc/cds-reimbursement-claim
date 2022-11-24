@@ -60,7 +60,7 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori",
       "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN",
       "uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ClaimsSelector",
-      "uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService",
+      "uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService",
       "uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity"
     )
   )

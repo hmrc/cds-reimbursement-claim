@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.connectors
+package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import org.scalatest.Inside
+import play.api.mvc.Headers
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{EndpointStub}
+import org.scalatest.compatible.Assertion
 
-trait ConnectorSpec
-    extends AnyWordSpec
-    with Matchers
-    with Inside
-    with EndpointStub
-    with FutureAwaits
-    with DefaultAwaitTimeout
+trait ValidateEisHeaders {
+  self: Matchers =>
+
+  def validateEisHeaders(headers: Headers): Assertion = {
+    headers.hasHeader("Date")             shouldBe true
+    headers.hasHeader("X-Correlation-ID") shouldBe true
+    headers.hasHeader("X-Forwarded-Host") shouldBe true
+    headers.hasHeader("Content-Type")     shouldBe true
+    headers.hasHeader("Accept")           shouldBe true
+    headers.hasHeader("Authorization")    shouldBe true
+  }
+
+}

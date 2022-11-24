@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.Tpi02Connector
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CDFPayService
+import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -40,6 +40,6 @@ class GetSpecificClaimServiceImpl @Inject() (tpi02Connector: Tpi02Connector)(imp
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, GetSpecificCaseResponse]] =
     tpi02Connector
-      .getSpecificClaim(cdfPayService.toString, cdfPayCaseNumber)
+      .getSpecificClaim(cdfPayService, cdfPayCaseNumber)
       .map(_.map(_.getSpecificCaseResponse))
 }

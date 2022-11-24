@@ -26,7 +26,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantRefer
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CDFPayService, _}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
+import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BtaSource}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
