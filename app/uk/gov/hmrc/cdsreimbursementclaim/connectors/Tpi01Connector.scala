@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import play.api.libs.json.{JsNumber, JsObject}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, Eori}
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, GetPostClearanceCasesRequest, Request, RequestCommon, RequestDetail, Response}
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, ErrorResponse, GetPostClearanceCasesRequest, Request, RequestCommon, RequestDetail, Response}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
@@ -34,10 +34,14 @@ class Tpi01Connector @Inject() (
     extends EisConnector
     with JsonHeaders {
 
+  import Tpi01Connector._
+
   private val getClaimsUrl: String =
     s"${config.baseUrl("claim")}/tpi/getreimbursementclaims/v1"
 
-  def getClaims(eori: Eori, claimsSelector: ClaimsSelector)(implicit hc: HeaderCarrier): Future[Response] = {
+  def getClaims(eori: Eori, claimsSelector: ClaimsSelector)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[ErrorResponse, Response]] = {
 
     val requestCommon = RequestCommon(
       receiptDate = RFC7231DateTime.now,
@@ -52,6 +56,25 @@ class Tpi01Connector @Inject() (
       )
     )
 
-    http.POST[Request, Response](getClaimsUrl, request, getEISRequiredHeaders)
+    http.POST[Request, Either[ErrorResponse, Response]](getClaimsUrl, request, getEISRequiredHeaders)
   }
+}
+
+object Tpi01Connector {
+
+  implicit val reads: HttpReads[Either[ErrorResponse, Response]] =
+    new HttpReads[Either[ErrorResponse, Response]] {
+
+      override def read(method: String, url: String, response: HttpResponse): Either[ErrorResponse, Response] =
+        response.json
+          .asOpt[Response]
+          .toRight(
+            (response.json
+              .asOpt[JsObject]
+              .flatMap(_.+("status" -> JsNumber(response.status)).asOpt[ErrorResponse])
+              .getOrElse(ErrorResponse(response.status, None)))
+          )
+
+    }
+
 }

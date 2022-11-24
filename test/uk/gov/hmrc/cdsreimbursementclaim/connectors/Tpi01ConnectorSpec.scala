@@ -45,7 +45,9 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
-              case Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(true, false, Some(cdfPayCase))))) =>
+              case Right(
+                    Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(true, false, Some(cdfPayCase)))))
+                  ) =>
                 cdfPayCase.NDRCCaseTotal shouldBe Some("45.123")
                 cdfPayCase.SCTYCaseTotal shouldBe None
             }
@@ -59,7 +61,9 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
-              case Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(false, true, Some(cdfPayCase))))) =>
+              case Right(
+                    Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(false, true, Some(cdfPayCase)))))
+                  ) =>
                 cdfPayCase.NDRCCaseTotal shouldBe None
                 cdfPayCase.SCTYCaseTotal shouldBe Some("123.45")
             }
@@ -73,7 +77,9 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
-              case Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(true, true, Some(cdfPayCase))))) =>
+              case Right(
+                    Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(true, true, Some(cdfPayCase)))))
+                  ) =>
                 cdfPayCase.NDRCCaseTotal shouldBe Some("45.123")
                 cdfPayCase.SCTYCaseTotal shouldBe Some("123.45")
             }
@@ -87,7 +93,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
-              case Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(false, false, details)))) =>
+              case Right(Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(false, false, details))))) =>
                 details shouldBe empty
             }
           }
@@ -99,9 +105,47 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector {
         } {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
-            inside(response) {
-              case Response(GetReimbursementClaimsResponse(c, Some(ResponseDetail(false, false, details)))) =>
-                details shouldBe empty
+            inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
+              errorDetails.errorCode    shouldBe "400"
+              errorDetails.errorMessage shouldBe "Invalid message"
+              errorDetails.source       shouldBe "ct-api"
+              inside(errorDetails.sourceFaultDetail) { case SourceFaultDetail(details) =>
+                details should not be empty
+              }
+            }
+          }
+        }
+      }
+      "get the 400 pattern error" in {
+        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+          Tpi01TestData.tpi01Response400PatternErrorResult
+        } {
+          givenTpi01Connector { connector =>
+            val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
+            inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
+              errorDetails.errorCode    shouldBe "400"
+              errorDetails.errorMessage shouldBe "Invalid message"
+              errorDetails.source       shouldBe "ct-api"
+              inside(errorDetails.sourceFaultDetail) { case SourceFaultDetail(details) =>
+                details should not be empty
+              }
+            }
+          }
+        }
+      }
+      "get the 500 system timeout error" in {
+        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+          Tpi01TestData.tpi01Response500SystemTimeoutErrorResult
+        } {
+          givenTpi01Connector { connector =>
+            val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
+            inside(response) { case Left(ErrorResponse(500, Some(errorDetails))) =>
+              errorDetails.errorCode    shouldBe "500"
+              errorDetails.errorMessage shouldBe "Error connecting to the server"
+              errorDetails.source       shouldBe "Backend"
+              inside(errorDetails.sourceFaultDetail) { case SourceFaultDetail(details) =>
+                details should not be empty
+              }
             }
           }
         }
@@ -174,10 +218,17 @@ object Tpi01TestData extends TestDataFromFile {
 
   lazy val tpi01Response400MissingFieldResult =
     Results
-      .Ok(testDataFromFile("conf/resources/tpi01/response-400-mandatory-missing-field.json"))
+      .BadRequest(testDataFromFile("conf/resources/tpi01/response-400-mandatory-missing-field.json"))
       .withHeaders(jsonContentType)
 
   lazy val tpi01Response400PatternErrorResult =
-    Results.Ok(testDataFromFile("conf/resources/tpi01/response-400-pattern-error.json")).withHeaders(jsonContentType)
+    Results
+      .BadRequest(testDataFromFile("conf/resources/tpi01/response-400-pattern-error.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val tpi01Response500SystemTimeoutErrorResult =
+    Results
+      .InternalServerError(testDataFromFile("conf/resources/tpi01/response-500-system-timeout.json"))
+      .withHeaders(jsonContentType)
 
 }
