@@ -37,6 +37,46 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
 
   "Tpi02Connector" when {
     "handling request for claims" must {
+      "get the 200 NDRC claim response" in {
+        givenEndpointStub { case r @ POST(p"/tpi/getspecificclaim/v1") =>
+          validateEisHeaders(r.headers)
+          Tpi02TestData.tpi02Response200NdrcClaimResult
+        } {
+          givenTpi02Connector { connector =>
+            val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
+            inside(response) {
+              case Right(
+                    Response(GetSpecificCaseResponse(c, Some(responseDetail)))
+                  ) =>
+                c.status                       shouldBe "OK"
+                responseDetail.CDFPayCaseFound shouldBe true
+                responseDetail.CDFPayService   shouldBe "NDRC"
+                responseDetail.NDRCCase        shouldBe defined
+                responseDetail.SCTYCase        shouldBe None
+            }
+          }
+        }
+      }
+      "get the 200 SCTY claim response" in {
+        givenEndpointStub { case r @ POST(p"/tpi/getspecificclaim/v1") =>
+          validateEisHeaders(r.headers)
+          Tpi02TestData.tpi02Response200SctyClaimResult
+        } {
+          givenTpi02Connector { connector =>
+            val response = await(connector.getSpecificClaim(CDFPayService.SCTY, "ABC-123"))
+            inside(response) {
+              case Right(
+                    Response(GetSpecificCaseResponse(c, Some(responseDetail)))
+                  ) =>
+                c.status                       shouldBe "OK"
+                responseDetail.CDFPayCaseFound shouldBe true
+                responseDetail.CDFPayService   shouldBe "SCTY"
+                responseDetail.NDRCCase        shouldBe None
+                responseDetail.SCTYCase        shouldBe defined
+            }
+          }
+        }
+      }
       "get the 200 NDRC no claims found response" in {
         givenEndpointStub { case r @ POST(p"/tpi/getspecificclaim/v1") =>
           validateEisHeaders(r.headers)
@@ -153,6 +193,16 @@ trait WithTpi02Connector {
 object Tpi02TestData extends TestDataFromFile {
 
   private val jsonContentType = HeaderNames.CONTENT_TYPE -> MimeTypes.JSON
+
+  lazy val tpi02Response200NdrcClaimResult: Result =
+    Results
+      .Ok(contentOfFile("conf/resources/tpi02/response-200-ndrc-claim.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val tpi02Response200SctyClaimResult: Result =
+    Results
+      .Ok(contentOfFile("conf/resources/tpi02/response-200-scty-claim.json"))
+      .withHeaders(jsonContentType)
 
   lazy val tpi02Response200NoClaimsFoundResult: Result =
     Results

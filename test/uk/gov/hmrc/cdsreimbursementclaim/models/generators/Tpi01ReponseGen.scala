@@ -18,12 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.CdsDateTime
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{CDFPayCase, CaseDetails, ErrorResponse, GetReimbursementClaimsResponse, NDRCCaseDetails, ResponseCommon, ResponseDetail, SCTYCaseDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ErrorDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.SourceFaultDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ReturnParameter
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01._
 
 object Tpi01ReponseGen {
 
@@ -34,6 +31,10 @@ object Tpi01ReponseGen {
 
   val genCdfPayCaseNumber: Gen[String] =
     Gen.listOfN(6, genChar).map(_.mkString("NDRC-", "", ""))
+
+  val loremIpsum: Gen[String] = Gen.const(
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+  )
 
   val genCaseStatusNdrc: Gen[String] = Gen.oneOf(
     "Open",

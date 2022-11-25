@@ -1,0 +1,98 @@
+{
+    "getSpecificCaseResponse": {
+        "responseCommon": {
+            "status": "OK",
+            "processingDate": "2022-11-25T18:02:14Z",
+            "correlationId": "cfcc5468-2bcb-402b-86e1-65a73017ddda"
+        },
+        "responseDetail": {
+            "CDFPayService": "NDRC",
+            "CDFPayCaseFound": true,
+            "NDRCCase": {
+                "claimantEORI": "NJ590744960410",
+                "declarationID": "59BE85178455204855",
+                "caseStatus": "Rework-Payment Details",
+                "descOfRejectedGoods": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                "claimantEmailAddress": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                "CDFPayCaseNumber": "NDRC-CD104D",
+                "entryDetails": [
+                    {
+                        "entryNumber": "CG7EDC1B6JF8",
+                        "mainDeclarationReference": true
+                    },
+                    {
+                        "entryNumber": "J9A4KD35EDFE",
+                        "mainDeclarationReference": true
+                    },
+                    {
+                        "entryNumber": "3EK1F4DKHA9E",
+                        "mainDeclarationReference": true
+                    }
+                ],
+                "caseType": "CMA",
+                "importerEORI": "MK810436775508",
+                "claimType": "C&E1179",
+                "descOfGoods": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                "MRNDetails": [
+                    {
+                        "MRNNumber": "79SS70593127105078",
+                        "mainDeclarationReference": false
+                    },
+                    {
+                        "MRNNumber": "55UQ99774177292228",
+                        "mainDeclarationReference": false
+                    },
+                    {
+                        "MRNNumber": "38LA31478317774202",
+                        "mainDeclarationReference": false
+                    }
+                ],
+                "declarantEORI": "DB808300444601",
+                "claimantName": "s$Vk!p59*v)@0Oe7;YXI|loD(!",
+                "claimStartDate": "20220220",
+                "basisOfClaim": "Not In Accordance With Contract",
+                "reimbursement": [
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "374888",
+                        "taxType": "419",
+                        "reimbursementMethod": "D"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "633427",
+                        "taxType": "556",
+                        "reimbursementMethod": "C"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "382725.08",
+                        "taxType": "572",
+                        "reimbursementMethod": "R"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "449557.49",
+                        "taxType": "595",
+                        "reimbursementMethod": "R"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "748217.49",
+                        "taxType": "A80",
+                        "reimbursementMethod": "C"
+                    }
+                ],
+                "totalExciseRefundAmount": "417479",
+                "totalVATRefundAmount": "827868",
+                "totalCustomsRefundAmount": "183716",
+                "totalCustomsClaimAmount": "729938.86",
+                "totalReimbursmentAmount": "134785.44",
+                "totalVATClaimAmount": "626469",
+                "totalClaimAmount": "943927",
+                "totalExciseClaimAmount": "363299.86",
+                "totalRefundAmount": "359415.65"
+            }
+        }
+    }
+}

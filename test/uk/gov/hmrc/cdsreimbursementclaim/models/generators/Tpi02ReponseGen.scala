@@ -18,22 +18,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import cats.syntax.eq._
 import org.scalacheck.Gen
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.CdsDateTime
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{GetSpecificCaseResponse, ResponseCommon, ResponseDetail, ReturnParameter}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.NDRCCase
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.NDRCDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.NDRCAmounts
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.SCTYCase
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.CdsDateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.Goods
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.ProcedureDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.EntryDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ErrorResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ErrorDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.SourceFaultDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.{EntryDetail, NDRCAmounts, NDRCCase, NDRCDetail, ProcedureDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.{Goods, SCTYCase}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorDetail, ErrorResponse, GetSpecificCaseResponse, Reimbursement, ResponseCommon, ResponseDetail, ReturnParameter, SourceFaultDetail}
 
 object Tpi02ReponseGen {
 
@@ -77,7 +68,7 @@ object Tpi02ReponseGen {
   val genGoods: Gen[Goods] =
     for {
       itemNumber       <- Gen.listOfN(12, genChar).map(_.mkString)
-      goodsDescription <- Gen.asciiPrintableStr
+      goodsDescription <- loremIpsum
     } yield Goods(itemNumber, Some(goodsDescription))
 
   val genProcedureDetail: Gen[ProcedureDetail] =
@@ -103,8 +94,8 @@ object Tpi02ReponseGen {
     reasonForSecurity        <- Gen.oneOf(ReasonForSecurity.values)
     procedureCode            <- Gen.const("AB")
     caseStatus               <- genCaseStatusNdrc
-    descOfGoods              <- Gen.asciiPrintableStr
-    descOfRejectedGoods      <- Gen.asciiPrintableStr
+    descOfGoods              <- loremIpsum
+    descOfRejectedGoods      <- loremIpsum
     goods                    <- Gen.listOfN(3, genGoods)
     declarantEORI            <- IdGen.genEori
     importerEORI             <- IdGen.genEori
@@ -114,8 +105,8 @@ object Tpi02ReponseGen {
     totalClaimAmount         <- genAmount
     totalReimbursementAmount <- genAmount
     claimStartDate           <- Gen.const("20220220")
-    claimantName             <- Gen.asciiPrintableStr
-    claimantEmailAddress     <- Gen.asciiPrintableStr
+    claimantName             <- loremIpsum
+    claimantEmailAddress     <- loremIpsum
     closedDate               <- if (isClosed(caseStatus)) Gen.const(Some("20220220"))
                                 else Gen.const(None)
     MRNDetails               <- Gen.listOfN(3, genProcedureDetail)
@@ -194,8 +185,8 @@ object Tpi02ReponseGen {
       totalClaimAmount         <- genAmount
       totalReimbursementAmount <- genAmount
       claimStartDate           <- Gen.const("20220220")
-      claimantName             <- Gen.asciiPrintableStr
-      claimantEmailAddress     <- Gen.asciiPrintableStr
+      claimantName             <- loremIpsum
+      claimantEmailAddress     <- loremIpsum
       closedDate               <- if (isClosed(caseStatus)) Gen.const(Some("20220220"))
                                   else Gen.const(None)
       reimbursement            <- Gen.listOfN(5, genReimbursement)
