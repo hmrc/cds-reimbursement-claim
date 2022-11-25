@@ -31,7 +31,12 @@ final case class SCTYCaseDetails(
   totalCustomsClaimAmount: Option[String],
   totalVATClaimAmount: Option[String],
   declarantReferenceNumber: Option[String]
-)
+) extends CaseDetails {
+
+  def total: BigDecimal =
+    totalCustomsClaimAmount.map(BigDecimal.apply).getOrElse(ZERO) +
+      totalVATClaimAmount.map(BigDecimal.apply).getOrElse(ZERO)
+}
 
 object SCTYCaseDetails {
   implicit val format: OFormat[SCTYCaseDetails] = Json.format[SCTYCaseDetails]

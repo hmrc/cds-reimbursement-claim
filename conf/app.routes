@@ -4,7 +4,12 @@ GET         /declaration/:id                         uk.gov.hmrc.cdsreimbursemen
 GET         /declaration/:id/reason-for-security     uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declarationWithReasonForSecurity(id: MRN, reasonForSecurity: ReasonForSecurity)
 GET         /declaration/:id/claim-exists            uk.gov.hmrc.cdsreimbursementclaim.controllers.ExistingClaimController.claimExists(id: MRN, reasonForSecurity: ReasonForSecurity)
 
-GET         /claims                                  uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getClaims(eori: Eori, claimsSelector: ClaimsSelector ?= ClaimsSelector.All)
+GET         /claims                                  uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getAllClaims
+GET         /claims/ndrc                             uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getNdrcClaims
+GET         /claims/overpayments                     uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getOverpaymentsClaims
+GET         /claims/securities                       uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getSecuritiesClaims
+GET         /claims/underpayments                    uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getUnderpaymentsClaims
+
 GET         /claims/:cdfPayService/:cdfPayCaseNumber uk.gov.hmrc.cdsreimbursementclaim.controllers.GetSpecificClaimController.getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)
 
 POST        /claims/c285                             uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()

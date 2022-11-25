@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.NDRCCaseDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ClaimDetails
 
 final case class NdrcClaimItem(
   CDFPayCaseNumber: String,
@@ -45,8 +46,8 @@ object NdrcClaimItem {
       declarationID = caseDetails.declarationID,
       claimStartDate = caseDetails.claimStartDate,
       closedDate = caseDetails.closedDate,
-      caseStatus = NdrcClaimDetails.transformedCaseStatus(caseDetails.caseStatus),
-      caseSubStatus = NdrcClaimDetails.caseSubStatus(caseDetails.caseStatus),
+      caseStatus = ClaimDetails.transformedCaseStatus(caseDetails.caseStatus),
+      caseSubStatus = ClaimDetails.caseSubStatus(caseDetails.caseStatus),
       declarantEORI = caseDetails.declarantEORI,
       importerEORI = caseDetails.importerEORI,
       claimantEORI = caseDetails.claimantEORI,

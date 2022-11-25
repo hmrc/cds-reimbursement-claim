@@ -32,6 +32,7 @@ object ClaimsResponse {
       .getOrElse(Seq.empty)
       .map(SctyClaimItem.fromTpi01Response)
       .filter(_.declarationID.isDefined)
+
     val ndrc = responseDetail.CDFPayCase
       .flatMap(_.NDRCCases)
       .getOrElse(Seq.empty)

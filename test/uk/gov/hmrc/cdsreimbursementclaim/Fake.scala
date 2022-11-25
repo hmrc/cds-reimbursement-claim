@@ -23,6 +23,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthorisedActions
 
 object Fake {
 
@@ -45,5 +47,18 @@ object Fake {
     }
 
   val user: AuthenticatedUser = AuthenticatedUser("ggCredId")
+
+  def login(eori: Eori): AuthorisedActions =
+    new AuthorisedActions {
+      override def parser: BodyParser[AnyContent] = Helpers.stubBodyParser()
+
+      override def invokeBlock[A](
+        request: Request[A],
+        block: AuthorisedActions.Input[A] => Future[Result]
+      ): Future[Result] =
+        block((request, eori))
+
+      override protected def executionContext: ExecutionContext = ExecutionContext.global
+    }
 
 }

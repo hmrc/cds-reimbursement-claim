@@ -16,52 +16,62 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
+import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 
-import java.time.LocalDateTime
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
-final case class AuthenticatedUser(ggCredId: String)
-class AuthenticatedUserRequest[+A](
-  val user: AuthenticatedUser,
-  val timestamp: LocalDateTime,
-  val headerCarrier: HeaderCarrier,
-  request: Request[A]
-) extends WrappedRequest[A](request)
+@ImplementedBy(classOf[AuthorisedActionsBuilder])
+trait AuthorisedActions extends ActionBuilder[AuthorisedActions.Input, AnyContent]
 
-@ImplementedBy(classOf[AuthenticateWithUserActionBuilder])
-trait AuthenticateWithUserActions extends ActionBuilder[AuthenticatedUserRequest, AnyContent]
+object AuthorisedActions {
+  type Input[A] = (Request[A], Eori)
+}
 
-class AuthenticateWithUserActionBuilder @Inject() (
+@Singleton
+class AuthorisedActionsBuilder @Inject() (
   val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
   val executionContext: ExecutionContext
-) extends AuthenticateWithUserActions
+) extends AuthorisedActions
     with AuthorisedFunctions
     with BackendHeaderCarrierProvider {
 
   override def invokeBlock[A](
     request: Request[A],
-    block: AuthenticatedUserRequest[A] => Future[Result]
+    block: AuthorisedActions.Input[A] => Future[Result]
   ): Future[Result] = {
-    val forbidden = Results.Forbidden("Forbidden")
-    val carrier   = hc(request)
+
+    val carrier = hc(request)
     authorised(AuthProviders(GovernmentGateway))
-      .retrieve(v2.Retrievals.credentials) {
-        case Some(credentials) =>
-          val user = AuthenticatedUser(credentials.providerId)
-          block(new AuthenticatedUserRequest[A](user, LocalDateTime.now(), carrier, request))
-        case _                 => Future.successful(forbidden)
+      .retrieve(v2.Retrievals.allEnrolments) {
+        _.getEnrolment("HMRC-CUS-ORG") match {
+          case Some(enrolment) =>
+            enrolment.identifiers.find(_.key === "EORINumber") match {
+              case Some(EnrolmentIdentifier(_, eoriNumber)) =>
+                block((request, Eori(eoriNumber)))
+
+              case None =>
+                Future.successful(
+                  Results.Forbidden("Missing EORINumber identifier")
+                )
+            }
+
+          case None =>
+            Future.successful(
+              Results.Forbidden("Missing HMRC-CUS-ORG enrolment")
+            )
+        }
       }(carrier, executionContext)
       .recover { case _: NoActiveSession =>
-        forbidden
+        Results.Forbidden("No active session found.")
       }(executionContext)
   }
 }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ClaimDetails
 
 final case class NdrcClaimDetails(
   CDFPayCaseNumber: String,
@@ -49,8 +50,8 @@ object NdrcClaimDetails {
       declarationID = ndrcCase.NDRCDetail.declarationID,
       claimType = ndrcCase.NDRCDetail.claimType,
       caseType = ndrcCase.NDRCDetail.caseType,
-      caseStatus = transformedCaseStatus(ndrcCase.NDRCDetail.caseStatus),
-      caseSubStatus = caseSubStatus(ndrcCase.NDRCDetail.caseStatus),
+      caseStatus = ClaimDetails.transformedCaseStatus(ndrcCase.NDRCDetail.caseStatus),
+      caseSubStatus = ClaimDetails.caseSubStatus(ndrcCase.NDRCDetail.caseStatus),
       descOfGoods = ndrcCase.NDRCDetail.descOfGoods,
       descOfRejectedGoods = ndrcCase.NDRCDetail.descOfRejectedGoods,
       totalClaimAmount = ndrcCase.NDRCAmounts.totalClaimAmount,
@@ -73,43 +74,4 @@ object NdrcClaimDetails {
         )
       )
     )
-
-  def transformedCaseStatus(caseStatus: String): String =
-    caseStatus match {
-      case "Open"                              => "In Progress"
-      case "Open-Analysis"                     => "In Progress"
-      case "Pending-Approval"                  => "In Progress"
-      case "Pending-Queried"                   => "Pending"
-      case "Resolved-Withdrawn"                => "Closed"
-      case "Rejected-Failed Validation"        => "Closed"
-      case "Resolved-Rejected"                 => "Closed"
-      case "Open-Rework"                       => "In Progress"
-      case "Paused"                            => "In Progress"
-      case "Resolved-No Reply"                 => "Closed"
-      case "Resolved-Refused"                  => "Closed"
-      case "Pending Payment Confirmation"      => "In Progress"
-      case "Resolved-Approved"                 => "Closed"
-      case "Resolved-Partial Refused"          => "Closed"
-      case "Pending Decision Letter"           => "In Progress"
-      case "Approved"                          => "In Progress"
-      case "Analysis-Rework"                   => "In Progress"
-      case "Rework-Payment Details"            => "In Progress"
-      case "Pending-RTBH"                      => "In Progress"
-      case "RTBH Sent"                         => "Pending"
-      case "Reply To RTBH"                     => "Pending"
-      case "Pending-Compliance Recommendation" => "In Progress"
-      case "Pending-Compliance Check Query"    => "Pending"
-      case "Pending-Compliance Check"          => "In Progress"
-    }
-
-  def caseSubStatus(caseStatus: String): Option[String] = caseStatus match {
-    case "Resolved-Withdrawn"         => Some("Withdrawn")
-    case "Rejected-Failed Validation" => Some("Failed Validation")
-    case "Resolved-Rejected"          => Some("Rejected")
-    case "Resolved-No Reply"          => Some("No Reply")
-    case "Resolved-Refused"           => Some("Refused")
-    case "Resolved-Approved"          => Some("Approved")
-    case "Resolved-Partial Refused"   => Some("Partial Refused")
-    case _                            => None
-  }
 }

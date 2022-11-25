@@ -32,7 +32,13 @@ final case class NDRCCaseDetails(
   totalExciseClaimAmount: Option[String],
   declarantReferenceNumber: Option[String],
   basisOfClaim: Option[String]
-)
+) extends CaseDetails {
+
+  def total: BigDecimal =
+    totalCustomsClaimAmount.map(BigDecimal.apply).getOrElse(ZERO) +
+      totalVATClaimAmount.map(BigDecimal.apply).getOrElse(ZERO) +
+      totalExciseClaimAmount.map(BigDecimal.apply).getOrElse(ZERO)
+}
 
 object NDRCCaseDetails {
   implicit val format: OFormat[NDRCCaseDetails] = Json.format[NDRCCaseDetails]

@@ -27,15 +27,24 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthorisedActions
+import scala.concurrent.Future
+import play.api.mvc.Result
+import play.api.mvc.Request
 
 @Singleton
-class GetSpecificClaimController @Inject() (service: GetSpecificClaimService, cc: ControllerComponents)(implicit
+class GetSpecificClaimController @Inject() (
+  authorised: AuthorisedActions,
+  service: GetSpecificClaimService,
+  cc: ControllerComponents
+)(implicit
   ec: ExecutionContext
 ) extends BackendController(cc)
     with Logging {
 
   final def getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    authorised.async({ case (r, _) =>
+      implicit val request: Request[AnyContent] = r
       service
         .getSpecificClaim(cdfPayService, cdfPayCaseNumber)
         .map {
@@ -60,5 +69,5 @@ class GetSpecificClaimController @Inject() (service: GetSpecificClaimService, cc
             logger.error(s"getSpecificClaim failed: ${error.getMessage}")
             ServiceUnavailable(error.getMessage)
         }
-    }
+    }: AuthorisedActions.Input[AnyContent] => Future[Result])
 }
