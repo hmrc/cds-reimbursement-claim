@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.SCTYCaseDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ClaimDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.CaseStatus
 
 final case class SctyClaimItem(
   CDFPayCaseNumber: String,
@@ -46,8 +46,8 @@ object SctyClaimItem {
       claimStartDate = caseDetails.claimStartDate,
       closedDate = caseDetails.closedDate,
       reasonForSecurity = caseDetails.reasonForSecurity,
-      caseStatus = ClaimDetails.transformedCaseStatus(caseDetails.caseStatus),
-      caseSubStatus = ClaimDetails.caseSubStatus(caseDetails.caseStatus),
+      caseStatus = CaseStatus.transformedCaseStatusScty(caseDetails.caseStatus),
+      caseSubStatus = CaseStatus.caseSubStatusScty(caseDetails.caseStatus),
       declarantEORI = caseDetails.declarantEORI,
       importerEORI = caseDetails.importerEORI,
       claimantEORI = caseDetails.claimantEORI,

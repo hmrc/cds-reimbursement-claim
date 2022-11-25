@@ -40,7 +40,8 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
     PropertyCheckConfiguration(minSuccessful = 100)
 
-  val mockGetClaimsService: GetClaimsService = mock[GetClaimsService]
+  val mockGetClaimsService: GetClaimsService =
+    mock[GetClaimsService]
 
   val testEori = Eori("ABC-123-XYZ")
 
@@ -69,7 +70,6 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
           }
 
           val result = controller.getAllClaims(FakeRequest())
-          println(await(result))
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(
             Json.obj(
@@ -91,7 +91,6 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
           }
 
           val result = controller.getAllClaims(FakeRequest())
-          println(await(result))
           status(result)        shouldBe BAD_REQUEST
           contentAsJson(result) shouldBe Json.toJson(response.responseCommon)
         }
@@ -103,7 +102,6 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
           }
 
           val result = controller.getAllClaims(FakeRequest())
-          println(await(result))
           status(result)        shouldBe BAD_REQUEST
           contentAsJson(result) shouldBe Json.toJson(response.errorDetail)
         }
@@ -115,7 +113,6 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
           }
 
           val result = controller.getAllClaims(FakeRequest())
-          println(await(result))
           status(result)        shouldBe SERVICE_UNAVAILABLE
           contentAsJson(result) shouldBe Json.toJson(response.errorDetail)
         }

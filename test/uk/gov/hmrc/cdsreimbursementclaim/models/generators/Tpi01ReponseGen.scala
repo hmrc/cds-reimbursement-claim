@@ -23,18 +23,19 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{CDFPayCase, CaseDetails, 
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ErrorDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.SourceFaultDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ReturnParameter
 
 object Tpi01ReponseGen {
 
   val letterChars: Set[Char] = Set('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K')
   val digitChars: Set[Char]  = Set('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
 
-  val charGen: Gen[Char] = Gen.oneOf(letterChars ++ digitChars)
+  val genChar: Gen[Char] = Gen.oneOf(letterChars ++ digitChars)
 
   val genCdfPayCaseNumber: Gen[String] =
-    Gen.listOfN(6, charGen).map(_.mkString("NDRC-", "", ""))
+    Gen.listOfN(6, genChar).map(_.mkString("NDRC-", "", ""))
 
-  val genCaseStatus: Gen[String] = Gen.oneOf(
+  val genCaseStatusNdrc: Gen[String] = Gen.oneOf(
     "Open",
     "Open-Analysis",
     "Pending-Approval",
@@ -60,6 +61,29 @@ object Tpi01ReponseGen {
     "Pending-Compliance Check"
   )
 
+  val genCaseStatusScty: Gen[String] = Gen.oneOf(
+    "Open",
+    "Pending-Approval",
+    "Pending-Payment",
+    "Partial Refund",
+    "Resolved-Refund",
+    "Pending-Query",
+    "Resolved-Manual BTA",
+    "Pending-C18",
+    "Closed-C18 Raised",
+    "RTBH Letter Initiated",
+    "Awaiting RTBH Letter Response",
+    "Reminder Letter Initiated",
+    "Awaiting Reminder Letter Response",
+    "Decision Letter Initiated",
+    "Partial BTA",
+    "Partial BTA/Refund",
+    "Resolved-Auto BTA",
+    "Resolved-Manual BTA/Refund",
+    "Open-Extension Granted",
+    "Resolved-Withdrawn"
+  )
+
   def isClosed(caseStatus: String): Boolean =
     caseStatus.startsWith("Resolved-") ||
       caseStatus.startsWith("Rejected-") ||
@@ -73,6 +97,17 @@ object Tpi01ReponseGen {
         correlationId = Some(CorrelationId()),
         errorMessage = None,
         returnParameters = None
+      )
+    )
+
+  val genResponseCommonError: Gen[ResponseCommon] =
+    Gen.const(
+      ResponseCommon(
+        status = "ERROR",
+        processingDate = CdsDateTime.now,
+        correlationId = Some(CorrelationId()),
+        errorMessage = Some("error message"),
+        returnParameters = Some(List(ReturnParameter("key", "value")))
       )
     )
 
@@ -93,7 +128,7 @@ object Tpi01ReponseGen {
       CDFPayCaseNumber         <- genCdfPayCaseNumber
       declarationID            <- IdGen.genMRN
       claimStartDate           <- Gen.const("20220220")
-      caseStatus               <- genCaseStatus
+      caseStatus               <- genCaseStatusNdrc
       closedDate               <- if (isClosed(caseStatus)) Gen.const(Some("20220220"))
                                   else Gen.const(None)
       declarantEORI            <- IdGen.genEori
@@ -128,7 +163,7 @@ object Tpi01ReponseGen {
       CDFPayCaseNumber         <- genCdfPayCaseNumber
       declarationID            <- IdGen.genMRN
       claimStartDate           <- Gen.const("20220220")
-      caseStatus               <- genCaseStatus
+      caseStatus               <- genCaseStatusScty
       closedDate               <- if (isClosed(caseStatus)) Gen.const(Some("20220220"))
                                   else Gen.const(None)
       declarantEORI            <- IdGen.genEori
@@ -205,7 +240,7 @@ object Tpi01ReponseGen {
 
   val genGetReimbursementClaimsResponseEmpty: Gen[GetReimbursementClaimsResponse] =
     for {
-      responseCommon <- genResponseCommonSuccess
+      responseCommon <- genResponseCommonError
     } yield GetReimbursementClaimsResponse(
       responseCommon,
       None

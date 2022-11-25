@@ -48,11 +48,6 @@ class GetClaimsController @Inject() (
       implicit val request: Request[AnyContent] = r
       service
         .getClaims(eori, claimsSelector)
-        .map { x =>
-          println(x)
-          x
-
-        }
         .map {
           case Right(GetReimbursementClaimsResponse(responseCommon, Some(responseDetail))) =>
             Ok(Json.obj("claims" -> Json.toJson(ClaimsResponse.fromTpi01Response(responseDetail))))

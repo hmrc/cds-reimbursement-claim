@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.CaseStatus
 
 final case class SctyClaimDetails(
   CDFPayCaseNumber: String,
@@ -50,8 +51,8 @@ object SctyClaimDetails {
       declarationID = caseDetails.declarationID,
       reasonForSecurity = caseDetails.reasonForSecurity,
       procedureCode = caseDetails.procedureCode,
-      caseStatus = transformedCaseStatus(caseDetails.caseStatus),
-      caseSubStatus = caseSubStatus(caseDetails.caseStatus),
+      caseStatus = CaseStatus.transformedCaseStatusScty(caseDetails.caseStatus),
+      caseSubStatus = CaseStatus.caseSubStatusScty(caseDetails.caseStatus),
       goods = caseDetails.goods.map(_.map(g => Goods(g.itemNumber, g.goodsDescription))),
       declarantEORI = caseDetails.declarantEORI,
       importerEORI = caseDetails.importerEORI,
@@ -76,37 +77,4 @@ object SctyClaimDetails {
       )
     )
 
-  def caseSubStatus(caseStatus: String): Option[String] = caseStatus match {
-    case "Resolved-Refund"            => Some("Resolved-Refund")
-    case "Resolved-Manual BTA"        => Some("Resolved-Manual BTA")
-    case "Closed-C18 Raised"          => Some("Closed-C18 Raised")
-    case "Resolved-Auto BTA"          => Some("Resolved-Auto BTA")
-    case "Resolved-Manual BTA/Refund" => Some("Resolved-Manual BTA/Refund")
-    case "Resolved-Withdrawn"         => Some("Resolved-Withdrawn")
-    case _                            => None
-  }
-
-  def transformedCaseStatus(caseStatus: String): String =
-    caseStatus match {
-      case "Open"                              => "In Progress"
-      case "Pending-Approval"                  => "Pending"
-      case "Pending-Payment"                   => "Pending"
-      case "Partial Refund"                    => "Pending"
-      case "Resolved-Refund"                   => "Closed"
-      case "Pending-Query"                     => "Pending"
-      case "Resolved-Manual BTA"               => "Closed"
-      case "Pending-C18"                       => "Pending"
-      case "Closed-C18 Raised"                 => "Closed"
-      case "RTBH Letter Initiated"             => "Pending"
-      case "Awaiting RTBH Letter Response"     => "Pending"
-      case "Reminder Letter Initiated"         => "Pending"
-      case "Awaiting Reminder Letter Response" => "Pending"
-      case "Decision Letter Initiated"         => "Pending"
-      case "Partial BTA"                       => "Pending"
-      case "Partial BTA/Refund"                => "Pending"
-      case "Resolved-Auto BTA"                 => "Closed"
-      case "Resolved-Manual BTA/Refund"        => "Closed"
-      case "Open-Extension Granted"            => "In Progress"
-      case "Resolved-Withdrawn"                => "Closed"
-    }
 }
