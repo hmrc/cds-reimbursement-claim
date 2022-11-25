@@ -24,14 +24,14 @@ import org.scalatest.matchers.should.Matchers
 trait ForSampledValueCheck {
   self: Matchers with ScalaCheckPropertyChecks =>
 
-  def forSampledValue[A](gen: Gen[A])(block: A => Assertion) = {
+  final def forSampledValue[A](gen: Gen[A])(block: A => Assertion) = {
     val value: A =
       gen.sample.getOrElse(fail("Cannot sample test value"))
 
     block(value)
   }
 
-  def forSampledValue[A : Gen](block: A => Assertion) = {
+  final def forSampledValue[A : Gen](block: A => Assertion) = {
     val value: A =
       implicitly[Gen[A]].sample.getOrElse(fail("Cannot sample test value"))
 

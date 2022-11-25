@@ -31,17 +31,27 @@ import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import com.eclipsesource.schema.SchemaType
+import play.api.mvc.AnyContent
+import uk.gov.hmrc.cdsreimbursementclaim.utils.SchemaValidation
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with ValidateEisHeaders {
+class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with ValidateEisHeaders with SchemaValidation {
+
+  lazy val tpi02RequestSchema: SchemaType =
+    readSchema("conf/resources/tpi02/tpi02-request-schema.json")
+
+  def validateTpi02Request(request: play.api.mvc.Request[AnyContent]): Unit = {
+    validateEisHeaders(request.headers)
+    validateRequestBody(tpi02RequestSchema, request.body.asJson.getOrElse(fail("Request is missing json body")))
+  }
 
   "Tpi02Connector" when {
     "handling request for claims" must {
       "get the 200 NDRC claim response" in {
-        givenEndpointStub { case r @ POST(p"/tpi/getspecificclaim/v1") =>
-          validateEisHeaders(r.headers)
+        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
           Tpi02TestData.tpi02Response200NdrcClaimResult
-        } {
+        }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
             inside(response) {
@@ -58,10 +68,9 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 200 SCTY claim response" in {
-        givenEndpointStub { case r @ POST(p"/tpi/getspecificclaim/v1") =>
-          validateEisHeaders(r.headers)
+        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
           Tpi02TestData.tpi02Response200SctyClaimResult
-        } {
+        }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.SCTY, "ABC-123"))
             inside(response) {
@@ -78,10 +87,9 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 200 NDRC no claims found response" in {
-        givenEndpointStub { case r @ POST(p"/tpi/getspecificclaim/v1") =>
-          validateEisHeaders(r.headers)
+        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
           Tpi02TestData.tpi02Response200NoClaimsFoundResult
-        } {
+        }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
             inside(response) {
@@ -97,7 +105,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
       "get the 400 missing field error" in {
         givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
           Tpi02TestData.tpi02Response400MissingFieldResult
-        } {
+        }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
             inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
@@ -114,7 +122,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
       "get the 400 pattern error" in {
         givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
           Tpi02TestData.tpi02Response400PatternErrorResult
-        } {
+        }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
             inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
@@ -131,7 +139,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
       "get the 500 system timeout error" in {
         givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
           Tpi02TestData.tpi02Response500SystemTimeoutErrorResult
-        } {
+        }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
             inside(response) { case Left(ErrorResponse(500, Some(errorDetails))) =>

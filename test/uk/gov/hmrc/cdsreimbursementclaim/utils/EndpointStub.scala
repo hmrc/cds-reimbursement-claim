@@ -31,14 +31,20 @@ import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, Data
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 import scala.util.matching.Regex
+import play.api.mvc.Request
+import play.api.mvc.AnyContent
 
+/** Provides method to stub an external endpoint with the expected result.
+  */
 trait EndpointStub {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
-  def givenEndpointStub[A](
+  final def givenEndpointStub[A](
     routes: PartialFunction[RequestHeader, Result]
+  )(
+    validateRequest: Request[AnyContent] => Unit = request => ()
   )(block: Port => HttpClient => A)(implicit provider: ServerProvider): A = {
 
     val config: ServerConfig = ServerConfig(port = Some(0), mode = Mode.Test)
@@ -51,7 +57,14 @@ trait EndpointStub {
     )
     val application                        =
       (new BuiltInComponentsFromContext(context) with NoHttpFiltersComponents { self: BuiltInComponents =>
-        def router = Router.from(routes.andThen(r => self.defaultActionBuilder(_ => r)))
+        def router = Router.from(
+          routes.andThen(result =>
+            self.defaultActionBuilder { request =>
+              validateRequest(request)
+              result
+            }
+          )
+        )
       }).application
 
     Play.start(application)

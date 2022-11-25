@@ -23,7 +23,7 @@ import org.scalatest.compatible.Assertion
 trait ValidateEisHeaders {
   self: Matchers =>
 
-  def validateEisHeaders(headers: Headers): Assertion = {
+  final def validateEisHeaders(headers: Headers): Assertion = {
     headers.hasHeader("Date")             shouldBe true
     headers.hasHeader("X-Correlation-ID") shouldBe true
     headers.hasHeader("X-Forwarded-Host") shouldBe true

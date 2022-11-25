@@ -29,7 +29,7 @@ trait TestDataFromFile {
       "org.wartremover.warts.Equals"
     )
   )
-  def contentOfFile(filename: String): String = {
+  final def contentOfFile(filename: String): String = {
     val in = getClass.getResourceAsStream(s"${filename.drop("conf".size)}")
     if (in == null) throw new NullPointerException(s"Cannot read content of $filename")
     else

@@ -17,9 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import play.api.libs.json.{JsNumber, JsObject}
+import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseRequest, Request, RequestCommon, RequestDetail, Response}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
@@ -45,9 +46,9 @@ class Tpi02Connector @Inject() (
   ): Future[Either[ErrorResponse, Response]] = {
 
     val requestCommon = RequestCommon(
-      receiptDate = RFC7231DateTime.now,
-      acknowledgementReference = CorrelationId(),
-      originatingSystem = "MDTP"
+      receiptDate = ISO8601DateTime.now,
+      acknowledgementReference = CorrelationId.compact,
+      originatingSystem = MetaConfig.Platform.MDTP
     )
 
     val request = Request(

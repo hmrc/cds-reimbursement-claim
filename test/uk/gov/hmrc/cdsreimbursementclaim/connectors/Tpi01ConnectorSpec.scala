@@ -16,33 +16,40 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import com.eclipsesource.schema.SchemaType
 import com.typesafe.config.ConfigFactory
 import org.scalatest.compatible.Assertion
 import play.api.Configuration
 import play.api.http.{HeaderNames, MimeTypes, Port}
-import play.api.mvc.Results
+import play.api.mvc.{AnyContent, Result, Results}
 import play.api.routing.sird._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, _}
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{TestDataFromFile, ValidateEisHeaders}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{SchemaValidation, TestDataFromFile, ValidateEisHeaders}
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.mvc.Result
 
-@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with ValidateEisHeaders {
+@SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext", "org.wartremover.warts.AsInstanceOf"))
+class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with ValidateEisHeaders with SchemaValidation {
+
+  lazy val tpi01RequestSchema: SchemaType =
+    readSchema("conf/resources/tpi01/tpi01-request-schema.json")
+
+  def validateTpi01Request(request: play.api.mvc.Request[AnyContent]): Unit = {
+    validateEisHeaders(request.headers)
+    validateRequestBody(tpi01RequestSchema, request.body.asJson.getOrElse(fail("Request is missing json body")))
+  }
 
   "TP01Connector" when {
     "handling request for claims" must {
       "get the 200 NDRC claims response" in {
-        givenEndpointStub { case r @ POST(p"/tpi/getreimbursementclaims/v1") =>
-          validateEisHeaders(r.headers)
+        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response200NdrcResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
@@ -58,7 +65,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
       "get the 200 Securities claims response" in {
         givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response200SctyResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
@@ -74,7 +81,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
       "get the 200 Ndrc and Securities claims response" in {
         givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response200NdcrAndSctyResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
@@ -90,7 +97,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
       "get the 200 empty claims response" in {
         givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response200NoClaimsResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) {
@@ -103,7 +110,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
       "get the 400 missing field error" in {
         givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response400MissingFieldResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
@@ -120,7 +127,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
       "get the 400 pattern error" in {
         givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response400PatternErrorResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
@@ -137,7 +144,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
       "get the 500 system timeout error" in {
         givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
           Tpi01TestData.tpi01Response500SystemTimeoutErrorResult
-        } {
+        }(validateTpi01Request) {
           givenTpi01Connector { connector =>
             val response = await(connector.getClaims(Eori("ABC123"), ClaimsSelector.All))
             inside(response) { case Left(ErrorResponse(500, Some(errorDetails))) =>
