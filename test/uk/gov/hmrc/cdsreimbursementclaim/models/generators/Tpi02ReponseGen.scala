@@ -31,6 +31,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.Goods
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.ProcedureDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.EntryDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ErrorResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ErrorDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.SourceFaultDetail
 
 object Tpi02ReponseGen {
 
@@ -248,5 +251,27 @@ object Tpi02ReponseGen {
       responseCommon <- genResponseCommonSuccess
       responseDetail <- genResponseDetailScty
     } yield GetSpecificCaseResponse(responseCommon, Some(responseDetail))
+
+  val getGetSpecificCaseResponseEmpty: Gen[GetSpecificCaseResponse] =
+    for {
+      responseCommon <- genResponseCommonError
+    } yield GetSpecificCaseResponse(responseCommon, None)
+
+  def genErrorResponse(status: Int): Gen[ErrorResponse] =
+    Gen.const(
+      ErrorResponse(
+        status,
+        Some(
+          ErrorDetail(
+            timestamp = CdsDateTime.now,
+            correlationId = CorrelationId(),
+            errorCode = s"$status",
+            errorMessage = "Some error message",
+            source = "foo",
+            sourceFaultDetail = SourceFaultDetail(Seq("source fault detail"))
+          )
+        )
+      )
+    )
 
 }

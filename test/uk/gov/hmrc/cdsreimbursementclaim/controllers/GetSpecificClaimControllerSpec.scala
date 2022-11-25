@@ -62,6 +62,14 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
       .expects(cdfPayService, cdfPayCaseNumber, *)
       .returning(Future.successful(response))
 
+  def mockGetClaimsResponseThrowsException(cdfPayService: CDFPayService, cdfPayCaseNumber: String) =
+    (
+      mockGetSpecificClaimService
+        .getSpecificClaim(_: CDFPayService, _: String)(_: HeaderCarrier)
+      )
+      .expects(cdfPayService, cdfPayCaseNumber, *)
+      .throws(new RuntimeException(""))
+
   "The GetSpecificClaimController" should {
     "succeed" when {
       "handling non-empty responseDetails with NDRC cases" in {
@@ -73,10 +81,8 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
           val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(
-            Json.toJson(
-              SpecificClaimResponse.fromTpi02Response(
-                response.responseDetail.getOrElse(fail("misising responseDetail field"))
-              )
+            SpecificClaimResponse.fromTpi02Response(
+              response.responseDetail.getOrElse(fail("misising responseDetail field"))
             )
           )
         }
@@ -90,12 +96,45 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
           val result = controller.getSpecificClaim(CDFPayService.SCTY, "XYZ-999")(FakeRequest())
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(
-            Json.toJson(
-              SpecificClaimResponse.fromTpi02Response(
-                response.responseDetail.getOrElse(fail("misising responseDetail field"))
-              )
+            SpecificClaimResponse.fromTpi02Response(
+              response.responseDetail.getOrElse(fail("misising responseDetail field"))
             )
           )
+        }
+      }
+    }
+    "fail" when {
+      "handling empty responseDetails" in {
+        forSampledValue(Tpi02ReponseGen.getGetSpecificCaseResponseEmpty) { response =>
+          inSequence {
+            mockGetClaimsResponse(CDFPayService.NDRC, "XYZ-999")(Right(response))
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result)        shouldBe BAD_REQUEST
+          contentAsJson(result) shouldBe Json.toJson(response.responseCommon)
+        }
+      }
+      "handling error response with status 403" in {
+        forSampledValue(Tpi02ReponseGen.genErrorResponse(403)) { response =>
+          inSequence {
+            mockGetClaimsResponse(CDFPayService.NDRC, "XYZ-999")(Left(response))
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result)        shouldBe BAD_REQUEST
+          contentAsJson(result) shouldBe Json.toJson(response.errorDetail)
+        }
+      }
+      "handling error response with status 500" in {
+        forSampledValue(Tpi02ReponseGen.genErrorResponse(500)) { response =>
+          inSequence {
+            mockGetClaimsResponse(CDFPayService.NDRC, "XYZ-999")(Left(response))
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result)        shouldBe SERVICE_UNAVAILABLE
+          contentAsJson(result) shouldBe Json.toJson(response.errorDetail)
         }
       }
     }
