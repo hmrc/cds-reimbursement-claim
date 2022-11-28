@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.NdrcClaimItem
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.SctyClaimItem
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
 
 final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem])
 

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
+package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.NDRCCaseDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.CaseStatus
 
+/** Model of an NDRC type of claim data returned from /claims endpoint */
 final case class NdrcClaimItem(
   CDFPayCaseNumber: String,
   declarationID: Option[String],

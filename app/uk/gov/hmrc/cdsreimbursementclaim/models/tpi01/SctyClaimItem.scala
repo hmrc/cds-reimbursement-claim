@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty
+package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.SCTYCaseDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.CaseStatus
 
+/** Model of an SCTY type of claim data returned from /claims endpoint */
 final case class SctyClaimItem(
   CDFPayCaseNumber: String,
   declarationID: Option[String],
