@@ -42,7 +42,7 @@ class AuthenticatedActionSpec extends AnyFlatSpec with Matchers with MockFactory
 
   val authConnector: AuthConnector = mock[AuthConnector]
 
-  val builder = new AuthenticateActionBuilder(
+  val builder = new AuthenticateWithUserActionBuilder(
     authConnector,
     new BodyParsers.Default()(NoMaterializer),
     executionContext

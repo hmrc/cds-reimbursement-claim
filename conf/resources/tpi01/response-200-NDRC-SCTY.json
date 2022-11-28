@@ -1,0 +1,78 @@
+{
+  "getPostClearanceCasesResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "processingDate": "2022-01-31T09:45:20Z"
+    },
+    "responseDetail": {
+      "NDRCCasesFound": true,
+      "SCTYCasesFound": true,
+      "CDFPayCase": {
+        "NDRCCaseTotal": "45.123",
+        "NDRCCases": [
+          {
+            "CDFPayCaseNumber": "NDRC-2111",
+            "declarationID": "21LLLLLLLLLLLLLLL9",
+            "claimStartDate": "20211120",
+            "closedDate": "20211220",
+            "caseStatus": "Open",
+            "declarantEORI": "GB744638982000",
+            "importerEORI": "GB744638982000",
+            "claimantEORI": "GB744638982000",
+            "totalCustomsClaimAmount": "3000.20",
+            "totalVATClaimAmount": "784.66",
+            "totalExciseClaimAmount": "1200.00",
+            "declarantReferenceNumber": "KWMREF1",
+            "basisOfClaim": "Duplicate Entry"
+          },
+          {
+            "CDFPayCaseNumber": "NDRC-2112",
+            "declarationID": "21LLLLLLLLLLLLLLL9",
+            "claimStartDate": "20211120",
+            "closedDate": "20211220",
+            "caseStatus": "Resolved-Partial Refused",
+            "declarantEORI": "GB744638982000",
+            "importerEORI": "GB744638982000",
+            "claimantEORI": "GB744638982000",
+            "totalCustomsClaimAmount": "3000.20",
+            "totalVATClaimAmount": "784.66",
+            "totalExciseClaimAmount": "1200.00",
+            "declarantReferenceNumber": "KWMREF1",
+            "basisOfClaim": "Duplicate Entry"
+          }
+        ],
+        "SCTYCaseTotal": "123.45",
+        "SCTYCases": [
+          {
+            "CDFPayCaseNumber": "SEC-2113",
+            "declarationID": "21LLLLLLLLLL12345",
+            "claimStartDate": "20210320",
+            "closedDate": "20211220",
+            "reasonForSecurity": "ACS",
+            "caseStatus": "Open",
+            "declarantEORI": "GB744638982000",
+            "importerEORI": "GB744638982000",
+            "claimantEORI": "GB744638982000",
+            "totalCustomsClaimAmount": "12000.56",
+            "totalVATClaimAmount": "3412.01",
+            "declarantReferenceNumber": "broomer007"
+          },
+          {
+            "CDFPayCaseNumber": "SEC-2114",
+            "declarationID": "21LLLLLLLLLL12345",
+            "claimStartDate": "20210320",
+            "closedDate": "20211220",
+            "reasonForSecurity": "ACS",
+            "caseStatus": "Pending-C18",
+            "declarantEORI": "GB744638982000",
+            "importerEORI": "GB744638982000",
+            "claimantEORI": "GB744638982000",
+            "totalCustomsClaimAmount": "12000.56",
+            "totalVATClaimAmount": "3412.01",
+            "declarantReferenceNumber": "broomer007"
+          }
+        ]
+      }
+    }
+  }
+}

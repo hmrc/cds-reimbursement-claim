@@ -1,0 +1,11 @@
+{
+  "errorDetail": {
+  "timestamp": "2018-08-08T13:57:53Z",
+  "correlationId": "1682aaa9-d212-46ba-852e-43c2d01faf21",
+  "errorCode": "400",
+  "errorMessage": "Invalid message",
+  "source": "ct-api",
+  "sourceFaultDetail": {
+    "detail": ["string '123456789012345679' is too long (length: 18, maximum allowed: 17), ECMA 262 regex '^-?[0-9]{17}$' does not match input string '123456789012345679']"]}
+  }
+}

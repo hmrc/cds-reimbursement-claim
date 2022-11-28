@@ -4,6 +4,8 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "cds-reimbursement-claim"
 
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 addCommandAlias("fix", "all compile:scalafix test:scalafix")
@@ -55,7 +57,10 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(
     routesImport := Seq(
+      "uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori",
       "uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN",
+      "uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ClaimsSelector",
+      "uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService",
       "uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity"
     )
   )

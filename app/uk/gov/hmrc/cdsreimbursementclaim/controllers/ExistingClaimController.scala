@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ExistingDeclarationConnector
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateWithUserActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class ExistingClaimController @Inject() (
-  authenticate: AuthenticateActions,
+  authenticate: AuthenticateWithUserActions,
   existingDeclarationConnector: ExistingDeclarationConnector,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)

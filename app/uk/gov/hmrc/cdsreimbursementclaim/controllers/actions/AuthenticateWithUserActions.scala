@@ -16,46 +16,48 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
-import java.time.LocalDateTime
-
 import com.google.inject.ImplementedBy
-import javax.inject.Inject
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 
+import java.time.LocalDateTime
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedUser(ggCredId: String)
-class AuthenticatedRequest[+A](
+class AuthenticatedUserRequest[+A](
   val user: AuthenticatedUser,
   val timestamp: LocalDateTime,
   val headerCarrier: HeaderCarrier,
   request: Request[A]
 ) extends WrappedRequest[A](request)
 
-@ImplementedBy(classOf[AuthenticateActionBuilder])
-trait AuthenticateActions extends ActionBuilder[AuthenticatedRequest, AnyContent]
+@ImplementedBy(classOf[AuthenticateWithUserActionBuilder])
+trait AuthenticateWithUserActions extends ActionBuilder[AuthenticatedUserRequest, AnyContent]
 
-class AuthenticateActionBuilder @Inject() (
+class AuthenticateWithUserActionBuilder @Inject() (
   val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
   val executionContext: ExecutionContext
-) extends AuthenticateActions
+) extends AuthenticateWithUserActions
     with AuthorisedFunctions
     with BackendHeaderCarrierProvider {
 
-  override def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](
+    request: Request[A],
+    block: AuthenticatedUserRequest[A] => Future[Result]
+  ): Future[Result] = {
     val forbidden = Results.Forbidden("Forbidden")
     val carrier   = hc(request)
     authorised(AuthProviders(GovernmentGateway))
       .retrieve(v2.Retrievals.credentials) {
         case Some(credentials) =>
           val user = AuthenticatedUser(credentials.providerId)
-          block(new AuthenticatedRequest[A](user, LocalDateTime.now(), carrier, request))
+          block(new AuthenticatedUserRequest[A](user, LocalDateTime.now(), carrier, request))
         case _                 => Future.successful(forbidden)
       }(carrier, executionContext)
       .recover { case _: NoActiveSession =>

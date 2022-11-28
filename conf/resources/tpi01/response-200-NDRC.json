@@ -1,0 +1,32 @@
+{
+  "getPostClearanceCasesResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "processingDate": "2022-01-31T09:45:20Z"
+    },
+    "responseDetail": {
+      "NDRCCasesFound": true,
+      "SCTYCasesFound": false,
+      "CDFPayCase": {
+        "NDRCCaseTotal": "45.123",
+        "NDRCCases": [
+          {
+            "CDFPayCaseNumber": "NDRC-2109",
+            "declarationID": "21LLLLLLLLLLLLLLL9",
+            "claimStartDate": "20211120",
+            "closedDate": "20211220",
+            "caseStatus": "Open-Analysis",
+            "declarantEORI": "GB744638982000",
+            "importerEORI": "GB744638982000",
+            "claimantEORI": "GB744638982000",
+            "totalCustomsClaimAmount": "3000.20",
+            "totalVATClaimAmount": "784.66",
+            "totalExciseClaimAmount": "1200.00",
+            "declarantReferenceNumber": "KWMREF1",
+            "basisOfClaim": "Duplicate Entry"
+          }
+        ]
+      }
+    }
+  }
+}

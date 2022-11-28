@@ -23,7 +23,7 @@ import play.api.mvc.{Headers, Request}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUserRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
@@ -57,7 +57,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
 
   val ccsSubmissionRequestWorkItem: WorkItem[CcsSubmissionRequest] = sample[WorkItem[CcsSubmissionRequest]]
 
-  val request = new AuthenticatedRequest(
+  val request = new AuthenticatedUserRequest(
     Fake.user,
     LocalDateTime.now(),
     headerCarrier,

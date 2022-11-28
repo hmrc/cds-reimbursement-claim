@@ -17,9 +17,17 @@
 package uk.gov.hmrc.cdsreimbursementclaim.utils
 
 import cats.Eq
+import cats.syntax.eq._
 import play.api.libs.json.Format
+import play.api.mvc.PathBindable
+import play.api.mvc.QueryStringBindable
 
-/** Provides parse, verification, serialization and equality capabilities to the set of case objects of sealed trait T. */
+/** Provides capabilities to the set of case objects of a sealed trait T:
+  * - JOSN serialization
+  * - cats Eq (equality)
+  * - path binding
+  * - query string binding
+  */
 @SuppressWarnings(Array("org.wartremover.warts.Throw"))
 trait EnumerationFormat[T] {
 
@@ -29,32 +37,55 @@ trait EnumerationFormat[T] {
     values.map(v => (v.toString, v)).toMap
 
   final def parse(key: String): Option[T] =
-    valueMap.get(key)
+    valueMap
+      .get(key)
+      .orElse(values.find(_.toString.toLowerCase() === key.toLowerCase()))
 
-  final def keyOf(value: T): String =
-    value.toString
+  final def keyOf(value: T): String = {
+    val key = value.toString
+    if (valueMap.contains(key)) key
+    else
+      throw new IllegalArgumentException(s"The [$key] is NOT a value of the expected enum class.")
+  }
 
   final def tryParse(key: String): T =
-    valueMap.getOrElse(
-      key,
-      throw new IllegalArgumentException(s"The [$key] is NOT a value of the expected enum class.")
-    )
+    valueMap
+      .get(key)
+      .orElse(values.find(_.toString.toLowerCase() === key.toLowerCase()))
+      .getOrElse(
+        throw new IllegalArgumentException(s"The [$key] is NOT a value of the expected enum class.")
+      )
 
   final def hasKey(key: String): Boolean =
-    valueMap.contains(key)
+    valueMap.contains(key) ||
+      values.exists(keyOf(_).toLowerCase() === key.toLowerCase())
 
   implicit final val equality: Eq[T] = Eq.fromUniversalEquals[T]
 
-  implicit final val format: Format[T] = SimpleStringFormat(
-    key =>
-      valueMap.getOrElse(
-        key,
-        throw new IllegalArgumentException(
-          s"The [$key] is NOT a value of the expected enum class."
-        )
-      ),
-    (value: T) => keyOf(value)
-  )
+  implicit final val format: Format[T] =
+    SimpleStringFormat(tryParse, keyOf)
 
   implicit final val enumeration: EnumerationFormat[T] = this
+
+  implicit val pathBinder: PathBindable[T] = new PathBindable[T] {
+    def bind(key: String, value: String): Either[String, T] =
+      parse(value).toRight(s"Path segment /$value/ cannot be parsed as a $key of an enum type")
+
+    def unbind(key: String, value: T): String =
+      keyOf(value)
+
+  }
+
+  implicit val queryBinder: QueryStringBindable[T] = new QueryStringBindable[T] {
+
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, T]] =
+      QueryStringBindable.bindableString
+        .bind(key, params)
+        .map(
+          _.flatMap(value => parse(value).toRight(s"Query parameter $key=[$value] cannot be parsed as an enum type"))
+        )
+
+    override def unbind(key: String, value: T): String =
+      QueryStringBindable.bindableString.unbind(key, keyOf(value))
+  }
 }

@@ -1,0 +1,76 @@
+{
+    "getSpecificCaseResponse": {
+        "responseCommon": {
+            "status": "OK",
+            "processingDate": "2022-11-25T18:02:14Z",
+            "correlationId": "cfcc5468-2bcb-402b-86e1-65a73017ddda"
+        },
+        "responseDetail": {
+            "CDFPayService": "SCTY",
+            "CDFPayCaseFound": true,
+            "SCTYCase": {
+                "CDFPayCaseNumber": "NDRC-9AJ0B5",
+                "declarationID": "37ZA28837070228580",
+                "reasonForSecurity": "CSD",
+                "procedureCode": "AB",
+                "caseStatus": "Open-Extension Granted",
+                "goods": [
+                    {
+                        "itemNumber": "BD4J9661F713",
+                        "goodsDescription": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+                    },
+                    {
+                        "itemNumber": "270BF5H8B0KJ",
+                        "goodsDescription": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+                    },
+                    {
+                        "itemNumber": "KE6CB675CH5A",
+                        "goodsDescription": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+                    }
+                ],
+                "declarantEORI": "IH105436067511",
+                "importerEORI": "XE346732712408",
+                "claimantEORI": "RO384835401922",
+                "totalCustomsClaimAmount": "431283.77",
+                "totalVATClaimAmount": "438968.22",
+                "totalClaimAmount": "498266",
+                "totalReimbursementAmount": "772797.11",
+                "claimStartDate": "20220220",
+                "claimantName": "j",
+                "claimantEmailAddress": "Q",
+                "reimbursement": [
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "986175.11",
+                        "taxType": "451",
+                        "reimbursementMethod": "P"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "167296",
+                        "taxType": "446",
+                        "reimbursementMethod": "C"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "871728.45",
+                        "taxType": "A45",
+                        "reimbursementMethod": "M"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "228432.39",
+                        "taxType": "412",
+                        "reimbursementMethod": "D"
+                    },
+                    {
+                        "reimbursementDate": "20220220",
+                        "reimbursementAmount": "167965.49",
+                        "taxType": "411",
+                        "reimbursementMethod": "C"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -61,7 +61,7 @@ class ExistingDeclarationConnector @Inject() (
     )
     EitherT[Future, Error, ExistingClaim](
       http
-        .POST[TPI04Request, ExistingClaim](url, requestDetails, getExplicitHeaders)
+        .POST[TPI04Request, ExistingClaim](url, requestDetails, getEISRequiredHeaders)
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUserRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
@@ -45,7 +45,7 @@ class DeclarationControllerSpec extends ControllerSpec {
   val mockDeclarationService: DeclarationService = mock[DeclarationService]
   implicit val headerCarrier: HeaderCarrier      = HeaderCarrier()
 
-  val request = new AuthenticatedRequest(
+  val request = new AuthenticatedUserRequest(
     Fake.user,
     LocalDateTime.now(),
     headerCarrier,

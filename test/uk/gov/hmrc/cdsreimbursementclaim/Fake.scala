@@ -18,11 +18,13 @@ package uk.gov.hmrc.cdsreimbursementclaim
 
 import play.api.mvc._
 import play.api.test.Helpers
-import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateActions, AuthenticatedRequest, AuthenticatedUser}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateWithUserActions, AuthenticatedUser, AuthenticatedUserRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthorisedActions
 
 object Fake {
 
@@ -31,19 +33,32 @@ object Fake {
     user: AuthenticatedUser,
     timestamp: LocalDateTime,
     hc: HeaderCarrier = HeaderCarrier()
-  ): AuthenticateActions =
-    new AuthenticateActions {
+  ): AuthenticateWithUserActions =
+    new AuthenticateWithUserActions {
       override def parser: BodyParser[AnyContent] = Helpers.stubBodyParser()
 
       override def invokeBlock[A](
         request: Request[A],
-        block: AuthenticatedRequest[A] => Future[Result]
+        block: AuthenticatedUserRequest[A] => Future[Result]
       ): Future[Result] =
-        block(new AuthenticatedRequest(user, timestamp, hc, request))
+        block(new AuthenticatedUserRequest(user, timestamp, hc, request))
 
       override protected def executionContext: ExecutionContext = ExecutionContext.global
     }
 
   val user: AuthenticatedUser = AuthenticatedUser("ggCredId")
+
+  def login(eori: Eori): AuthorisedActions =
+    new AuthorisedActions {
+      override def parser: BodyParser[AnyContent] = Helpers.stubBodyParser()
+
+      override def invokeBlock[A](
+        request: Request[A],
+        block: AuthorisedActions.Input[A] => Future[Result]
+      ): Future[Result] =
+        block((request, eori))
+
+      override protected def executionContext: ExecutionContext = ExecutionContext.global
+    }
 
 }

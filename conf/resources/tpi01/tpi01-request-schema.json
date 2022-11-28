@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "TPI01 Json request schema",
+  "type": "object",
+  "properties": {
+    "getPostClearanceCasesRequest": {
+      "type": "object",
+      "properties": {
+        "requestCommon": {
+          "type": "object",
+          "properties": {
+            "originatingSystem": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 30
+            },
+            "receiptDate": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 20,
+              "pattern": "([1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z"
+            },
+            "acknowledgementReference": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          },
+          "required": [
+            "originatingSystem",
+            "receiptDate",
+            "acknowledgementReference"
+          ]
+        },
+        "requestDetail": {
+          "type": "object",
+          "properties": {
+            "EORI": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 17,
+              "pattern": "([A-Z]{2}[0-9A-Z]+)"
+            },
+            "appType": {
+              "type": "string",
+              "enum": ["A", "N", "O", "S", "U"]
+            }
+          },
+          "required": [
+            "EORI",
+            "appType"
+          ]
+        }
+      },
+      "required": [
+        "requestCommon",
+        "requestDetail"
+      ]
+    }
+  },
+  "required": [
+    "getPostClearanceCasesRequest"
+  ]
+}

@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIn
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
+import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 
 final case class RequestDetail(
   CDFPayService: CDFPayService,
