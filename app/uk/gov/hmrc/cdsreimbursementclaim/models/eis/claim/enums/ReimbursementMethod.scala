@@ -42,5 +42,6 @@ object ReimbursementMethod extends EnumerationFormat[ReimbursementMethod] {
     override def toString: String = "Individual Guarantee"
   }
 
-  lazy val values: Set[ReimbursementMethod] = Set(Deferment, BankTransfer, PayableOrder)
+  lazy val values: Set[ReimbursementMethod] =
+    Set(Deferment, BankTransfer, PayableOrder, GeneralGuarantee, IndividualGuarantee)
 }
