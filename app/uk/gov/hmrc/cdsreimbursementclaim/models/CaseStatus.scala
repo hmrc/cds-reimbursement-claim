@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02
+package uk.gov.hmrc.cdsreimbursementclaim.models
 
 object CaseStatus {
 

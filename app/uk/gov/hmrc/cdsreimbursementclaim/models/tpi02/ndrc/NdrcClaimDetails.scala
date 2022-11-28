@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.CaseStatus
 
 final case class NdrcClaimDetails(
   CDFPayCaseNumber: String,
