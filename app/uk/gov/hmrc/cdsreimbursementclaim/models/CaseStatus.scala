@@ -20,7 +20,7 @@ object CaseStatus {
 
   def transformedCaseStatusNdrc(caseStatus: String): String =
     caseStatus match {
-      case "Open"                              => "In Progress"
+    case "Open"                              => "In Progress"
       case "Open-Analysis"                     => "In Progress"
       case "Pending-Approval"                  => "In Progress"
       case "Pending-Queried"                   => "Pending"
@@ -82,12 +82,12 @@ object CaseStatus {
     }
 
   def caseSubStatusScty(caseStatus: String): Option[String] = caseStatus match {
-    case "Resolved-Refund"            => Some("Resolved-Refund")
-    case "Resolved-Manual BTA"        => Some("Resolved-Manual BTA")
-    case "Closed-C18 Raised"          => Some("Closed-C18 Raised")
-    case "Resolved-Auto BTA"          => Some("Resolved-Auto BTA")
-    case "Resolved-Manual BTA/Refund" => Some("Resolved-Manual BTA/Refund")
-    case "Resolved-Withdrawn"         => Some("Resolved-Withdrawn")
+    case "Resolved-Refund"            => Some("Approved")
+    case "Resolved-Manual BTA"        => Some("Refused")
+    case "Closed-C18 Raised"          => Some("Underpayment")
+    case "Resolved-Auto BTA"          => Some("Refused")
+    case "Resolved-Manual BTA/Refund" => Some("Part approved")
+    case "Resolved-Withdrawn"         => Some("Withdrawn")
     case _                            => None
   }
 }
