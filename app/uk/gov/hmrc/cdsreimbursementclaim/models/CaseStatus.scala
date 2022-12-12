@@ -20,7 +20,7 @@ object CaseStatus {
 
   def transformedCaseStatusNdrc(caseStatus: String): String =
     caseStatus match {
-    case "Open"                              => "In Progress"
+      case "Open"                              => "In Progress"
       case "Open-Analysis"                     => "In Progress"
       case "Pending-Approval"                  => "In Progress"
       case "Pending-Queried"                   => "Pending"

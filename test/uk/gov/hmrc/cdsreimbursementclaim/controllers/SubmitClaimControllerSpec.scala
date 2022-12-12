@@ -29,9 +29,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Dec64UploadRequestGen.arbitraryDec64UploadRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
@@ -150,6 +152,23 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
+  private def mockSecurityClaimSubmission(
+    request: SecuritiesClaimRequest
+  )(
+    response: Either[Error, ClaimSubmitResponse]
+  ) =
+    (
+      mockClaimService
+        .submitSecuritiesClaim(_: SecuritiesClaimRequest)(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
+          _: Format[SecuritiesClaimRequest]
+        )
+      )
+      .expects(request, *, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
   private def mockCcsRequestEnqueue[A](
     submitClaimRequest: A,
     submitClaimResponse: ClaimSubmitResponse
@@ -231,18 +250,28 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           contentAsJson(result) shouldBe Json.toJson(response)
       }
 
-//      "handling securities claim request" in forAll { //TODO: 1718
-//        (request: SecuritiesClaimRequest, response: ClaimSubmitResponse) =>
-//          inSequence {
-//            mockSecurityClaimSubmission(request)(Right(response))
-//            mockCcsRequestEnqueue(request, response)
-//          }
-//
-//          val result = controller.submitSecuritiesClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
-//
-//          status(result)        shouldBe OK
-//          contentAsJson(result) shouldBe Json.toJson(response)
-//      }
+      "handling securities claim request" in forAll {
+        (request: SecuritiesClaimRequest, response: ClaimSubmitResponse) =>
+          inSequence {
+            mockSecurityClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
+
+          val result = controller.submitSecuritiesClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
+
+      "handling files request" in forAll { (request: Dec64UploadRequest) =>
+        inSequence {
+          mockCcsRequestEnqueue(request, ClaimSubmitResponse(request.caseNumber))
+        }
+
+        val result = controller.submitFiles()(fakeRequestWithJsonBody(Json.toJson(request)))
+
+        status(result) shouldBe ACCEPTED
+      }
     }
 
     "fail" when {
@@ -295,14 +324,14 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
-//      "submission of the securities claim failed" in forAll { request: SecuritiesClaimRequest => //TODO: 1718
-//        inSequence {
-//          mockSecurityClaimSubmission(request)(Left(Error("boom!")))
-//        }
-//
-//        val result = controller.submitSecuritiesClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
-//        status(result) shouldBe INTERNAL_SERVER_ERROR
-//      }
+      "submission of the securities claim failed" in forAll { request: SecuritiesClaimRequest => //TODO: 1718
+        inSequence {
+          mockSecurityClaimSubmission(request)(Left(Error("boom!")))
+        }
+
+        val result = controller.submitSecuritiesClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
     }
   }
 }
