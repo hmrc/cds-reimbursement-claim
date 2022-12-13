@@ -29,6 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,7 +43,7 @@ class SubmitClaimController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def submitC285Claim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  final val submitC285Claim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[C285ClaimRequest] {
       uploadDocumentsOnce {
         claimService.submitC285Claim(_)
@@ -50,7 +51,7 @@ class SubmitClaimController @Inject() (
     }
   }
 
-  def submitSingleOverpaymentsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  final val submitSingleOverpaymentsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[SingleOverpaymentsClaimRequest] {
       uploadDocumentsOnce {
         claimService.submitSingleOverpaymentsClaim(_)
@@ -58,7 +59,7 @@ class SubmitClaimController @Inject() (
     }
   }
 
-  def submitSingleRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  final val submitSingleRejectedGoodsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]] {
       uploadDocumentsOnce {
         claimService.submitRejectedGoodsClaim(_)
@@ -66,7 +67,7 @@ class SubmitClaimController @Inject() (
     }
   }
 
-  def submitMultipleRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  final val submitMultipleRejectedGoodsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]] {
       uploadDocumentsOnce {
         claimService.submitMultipleRejectedGoodsClaim(_)
@@ -74,7 +75,7 @@ class SubmitClaimController @Inject() (
     }
   }
 
-  def submitScheduledRejectedGoodsClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  final val submitScheduledRejectedGoodsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]] {
       uploadDocumentsOnce {
         claimService.submitScheduledRejectedGoodsClaim(_)
@@ -82,11 +83,21 @@ class SubmitClaimController @Inject() (
     }
   }
 
-  def submitSecuritiesClaim(): Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  final val submitSecuritiesClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[SecuritiesClaimRequest] {
       uploadDocumentsOnce {
         claimService.submitSecuritiesClaim(_)
       }
+    }
+  }
+
+  final val submitFiles: Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[Dec64UploadRequest] {
+      uploadDocumentsOnce { uploadFilesRequest =>
+        EitherT.pure[Future, Error](ClaimSubmitResponse(uploadFilesRequest.caseNumber))
+      }
+    }.map { _ =>
+      Accepted
     }
   }
 

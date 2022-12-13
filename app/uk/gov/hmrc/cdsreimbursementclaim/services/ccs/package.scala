@@ -37,4 +37,7 @@ package object ccs {
 
   implicit val securitiesClaimToDec64FilesMapper: SecuritiesClaimToDec64Mapper =
     new SecuritiesClaimToDec64Mapper
+
+  implicit val dec64UploadRequestToDec64FilesMapper: Dec64UploadRequestToDec64FilesMapper =
+    new Dec64UploadRequestToDec64FilesMapper
 }
