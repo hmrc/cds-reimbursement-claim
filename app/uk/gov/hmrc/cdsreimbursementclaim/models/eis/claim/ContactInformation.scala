@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ContactAddress, ContactDetails, Street}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ClaimantDetails, ConsigneeDetails, DeclarantDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ClaimantDetails
 
 final case class ContactInformation(
   contactPerson: Option[String],
@@ -72,42 +72,6 @@ object ContactInformation {
       emailAddress = maybeContactDetails.flatMap(_.emailAddress)
     )
   }
-
-  def fromDeclarantDetails(declarantDetails: DeclarantDetails): ContactInformation =
-    new ContactInformation(
-      contactPerson = declarantDetails.contactDetails.flatMap(_.contactName),
-      addressLine1 = declarantDetails.contactDetails.flatMap(_.addressLine1),
-      addressLine2 = declarantDetails.contactDetails.flatMap(_.addressLine2),
-      addressLine3 = declarantDetails.contactDetails.flatMap(_.addressLine3),
-      street = Street.fromLines(
-        declarantDetails.contactDetails.flatMap(_.addressLine1),
-        declarantDetails.contactDetails.flatMap(_.addressLine2)
-      ),
-      city = declarantDetails.contactDetails.flatMap(_.addressLine3),
-      countryCode = declarantDetails.contactDetails.flatMap(_.countryCode),
-      postalCode = declarantDetails.contactDetails.flatMap(_.postalCode),
-      telephoneNumber = declarantDetails.contactDetails.flatMap(_.telephone),
-      faxNumber = None,
-      emailAddress = declarantDetails.contactDetails.flatMap(_.emailAddress)
-    )
-
-  def fromConsigneeDetails(consigneeDetails: ConsigneeDetails): ContactInformation =
-    new ContactInformation(
-      contactPerson = consigneeDetails.contactDetails.flatMap(_.contactName),
-      addressLine1 = consigneeDetails.contactDetails.flatMap(_.addressLine1),
-      addressLine2 = consigneeDetails.contactDetails.flatMap(_.addressLine2),
-      addressLine3 = consigneeDetails.contactDetails.flatMap(_.addressLine3),
-      street = Street.fromLines(
-        consigneeDetails.contactDetails.flatMap(_.addressLine1),
-        consigneeDetails.contactDetails.flatMap(_.addressLine2)
-      ),
-      city = consigneeDetails.contactDetails.flatMap(_.addressLine3),
-      countryCode = consigneeDetails.contactDetails.flatMap(_.countryCode),
-      postalCode = consigneeDetails.contactDetails.flatMap(_.postalCode),
-      telephoneNumber = consigneeDetails.contactDetails.flatMap(_.telephone),
-      faxNumber = None,
-      emailAddress = consigneeDetails.contactDetails.flatMap(_.emailAddress)
-    )
 
   implicit val format: OFormat[ContactInformation] = Json.format[ContactInformation]
 }

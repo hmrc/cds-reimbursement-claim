@@ -20,11 +20,7 @@ import cats.data.Validated.Invalid
 import cats.data.Validated.Valid
 import cats.implicits.catsSyntaxEq
 import cats.syntax.either._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecurityDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxReclaimDetail
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, Street, TaxCode, TaxReclaimDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.DeclarantReferenceNumber
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.DeclarationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.ProcedureCode
@@ -40,10 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissi
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BtaSource
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.SecurityDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.TaxDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, ClaimantDetails, ConsigneeDetails, DeclarantDetails, SecurityDetails, TaxDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
@@ -65,12 +58,12 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       _                                                            <- displayDeclaration.displayResponseDetail.declarantDetails.contactDetails.toRight(
                                                                         CdsError("The declarant contact information is missing")
                                                                       )
-      declarantDetails                                              = MRNInformation.fromDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
+      declarantDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
       _                                                            <- displayDeclaration.displayResponseDetail.consigneeDetails
                                                                         .map(_.contactDetails.toRight(CdsError("The consignee contact information is missing")).map(_ => ()))
                                                                         .getOrElse(().asRight)
       consigneeDetails                                              = displayDeclaration.displayResponseDetail.consigneeDetails
-                                                                        .map(MRNInformation.fromConsigneeDetails)
+                                                                        .map(mrnInfoFromClaimantDetails)
                                                                         .getOrElse(declarantDetails)
       securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
@@ -256,4 +249,37 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     else
       Some(reclaims.flatMap(_.toList))
   }
+
+  private def mrnInfoFromClaimantDetails(claimantDetails: ClaimantDetails): MRNInformation =
+    MRNInformation(
+      EORI = claimantDetails.EORI,
+      legalName = claimantDetails.legalName,
+      establishmentAddress = claimantDetails match {
+        case ConsigneeDetails(_, _, establishmentAddress, _) =>
+          Address.fromEstablishmentAddress(establishmentAddress)
+        case DeclarantDetails(_, _, _, _) | _                =>
+          Address
+            .fromEstablishmentAddress(claimantDetails.establishmentAddress)
+            .copy(contactPerson = claimantDetails.contactDetails.flatMap(_.contactName))
+      },
+      contactDetails = contactInfoFromClaimantDetails(claimantDetails)
+    )
+
+  private def contactInfoFromClaimantDetails(claimantDetails: ClaimantDetails): ContactInformation =
+    new ContactInformation(
+      contactPerson = claimantDetails.contactDetails.flatMap(_.contactName),
+      addressLine1 = claimantDetails.contactDetails.flatMap(_.addressLine1),
+      addressLine2 = claimantDetails.contactDetails.flatMap(_.addressLine2),
+      addressLine3 = claimantDetails.contactDetails.flatMap(_.addressLine3),
+      street = Street.fromLines(
+        claimantDetails.contactDetails.flatMap(_.addressLine1),
+        claimantDetails.contactDetails.flatMap(_.addressLine2)
+      ),
+      city = claimantDetails.contactDetails.flatMap(_.addressLine3),
+      countryCode = claimantDetails.contactDetails.flatMap(_.countryCode),
+      postalCode = claimantDetails.contactDetails.flatMap(_.postalCode),
+      telephoneNumber = None,
+      faxNumber = None,
+      emailAddress = claimantDetails.contactDetails.flatMap(_.emailAddress)
+    )
 }
