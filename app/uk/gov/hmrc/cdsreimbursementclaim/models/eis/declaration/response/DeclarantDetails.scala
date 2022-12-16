@@ -18,10 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Format, JsPath, Reads, Writes}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantInformation
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{Address, MRNInformation}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 final case class DeclarantDetails(
   EORI: Eori,
@@ -31,19 +28,6 @@ final case class DeclarantDetails(
 ) extends ClaimantDetails
 
 object DeclarantDetails {
-
-  def fromClaimantInformation(claimantInformation: ClaimantInformation): Either[CdsError, MRNInformation] =
-    Address
-      .fromContactInformation(claimantInformation.establishmentAddress)
-      .map { address =>
-        MRNInformation(
-          claimantInformation.eori,
-          claimantInformation.fullName,
-          address,
-          claimantInformation.contactInformation
-        )
-      }
-
   private val reads: Reads[DeclarantDetails] = (
     (JsPath \ "declarantEORI").read[Eori] and
       (JsPath \ "legalName").read[String] and

@@ -36,8 +36,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05 {
 
-// TODO: Reinstate when the QA environment has been updates with a later version of the TPI05 schema.
-//  def request(claimantEORI: Eori, claimantEmailAddress: Email, claimantName: String): Builder = Builder(
   def request(
     claimantEORI: Eori,
     claimantEmailAddress: Email,
@@ -214,11 +212,11 @@ object TPI05 {
       useExistingPaymentMethod: Option[Boolean]
     ): Builder =
       copy(
-        validatedRequest.map(x =>
-          x.copy(
+        validatedRequest.map(requestDetail =>
+          requestDetail.copy(
             reimbursementMethod = reimbursementMethod,
             useExistingPaymentMethod = useExistingPaymentMethod,
-            security = x.security.map(
+            security = requestDetail.security.map(
               _.copy(
                 bankDetails = bankDetails
               )
@@ -229,6 +227,9 @@ object TPI05 {
 
     def withReimbursementParty(reimbursementParty: ReimbursementParty): Builder =
       copy(validatedRequest.map(x => x.copy(reimbursementParty = Some(reimbursementParty))))
+
+    def withClaimantAddress(claimantAddress: Address): Builder =
+      copy(validatedRequest.map(_.copy(claimantAddress = Some(claimantAddress))))
 
     def verify: Either[CdsError, EisSubmitClaimRequest] =
       validatedRequest.toEither.map { requestDetail =>

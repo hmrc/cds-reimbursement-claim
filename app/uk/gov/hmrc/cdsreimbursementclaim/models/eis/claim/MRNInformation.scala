@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{ConsigneeDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class MRNInformation(
@@ -28,23 +27,5 @@ final case class MRNInformation(
 )
 
 object MRNInformation {
-  def fromDeclarantDetails(declarantDetails: DeclarantDetails): MRNInformation =
-    MRNInformation(
-      declarantDetails.EORI,
-      legalName = declarantDetails.legalName,
-      establishmentAddress = Address
-        .fromEstablishmentAddress(declarantDetails.establishmentAddress)
-        .copy(contactPerson = declarantDetails.contactDetails.flatMap(_.contactName)),
-      contactDetails = ContactInformation.fromDeclarantDetails(declarantDetails)
-    )
-
-  def fromConsigneeDetails(consigneeDetails: ConsigneeDetails): MRNInformation =
-    MRNInformation(
-      consigneeDetails.EORI,
-      consigneeDetails.legalName,
-      Address.fromEstablishmentAddress(consigneeDetails.establishmentAddress),
-      ContactInformation.fromConsigneeDetails(consigneeDetails)
-    )
-
   implicit val format: OFormat[MRNInformation] = Json.format[MRNInformation]
 }
