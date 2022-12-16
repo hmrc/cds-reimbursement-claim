@@ -107,16 +107,16 @@ class SecuritiesClaimMappingSpec
           }
         detail.claimantAddress.map { address =>
           val contactInformation = claim.claimantInformation.contactInformation
-          address.contactPerson   shouldBe contactInformation.contactPerson
-          address.addressLine1    shouldBe contactInformation.addressLine1
-          address.addressLine2    shouldBe contactInformation.addressLine2
-          address.addressLine3    shouldBe contactInformation.addressLine3
-          address.street          shouldBe contactInformation.street
-          address.city            shouldBe contactInformation.city
-          address.countryCode     shouldBe contactInformation.countryCode.getOrElse("")
-          address.postalCode      shouldBe contactInformation.postalCode
-          address.telephoneNumber shouldBe contactInformation.telephoneNumber
-          address.emailAddress    shouldBe contactInformation.emailAddress
+          address.contactPerson     shouldBe contactInformation.contactPerson
+          address.addressLine1      shouldBe contactInformation.addressLine1
+          address.addressLine2      shouldBe contactInformation.addressLine2
+          address.addressLine3      shouldBe contactInformation.addressLine3
+          address.street            shouldBe contactInformation.street
+          address.city              shouldBe contactInformation.city
+          Some(address.countryCode) shouldBe contactInformation.countryCode
+          address.postalCode        shouldBe contactInformation.postalCode
+          address.telephoneNumber   shouldBe contactInformation.telephoneNumber
+          address.emailAddress      shouldBe contactInformation.emailAddress
         }
     }
 
