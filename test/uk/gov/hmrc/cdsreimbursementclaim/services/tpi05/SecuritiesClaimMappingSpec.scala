@@ -105,6 +105,19 @@ class SecuritiesClaimMappingSpec
               }
 
           }
+        detail.claimantAddress.map { address =>
+          val contactInformation = claim.claimantInformation.contactInformation
+          address.contactPerson   shouldBe contactInformation.contactPerson
+          address.addressLine1    shouldBe contactInformation.addressLine1
+          address.addressLine2    shouldBe contactInformation.addressLine2
+          address.addressLine3    shouldBe contactInformation.addressLine3
+          address.street          shouldBe contactInformation.street
+          address.city            shouldBe contactInformation.city
+          address.countryCode     shouldBe contactInformation.countryCode.getOrElse("")
+          address.postalCode      shouldBe contactInformation.postalCode
+          address.telephoneNumber shouldBe contactInformation.telephoneNumber
+          address.emailAddress    shouldBe contactInformation.emailAddress
+        }
     }
 
   "The Securities claim mapper" should {
@@ -130,6 +143,63 @@ class SecuritiesClaimMappingSpec
           claim.exportMovementReferenceNumber.map(List(_))
         )
       }
+    }
+
+    "fail for an invalid email in Securities claim to TPI05 request" in forAll(
+      genTempAdmissionSecuritiesClaimAndDeclaration
+    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+      val (claim, declaration) = details
+      val updatedClaim         = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(emailAddress = None)
+            )
+        )
+
+      val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
+
+      tpi05Request.left.map(_.value should be("claimant email address is mandatory"))
+
+    }
+
+    "fail for an invalid contact person in Securities claim to TPI05 request" in forAll(
+      genTempAdmissionSecuritiesClaimAndDeclaration
+    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+      val (claim, declaration) = details
+      val updatedClaim         = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(contactPerson = None)
+            )
+        )
+
+      val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
+
+      tpi05Request.left.map(_.value should be("claimant contact name is mandatory"))
+
+    }
+
+    "fail for an invalid claimant address in Securities claim to TPI05 request" in forAll(
+      genTempAdmissionSecuritiesClaimAndDeclaration
+    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+      val (claim, declaration) = details
+      val updatedClaim         = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(countryCode = None)
+            )
+        )
+
+      val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
+
+      tpi05Request.left.map(_.value should be("Claimant Address could not be parsed: country code is mandatory"))
+
     }
   }
 }

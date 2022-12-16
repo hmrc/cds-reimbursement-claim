@@ -125,6 +125,10 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
           selectedSecurityDeposits
         )
       (bankDetails, useExistingPaymentDetails, reimbursementMethod) = securityPaymentDetails
+      claimantAddress                                              <-
+        Address
+          .fromContactInformation(claim.claimantInformation.contactInformation)
+          .leftMap(error => CdsError(s"Claimant Address could not be parsed: $error"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -157,7 +161,8 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         useExistingPaymentMethod = useExistingPaymentDetails,
         bankDetails = bankDetails
       )
-      .withTemporaryAdmissionMethodOfDisposal(methodOfDisposalDetail)).flatMap(x => x.verify)
+      .withTemporaryAdmissionMethodOfDisposal(methodOfDisposalDetail)
+      .withClaimantAddress(claimantAddress)).flatMap(_.verify)
   }
 
   private def getSecurityPaymentDetails(
