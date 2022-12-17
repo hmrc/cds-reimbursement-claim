@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
+import cats.implicits.catsSyntaxEq
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
+
 
 final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem])
 
@@ -27,18 +29,27 @@ object ClaimsResponse {
 
   def fromTpi01Response(responseDetail: ResponseDetail): ClaimsResponse = {
 
-    val scty = responseDetail.CDFPayCase
+    val scty       = responseDetail.CDFPayCase
       .flatMap(_.SCTYCases)
       .getOrElse(Seq.empty)
       .map(SctyClaimItem.fromTpi01Response)
       .filter(_.declarationID.isDefined)
+    val uniqueScty = removeDuplicates[SctyClaimItem](scty, _.CDFPayCaseNumber)
 
-    val ndrc = responseDetail.CDFPayCase
+    val ndrc       = responseDetail.CDFPayCase
       .flatMap(_.NDRCCases)
       .getOrElse(Seq.empty)
       .map(NdrcClaimItem.fromTpi01Response)
       .filter(_.declarationID.isDefined)
+    val uniqueNdrc = removeDuplicates[NdrcClaimItem](ndrc, _.CDFPayCaseNumber)
 
-    ClaimsResponse(scty, ndrc)
+    ClaimsResponse(uniqueScty, uniqueNdrc)
   }
+  def removeDuplicates[A](list: Seq[A], get: A => String): Seq[A] =
+    list.foldLeft(List.empty[A]) { (acc, elem) =>
+      acc.find(item => get(item) === get(elem)) match {
+        case Some(_) => acc
+        case None    => elem :: acc
+      }
+    }
 }
