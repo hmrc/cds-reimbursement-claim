@@ -29,7 +29,8 @@ abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
       .map(fromTpi01Response)
       .filter((item: ClaimItem) =>
         item.declarationID.exists(id =>
-          !ENTRY_NUMBER.pattern.matcher(id).matches() && MRN.pattern.matcher(id).matches()
+          !ENTRY_NUMBER.pattern.matcher(id).matches()
+//            && MRN.pattern.matcher(id).matches()
         )
       )
     removeDuplicates(result, _.CDFPayCaseNumber)
