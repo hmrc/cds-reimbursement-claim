@@ -14,9 +14,8 @@ class ClaimsResponseSpec extends AnyWordSpec with Matchers {
       val uniqueList: Seq[SampleClass] = ClaimsResponse.removeDuplicates[SampleClass](list, item => item.name)
 
       uniqueList.length shouldBe 2
-      uniqueList should contain only (SampleClass(2, "Charlie"), SampleClass(1, "Bob"))
+      uniqueList should contain only (SampleClass(1, "Bob"), SampleClass(2, "Charlie"))
     }
   }
-
 
 }

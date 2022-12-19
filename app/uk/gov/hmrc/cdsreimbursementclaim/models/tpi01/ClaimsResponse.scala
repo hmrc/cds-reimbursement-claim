@@ -21,7 +21,6 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
 
-
 final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem])
 
 object ClaimsResponse {
@@ -49,7 +48,7 @@ object ClaimsResponse {
     list.foldLeft(List.empty[A]) { (acc, elem) =>
       acc.find(item => get(item) === get(elem)) match {
         case Some(_) => acc
-        case None    => elem :: acc
+        case None    => acc :+ elem
       }
     }
 }
