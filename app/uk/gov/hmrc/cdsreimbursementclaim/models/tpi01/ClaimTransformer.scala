@@ -22,7 +22,7 @@ abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
   private val ENTRY_NUMBER = "^[0-9]{9}[a-zA-Z]{1}[0-9]{8}$".r
   private val MRN          = "^[0-9]{2}[a-zA-Z]{2}[0-9a-zA-Z]{13}[0-9]{1}$".r
 
-  def convert(responseDetail: ResponseDetail, mapToCases: CDFPayCase => Option[Seq[T]]): Seq[S] = {
+  final def convert(responseDetail: ResponseDetail, mapToCases: CDFPayCase => Option[Seq[T]]): Seq[S] = {
     val result = responseDetail.CDFPayCase
       .flatMap(mapToCases)
       .getOrElse(Seq.empty)
@@ -37,7 +37,7 @@ abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
 
   def fromTpi01Response(caseDetails: T): S
 
-  def removeDuplicates(list: Seq[S], get: S => String): Seq[S] =
+  final def removeDuplicates(list: Seq[S], get: S => String): Seq[S] =
     list
       .foldLeft(List.empty[S]) { (acc, elem) =>
         acc.find(item => get(item) === get(elem)) match {
