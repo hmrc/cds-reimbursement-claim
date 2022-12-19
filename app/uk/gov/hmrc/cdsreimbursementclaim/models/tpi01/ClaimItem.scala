@@ -16,15 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
-
-final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem])
-
-object ClaimsResponse {
-  implicit val format: OFormat[ClaimsResponse] = Json.format[ClaimsResponse]
-
-  def fromTpi01Response(responseDetail: ResponseDetail): ClaimsResponse =
-    ClaimsResponse(SctyClaimItem.convert(responseDetail), NdrcClaimItem.convert(responseDetail))
+trait ClaimItem {
+  val CDFPayCaseNumber: String
+  val declarationID: Option[String]
 }

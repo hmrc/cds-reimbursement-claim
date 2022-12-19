@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.NDRCCaseDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimItem, ClaimTransformer, NDRCCaseDetails, ResponseDetail}
 
 /** Model of an NDRC type of claim data returned from /claims endpoint */
 final case class NdrcClaimItem(
@@ -36,12 +36,14 @@ final case class NdrcClaimItem(
   totalExciseClaimAmount: Option[String],
   declarantReferenceNumber: Option[String],
   basisOfClaim: Option[String]
-)
+) extends ClaimItem
 
-object NdrcClaimItem {
-  implicit val format: OFormat[NdrcClaimItem] = Json.format[NdrcClaimItem]
+object NdrcClaimItem extends ClaimTransformer[NDRCCaseDetails, NdrcClaimItem] {
+  implicit val format: OFormat[NdrcClaimItem]                     = Json.format[NdrcClaimItem]
+  def convert(responseDetail: ResponseDetail): Seq[NdrcClaimItem] =
+    super.convert(responseDetail, _.NDRCCases)
 
-  def fromTpi01Response(caseDetails: NDRCCaseDetails): NdrcClaimItem =
+  override def fromTpi01Response(caseDetails: NDRCCaseDetails): NdrcClaimItem =
     NdrcClaimItem(
       CDFPayCaseNumber = caseDetails.CDFPayCaseNumber,
       declarationID = caseDetails.declarationID,
