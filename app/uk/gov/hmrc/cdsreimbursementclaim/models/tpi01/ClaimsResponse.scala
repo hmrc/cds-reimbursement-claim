@@ -48,7 +48,7 @@ object ClaimsResponse {
     list.foldLeft(List.empty[A]) { (acc, elem) =>
       acc.find(item => get(item) === get(elem)) match {
         case Some(_) => acc
-        case None    => acc :+ elem
+        case None    => elem :: acc
       }
-    }
+    }.reverse
 }
