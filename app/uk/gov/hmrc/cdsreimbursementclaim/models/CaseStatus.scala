@@ -60,8 +60,8 @@ object CaseStatus {
   def transformedCaseStatusScty(caseStatus: String): String =
     caseStatus match {
       case "Open"                              => "In Progress"
-      case "Pending-Approval"                  => "Pending"
-      case "Pending-Payment"                   => "Pending"
+      case "Pending-Approval"                  => "In Progress"
+      case "Pending-Payment"                   => "In Progress"
       case "Partial Refund"                    => "Pending"
       case "Resolved-Refund"                   => "Closed"
       case "Pending-Query"                     => "Pending"
