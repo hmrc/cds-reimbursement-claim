@@ -38,7 +38,8 @@ final case class NdrcClaimDetails(
   claimantName: Option[String],
   claimantEmailAddress: Option[String],
   closedDate: Option[String],
-  reimbursements: Option[Seq[Reimbursement]]
+  reimbursements: Option[Seq[Reimbursement]],
+  MRNDetails:Option[Seq[ProcedureDetail]]
 )
 
 object NdrcClaimDetails {
@@ -72,6 +73,7 @@ object NdrcClaimDetails {
             r.reimbursementMethod
           )
         )
-      )
+      ),
+      MRNDetails = ndrcCase.NDRCDetail.MRNDetails
     )
 }
