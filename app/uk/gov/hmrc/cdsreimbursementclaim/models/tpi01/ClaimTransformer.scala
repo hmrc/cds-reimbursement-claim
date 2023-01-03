@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,7 @@ abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
       .getOrElse(Seq.empty)
       .map(fromTpi01Response)
       .filter((item: ClaimItem) =>
-        item.declarationID.exists(id =>
-          !ENTRY_NUMBER.pattern.matcher(id).matches()
+        item.declarationID.exists(id => !ENTRY_NUMBER.pattern.matcher(id).matches()
 //            && MRN.pattern.matcher(id).matches()
         )
       )
