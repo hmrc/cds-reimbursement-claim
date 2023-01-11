@@ -31,14 +31,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Dec64UploadRequestGen.arbitraryDec64UploadRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
@@ -98,6 +98,21 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           _: Request[_],
           _: OverpaymentsSingleClaimToTPI05Mapper,
           _: OverpaymentsSingleClaimToEmailMapper
+        )
+      )
+      .expects(request, *, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
+  private def mockScheduledOverpaymentsClaimSubmission(request: ScheduledOverpaymentsClaimRequest)(
+    response: Either[Error, ClaimSubmitResponse]
+  ) =
+    (
+      mockClaimService
+        .submitScheduledOverpaymentsClaim(_: ScheduledOverpaymentsClaimRequest)(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: OverpaymentsScheduledClaimToTPI05Mapper,
+          _: OverpaymentsScheduledClaimToEmailMapper
         )
       )
       .expects(request, *, *, *, *)
@@ -211,6 +226,18 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           contentAsJson(result) shouldBe Json.toJson(response)
       }
 
+      "handling Overpayments scheduled claim request" in forAll {
+        (request: ScheduledOverpaymentsClaimRequest, response: ClaimSubmitResponse) =>
+          inSequence {
+            mockScheduledOverpaymentsClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
+
+          val result = controller.submitScheduledOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
+
       "handling Single C&E1779 claim request" in forAll {
         (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
           inSequence {
@@ -291,6 +318,15 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         }
 
         val result = controller.submitSingleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "submission of the scheduled overpayments claim failed" in forAll { request: ScheduledOverpaymentsClaimRequest =>
+        inSequence {
+          mockScheduledOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
+        }
+
+        val result = controller.submitScheduledOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 

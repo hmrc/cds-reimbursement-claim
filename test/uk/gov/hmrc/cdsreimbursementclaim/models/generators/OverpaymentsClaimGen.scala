@@ -34,7 +34,7 @@ import java.net.URL
 import scala.jdk.CollectionConverters.asScalaBufferConverter
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
-object OverpaymentsSingleClaimGen {
+object OverpaymentsClaimGen {
 
   lazy val genUrl: Gen[URL] =
     for {
@@ -144,6 +144,46 @@ object OverpaymentsSingleClaimGen {
       duplicateDeclaration
     )
 
+  lazy val genOverpaymentsScheduledClaim
+    : Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+    for {
+      mrn                      <- genMRN
+      claimantType             <- Gen.oneOf(ClaimantType.values)
+      claimantInformation      <- genClaimantInformation
+      basisOfClaim             <- genBasisOfClaim
+      bankAccountDetails       <- Gen.option(genBankAccountDetails)
+      reimbursementMethod      <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      declaration              <- genDisplayDeclaration.map { generatedDeclaration =>
+                                    val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
+                                    DisplayDeclaration(drd)
+                                  }
+      duplicateMrn             <- Gen.option(genMRN).map(_.filter(_ => basisOfClaim === DuplicateEntry))
+      duplicateDeclaration      =
+        duplicateMrn.map(dup => DisplayDeclaration(declaration.displayResponseDetail.copy(declarationId = dup.value)))
+      claims                   <- genClaimsFromDisplayDeclaration(declaration)
+      evidences                <- Gen.nonEmptyListOf(genEvidences)
+      scheduledDocument        <- genEvidences
+      whetherInNorthernIreland <- Gen.oneOf(true, false)
+      additionalDetails        <- genRandomString
+    } yield (
+      ScheduledOverpaymentsClaim(
+        movementReferenceNumber = mrn,
+        duplicateMovementReferenceNumber = duplicateMrn,
+        claimantType = claimantType,
+        claimantInformation = claimantInformation,
+        basisOfClaim = basisOfClaim,
+        whetherNorthernIreland = whetherInNorthernIreland,
+        additionalDetails = additionalDetails,
+        reimbursementClaims = claims._2,
+        reimbursementMethod = reimbursementMethod,
+        bankAccountDetails = bankAccountDetails,
+        supportingEvidences = evidences,
+        scheduledDocument = scheduledDocument
+      ),
+      declaration,
+      duplicateDeclaration
+    )
+
   def genClaimAmount(ndrcDetails: List[NdrcDetails]): Gen[Map[TaxCode, BigDecimal]] = {
     val possibleValues = ndrcDetails.map(detail => TaxCode.getOrFail(detail.taxType) -> detail.amount.toDouble)
     Gen
@@ -160,13 +200,23 @@ object OverpaymentsSingleClaimGen {
       claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
-  implicit lazy val arbitraryOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]   =
+  implicit lazy val arbitrarySingleOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]       =
     Arbitrary(genOverpaymentsSingleClaim.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
 
-  implicit lazy val arbitraryOverpaymentsSingleGoodsClaim: Typeclass[SingleOverpaymentsClaim] =
+  implicit lazy val arbitraryScheduledOverpaymentsRequest: Typeclass[ScheduledOverpaymentsClaimRequest] =
+    Arbitrary(genOverpaymentsScheduledClaim.map { case (claim, _, _) => ScheduledOverpaymentsClaimRequest(claim) })
+
+  implicit lazy val arbitraryOverpaymentsSingleGoodsClaim: Typeclass[SingleOverpaymentsClaim]           =
     Arbitrary(
       for {
         (claim, _, _) <- genOverpaymentsSingleClaim
+      } yield claim
+    )
+
+  implicit lazy val arbitraryOverpaymentsScheduledGoodsClaim: Typeclass[ScheduledOverpaymentsClaim] =
+    Arbitrary(
+      for {
+        (claim, _, _) <- genOverpaymentsScheduledClaim
       } yield claim
     )
 

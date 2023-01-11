@@ -30,15 +30,7 @@ import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285ClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MultipleRejectedGoodsClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ScheduledRejectedGoodsClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SingleOverpaymentsClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimResponseEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
@@ -46,10 +38,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.ClaimToEmailMapper
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.OverpaymentsSingleClaimToEmailMapper
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mapper
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.OverpaymentsSingleClaimToTPI05Mapper
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -80,6 +70,15 @@ trait ClaimService {
     request: Request[_],
     tpi05Binder: OverpaymentsSingleClaimToTPI05Mapper,
     emailMapper: OverpaymentsSingleClaimToEmailMapper
+  ): EitherT[Future, Error, ClaimSubmitResponse]
+
+  def submitScheduledOverpaymentsClaim(
+    scheduledOverpaymentsClaim: ScheduledOverpaymentsClaimRequest
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: OverpaymentsScheduledClaimToTPI05Mapper,
+    emailMapper: OverpaymentsScheduledClaimToEmailMapper
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](
@@ -155,11 +154,36 @@ class DefaultClaimService @Inject() (
                                     ) { duplicateMrn =>
                                       declarationService
                                         .getDeclaration(duplicateMrn)
-                                        .subflatMap(x =>
-                                          x.toRight(Error(s"Could not retrieve duplicate display declaration"))
-                                            .map(_.some)
+                                        .subflatMap(_
+                                          .toRight(Error(s"Could not retrieve duplicate display declaration"))
+                                          .map(_.some)
                                         )
                                     }
+      result                     <- proceed((claimRequest.claim, declaration, maybeDuplicateDeclaratiion), claimRequest)
+    } yield result
+
+  def submitScheduledOverpaymentsClaim(
+                                        claimRequest: ScheduledOverpaymentsClaimRequest
+                                      )(implicit
+                                        hc: HeaderCarrier,
+                                        request: Request[_],
+                                        tpi05Binder: OverpaymentsScheduledClaimToTPI05Mapper,
+                                        emailMapper: OverpaymentsScheduledClaimToEmailMapper
+                                      ): EitherT[Future, Error, ClaimSubmitResponse] =
+    for {
+      declaration                <- declarationService
+        .getDeclaration(claimRequest.claim.movementReferenceNumber)
+        .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
+      maybeDuplicateDeclaratiion <- claimRequest.claim.duplicateMovementReferenceNumber.fold(
+        EitherT.rightT[Future, Error](None: Option[DisplayDeclaration])
+      ) { duplicateMrn =>
+        declarationService
+          .getDeclaration(duplicateMrn)
+          .subflatMap(_
+            .toRight(Error(s"Could not retrieve duplicate display declaration"))
+            .map(_.some)
+          )
+      }
       result                     <- proceed((claimRequest.claim, declaration, maybeDuplicateDeclaratiion), claimRequest)
     } yield result
 
