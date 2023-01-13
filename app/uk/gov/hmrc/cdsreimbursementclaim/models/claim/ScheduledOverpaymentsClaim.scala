@@ -23,17 +23,16 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
 final case class ScheduledOverpaymentsClaim(
   movementReferenceNumber: MRN,
-  duplicateMovementReferenceNumber: Option[MRN],
   claimantType: ClaimantType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
   whetherNorthernIreland: Boolean,
   additionalDetails: String,
-  reimbursementClaims: Map[TaxCode, BigDecimal],
+  reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithRefund]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument],
-  scheduledDocument: EvidenceDocument
+  scheduledDocument: EvidenceDocument,
+  supportingEvidences: Seq[EvidenceDocument]
 ) {
   def documents: Seq[EvidenceDocument] = scheduledDocument +: supportingEvidences
 }
