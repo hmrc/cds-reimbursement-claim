@@ -51,15 +51,11 @@ class OverpaymentsScheduledClaimMappingSpec
   "The OverpaymentsScheduled claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim) {
-      scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]) =>
+      scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration) =>
         val tpi05Request = overpaymentsScheduledClaimToTPI05Mapper map scheduledOverpaymentsData
 
-        val (claim, displayDeclaration, duplicateDeclaration) = scheduledOverpaymentsData
-        val declarant                                         = displayDeclaration.displayResponseDetail.declarantDetails
-        val nrdcDetailsMap                                    = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
-          .groupBy(_.taxType)
-          .mapValues(_.sortBy(_.taxType).headOption.value)
-          .mapValues(ndrc => ndrc.copy(amount = BigDecimal(ndrc.amount).roundToTwoDecimalPlaces.toString()))
+        val (claim, displayDeclaration) = scheduledOverpaymentsData
+        val declarant                   = displayDeclaration.displayResponseDetail.declarantDetails
 
         inside(tpi05Request) {
           case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details: RequestDetail))) =>
@@ -76,7 +72,7 @@ class OverpaymentsScheduledClaimMappingSpec
               'claimant (Some(if (claim.claimantType === Consignee) Importer else Representative)),
               'payeeIndicator (Some(if (claim.claimantType === Consignee) Importer else Representative)),
               'declarationMode (Some(DeclarationMode.ParentDeclaration)),
-              'claimAmountTotal (claim.reimbursementClaims.values.sum.roundToTwoDecimalPlaces.toString.some),
+              'claimAmountTotal (claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
               'reimbursementMethod (
                 Some(if (claim.reimbursementMethod === BankAccountTransfer) BankTransfer else Deferment)
               ),
@@ -279,129 +275,19 @@ class OverpaymentsScheduledClaimMappingSpec
                             )
                           )
                       ),
-                    NDRCDetails = claim.reimbursementClaims.toList.map { case (taxCode, reclaimAmount) =>
+                    NDRCDetails = claim.getClaimedReimbursements.map { reimbursement =>
                       NdrcDetails(
-                        paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
-                        paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
+                        paymentMethod = reimbursement.paymentMethod,
+                        paymentReference = reimbursement.paymentReference,
                         CMAEligible = None,
-                        taxType = taxCode,
-                        amount = nrdcDetailsMap.get(taxCode.value).value.amount,
-                        claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some
+                        taxType = reimbursement.taxCode,
+                        amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
+                        claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some
                       )
                     }.some
                   ) :: Nil
                 )
-              },
-              'duplicateMRNDetails (
-                duplicateDeclaration
-                  .map(_.displayResponseDetail)
-                  .map(details =>
-                    MrnDetail(
-                      MRNNumber = MRN(details.declarationId).some,
-                      acceptanceDate = AcceptanceDate
-                        .fromDisplayFormat(details.acceptanceDate)
-                        .flatMap(_.toTpi05DateString)
-                        .toOption,
-                      declarantReferenceNumber = details.declarantReferenceNumber,
-                      mainDeclarationReference = true.some,
-                      procedureCode = details.procedureCode.some,
-                      declarantDetails = {
-                        val declarantDetails = details.declarantDetails
-                        val contactDetails   = declarantDetails.contactDetails.value
-
-                        MRNInformation(
-                          EORI = declarantDetails.EORI,
-                          legalName = declarantDetails.legalName,
-                          establishmentAddress = Address(
-                            contactPerson = None,
-                            addressLine1 = declarantDetails.establishmentAddress.addressLine1.some,
-                            addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                            addressLine3 = declarantDetails.establishmentAddress.addressLine3,
-                            street = Street.fromLines(
-                              declarantDetails.establishmentAddress.addressLine1.some,
-                              declarantDetails.establishmentAddress.addressLine2
-                            ),
-                            city = declarantDetails.establishmentAddress.addressLine3,
-                            countryCode = declarantDetails.establishmentAddress.countryCode,
-                            postalCode = declarantDetails.establishmentAddress.postalCode,
-                            telephoneNumber = None,
-                            emailAddress = None
-                          ),
-                          contactDetails = ContactInformation(
-                            contactPerson = contactDetails.contactName,
-                            addressLine1 = contactDetails.addressLine1,
-                            addressLine2 = contactDetails.addressLine2,
-                            addressLine3 = contactDetails.addressLine3,
-                            street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
-                            city = contactDetails.addressLine3,
-                            countryCode = contactDetails.countryCode,
-                            postalCode = contactDetails.postalCode,
-                            telephoneNumber = contactDetails.telephone,
-                            faxNumber = None,
-                            emailAddress = contactDetails.emailAddress
-                          )
-                        ).some
-                      },
-                      consigneeDetails = {
-                        val consigneeDetails   = details.consigneeDetails.value
-                        val contactInformation = consigneeDetails.contactDetails.value
-
-                        MRNInformation(
-                          EORI = consigneeDetails.EORI,
-                          legalName = consigneeDetails.legalName,
-                          establishmentAddress = Address(
-                            contactPerson = None,
-                            addressLine1 = consigneeDetails.establishmentAddress.addressLine1.some,
-                            addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                            addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-                            street = Street.fromLines(
-                              consigneeDetails.establishmentAddress.addressLine1.some,
-                              consigneeDetails.establishmentAddress.addressLine2
-                            ),
-                            city = consigneeDetails.establishmentAddress.addressLine3,
-                            countryCode = consigneeDetails.establishmentAddress.countryCode,
-                            postalCode = consigneeDetails.establishmentAddress.postalCode,
-                            telephoneNumber = None,
-                            emailAddress = None
-                          ),
-                          contactDetails = ContactInformation(
-                            contactPerson = contactInformation.contactName,
-                            addressLine1 = contactInformation.addressLine1,
-                            addressLine2 = contactInformation.addressLine2,
-                            addressLine3 = contactInformation.addressLine3,
-                            street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
-                            city = contactInformation.addressLine3,
-                            countryCode = contactInformation.countryCode,
-                            postalCode = contactInformation.postalCode,
-                            telephoneNumber = contactInformation.telephone,
-                            faxNumber = None,
-                            emailAddress = contactInformation.emailAddress
-                          )
-                        ).some
-                      },
-                      bankDetails = claim.bankAccountDetails
-                        .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
-                        .orElse(
-                          displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
-                            BankDetails(
-                              bd.consigneeBankDetails.map(BankDetail.from),
-                              bd.declarantBankDetails.map(BankDetail.from)
-                            )
-                          )
-                        ),
-                      NDRCDetails = claim.reimbursementClaims.toList.map { case (taxCode, reclaimAmount) =>
-                        NdrcDetails(
-                          paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
-                          paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
-                          CMAEligible = None,
-                          taxType = taxCode,
-                          amount = nrdcDetailsMap.get(taxCode.value).value.amount,
-                          claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some
-                        )
-                      }.some
-                    )
-                  )
-              )
+              }
             )
         }
     }

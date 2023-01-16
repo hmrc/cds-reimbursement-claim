@@ -319,11 +319,11 @@ class ClaimServiceSpec
 
       "successfully submit a Scheduled Overpayments claim" in forAll(genOverpaymentsScheduledClaim, genC285EisRequest) {
         (
-          scheduledOverpaymentsClaimData: (ScheduledOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]),
+          scheduledOverpaymentsClaimData: (ScheduledOverpaymentsClaim, DisplayDeclaration),
           eisRequest: EisSubmitClaimRequest
         ) =>
-          val (claim, declaration, duplicateDeclaration) = scheduledOverpaymentsClaimData
-          val responseJsonBody                           = Json.parse(
+          val (claim, declaration) = scheduledOverpaymentsClaimData
+          val responseJsonBody     = Json.parse(
             """
                 |{
                 |    "postNewClaimsResponse": {
@@ -342,18 +342,17 @@ class ClaimServiceSpec
           val emailRequest        = EmailRequest(
             Email(claim.claimantInformation.contactInformation.emailAddress.value),
             claim.claimantInformation.contactInformation.contactPerson.value,
-            claim.reimbursementClaims.values.sum
+            claim.totalReimbursementAmount
           )
 
           inSequence {
             mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
+
             (overpaymentsScheduledClaimMapper
-              .map(_: (ScheduledOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])))
-              .expects((claim, declaration, duplicateDeclaration))
+              .map(_: (ScheduledOverpaymentsClaim, DisplayDeclaration)))
+              .expects((claim, declaration))
               .returning(Right(eisRequest))
-            (claim.duplicateMovementReferenceNumber, duplicateDeclaration).mapN(
-              mockDeclarationRetrieving(_)(_)
-            )
+
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))

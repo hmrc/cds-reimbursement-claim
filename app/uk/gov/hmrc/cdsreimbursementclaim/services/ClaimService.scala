@@ -154,37 +154,27 @@ class DefaultClaimService @Inject() (
                                     ) { duplicateMrn =>
                                       declarationService
                                         .getDeclaration(duplicateMrn)
-                                        .subflatMap(_
-                                          .toRight(Error(s"Could not retrieve duplicate display declaration"))
-                                          .map(_.some)
+                                        .subflatMap(
+                                          _.toRight(Error(s"Could not retrieve duplicate display declaration"))
+                                            .map(_.some)
                                         )
                                     }
       result                     <- proceed((claimRequest.claim, declaration, maybeDuplicateDeclaratiion), claimRequest)
     } yield result
 
   def submitScheduledOverpaymentsClaim(
-                                        claimRequest: ScheduledOverpaymentsClaimRequest
-                                      )(implicit
-                                        hc: HeaderCarrier,
-                                        request: Request[_],
-                                        tpi05Binder: OverpaymentsScheduledClaimToTPI05Mapper,
-                                        emailMapper: OverpaymentsScheduledClaimToEmailMapper
-                                      ): EitherT[Future, Error, ClaimSubmitResponse] =
+    claimRequest: ScheduledOverpaymentsClaimRequest
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: OverpaymentsScheduledClaimToTPI05Mapper,
+    emailMapper: OverpaymentsScheduledClaimToEmailMapper
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
     for {
-      declaration                <- declarationService
-        .getDeclaration(claimRequest.claim.movementReferenceNumber)
-        .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
-      maybeDuplicateDeclaratiion <- claimRequest.claim.duplicateMovementReferenceNumber.fold(
-        EitherT.rightT[Future, Error](None: Option[DisplayDeclaration])
-      ) { duplicateMrn =>
-        declarationService
-          .getDeclaration(duplicateMrn)
-          .subflatMap(_
-            .toRight(Error(s"Could not retrieve duplicate display declaration"))
-            .map(_.some)
-          )
-      }
-      result                     <- proceed((claimRequest.claim, declaration, maybeDuplicateDeclaratiion), claimRequest)
+      declaration <- declarationService
+                       .getDeclaration(claimRequest.claim.movementReferenceNumber)
+                       .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
+      result      <- proceed((claimRequest.claim, declaration), claimRequest)
     } yield result
 
   def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](claimRequest: RejectedGoodsClaimRequest[Claim])(implicit

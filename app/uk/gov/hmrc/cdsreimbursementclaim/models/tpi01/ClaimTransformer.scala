@@ -20,7 +20,7 @@ import cats.implicits.catsSyntaxEq
 
 abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
   private val ENTRY_NUMBER = "^[0-9]{9}[a-zA-Z]{1}[0-9]{8}$".r
-  private val MRN          = "^[0-9]{2}[a-zA-Z]{2}[0-9a-zA-Z]{13}[0-9]{1}$".r
+//  private val MRN          = "^[0-9]{2}[a-zA-Z]{2}[0-9a-zA-Z]{13}[0-9]{1}$".r
 
   final def convert(responseDetail: ResponseDetail, mapToCases: CDFPayCase => Option[Seq[T]]): Seq[S] = {
     val result = responseDetail.CDFPayCase

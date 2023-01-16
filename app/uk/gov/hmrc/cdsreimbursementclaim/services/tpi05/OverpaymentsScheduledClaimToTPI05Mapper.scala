@@ -16,27 +16,24 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.implicits.catsSyntaxEq
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, ScheduledOverpaymentsClaim, TaxCode, TypeOfClaimAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, ScheduledOverpaymentsClaim, TypeOfClaimAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsScheduledClaimToTPI05Mapper
-    extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] {
+    extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, DisplayDeclaration)] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
-    details: (ScheduledOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])
+    details: (ScheduledOverpaymentsClaim, DisplayDeclaration)
   ): Either[CdsError, EisSubmitClaimRequest] = {
-    val (claim, declaration, duplicateDeclaration) = details
-    val contactInfo                                = claim.claimantInformation.contactInformation
+    val (claim, declaration) = details
+    val contactInfo          = claim.claimantInformation.contactInformation
 
     (for {
       claimantEmail <- contactInfo.emailAddress.toRight(
@@ -64,7 +61,7 @@ class OverpaymentsScheduledClaimToTPI05Mapper
       )
       .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(claim.claimantType))
-      .withClaimedAmount(claim.reimbursementClaims.values.sum)
+      .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)
       .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Individual, claim.reimbursementMethod))
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Individual))
@@ -79,45 +76,35 @@ class OverpaymentsScheduledClaimToTPI05Mapper
         )
       )
       .withEORIDetails(eoriDetails)
-      .withMrnDetails(getMrnDetails(claim, declaration) :: Nil)
-      .withMaybeDuplicateMrnDetails(
-        duplicateDeclaration.map(d => getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId)), false))
-      )).flatMap(_.verify)
+      .withMrnDetails(getMrnDetails(claim, declaration.displayResponseDetail))).flatMap(_.verify)
   }
 
   private def getMrnDetails(
     claim: ScheduledOverpaymentsClaim,
-    displayDeclaration: DisplayDeclaration,
-    mrn: Option[MRN] = None,
-    includeAccountDetails: Boolean = true
-  ) = {
-    val nrdcDetails: List[DeclarationNdrcDetails] =
-      displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten.sortBy(x => TaxCode.getOrFail(x.taxType))
+    displayResponseDetail: DisplayResponseDetail
+  ): List[MrnDetail.Builder] = {
+    val claimedReimbursement = claim.getClaimedReimbursements
+
     MrnDetail.build
-      .withMrnNumber(mrn.getOrElse(claim.movementReferenceNumber))
-      .withAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate)
-      .withDeclarantReferenceNumber(displayDeclaration.displayResponseDetail.declarantReferenceNumber)
+      .withMrnNumber(claim.movementReferenceNumber)
+      .withAcceptanceDate(displayResponseDetail.acceptanceDate)
+      .withDeclarantReferenceNumber(displayResponseDetail.declarantReferenceNumber)
       .withWhetherMainDeclarationReference(true)
-      .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
-      .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
-      .withAccountDetails(if (includeAccountDetails) displayDeclaration.displayResponseDetail.accountDetails else None)
-      .withFirstNonEmptyBankDetails(
-        displayDeclaration.displayResponseDetail.bankDetails,
-        claim.bankAccountDetails
-      )
+      .withProcedureCode(displayResponseDetail.procedureCode)
+      .withDeclarantDetails(displayResponseDetail.declarantDetails)
+      .withConsigneeDetails(displayResponseDetail.consigneeDetails)
+      .withAccountDetails(displayResponseDetail.accountDetails)
+      .withFirstNonEmptyBankDetails(displayResponseDetail.bankDetails, claim.bankAccountDetails)
       .withNdrcDetails(
-        for {
-          (taxCode, reclaimAmount) <- claim.reimbursementClaims.toList
-          ndrcDetails              <- nrdcDetails.filter(_.taxType === taxCode.value)
-        } yield NdrcDetails.buildChecking(
-          taxCode,
-          ndrcDetails.paymentMethod,
-          ndrcDetails.paymentReference,
-          BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
-          reclaimAmount.roundToTwoDecimalPlaces
+        claimedReimbursement.map(reimbursement =>
+          NdrcDetails.buildChecking(
+            reimbursement.taxCode,
+            reimbursement.paymentMethod,
+            reimbursement.paymentReference,
+            reimbursement.paidAmount.roundToTwoDecimalPlaces,
+            reimbursement.claimAmount.roundToTwoDecimalPlaces
+          )
         )
       )
-
-  }
+  } :: Nil
 }
