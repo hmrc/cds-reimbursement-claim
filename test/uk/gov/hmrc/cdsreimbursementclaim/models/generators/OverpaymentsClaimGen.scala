@@ -194,7 +194,7 @@ object OverpaymentsClaimGen {
       claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
-  val genScheduledOverpaymentClaims: Gen[Map[String, Map[TaxCode, AmountPaidWithRefund]]] =
+  val genScheduledOverpaymentClaims: Gen[Map[String, Map[TaxCode, AmountPaidWithCorrect]]] =
     Gen
       .nonEmptyListOf(
         Gen
@@ -204,7 +204,7 @@ object OverpaymentsClaimGen {
             Gen
               .nonEmptyListOf(
                 genTaxCode.flatMap(taxCode =>
-                  Gen.posNum[Long].map(num => (taxCode, AmountPaidWithRefund(BigDecimal(num + 1), BigDecimal(num))))
+                  Gen.posNum[Long].map(num => (taxCode, AmountPaidWithCorrect(BigDecimal(num + 1), BigDecimal(num))))
                 )
               )
               .map(list => id -> list.toMap)

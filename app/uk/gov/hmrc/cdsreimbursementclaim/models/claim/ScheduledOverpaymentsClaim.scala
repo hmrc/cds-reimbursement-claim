@@ -30,19 +30,19 @@ final case class ScheduledOverpaymentsClaim(
   basisOfClaim: BasisOfClaim,
   whetherNorthernIreland: Boolean,
   additionalDetails: String,
-  reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithRefund]],
+  reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithCorrect]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   scheduledDocument: EvidenceDocument,
   supportingEvidences: Seq[EvidenceDocument]
 ) {
-  lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithRefund] =
+  lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithCorrect] =
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
   def documents: Seq[EvidenceDocument] = scheduledDocument +: supportingEvidences
 
   def totalReimbursementAmount: BigDecimal =
-    reimbursementClaims.values.map(_.values.map(_.refundAmount).sum).sum
+    reimbursementClaims.values.map(_.values.map(_.correctAmount).sum).sum
 
   def getClaimedReimbursements: List[ClaimedReimbursement] =
     combinedReimbursementClaims.toList
@@ -50,7 +50,7 @@ final case class ScheduledOverpaymentsClaim(
         ClaimedReimbursement(
           taxCode = taxCode,
           paidAmount = reimbursement.paidAmount,
-          claimAmount = reimbursement.refundAmount
+          claimAmount = reimbursement.correctAmount
         )
       }
 
@@ -58,14 +58,14 @@ final case class ScheduledOverpaymentsClaim(
 
 object ScheduledOverpaymentsClaim {
 
-  implicit val semigroup: Semigroup[Map[TaxCode, AmountPaidWithRefund]] =
-    (x: Map[TaxCode, AmountPaidWithRefund], y: Map[TaxCode, AmountPaidWithRefund]) =>
+  implicit val semigroup: Semigroup[Map[TaxCode, AmountPaidWithCorrect]] =
+    (x: Map[TaxCode, AmountPaidWithCorrect], y: Map[TaxCode, AmountPaidWithCorrect]) =>
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
-        .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithRefund.empty))
+        .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithCorrect.empty))
 
-  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithRefund]] =
-    MapFormat[TaxCode, AmountPaidWithRefund]
+  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithCorrect]] =
+    MapFormat[TaxCode, AmountPaidWithCorrect]
 
   implicit val format: Format[ScheduledOverpaymentsClaim] = Json.format[ScheduledOverpaymentsClaim]
 }
