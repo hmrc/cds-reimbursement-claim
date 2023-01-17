@@ -34,7 +34,7 @@ import java.net.URL
 import scala.jdk.CollectionConverters.asScalaBufferConverter
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
-object OverpaymentsSingleClaimGen {
+object OverpaymentsClaimGen {
 
   lazy val genUrl: Gen[URL] =
     for {
@@ -144,6 +144,40 @@ object OverpaymentsSingleClaimGen {
       duplicateDeclaration
     )
 
+  lazy val genOverpaymentsScheduledClaim: Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+    for {
+      mrn                      <- genMRN
+      claimantType             <- Gen.oneOf(ClaimantType.values)
+      claimantInformation      <- genClaimantInformation
+      basisOfClaim             <- genBasisOfClaim
+      bankAccountDetails       <- Gen.option(genBankAccountDetails)
+      reimbursementMethod      <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      declaration              <- genDisplayDeclaration.map { generatedDeclaration =>
+                                    val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
+                                    DisplayDeclaration(drd)
+                                  }
+      claims                   <- genScheduledOverpaymentClaims
+      evidences                <- Gen.nonEmptyListOf(genEvidences)
+      scheduledDocument        <- genEvidences
+      whetherInNorthernIreland <- Gen.oneOf(true, false)
+      additionalDetails        <- genRandomString
+    } yield (
+      ScheduledOverpaymentsClaim(
+        movementReferenceNumber = mrn,
+        claimantType = claimantType,
+        claimantInformation = claimantInformation,
+        basisOfClaim = basisOfClaim,
+        whetherNorthernIreland = whetherInNorthernIreland,
+        additionalDetails = additionalDetails,
+        reimbursementClaims = claims,
+        reimbursementMethod = reimbursementMethod,
+        bankAccountDetails = bankAccountDetails,
+        supportingEvidences = evidences,
+        scheduledDocument = scheduledDocument
+      ),
+      declaration
+    )
+
   def genClaimAmount(ndrcDetails: List[NdrcDetails]): Gen[Map[TaxCode, BigDecimal]] = {
     val possibleValues = ndrcDetails.map(detail => TaxCode.getOrFail(detail.taxType) -> detail.amount.toDouble)
     Gen
@@ -160,13 +194,41 @@ object OverpaymentsSingleClaimGen {
       claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
-  implicit lazy val arbitraryOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]   =
+  val genScheduledOverpaymentClaims: Gen[Map[String, Map[TaxCode, AmountPaidWithCorrect]]] =
+    Gen
+      .nonEmptyListOf(
+        Gen
+          .nonEmptyListOf(Gen.oneOf('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'))
+          .map(String.valueOf)
+          .flatMap { id =>
+            Gen
+              .nonEmptyListOf(
+                genTaxCode.flatMap(taxCode =>
+                  Gen.posNum[Long].map(num => (taxCode, AmountPaidWithCorrect(BigDecimal(num + 1), BigDecimal(num))))
+                )
+              )
+              .map(list => id -> list.toMap)
+          }
+      )
+      .map(_.toMap)
+
+  implicit lazy val arbitrarySingleOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]       =
     Arbitrary(genOverpaymentsSingleClaim.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
 
-  implicit lazy val arbitraryOverpaymentsSingleGoodsClaim: Typeclass[SingleOverpaymentsClaim] =
+  implicit lazy val arbitraryScheduledOverpaymentsRequest: Typeclass[ScheduledOverpaymentsClaimRequest] =
+    Arbitrary(genOverpaymentsScheduledClaim.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
+
+  implicit lazy val arbitraryOverpaymentsSingleGoodsClaim: Typeclass[SingleOverpaymentsClaim]           =
     Arbitrary(
       for {
         (claim, _, _) <- genOverpaymentsSingleClaim
+      } yield claim
+    )
+
+  implicit lazy val arbitraryOverpaymentsScheduledGoodsClaim: Typeclass[ScheduledOverpaymentsClaim] =
+    Arbitrary(
+      for {
+        (claim, _) <- genOverpaymentsScheduledClaim
       } yield claim
     )
 

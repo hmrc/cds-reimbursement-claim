@@ -33,19 +33,19 @@ import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, SingleOverpaymentsClaim, SingleOverpaymentsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaim, ScheduledOverpaymentsClaimRequest, SingleOverpaymentsClaim, SingleOverpaymentsClaimRequest, SingleRejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -86,6 +86,9 @@ class ClaimServiceSpec
   implicit val overpaymentsSingleClaimMapper: OverpaymentsSingleClaimToTPI05Mapper =
     mock[OverpaymentsSingleClaimToTPI05Mapper]
 
+  implicit val overpaymentsScheduledClaimMapper: OverpaymentsScheduledClaimToTPI05Mapper =
+    mock[OverpaymentsScheduledClaimToTPI05Mapper]
+
   implicit val singleRejectedGoodsClaimMapper
     : ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])] =
     mock[ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])]]
@@ -99,6 +102,9 @@ class ClaimServiceSpec
 
   implicit val overpaymentsSingleClaimEmailMapperMock: OverpaymentsSingleClaimToEmailMapper =
     mock[OverpaymentsSingleClaimToEmailMapper]
+
+  implicit val overpaymentsScheduledClaimEmailMapperMock: OverpaymentsScheduledClaimToEmailMapper =
+    mock[OverpaymentsScheduledClaimToEmailMapper]
 
   implicit val singleRejectedGoodsClaimEmailMapperMock
     : ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])] =
@@ -308,6 +314,61 @@ class ClaimServiceSpec
 
           await(
             claimService.submitSingleOverpaymentsClaim(SingleOverpaymentsClaimRequest(claim)).value
+          ) shouldBe Right(submitClaimResponse)
+      }
+
+      "successfully submit a Scheduled Overpayments claim" in forAll(genOverpaymentsScheduledClaim, genC285EisRequest) {
+        (
+          scheduledOverpaymentsClaimData: (ScheduledOverpaymentsClaim, DisplayDeclaration),
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val (claim, declaration) = scheduledOverpaymentsClaimData
+          val responseJsonBody     = Json.parse(
+            """
+                |{
+                |    "postNewClaimsResponse": {
+                |        "responseCommon": {
+                |            "status": "OK",
+                |            "processingDate": "2021-01-20T12:07540Z",
+                |            "CDFPayService": "NDRC",
+                |            "CDFPayCaseNumber": "4374422408"
+                |        }
+                |    }
+                |}
+                |""".stripMargin
+          )
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(claim.claimantInformation.contactInformation.emailAddress.value),
+            claim.claimantInformation.contactInformation.contactPerson.value,
+            claim.totalReimbursementAmount
+          )
+
+          inSequence {
+            mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
+
+            (overpaymentsScheduledClaimMapper
+              .map(_: (ScheduledOverpaymentsClaim, DisplayDeclaration)))
+              .expects((claim, declaration))
+              .returning(Right(eisRequest))
+
+            mockAuditSubmitClaimEvent(eisRequest)
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = ScheduledOverpaymentsClaimRequest(claim),
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockClaimEmailRequestMapping(scheduledOverpaymentsClaimData, emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(
+            claimService.submitScheduledOverpaymentsClaim(ScheduledOverpaymentsClaimRequest(claim)).value
           ) shouldBe Right(submitClaimResponse)
       }
 

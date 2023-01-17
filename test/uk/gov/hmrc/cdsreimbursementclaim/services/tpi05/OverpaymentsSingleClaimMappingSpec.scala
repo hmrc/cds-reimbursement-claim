@@ -36,7 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMet
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsSingleClaimGen.genOverpaymentsSingleClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsSingleClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 

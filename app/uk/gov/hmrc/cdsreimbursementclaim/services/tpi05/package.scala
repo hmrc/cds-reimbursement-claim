@@ -26,6 +26,9 @@ package object tpi05 {
   implicit val overpaymentsSingleClaimToTPI05Mapper: OverpaymentsSingleClaimToTPI05Mapper =
     new OverpaymentsSingleClaimToTPI05Mapper
 
+  implicit val overpaymentsScheduledClaimToTPI05Mapper: OverpaymentsScheduledClaimToTPI05Mapper =
+    new OverpaymentsScheduledClaimToTPI05Mapper
+
   implicit val singleRejectedGoodsClaimToTPI05Mapper: RejectedGoodsClaimToTPI05Mapper[SingleRejectedGoodsClaim] =
     new RejectedGoodsClaimToTPI05Mapper[SingleRejectedGoodsClaim]
 
