@@ -42,7 +42,7 @@ final case class ScheduledOverpaymentsClaim(
   def documents: Seq[EvidenceDocument] = scheduledDocument +: supportingEvidences
 
   def totalReimbursementAmount: BigDecimal =
-    reimbursementClaims.values.map(_.values.map(_.correctAmount).sum).sum
+    reimbursementClaims.values.map(_.values.map(_.refundAmount).sum).sum
 
   def getClaimedReimbursements: List[ClaimedReimbursement] =
     combinedReimbursementClaims.toList
@@ -50,7 +50,7 @@ final case class ScheduledOverpaymentsClaim(
         ClaimedReimbursement(
           taxCode = taxCode,
           paidAmount = reimbursement.paidAmount,
-          claimAmount = reimbursement.correctAmount
+          claimAmount = reimbursement.refundAmount
         )
       }
 

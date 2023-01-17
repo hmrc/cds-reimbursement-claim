@@ -21,7 +21,9 @@ import play.api.libs.json.Format
 import play.api.libs.json.Json
 import cats.kernel.Semigroup
 
-final case class AmountPaidWithCorrect(paidAmount: BigDecimal, correctAmount: BigDecimal)
+final case class AmountPaidWithCorrect(paidAmount: BigDecimal, correctAmount: BigDecimal) {
+  val refundAmount: BigDecimal = paidAmount - correctAmount
+}
 
 object AmountPaidWithCorrect {
 
