@@ -30,7 +30,7 @@ import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleOverpaymentsClaimRequest, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimResponseEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
@@ -38,8 +38,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsMultipleClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -70,6 +70,15 @@ trait ClaimService {
     request: Request[_],
     tpi05Binder: OverpaymentsSingleClaimToTPI05Mapper,
     emailMapper: OverpaymentsSingleClaimToEmailMapper
+  ): EitherT[Future, Error, ClaimSubmitResponse]
+
+  def submitMultipleOverpaymentsClaim(
+    multipleOverpaymentsClaim: MultipleOverpaymentsClaimRequest
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: OverpaymentsMultipleClaimToTPI05Mapper,
+    emailMapper: OverpaymentsMultipleClaimToEmailMapper
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitScheduledOverpaymentsClaim(
@@ -162,6 +171,17 @@ class DefaultClaimService @Inject() (
       result                     <- proceed((claimRequest.claim, declaration, maybeDuplicateDeclaratiion), claimRequest)
     } yield result
 
+  def submitMultipleOverpaymentsClaim(
+    claimRequest: MultipleOverpaymentsClaimRequest
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_],
+    tpi05Binder: OverpaymentsMultipleClaimToTPI05Mapper,
+    emailMapper: OverpaymentsMultipleClaimToEmailMapper
+  ): EitherT[Future, Error, ClaimSubmitResponse] =
+    obtainAcc14Declarations(claimRequest.claim.movementReferenceNumbers)
+      .flatMap(declarations => proceed((claimRequest.claim, declarations), claimRequest))
+
   def submitScheduledOverpaymentsClaim(
     claimRequest: ScheduledOverpaymentsClaimRequest
   )(implicit
@@ -196,7 +216,7 @@ class DefaultClaimService @Inject() (
   ): EitherT[Future, Error, List[DisplayDeclaration]] =
     for {
       decs <- declarations
-      dec  <- maybeDeclaration.subflatMap(aaa => aaa.toRight(Error(s"Could not retrieve display declaration $mrn")))
+      dec  <- maybeDeclaration.subflatMap(_.toRight(Error(s"Could not retrieve display declaration $mrn")))
     } yield dec :: decs
 
   def obtainAcc14Declarations(mrns: List[MRN])(implicit

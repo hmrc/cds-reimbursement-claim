@@ -59,6 +59,14 @@ class SubmitClaimController @Inject() (
     }
   }
 
+  final val submitMultipleOverpaymentsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
+    withJsonBody[MultipleOverpaymentsClaimRequest] {
+      uploadDocumentsOnce {
+        claimService.submitMultipleOverpaymentsClaim(_)
+      }
+    }
+  }
+
   final val submitScheduledOverpaymentsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[ScheduledOverpaymentsClaimRequest] {
       uploadDocumentsOnce {

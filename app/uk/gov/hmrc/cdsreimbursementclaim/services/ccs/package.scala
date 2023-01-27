@@ -26,6 +26,9 @@ package object ccs {
   implicit val singleOverpaymentsClaimToDec64FilesMapper: SingleOverpaymentsClaimToDec64FilesMapper =
     new SingleOverpaymentsClaimToDec64FilesMapper
 
+  implicit val multipleOverpaymentsClaimToDec64FilesMapper: MultipleOverpaymentsClaimToDec64FilesMapper =
+    new MultipleOverpaymentsClaimToDec64FilesMapper
+
   implicit val scheduledOverpaymentsClaimToDec64FilesMapper: ScheduledOverpaymentsClaimToDec64FilesMapper =
     new ScheduledOverpaymentsClaimToDec64FilesMapper
 

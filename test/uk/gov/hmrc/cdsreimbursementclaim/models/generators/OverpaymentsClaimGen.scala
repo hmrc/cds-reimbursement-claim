@@ -178,6 +178,47 @@ object OverpaymentsClaimGen {
       declaration
     )
 
+  lazy val genOverpaymentsMultipleClaim: Gen[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
+    for {
+//      numMrns                  <- Gen.choose(2, 10)
+      numMrns                  <- Gen.choose(3, 3)
+      mrns                     <- Gen.listOfN(numMrns, genMRN)
+      claimantType             <- Gen.oneOf(ClaimantType.values)
+      claimantInformation      <- genClaimantInformation
+      basisOfClaim             <- genBasisOfClaim
+      bankAccountDetails       <- Gen.option(genBankAccountDetails)
+      reimbursementMethod      <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      numEvidences             <- Gen.choose(2, 5)
+      evidences                <- Gen.listOfN(numEvidences, genEvidences)
+      declarations             <- Gen
+                                    .sequence(
+                                      mrns.map(mrn =>
+                                        genDisplayDeclaration.map { generatedDeclaration =>
+                                          val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
+                                          DisplayDeclaration(drd)
+                                        }
+                                      )
+                                    )
+                                    .map(_.asScala.toList)
+      claims                   <- Gen.sequence(declarations.map(declaration => genMultipleClaimsFromDisplayDeclaration(declaration)))
+      whetherInNorthernIreland <- Gen.oneOf(true, false)
+      additionalDetails        <- genRandomString
+    } yield (
+      MultipleOverpaymentsClaim(
+        movementReferenceNumbers = mrns,
+        claimantType = claimantType,
+        claimantInformation = claimantInformation,
+        basisOfClaim = basisOfClaim,
+        whetherNorthernIreland = whetherInNorthernIreland,
+        additionalDetails = additionalDetails,
+        reimbursementClaims = claims.asScala.toMap,
+        reimbursementMethod = reimbursementMethod,
+        bankAccountDetails = bankAccountDetails,
+        supportingEvidences = evidences
+      ),
+      declarations
+    )
+
   def genClaimAmount(ndrcDetails: List[NdrcDetails]): Gen[Map[TaxCode, BigDecimal]] = {
     val possibleValues = ndrcDetails.map(detail => TaxCode.getOrFail(detail.taxType) -> detail.amount.toDouble)
     Gen
@@ -194,7 +235,33 @@ object OverpaymentsClaimGen {
       claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
+  def genMultipleClaimsFromDisplayDeclaration(
+    displayDeclaration: DisplayDeclaration
+  ): Gen[(String, Map[TaxCode, AmountPaidWithCorrect])] =
+    for {
+      claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
+                       .flatMap(_.map { case (x, y) => x -> AmountPaidWithCorrect(y + 1, y) })
+    } yield (displayDeclaration.displayResponseDetail.declarationId, claimAmount)
+
   val genScheduledOverpaymentClaims: Gen[Map[String, Map[TaxCode, AmountPaidWithCorrect]]] =
+    Gen
+      .nonEmptyListOf(
+        Gen
+          .nonEmptyListOf(Gen.oneOf('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'))
+          .map(String.valueOf)
+          .flatMap { id =>
+            Gen
+              .nonEmptyListOf(
+                genTaxCode.flatMap(taxCode =>
+                  Gen.posNum[Long].map(num => (taxCode, AmountPaidWithCorrect(BigDecimal(num + 1), BigDecimal(num))))
+                )
+              )
+              .map(list => id -> list.toMap)
+          }
+      )
+      .map(_.toMap)
+
+  val genMultipleOverpaymentClaims: Gen[Map[String, Map[TaxCode, AmountPaidWithCorrect]]] =
     Gen
       .nonEmptyListOf(
         Gen
@@ -215,6 +282,9 @@ object OverpaymentsClaimGen {
   implicit lazy val arbitrarySingleOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]       =
     Arbitrary(genOverpaymentsSingleClaim.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
 
+  implicit lazy val arbitraryMultipleOverpaymentsRequest: Typeclass[MultipleOverpaymentsClaimRequest]   =
+    Arbitrary(genOverpaymentsMultipleClaim.map { case (claim, _) => MultipleOverpaymentsClaimRequest(claim) })
+
   implicit lazy val arbitraryScheduledOverpaymentsRequest: Typeclass[ScheduledOverpaymentsClaimRequest] =
     Arbitrary(genOverpaymentsScheduledClaim.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
 
@@ -222,6 +292,13 @@ object OverpaymentsClaimGen {
     Arbitrary(
       for {
         (claim, _, _) <- genOverpaymentsSingleClaim
+      } yield claim
+    )
+
+  implicit lazy val arbitraryOverpaymentsMultipleGoodsClaim: Typeclass[MultipleOverpaymentsClaim] =
+    Arbitrary(
+      for {
+        (claim, _) <- genOverpaymentsMultipleClaim
       } yield claim
     )
 
