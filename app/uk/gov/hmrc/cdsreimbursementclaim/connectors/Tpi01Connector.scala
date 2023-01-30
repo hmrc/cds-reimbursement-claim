@@ -38,7 +38,7 @@ class Tpi01Connector @Inject() (
   import Tpi01Connector._
 
   private val getClaimsUrl: String =
-    s"${config.baseUrl("claim")}/tpi/getreimbursementclaims/v1"
+    s"${config.baseUrl("claim")}/tpi/getpostclearancecases/v1"
 
   def getClaims(eori: Eori, claimsSelector: ClaimsSelector)(implicit
     hc: HeaderCarrier
