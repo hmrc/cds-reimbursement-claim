@@ -39,7 +39,7 @@ class Tpi02Connector @Inject() (
   import Tpi02Connector._
 
   private val getSpecificClaimUrl: String =
-    s"${config.baseUrl("claim")}/tpi/getspecificclaim/v1"
+    s"${config.baseUrl("claim")}/tpi/getspecificcase/v1"
 
   def getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)(implicit
     hc: HeaderCarrier

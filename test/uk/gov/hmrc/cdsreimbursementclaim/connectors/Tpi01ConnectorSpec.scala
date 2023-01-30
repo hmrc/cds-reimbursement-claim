@@ -47,7 +47,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
   "TP01Connector" when {
     "handling request for claims" must {
       "get the 200 NDRC claims response" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response200NdrcResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
@@ -63,7 +63,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
         }
       }
       "get the 200 Securities claims response" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response200SctyResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
@@ -79,7 +79,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
         }
       }
       "get the 200 Ndrc and Securities claims response" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response200NdcrAndSctyResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
@@ -95,7 +95,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
         }
       }
       "get the 200 empty claims response" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response200NoClaimsResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
@@ -108,7 +108,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
         }
       }
       "get the 400 missing field error" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response400MissingFieldResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
@@ -125,7 +125,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
         }
       }
       "get the 400 pattern error" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response400PatternErrorResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
@@ -142,7 +142,7 @@ class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with Vali
         }
       }
       "get the 500 system timeout error" in {
-        givenEndpointStub { case POST(p"/tpi/getreimbursementclaims/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getpostclearancecases/v1") =>
           Tpi01TestData.tpi01Response500SystemTimeoutErrorResult
         }(validateTpi01Request) {
           givenTpi01Connector { connector =>
