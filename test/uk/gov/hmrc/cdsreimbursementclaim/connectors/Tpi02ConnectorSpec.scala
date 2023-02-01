@@ -49,7 +49,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
   "Tpi02Connector" when {
     "handling request for claims" must {
       "get the 200 NDRC claim response" in {
-        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response200NdrcClaimResult
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
@@ -68,7 +68,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 200 SCTY claim response" in {
-        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response200SctyClaimResult
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
@@ -87,7 +87,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 200 NDRC no claims found response" in {
-        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response200NoClaimsFoundResult
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
@@ -103,7 +103,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 400 missing field error" in {
-        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response400MissingFieldResult
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
@@ -120,7 +120,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 400 pattern error" in {
-        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response400PatternErrorResult
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
@@ -137,7 +137,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }
       }
       "get the 500 system timeout error" in {
-        givenEndpointStub { case POST(p"/tpi/getspecificclaim/v1") =>
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response500SystemTimeoutErrorResult
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
