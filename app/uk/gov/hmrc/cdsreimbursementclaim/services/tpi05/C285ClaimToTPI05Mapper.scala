@@ -29,6 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
+@deprecated("IS replaced by journey specific overpayments TPI05 mappers")
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
 
   // todo CDSR-1795 TPI05 creation and validation - factor out common code

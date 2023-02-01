@@ -27,6 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
 
+@deprecated("Is replaced by classes of type: OverpaymentsClaim")
 final case class C285Claim(
   id: UUID,
   typeOfClaim: TypeOfClaimAnswer,

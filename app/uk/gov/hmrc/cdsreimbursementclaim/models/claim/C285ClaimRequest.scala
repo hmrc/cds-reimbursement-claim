@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.util.UUID
 
+@deprecated("IS replaced by journey specific Overpayments Claim request objects")
 final case class C285ClaimRequest(
   id: UUID,
   claim: C285Claim,
