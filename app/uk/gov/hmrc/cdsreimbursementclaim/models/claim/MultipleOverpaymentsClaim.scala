@@ -17,11 +17,13 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.implicits.catsSyntaxSemigroup
-import cats.kernel.Semigroup
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.Reads.minLength
+import play.api.libs.json.{Format, JsPath, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
+import scala.collection.immutable.Seq
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 final case class MultipleOverpaymentsClaim(
@@ -31,44 +33,60 @@ final case class MultipleOverpaymentsClaim(
   basisOfClaim: BasisOfClaim,
   whetherNorthernIreland: Boolean,
   additionalDetails: String,
-  reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithCorrect]],
+  reimbursementClaims: Map[MRN, Map[TaxCode, BigDecimal]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument]
-) {
+) extends OverpaymentsClaim {
 
   def leadMrn: MRN = movementReferenceNumbers.head
 
-  lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithCorrect] =
+  def documents: Seq[EvidenceDocument] = supportingEvidences
+
+  lazy val combinedReimbursementClaims: Map[TaxCode, BigDecimal] =
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
   def totalReimbursementAmount: BigDecimal =
-    reimbursementClaims.values.map(_.values.map(_.refundAmount).sum).sum
+    reimbursementClaims.flatMap(_._2.values).sum
 
-  def getClaimedReimbursements: List[ClaimedReimbursement] =
-    combinedReimbursementClaims.toList
-      .map { case (taxCode, reimbursement) =>
-        ClaimedReimbursement(
-          taxCode = taxCode,
-          paidAmount = reimbursement.paidAmount,
-          claimAmount = reimbursement.refundAmount
-        )
-      }
-
+  override def bankAccountDetailsAnswer: Option[BankAccountDetails] = bankAccountDetails
 }
 
 object MultipleOverpaymentsClaim {
 
-  implicit val semigroup: Semigroup[Map[TaxCode, AmountPaidWithCorrect]] =
-    (x: Map[TaxCode, AmountPaidWithCorrect], y: Map[TaxCode, AmountPaidWithCorrect]) =>
-      (x.toSeq ++ y.toSeq)
-        .groupBy(_._1)
-        .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithCorrect.empty))
+  implicit lazy val reimbursementFormat: Format[Map[TaxCode, BigDecimal]] =
+    MapFormat[TaxCode, BigDecimal]
 
-  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithCorrect]] =
-    MapFormat[TaxCode, AmountPaidWithCorrect]
+  implicit lazy val mrnsReimbursementFormat: Format[Map[MRN, Map[TaxCode, BigDecimal]]] =
+    MapFormat[MRN, Map[TaxCode, BigDecimal]]
 
-  implicit val format: Format[MultipleOverpaymentsClaim] = Json.format[MultipleOverpaymentsClaim]
+  implicit val format: Format[MultipleOverpaymentsClaim] =
+    Format(
+      (
+        (JsPath \ "movementReferenceNumbers").read[List[MRN]](minLength[List[MRN]](2)) and
+          (JsPath \ "claimantType").read[ClaimantType] and
+          (JsPath \ "claimantInformation").read[ClaimantInformation] and
+          (JsPath \ "basisOfClaim").read[BasisOfClaim] and
+          (JsPath \ "whetherNorthernIreland").read[Boolean] and
+          (JsPath \ "additionalDetails").read[String] and
+          (JsPath \ "reimbursementClaims").read[Map[MRN, Map[TaxCode, BigDecimal]]] and
+          (JsPath \ "reimbursementMethod").read[ReimbursementMethodAnswer] and
+          (JsPath \ "bankAccountDetails").readNullable[BankAccountDetails] and
+          (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]]
+      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _)),
+      (
+        (JsPath \ "movementReferenceNumbers").write[List[MRN]] and
+          (JsPath \ "claimantType").write[ClaimantType] and
+          (JsPath \ "claimantInformation").write[ClaimantInformation] and
+          (JsPath \ "basisOfClaim").write[BasisOfClaim] and
+          (JsPath \ "whetherNorthernIreland").write[Boolean] and
+          (JsPath \ "additionalDetails").write[String] and
+          (JsPath \ "reimbursementClaims").write[Map[MRN, Map[TaxCode, BigDecimal]]] and
+          (JsPath \ "reimbursementMethod").write[ReimbursementMethodAnswer] and
+          (JsPath \ "bankAccountDetails").writeNullable[BankAccountDetails] and
+          (JsPath \ "supportingEvidences").write[Seq[EvidenceDocument]]
+      )(unlift(MultipleOverpaymentsClaim.unapply))
+    )
 }
 
 final case class MultipleOverpaymentsClaimRequest(claim: MultipleOverpaymentsClaim)

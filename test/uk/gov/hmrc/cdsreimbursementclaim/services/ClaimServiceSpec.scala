@@ -378,61 +378,63 @@ class ClaimServiceSpec
           ) shouldBe Right(submitClaimResponse)
       }
 
-//      "successfully submit a multiple Overpayments claim" in forAll(genOverpaymentsMultipleClaim, genC285EisRequest) {
-//        (
-//          multipleOverpaymentsClaimData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]),
-//          eisRequest: EisSubmitClaimRequest
-//        ) =>
-//          val (claim, declarations) = multipleOverpaymentsClaimData
-//          val responseJsonBody      = Json.parse(
-//            """
-//              |{
-//              |    "postNewClaimsResponse": {
-//              |        "responseCommon": {
-//              |            "status": "OK",
-//              |            "processingDate": "2021-01-20T12:07540Z",
-//              |            "CDFPayService": "NDRC",
-//              |            "CDFPayCaseNumber": "4374422408"
-//              |        }
-//              |    }
-//              |}
-//              |""".stripMargin
-//          )
-//
-//          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
-//          val emailRequest        = EmailRequest(
-//            Email(claim.claimantInformation.contactInformation.emailAddress.value),
-//            claim.claimantInformation.contactInformation.contactPerson.value,
-//            claim.totalReimbursementAmount
-//          )
-//
-//          inSequence {
-//            declarations.foreach { dd =>
-//              val mrn = MRN(dd.displayResponseDetail.declarationId)
-//              mockDeclarationRetrieving(mrn)(dd)
-//            }
-//
-//            mockClaimMapping(multipleOverpaymentsClaimData, eisRequest)
-//
-//            mockAuditSubmitClaimEvent(eisRequest)
-//
-//            mockSubmitClaim(eisRequest)(
-//              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
-//            )
-//            mockAuditSubmitClaimResponseEvent(
-//              httpStatus = 200,
-//              responseBody = Some(responseJsonBody),
-//              submitClaimRequest = MultipleOverpaymentsClaimRequest(claim),
-//              eisSubmitClaimRequest = eisRequest
-//            )
-//            mockClaimEmailRequestMapping((claim, declarations), emailRequest)
-//            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
-//          }
-//
-//          await(
-//            claimService.submitMultipleOverpaymentsClaim(MultipleOverpaymentsClaimRequest(claim)).value
-//          ) shouldBe Right(submitClaimResponse)
-//      }
+      "successfully submit a multiple Overpayments claim" in forAll {
+        (
+          multipleOverpaymentsClaimData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]),
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val claim                = multipleOverpaymentsClaimData._1
+          val declarations         = multipleOverpaymentsClaimData._2
+          val reversedDeclarations = declarations.reverse
+          val responseJsonBody     = Json.parse(
+            """
+              |{
+              |    "postNewClaimsResponse": {
+              |        "responseCommon": {
+              |            "status": "OK",
+              |            "processingDate": "2021-01-20T12:07540Z",
+              |            "CDFPayService": "NDRC",
+              |            "CDFPayCaseNumber": "4374422408"
+              |        }
+              |    }
+              |}
+              |""".stripMargin
+          )
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(claim.claimantInformation.contactInformation.emailAddress.value),
+            claim.claimantInformation.contactInformation.contactPerson.value,
+            claim.reimbursementClaims.values.flatMap(_.values).sum
+          )
+
+          inSequence {
+            declarations.foreach { dd =>
+              val mrn = MRN(dd.displayResponseDetail.declarationId)
+              mockDeclarationRetrieving(mrn)(dd)
+            }
+
+            mockClaimMapping((claim, reversedDeclarations), eisRequest)
+
+            mockAuditSubmitClaimEvent(eisRequest)
+
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = MultipleOverpaymentsClaimRequest(claim),
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockClaimEmailRequestMapping((claim, reversedDeclarations), emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(
+            claimService.submitMultipleOverpaymentsClaim(MultipleOverpaymentsClaimRequest(claim)).value
+          ) shouldBe Right(submitClaimResponse)
+      }
 
       "successfully submit a Single Rejected Goods claim" in forAll {
         (
@@ -487,8 +489,9 @@ class ClaimServiceSpec
           details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]),
           eisRequest: EisSubmitClaimRequest
         ) =>
-          val claim        = details._1
-          val declarations = details._2.reverse
+          val claim                = details._1
+          val declarations         = details._2
+          val reversedDeclarations = declarations.reverse
 
           val responseJsonBody = Json.parse(
             """
@@ -513,11 +516,11 @@ class ClaimServiceSpec
           )
 
           inSequence {
-            details._2.foreach { dd =>
+            declarations.foreach { dd =>
               val mrn = MRN(dd.displayResponseDetail.declarationId)
               mockDeclarationRetrieving(mrn)(dd)
             }
-            mockClaimMapping((claim, declarations), eisRequest)
+            mockClaimMapping((claim, reversedDeclarations), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
@@ -525,15 +528,15 @@ class ClaimServiceSpec
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
               responseBody = Some(responseJsonBody),
-              submitClaimRequest = RejectedGoodsClaimRequest(details._1),
+              submitClaimRequest = RejectedGoodsClaimRequest(claim),
               eisSubmitClaimRequest = eisRequest
             )
-            mockClaimEmailRequestMapping((claim, declarations), emailRequest)
+            mockClaimEmailRequestMapping((claim, reversedDeclarations), emailRequest)
             mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
           await(
-            claimService.submitMultipleRejectedGoodsClaim(RejectedGoodsClaimRequest(details._1)).value
+            claimService.submitMultipleRejectedGoodsClaim(RejectedGoodsClaimRequest(claim)).value
           ) shouldBe Right(submitClaimResponse)
       }
 

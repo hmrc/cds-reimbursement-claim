@@ -35,28 +35,30 @@ class OverpaymentsMultipleClaimToTPI05Mapper
   override def map(
     details: (MultipleOverpaymentsClaim, List[DisplayDeclaration])
   ): Either[CdsError, EisSubmitClaimRequest] = {
-    val (claim, declarations)                           = details
-    val contactInfo                                     = claim.claimantInformation.contactInformation
-    val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      declarations.headOption.flatMap(_.displayResponseDetail.consigneeDetails)
-    val mrnDeclarationsMap                              = declarations
+    val claim        = details._1
+    val declarations = details._2
       .map(declaration => MRN(declaration.displayResponseDetail.declarationId) -> declaration.displayResponseDetail)
       .toMap
 
+    val contactInfo                                     = claim.claimantInformation.contactInformation
+    val maybeConsigneeDetails: Option[ConsigneeDetails] =
+      details._2.headOption.flatMap(_.displayResponseDetail.consigneeDetails)
+
     (for {
-      claimantEmail <- contactInfo.emailAddress.toRight(
-                         CdsError("Email address is missing")
-                       )
-      contactPerson <- contactInfo.contactPerson.toRight(
-                         CdsError("Email address is missing")
-                       )
+      email        <- contactInfo.emailAddress.toRight(
+                        CdsError("Email address is missing")
+                      )
+      claimantName <- contactInfo.contactPerson.toRight(
+                        CdsError("Email address is missing")
+                      )
+      claimantEmail = Email(email)
 
       consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
-        claimantEmailAddress = Email(claimantEmail),
-        claimantName = contactPerson
+        claimantEmailAddress = claimantEmail,
+        claimantName = claimantName
       )
       .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(claim.claimantType))
@@ -75,7 +77,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper
         )
       )
       .withEORIDetails(getEoriDetails(consigneeDetails, claim))
-      .withMrnDetails(getMrnDetails(claim, mrnDeclarationsMap))).flatMap(_.verify)
+      .withMrnDetails(getMrnDetails(claim, declarations))).flatMap(_.verify)
   }
 
   private def getEoriDetails(consigneeDetails: ConsigneeDetails, claim: MultipleOverpaymentsClaim): EoriDetails =
@@ -106,15 +108,15 @@ class OverpaymentsMultipleClaimToTPI05Mapper
   ): List[MrnDetail.Builder] = {
     val claimsOverMrns =
       claim.reimbursementClaims.flatMap { case (mrn, taxesClaimed) =>
-        declarations.get(MRN(mrn)).toList.map(declaration => mrn -> ((taxesClaimed, declaration)))
+        declarations.get(mrn).toList.map(declaration => mrn -> ((taxesClaimed, declaration)))
       }
 
     claimsOverMrns.map { case (mrn, (claimedReimbursement, declaration)) =>
       MrnDetail.build
-        .withMrnNumber(MRN(mrn))
+        .withMrnNumber(mrn)
         .withAcceptanceDate(declaration.acceptanceDate)
         .withDeclarantReferenceNumber(declaration.declarantReferenceNumber)
-        .withWhetherMainDeclarationReference(claim.leadMrn.value === mrn)
+        .withWhetherMainDeclarationReference(claim.leadMrn === mrn)
         .withProcedureCode(declaration.procedureCode)
         .withDeclarantDetails(declaration.declarantDetails)
         .withConsigneeDetails(declaration.consigneeDetails)
@@ -132,8 +134,8 @@ class OverpaymentsMultipleClaimToTPI05Mapper
                   taxCode = taxCode,
                   paymentMethod = foundNdrcDetails.paymentMethod,
                   paymentReference = foundNdrcDetails.paymentReference,
-                  claimedAmount.paidAmount.roundToTwoDecimalPlaces,
-                  claimedAmount.refundAmount.roundToTwoDecimalPlaces
+                  BigDecimal(foundNdrcDetails.amount),
+                  claimedAmount.roundToTwoDecimalPlaces
                 )
               }
           }.toList
