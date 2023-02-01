@@ -16,17 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 
-import java.util.UUID
-
-@deprecated("IS replaced by journey specific Overpayments Claim request objects")
-final case class C285ClaimRequest(
-  id: UUID,
-  claim: C285Claim,
-  signedInUserDetails: SignedInUserDetails
-)
-
-object C285ClaimRequest {
-  implicit val format: OFormat[C285ClaimRequest] = Json.format
+trait OverpaymentsClaim extends Product with Serializable {
+  def bankAccountDetailsAnswer: Option[BankAccountDetails]
 }

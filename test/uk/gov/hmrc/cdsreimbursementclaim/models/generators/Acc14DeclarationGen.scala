@@ -179,7 +179,7 @@ object Acc14DeclarationGen {
     numNdrcDetails           <- Gen.choose(1, 5)
     ndrcDetails              <- Gen
                                   .listOfN(numNdrcDetails, genNdrcDetails)
-                                  .map(_.groupBy(_.taxType).values.map(_.headOption.toList).flatten.toList)
+                                  .map(_.groupBy(_.taxType).values.flatMap(_.headOption.toList).toList)
 
   } yield DisplayDeclaration(
     DisplayResponseDetail(

@@ -35,7 +35,7 @@ final case class ScheduledOverpaymentsClaim(
   bankAccountDetails: Option[BankAccountDetails],
   scheduledDocument: EvidenceDocument,
   supportingEvidences: Seq[EvidenceDocument]
-) {
+) extends OverpaymentsClaim {
   lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithCorrect] =
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
@@ -54,6 +54,7 @@ final case class ScheduledOverpaymentsClaim(
         )
       }
 
+  override def bankAccountDetailsAnswer: Option[BankAccountDetails] = bankAccountDetails
 }
 
 object ScheduledOverpaymentsClaim {

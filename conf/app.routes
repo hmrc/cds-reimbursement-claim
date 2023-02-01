@@ -14,6 +14,7 @@ GET         /claims/:cdfPayService/:cdfPayCaseNumber uk.gov.hmrc.cdsreimbursemen
 
 POST        /claims/c285                             uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitC285Claim()
 POST        /claims/overpayments-single              uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleOverpaymentsClaim()
+POST        /claims/overpayments-multiple            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitMultipleOverpaymentsClaim()
 POST        /claims/overpayments-scheduled           uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitScheduledOverpaymentsClaim()
 POST        /claims/rejected-goods-single            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSingleRejectedGoodsClaim()
 POST        /claims/rejected-goods-multiple          uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitMultipleRejectedGoodsClaim()

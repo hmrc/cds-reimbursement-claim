@@ -25,6 +25,9 @@ package object email {
   implicit val overpaymentsSingleClaimToEmailMapper: OverpaymentsSingleClaimToEmailMapper =
     new OverpaymentsSingleClaimToEmailMapper
 
+  implicit val overpaymentsMultipleClaimToEmailMapper: OverpaymentsMultipleClaimToEmailMapper =
+    new OverpaymentsMultipleClaimToEmailMapper
+
   implicit val overpaymentsScheduledClaimToEmailMapper: OverpaymentsScheduledClaimToEmailMapper =
     new OverpaymentsScheduledClaimToEmailMapper
 

@@ -16,27 +16,29 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.email
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285ClaimRequest
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MultipleOverpaymentsClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
-@deprecated("Is replaced by journey specific overpayments email mappers")
-class C285ClaimToEmailMapper extends ClaimToEmailMapper[C285ClaimRequest] {
-  override def map(claim: C285ClaimRequest): Either[CdsError, EmailRequest] = {
-    val x = for {
-      email       <- claim.claim.contactInformation.emailAddress.toRight(
+class OverpaymentsMultipleClaimToEmailMapper
+    extends ClaimToEmailMapper[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] {
+  override def map(
+    claim: (MultipleOverpaymentsClaim, List[DisplayDeclaration])
+  ): Either[CdsError, EmailRequest] = {
+    val (overpaymentsClaim, _) = claim
+    for {
+      email       <- overpaymentsClaim.claimantInformation.contactInformation.emailAddress.toRight(
                        CdsError("no email address provided with claim")
                      )
-      contactName <- claim.claim.contactInformation.contactPerson.toRight(
+      contactName <- overpaymentsClaim.claimantInformation.contactInformation.contactPerson.toRight(
                        CdsError("no contact name provided with claim")
                      )
-      claimAmount  = claim.claim.claims.map(_.claimAmount).toList.sum
+      claimAmount  = overpaymentsClaim.totalReimbursementAmount
     } yield EmailRequest(
       Email(email),
       contactName,
       claimAmount
     )
-
-    x
   }
 }

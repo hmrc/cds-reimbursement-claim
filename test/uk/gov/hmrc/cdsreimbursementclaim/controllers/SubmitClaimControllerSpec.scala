@@ -37,8 +37,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.services.ClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.{CcsSubmissionRequest, CcsSubmissionService, ClaimToDec64Mapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsMultipleClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.workitem.WorkItem
 
@@ -98,6 +98,21 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           _: Request[_],
           _: OverpaymentsSingleClaimToTPI05Mapper,
           _: OverpaymentsSingleClaimToEmailMapper
+        )
+      )
+      .expects(request, *, *, *, *)
+      .returning(EitherT.fromEither[Future](response))
+
+  private def mockMultipleOverpaymentsClaimSubmission(request: MultipleOverpaymentsClaimRequest)(
+    response: Either[Error, ClaimSubmitResponse]
+  ) =
+    (
+      mockClaimService
+        .submitMultipleOverpaymentsClaim(_: MultipleOverpaymentsClaimRequest)(
+          _: HeaderCarrier,
+          _: Request[_],
+          _: OverpaymentsMultipleClaimToTPI05Mapper,
+          _: OverpaymentsMultipleClaimToEmailMapper
         )
       )
       .expects(request, *, *, *, *)
@@ -238,6 +253,18 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           contentAsJson(result) shouldBe Json.toJson(response)
       }
 
+      "handling Overpayments multiple claim request" in forAll {
+        (request: MultipleOverpaymentsClaimRequest, response: ClaimSubmitResponse) =>
+          inSequence {
+            mockMultipleOverpaymentsClaimSubmission(request)(Right(response))
+            mockCcsRequestEnqueue(request, response)
+          }
+
+          val result = controller.submitMultipleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(response)
+      }
+
       "handling Single C&E1779 claim request" in forAll {
         (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
           inSequence {
@@ -318,6 +345,15 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         }
 
         val result = controller.submitSingleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "submission of the multiple overpayments claim failed" in forAll { request: MultipleOverpaymentsClaimRequest =>
+        inSequence {
+          mockMultipleOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
+        }
+
+        val result = controller.submitMultipleOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 

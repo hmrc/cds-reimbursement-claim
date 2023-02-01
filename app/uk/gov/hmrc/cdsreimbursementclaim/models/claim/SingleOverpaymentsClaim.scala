@@ -33,7 +33,10 @@ final case class SingleOverpaymentsClaim(
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument]
-)
+) extends OverpaymentsClaim {
+
+  override def bankAccountDetailsAnswer: Option[BankAccountDetails] = bankAccountDetails
+}
 
 object SingleOverpaymentsClaim {
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =

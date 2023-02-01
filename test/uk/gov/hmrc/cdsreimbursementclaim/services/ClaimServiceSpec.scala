@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxTuple2Semigroupal
-import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3, CallHandler4, CallHandler6}
+import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -33,7 +33,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaim, ScheduledOverpaymentsClaimRequest, SingleOverpaymentsClaim, SingleOverpaymentsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
@@ -44,8 +44,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
-import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsMultipleClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -86,6 +86,9 @@ class ClaimServiceSpec
   implicit val overpaymentsSingleClaimMapper: OverpaymentsSingleClaimToTPI05Mapper =
     mock[OverpaymentsSingleClaimToTPI05Mapper]
 
+  implicit val overpaymentsMultipleClaimMapper: OverpaymentsMultipleClaimToTPI05Mapper =
+    mock[OverpaymentsMultipleClaimToTPI05Mapper]
+
   implicit val overpaymentsScheduledClaimMapper: OverpaymentsScheduledClaimToTPI05Mapper =
     mock[OverpaymentsScheduledClaimToTPI05Mapper]
 
@@ -102,6 +105,9 @@ class ClaimServiceSpec
 
   implicit val overpaymentsSingleClaimEmailMapperMock: OverpaymentsSingleClaimToEmailMapper =
     mock[OverpaymentsSingleClaimToEmailMapper]
+
+  implicit val overpaymentsMultipleClaimEmailMapperMock: OverpaymentsMultipleClaimToEmailMapper =
+    mock[OverpaymentsMultipleClaimToEmailMapper]
 
   implicit val overpaymentsScheduledClaimEmailMapperMock: OverpaymentsScheduledClaimToEmailMapper =
     mock[OverpaymentsScheduledClaimToEmailMapper]
@@ -171,6 +177,22 @@ class ClaimServiceSpec
       )
       .returning(())
 
+  def mockSendClaimSubmitConfirmationEmail(
+    emailRequest: EmailRequest,
+    submitClaimResponse: ClaimSubmitResponse
+  )(
+    response: Either[Error, Unit]
+  ): CallHandler4[EmailRequest, ClaimSubmitResponse, HeaderCarrier, Request[_], EitherT[Future, models.Error, Unit]] =
+    (emailServiceMock
+      .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[_]))
+      .expects(
+        emailRequest,
+        submitClaimResponse,
+        *,
+        *
+      )
+      .returning(EitherT(Future.successful(response)))
+
   private def mockAuditSubmitClaimResponseEvent[A](
     httpStatus: Int,
     responseBody: Option[JsValue],
@@ -197,22 +219,6 @@ class ClaimServiceSpec
         *
       )
       .returning(())
-
-  def mockSendClaimSubmitConfirmationEmail(
-    emailRequest: EmailRequest,
-    submitClaimResponse: ClaimSubmitResponse
-  )(
-    response: Either[Error, Unit]
-  ): CallHandler4[EmailRequest, ClaimSubmitResponse, HeaderCarrier, Request[_], EitherT[Future, models.Error, Unit]] =
-    (emailServiceMock
-      .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[_]))
-      .expects(
-        emailRequest,
-        submitClaimResponse,
-        *,
-        *
-      )
-      .returning(EitherT(Future.successful(response)))
 
   "Claim Service" when {
 
@@ -372,6 +378,64 @@ class ClaimServiceSpec
           ) shouldBe Right(submitClaimResponse)
       }
 
+      "successfully submit a multiple Overpayments claim" in forAll {
+        (
+          multipleOverpaymentsClaimData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]),
+          eisRequest: EisSubmitClaimRequest
+        ) =>
+          val claim                = multipleOverpaymentsClaimData._1
+          val declarations         = multipleOverpaymentsClaimData._2
+          val reversedDeclarations = declarations.reverse
+          val responseJsonBody     = Json.parse(
+            """
+              |{
+              |    "postNewClaimsResponse": {
+              |        "responseCommon": {
+              |            "status": "OK",
+              |            "processingDate": "2021-01-20T12:07540Z",
+              |            "CDFPayService": "NDRC",
+              |            "CDFPayCaseNumber": "4374422408"
+              |        }
+              |    }
+              |}
+              |""".stripMargin
+          )
+
+          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
+          val emailRequest        = EmailRequest(
+            Email(claim.claimantInformation.contactInformation.emailAddress.value),
+            claim.claimantInformation.contactInformation.contactPerson.value,
+            claim.reimbursementClaims.values.flatMap(_.values).sum
+          )
+
+          inSequence {
+            declarations.foreach { dd =>
+              val mrn = MRN(dd.displayResponseDetail.declarationId)
+              mockDeclarationRetrieving(mrn)(dd)
+            }
+
+            mockClaimMapping((claim, reversedDeclarations), eisRequest)
+
+            mockAuditSubmitClaimEvent(eisRequest)
+
+            mockSubmitClaim(eisRequest)(
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+            )
+            mockAuditSubmitClaimResponseEvent(
+              httpStatus = 200,
+              responseBody = Some(responseJsonBody),
+              submitClaimRequest = MultipleOverpaymentsClaimRequest(claim),
+              eisSubmitClaimRequest = eisRequest
+            )
+            mockClaimEmailRequestMapping((claim, reversedDeclarations), emailRequest)
+            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
+          }
+
+          await(
+            claimService.submitMultipleOverpaymentsClaim(MultipleOverpaymentsClaimRequest(claim)).value
+          ) shouldBe Right(submitClaimResponse)
+      }
+
       "successfully submit a Single Rejected Goods claim" in forAll {
         (
           ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
@@ -425,8 +489,9 @@ class ClaimServiceSpec
           details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]),
           eisRequest: EisSubmitClaimRequest
         ) =>
-          val claim        = details._1
-          val declarations = details._2.reverse
+          val claim                = details._1
+          val declarations         = details._2
+          val reversedDeclarations = declarations.reverse
 
           val responseJsonBody = Json.parse(
             """
@@ -451,11 +516,11 @@ class ClaimServiceSpec
           )
 
           inSequence {
-            details._2.foreach { dd =>
+            declarations.foreach { dd =>
               val mrn = MRN(dd.displayResponseDetail.declarationId)
               mockDeclarationRetrieving(mrn)(dd)
             }
-            mockClaimMapping((claim, declarations), eisRequest)
+            mockClaimMapping((claim, reversedDeclarations), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
@@ -463,15 +528,15 @@ class ClaimServiceSpec
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
               responseBody = Some(responseJsonBody),
-              submitClaimRequest = RejectedGoodsClaimRequest(details._1),
+              submitClaimRequest = RejectedGoodsClaimRequest(claim),
               eisSubmitClaimRequest = eisRequest
             )
-            mockClaimEmailRequestMapping((claim, declarations), emailRequest)
+            mockClaimEmailRequestMapping((claim, reversedDeclarations), emailRequest)
             mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
           await(
-            claimService.submitMultipleRejectedGoodsClaim(RejectedGoodsClaimRequest(details._1)).value
+            claimService.submitMultipleRejectedGoodsClaim(RejectedGoodsClaimRequest(claim)).value
           ) shouldBe Right(submitClaimResponse)
       }
 
