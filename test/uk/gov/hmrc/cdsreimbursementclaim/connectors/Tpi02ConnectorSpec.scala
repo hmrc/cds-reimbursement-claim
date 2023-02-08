@@ -86,6 +86,25 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
           }
         }
       }
+      "get the 200 SCTY claim minimal response" in {
+        givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
+          Tpi02TestData.tpi02Response200SctyClaimMinimalResult
+        }(validateTpi02Request) {
+          givenTpi02Connector { connector =>
+            val response = await(connector.getSpecificClaim(CDFPayService.SCTY, "SCTY-2110"))
+            inside(response) {
+              case Right(
+                    Response(GetSpecificCaseResponse(c, Some(responseDetail)))
+                  ) =>
+                c.status                       shouldBe "OK"
+                responseDetail.CDFPayCaseFound shouldBe true
+                responseDetail.CDFPayService   shouldBe "SCTY"
+                responseDetail.NDRCCase        shouldBe None
+                responseDetail.SCTYCase        shouldBe defined
+            }
+          }
+        }
+      }
       "get the 200 NDRC no claims found response" in {
         givenEndpointStub { case POST(p"/tpi/getspecificcase/v1") =>
           Tpi02TestData.tpi02Response200NoClaimsFoundResult
@@ -210,6 +229,11 @@ object Tpi02TestData extends TestDataFromFile {
   lazy val tpi02Response200SctyClaimResult: Result =
     Results
       .Ok(contentOfFile("conf/resources/tpi02/response-200-scty-claim.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val tpi02Response200SctyClaimMinimalResult: Result =
+    Results
+      .Ok(contentOfFile("conf/resources/tpi02/response-200-scty-claim-minimal.json"))
       .withHeaders(jsonContentType)
 
   lazy val tpi02Response200NoClaimsFoundResult: Result =
