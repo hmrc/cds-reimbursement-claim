@@ -19,11 +19,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 trait CaseDetails {
   def CDFPayCaseNumber: String
   def declarationID: Option[String]
-  def claimStartDate: String
   def closedDate: Option[String]
   def caseStatus: String
   def declarantEORI: String
-  def importerEORI: String
   def claimantEORI: Option[String]
   def totalCustomsClaimAmount: Option[String]
   def totalVATClaimAmount: Option[String]

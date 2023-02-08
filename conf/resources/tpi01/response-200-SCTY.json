@@ -23,6 +23,13 @@
             "totalCustomsClaimAmount": "12000.56",
             "totalVATClaimAmount": "3412.01",
             "declarantReferenceNumber": "broomer007"
+          },
+          {
+            "CDFPayCaseNumber": "SCTY-2110",
+            "declarationID": "21LLLLLLLLLL12346",
+            "reasonForSecurity": "ACS",
+            "caseStatus": "Partial Refund",
+            "declarantEORI": "GB744638982007"
           }
         ]
       }

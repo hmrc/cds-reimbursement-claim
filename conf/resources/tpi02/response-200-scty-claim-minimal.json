@@ -1,0 +1,19 @@
+{
+    "getSpecificCaseResponse": {
+        "responseCommon": {
+            "status": "OK",
+            "processingDate": "2021-05-10T11:21:35Z"
+        },
+        "responseDetail": {
+            "CDFPayService": "SCTY",
+            "CDFPayCaseFound": true,
+            "SCTYCase": {
+                "CDFPayCaseNumber": "SCTY-2110",
+                "reasonForSecurity": "ACS",
+                "procedureCode": "10",
+                "caseStatus": "Partial Refund",
+                "declarantEORI": "GB744638982000"
+            }
+        }
+    }
+}
