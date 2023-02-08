@@ -223,48 +223,97 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
 
       "enqueue the C285 claim request" in forAll {
         (claimSubmitRequest: C285ClaimRequest, claimSubmitResponse: ClaimSubmitResponse) =>
-          val documentLens          = lens[C285ClaimRequest].claim.documents
-          val evidence              = claimSubmitRequest.claim.documents.toList.flatten.head
-          val singleDocumentRequest = documentLens.set(claimSubmitRequest)(Option(List(evidence)))
+          whenever(claimSubmitRequest.claim.documents.nonEmpty) {
+            val documentLens          = lens[C285ClaimRequest].claim.documents
+            val evidence              = claimSubmitRequest.claim.documents.toList.flatten.head
+            val singleDocumentRequest = documentLens.set(claimSubmitRequest)(Option(List(evidence)))
 
-          val dec64payload = makeDec64XmlPayload(
-            correlationId = UUID.randomUUID().toString,
-            batchId = singleDocumentRequest.claim.id,
-            batchSize = singleDocumentRequest.claim.documents.size,
-            batchCount = singleDocumentRequest.claim.documents.size,
-            checksum = evidence.checksum,
-            fileSize = evidence.size,
-            caseReference = claimSubmitResponse.caseNumber,
-            eori = singleDocumentRequest.signedInUserDetails.eori.value,
-            declarationId = singleDocumentRequest.claim.movementReferenceNumber.value,
-            declarationType = singleDocumentRequest.claim.declarantTypeAnswer.toString,
-            applicationName = "NDRC",
-            documentType = evidence.documentType.toDec64DisplayString,
-            documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
-            sourceLocation = evidence.downloadUrl,
-            sourceFileName = evidence.fileName,
-            sourceFileMimeType = evidence.fileMimeType,
-            destinationSystem = "CDFPay"
-          )
+            val dec64payload = makeDec64XmlPayload(
+              correlationId = UUID.randomUUID().toString,
+              batchId = singleDocumentRequest.claim.id,
+              batchSize = singleDocumentRequest.claim.documents.size,
+              batchCount = singleDocumentRequest.claim.documents.size,
+              checksum = evidence.checksum,
+              fileSize = evidence.size,
+              caseReference = claimSubmitResponse.caseNumber,
+              eori = singleDocumentRequest.signedInUserDetails.eori.value,
+              declarationId = singleDocumentRequest.claim.movementReferenceNumber.value,
+              declarationType = singleDocumentRequest.claim.declarantTypeAnswer.toString,
+              applicationName = "NDRC",
+              documentType = evidence.documentType.toDec64DisplayString,
+              documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
+              sourceLocation = evidence.downloadUrl,
+              sourceFileName = evidence.fileName,
+              sourceFileMimeType = evidence.fileMimeType,
+              destinationSystem = "CDFPay"
+            )
 
-          val workItem = WorkItem(
-            id = new ObjectId(),
-            receivedAt = Instant.now(),
-            updatedAt = Instant.now(),
-            availableAt = Instant.now(),
-            status = ToDo,
-            failureCount = 0,
-            item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
-          )
+            val workItem = WorkItem(
+              id = new ObjectId(),
+              receivedAt = Instant.now(),
+              updatedAt = Instant.now(),
+              availableAt = Instant.now(),
+              status = ToDo,
+              failureCount = 0,
+              item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
+            )
 
-          mockCcsSubmissionRequest()(Right(workItem))
+            mockCcsSubmissionRequest()(Right(workItem))
 
-          await(ccsSubmissionService.enqueue(singleDocumentRequest, claimSubmitResponse).value).isRight should be(true)
+            await(ccsSubmissionService.enqueue(singleDocumentRequest, claimSubmitResponse).value).isRight should be(
+              true
+            )
+          }
       }
 
       "enqueue the Single Rejected Goods claim request" in forAll {
         (submitRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], submitResponse: ClaimSubmitResponse) =>
-          val documentLens          = lens[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]].claim.supportingEvidences
+          whenever(submitRequest.claim.supportingEvidences.nonEmpty) {
+            val documentLens          = lens[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]].claim.supportingEvidences
+            val evidence              = submitRequest.claim.supportingEvidences.head
+            val singleDocumentRequest = documentLens.set(submitRequest)(evidence :: Nil)
+
+            val dec64payload = makeDec64XmlPayload(
+              correlationId = UUID.randomUUID().toString,
+              batchId = UUID.randomUUID().toString,
+              batchSize = singleDocumentRequest.claim.supportingEvidences.size.toLong,
+              batchCount = singleDocumentRequest.claim.supportingEvidences.size.toLong,
+              checksum = evidence.checksum,
+              fileSize = evidence.size,
+              caseReference = submitResponse.caseNumber,
+              eori = singleDocumentRequest.claim.claimantInformation.eori.value,
+              declarationId = singleDocumentRequest.claim.leadMrn.value,
+              declarationType = "MRN",
+              applicationName = "NDRC",
+              documentType = evidence.documentType.toDec64DisplayString,
+              documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
+              sourceLocation = evidence.downloadUrl,
+              sourceFileName = evidence.fileName,
+              sourceFileMimeType = evidence.fileMimeType,
+              destinationSystem = "CDFPay"
+            )
+
+            val workItem = WorkItem(
+              id = new ObjectId(),
+              receivedAt = Instant.now(),
+              updatedAt = Instant.now(),
+              availableAt = Instant.now(),
+              status = ToDo,
+              failureCount = 0,
+              item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
+            )
+
+            mockCcsSubmissionRequest()(Right(workItem))
+
+            await(ccsSubmissionService.enqueue(singleDocumentRequest, submitResponse).value).isRight should be(true)
+          }
+      }
+    }
+
+    "enqueue the Multiple Rejected Goods claim request" in forAll {
+      (submitRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim], submitResponse: ClaimSubmitResponse) =>
+        whenever(submitRequest.claim.supportingEvidences.nonEmpty) {
+          val documentLens          = lens[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]].claim.supportingEvidences
           val evidence              = submitRequest.claim.supportingEvidences.head
           val singleDocumentRequest = documentLens.set(submitRequest)(evidence :: Nil)
 
@@ -301,48 +350,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
           mockCcsSubmissionRequest()(Right(workItem))
 
           await(ccsSubmissionService.enqueue(singleDocumentRequest, submitResponse).value).isRight should be(true)
-      }
-    }
-
-    "enqueue the Multiple Rejected Goods claim request" in forAll {
-      (submitRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim], submitResponse: ClaimSubmitResponse) =>
-        val documentLens          = lens[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]].claim.supportingEvidences
-        val evidence              = submitRequest.claim.supportingEvidences.head
-        val singleDocumentRequest = documentLens.set(submitRequest)(evidence :: Nil)
-
-        val dec64payload = makeDec64XmlPayload(
-          correlationId = UUID.randomUUID().toString,
-          batchId = UUID.randomUUID().toString,
-          batchSize = singleDocumentRequest.claim.supportingEvidences.size.toLong,
-          batchCount = singleDocumentRequest.claim.supportingEvidences.size.toLong,
-          checksum = evidence.checksum,
-          fileSize = evidence.size,
-          caseReference = submitResponse.caseNumber,
-          eori = singleDocumentRequest.claim.claimantInformation.eori.value,
-          declarationId = singleDocumentRequest.claim.leadMrn.value,
-          declarationType = "MRN",
-          applicationName = "NDRC",
-          documentType = evidence.documentType.toDec64DisplayString,
-          documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
-          sourceLocation = evidence.downloadUrl,
-          sourceFileName = evidence.fileName,
-          sourceFileMimeType = evidence.fileMimeType,
-          destinationSystem = "CDFPay"
-        )
-
-        val workItem = WorkItem(
-          id = new ObjectId(),
-          receivedAt = Instant.now(),
-          updatedAt = Instant.now(),
-          availableAt = Instant.now(),
-          status = ToDo,
-          failureCount = 0,
-          item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
-        )
-
-        mockCcsSubmissionRequest()(Right(workItem))
-
-        await(ccsSubmissionService.enqueue(singleDocumentRequest, submitResponse).value).isRight should be(true)
+        }
     }
 
     "the submission poller updates the processing status" must {
