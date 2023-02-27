@@ -45,9 +45,10 @@ class OverpaymentsScheduledClaimToTPI05Mapper
       importerEori  <- declaration.displayResponseDetail.consigneeDetails
                          .map(EORIInformation.forConsignee)
                          .toRight(CdsError("Could not deduce consignee EORI information"))
-      agentEori     <- EORIInformation.forDeclarant(
+      agentEori     = EORIInformation.forDeclarant(
                          declaration.displayResponseDetail.declarantDetails,
-                         Some(claim.claimantInformation.contactInformation)
+                         Some(claim.claimantInformation.contactInformation),
+                         Some(Email(""))
                        )
       eoriDetails    = EoriDetails(
                          importerEORIDetails = importerEori,

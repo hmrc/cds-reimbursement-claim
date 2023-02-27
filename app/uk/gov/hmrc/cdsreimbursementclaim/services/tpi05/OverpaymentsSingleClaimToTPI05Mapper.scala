@@ -17,11 +17,9 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SingleOverpaymentsClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUser
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SingleOverpaymentsClaim, TaxCode, TypeOfClaimAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, _}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
@@ -35,15 +33,22 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
+case class OverpaymentsSingleClaimData(
+  claim: SingleOverpaymentsClaim,
+  declaration: DisplayDeclaration,
+  duplicateDeclaration: Option[DisplayDeclaration],
+  user: AuthenticatedUser
+)
+
 class OverpaymentsSingleClaimToTPI05Mapper
-    extends ClaimToTPI05Mapper[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] {
+    extends ClaimToTPI05Mapper[OverpaymentsSingleClaimData] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
-    details: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])
+    claimData: OverpaymentsSingleClaimData
   ): Either[CdsError, EisSubmitClaimRequest] = {
-    val (claim, declaration, duplicateDeclaration) = details
-    val contactInfo                                = claim.claimantInformation.contactInformation
+    val OverpaymentsSingleClaimData(claim, declaration, duplicateDeclaration, user) = claimData
+    val contactInfo = claim.claimantInformation.contactInformation
 
     (for {
       claimantEmail <- contactInfo.emailAddress.toRight(
@@ -55,9 +60,10 @@ class OverpaymentsSingleClaimToTPI05Mapper
       importerEori  <- declaration.displayResponseDetail.consigneeDetails
                          .map(EORIInformation.forConsignee)
                          .toRight(CdsError("Could not deduce consignee EORI information"))
-      agentEori     <- EORIInformation.forDeclarant(
+      agentEori       = EORIInformation.forDeclarant(
                          declaration.displayResponseDetail.declarantDetails,
-                         Some(claim.claimantInformation.contactInformation)
+                         Some(claim.claimantInformation.contactInformation),
+                         user.email//TODO: get signedInUserDetails.verifiedEmail
                        )
       eoriDetails    = EoriDetails(
                          importerEORIDetails = importerEori,
@@ -66,8 +72,8 @@ class OverpaymentsSingleClaimToTPI05Mapper
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
-        claimantEmailAddress = Email(claimantEmail),
-        claimantName = contactPerson
+        claimantEmailAddress = Email(""), //signedInUserDetails.verifiedEmail,
+        claimantName = "" //signedInUserDetails.contactName.value
       )
       .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(claim.claimantType))

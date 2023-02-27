@@ -28,6 +28,7 @@ import play.api.libs.json.Format
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUser
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleOverpaymentsClaimRequest, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
@@ -39,7 +40,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclarati
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
 import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsMultipleClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimData, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -65,7 +66,8 @@ trait ClaimService {
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitSingleOverpaymentsClaim(
-    singleOverpaymentsClaim: SingleOverpaymentsClaimRequest
+    singleOverpaymentsClaim: SingleOverpaymentsClaimRequest,
+    user: AuthenticatedUser
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
@@ -148,7 +150,8 @@ class DefaultClaimService @Inject() (
     proceed(c285ClaimRequest, c285ClaimRequest)
 
   def submitSingleOverpaymentsClaim(
-    claimRequest: SingleOverpaymentsClaimRequest
+    claimRequest: SingleOverpaymentsClaimRequest,
+    user: AuthenticatedUser
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
@@ -169,7 +172,12 @@ class DefaultClaimService @Inject() (
                                             .map(_.some)
                                         )
                                     }
-      result                     <- proceed((claimRequest.claim, declaration, maybeDuplicateDeclaratiion), claimRequest)
+      result                     <- proceed(OverpaymentsSingleClaimData(
+                                              claimRequest.claim,
+                                              declaration,
+                                              maybeDuplicateDeclaratiion,
+                                              user
+                                            ), claimRequest)
     } yield result
 
   def submitMultipleOverpaymentsClaim(
