@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
+import cats.syntax.eq._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 import play.api.mvc.QueryStringBindable
 
@@ -78,4 +79,7 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
 
     override def unbind(key: String, value: ReasonForSecurity): String = strBinder.unbind(key, value.toString)
   }
+
+  def parseACC14Code(code: String): Option[ReasonForSecurity] =
+    values.find(_.acc14Code === code)
 }
