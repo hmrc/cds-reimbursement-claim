@@ -16,31 +16,39 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
+import cats.syntax.eq._
 import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 
 import java.net.URL
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object Dec64UploadRequestGen {
 
   lazy val genDec64UploadRequest: Gen[Dec64UploadRequest] = for {
-    uuid          <- genUUID
-    mrn           <- genMRN
-    eori          <- genEori
-    caseNumber    <- genRandomString
-    numberOfFiles <- Gen.chooseNum(1, 4)
-    files         <- Gen.listOfN(numberOfFiles, genEvidences)
+    uuid              <- genUUID
+    mrn               <- genMRN
+    eori              <- genEori
+    caseNumber        <- genRandomString
+    numberOfFiles     <- Gen.chooseNum(1, 4)
+    files             <- Gen.listOfN(numberOfFiles, genEvidences)
+    applicationName   <- Gen.oneOf("NDRC", "Securities")
+    reasonForSecurity <- Gen.oneOf(ReasonForSecurity.values)
   } yield Dec64UploadRequest(
     id = uuid.toString,
     eori = eori.value,
     caseNumber = caseNumber,
     declarationId = mrn.value,
     entryNumber = false,
-    applicationName = "NDRC",
-    uploadedFiles = files.toList
+    applicationName = applicationName,
+    uploadedFiles = files.toList,
+    reasonForSecurity =
+      if (applicationName === "Securities")
+        Some(reasonForSecurity.acc14Code)
+      else None
   )
 
   implicit lazy val arbitraryDec64UploadRequest: Typeclass[Dec64UploadRequest] =

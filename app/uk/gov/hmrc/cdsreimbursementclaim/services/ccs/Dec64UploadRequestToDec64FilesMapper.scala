@@ -21,9 +21,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, Dec6
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 
 class Dec64UploadRequestToDec64FilesMapper extends ClaimToDec64Mapper[Dec64UploadRequest] {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   def map(request: Dec64UploadRequest, response: ClaimSubmitResponse): List[Envelope] =
     request.uploadedFiles.zipWithIndex.map { case (document, index) =>
       Envelope(
@@ -47,7 +49,15 @@ class Dec64UploadRequestToDec64FilesMapper extends ClaimToDec64Mapper[Dec64Uploa
                 PropertyType("ApplicationName", request.applicationName),
                 PropertyType("DocumentType", document.description),
                 PropertyType("DocumentReceivedDate", document.uploadTimestamp.toCdsDateTime)
-              )
+              ) ++ (if (request.applicationName == "Securities")
+                      (PropertyType(
+                        "RFS",
+                        request.reasonForSecurity
+                          .flatMap(ReasonForSecurity.parseACC14Code)
+                          .getOrElse(throw new Exception("Missing RFS property"))
+                          .dec64DisplayString
+                      ) :: Nil)
+                    else Nil)
             )
           )
         )

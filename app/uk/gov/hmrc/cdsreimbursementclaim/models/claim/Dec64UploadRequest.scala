@@ -25,7 +25,8 @@ final case class Dec64UploadRequest(
   declarationId: String,
   entryNumber: Boolean,
   applicationName: String,
-  uploadedFiles: List[Dec64UploadedFile]
+  uploadedFiles: List[Dec64UploadedFile],
+  reasonForSecurity: Option[String] = None
 )
 
 object Dec64UploadRequest {
