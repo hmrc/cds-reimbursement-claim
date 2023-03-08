@@ -39,6 +39,8 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
   case object TemporaryAdmission2M extends ReasonForSecurity("TA2", "Temporary Admission (2 months Expiration)")
   case object UKAPEntryPrice extends ReasonForSecurity("CEP", "CAP Entry Price")
   case object UKAPSafeguardDuties extends ReasonForSecurity("CSD", "CAP Safeguard Duties")
+  case object ProvisionalDuty extends ReasonForSecurity("PDD", "Provisional Duty")
+  case object Quota extends ReasonForSecurity("CRQ", "Quota")
 
   override val values: Set[ReasonForSecurity] =
     Set(
@@ -56,7 +58,9 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
       TemporaryAdmission3M,
       TemporaryAdmission2M,
       UKAPEntryPrice,
-      UKAPSafeguardDuties
+      UKAPSafeguardDuties,
+      ProvisionalDuty,
+      Quota
     )
 
   val temporaryAdmissions: Set[ReasonForSecurity] =
