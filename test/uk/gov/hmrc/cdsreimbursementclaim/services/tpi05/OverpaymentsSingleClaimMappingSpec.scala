@@ -111,7 +111,7 @@ class OverpaymentsSingleClaimMappingSpec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 importerEORIDetails = {
-                  val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.consigneeDetails
+                  val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
@@ -204,7 +204,7 @@ class OverpaymentsSingleClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = displayDeclaration.displayResponseDetail.consigneeDetails.value
+                    val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails.value
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(
@@ -343,7 +343,7 @@ class OverpaymentsSingleClaimMappingSpec
                       ).some
                     },
                     consigneeDetails = {
-                      val consigneeDetails   = details.consigneeDetails.value
+                      val consigneeDetails   = details.effectiveConsigneeDetails.value
                       val contactInformation = consigneeDetails.contactDetails.value
 
                       MRNInformation(

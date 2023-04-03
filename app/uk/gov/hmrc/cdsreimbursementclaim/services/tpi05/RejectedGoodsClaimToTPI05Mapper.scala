@@ -45,7 +45,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
       .map(declaration => MRN(declaration.displayResponseDetail.declarationId) -> declaration.displayResponseDetail)
       .toMap
     val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      details._2.headOption.flatMap(_.displayResponseDetail.consigneeDetails)
+      details._2.headOption.flatMap(_.displayResponseDetail.effectiveConsigneeDetails)
 
     (for {
       email            <- claim.claimantInformation.contactInformation.emailAddress
@@ -127,7 +127,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
         .withWhetherMainDeclarationReference(mrn === claim.leadMrn)
         .withProcedureCode(declaration.procedureCode)
         .withDeclarantDetails(declaration.declarantDetails)
-        .withConsigneeDetails(declaration.consigneeDetails)
+        .withConsigneeDetails(declaration.effectiveConsigneeDetails)
         .withAccountDetails(declaration.accountDetails)
         .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
         .withNdrcDetails {

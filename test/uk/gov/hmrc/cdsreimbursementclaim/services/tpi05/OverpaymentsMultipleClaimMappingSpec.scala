@@ -137,7 +137,7 @@ class OverpaymentsMultipleClaimMappingSpec
                       ).some
                     },
                     consigneeDetails = {
-                      val consigneeDetails   = declaration.displayResponseDetail.consigneeDetails.value
+                      val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails.value
                       val contactInformation = consigneeDetails.contactDetails.value
 
                       MRNInformation(

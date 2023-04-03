@@ -42,7 +42,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper
 
     val contactInfo                                     = claim.claimantInformation.contactInformation
     val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      details._2.headOption.flatMap(_.displayResponseDetail.consigneeDetails)
+      details._2.headOption.flatMap(_.displayResponseDetail.effectiveConsigneeDetails)
 
     (for {
       email        <- contactInfo.emailAddress.toRight(
@@ -119,7 +119,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper
         .withWhetherMainDeclarationReference(claim.leadMrn === mrn)
         .withProcedureCode(declaration.procedureCode)
         .withDeclarantDetails(declaration.declarantDetails)
-        .withConsigneeDetails(declaration.consigneeDetails)
+        .withConsigneeDetails(declaration.effectiveConsigneeDetails)
         .withAccountDetails(declaration.accountDetails)
         .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
         .withNdrcDetails {

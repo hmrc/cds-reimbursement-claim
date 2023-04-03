@@ -52,7 +52,7 @@ class OverpaymentsSingleClaimToTPI05Mapper
       contactPerson <- contactInfo.contactPerson.toRight(
                          CdsError("Email address is missing")
                        )
-      importerEori  <- declaration.displayResponseDetail.consigneeDetails
+      importerEori  <- declaration.displayResponseDetail.effectiveConsigneeDetails
                          .map(EORIInformation.forConsignee)
                          .toRight(CdsError("Could not deduce consignee EORI information"))
       agentEori     <- EORIInformation.forDeclarant(
@@ -107,7 +107,7 @@ class OverpaymentsSingleClaimToTPI05Mapper
       .withWhetherMainDeclarationReference(true)
       .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
       .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
+      .withConsigneeDetails(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
       .withAccountDetails(if (includeAccountDetails) displayDeclaration.displayResponseDetail.accountDetails else None)
       .withFirstNonEmptyBankDetails(
         displayDeclaration.displayResponseDetail.bankDetails,

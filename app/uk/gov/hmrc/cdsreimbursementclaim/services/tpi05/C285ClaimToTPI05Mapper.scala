@@ -29,7 +29,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-@deprecated("IS replaced by journey specific overpayments TPI05 mappers")
 class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
 
   // todo CDSR-1795 TPI05 creation and validation - factor out common code
@@ -69,7 +68,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
             .withWhetherMainDeclarationReference(true)
             .withProcedureCode(displayDeclaration.procedureCode)
             .withDeclarantDetails(displayDeclaration.declarantDetails)
-            .withConsigneeDetails(displayDeclaration.consigneeDetails)
+            .withConsigneeDetails(displayDeclaration.effectiveConsigneeDetails)
             .withFirstNonEmptyBankDetails(displayDeclaration.bankDetails, request.claim.bankAccountDetailsAnswer)
             .withNdrcDetails(
               request.claim.claims.toList.map { reimbursement =>
@@ -126,7 +125,7 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
           .withWhetherMainDeclarationReference(request.claim.movementReferenceNumber.value === mrn.value)
           .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
           .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-          .withConsigneeDetails(displayDeclaration.displayResponseDetail.consigneeDetails)
+          .withConsigneeDetails(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
           .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
           .withFirstNonEmptyBankDetailsWhen(request.claim.movementReferenceNumber.value === mrn.value)(
             displayDeclaration.displayResponseDetail.bankDetails,

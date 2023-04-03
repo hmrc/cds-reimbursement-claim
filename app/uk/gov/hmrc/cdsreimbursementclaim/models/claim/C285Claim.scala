@@ -27,7 +27,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 import java.util.UUID
 
-@deprecated("Is replaced by classes of type: OverpaymentsClaim")
 final case class C285Claim(
   id: UUID,
   typeOfClaim: TypeOfClaimAnswer,
@@ -52,7 +51,7 @@ final case class C285Claim(
 ) {
 
   lazy val consigneeDetails: Option[ConsigneeDetails] =
-    displayDeclaration.flatMap(s => s.displayResponseDetail.consigneeDetails)
+    displayDeclaration.flatMap(s => s.displayResponseDetail.effectiveConsigneeDetails)
 
   lazy val declarantDetails: Option[DeclarantDetails] =
     displayDeclaration.map(s => s.displayResponseDetail.declarantDetails)

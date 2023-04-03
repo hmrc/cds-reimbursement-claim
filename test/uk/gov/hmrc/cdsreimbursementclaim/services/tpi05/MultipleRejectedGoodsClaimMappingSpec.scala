@@ -119,7 +119,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 importerEORIDetails = {
-                  val maybeConsigneeDetails = leadDeclaration.displayResponseDetail.consigneeDetails
+                  val maybeConsigneeDetails = leadDeclaration.displayResponseDetail.effectiveConsigneeDetails
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
@@ -211,7 +211,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = declaration.displayResponseDetail.consigneeDetails.value
+                    val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails.value
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(
