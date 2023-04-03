@@ -28,6 +28,15 @@ final case class ConsigneeDetails(
 ) extends ClaimantDetails
 
 object ConsigneeDetails {
+
+  def from(declarant: DeclarantDetails): ConsigneeDetails =
+    ConsigneeDetails(
+      EORI = declarant.EORI,
+      legalName = declarant.legalName,
+      establishmentAddress = declarant.establishmentAddress,
+      contactDetails = declarant.contactDetails
+    )
+
   private val reads: Reads[ConsigneeDetails] = (
     (JsPath \ "consigneeEORI").read[Eori] and
       (JsPath \ "legalName").read[String] and

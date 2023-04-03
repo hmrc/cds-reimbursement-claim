@@ -59,10 +59,10 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                         CdsError("The declarant contact information is missing")
                                                                       )
       declarantDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      _                                                            <- displayDeclaration.displayResponseDetail.consigneeDetails
+      _                                                            <- displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
                                                                         .map(_.contactDetails.toRight(CdsError("The consignee contact information is missing")).map(_ => ()))
                                                                         .getOrElse(().asRight)
-      consigneeDetails                                              = displayDeclaration.displayResponseDetail.consigneeDetails
+      consigneeDetails                                              = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
                                                                         .map(mrnInfoFromClaimantDetails)
                                                                         .getOrElse(declarantDetails)
       securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten

@@ -194,7 +194,7 @@ class C285ClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = displayDeclaration.displayResponseDetail.consigneeDetails.value
+                    val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails.value
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(
@@ -329,7 +329,7 @@ class C285ClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = details.consigneeDetails.value
+                    val consigneeDetails   = details.effectiveConsigneeDetails.value
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(

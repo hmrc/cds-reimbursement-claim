@@ -35,7 +35,14 @@ final case class DisplayResponseDetail(
   maskedBankDetails: Option[BankDetails],
   ndrcDetails: Option[List[NdrcDetails]],
   securityDetails: Option[List[SecurityDetails]] = None
-)
+) {
+
+  val effectiveConsigneeDetails: Option[ConsigneeDetails] =
+    consigneeDetails.orElse {
+      Some(ConsigneeDetails.from(declarantDetails))
+    }
+
+}
 
 object DisplayResponseDetail {
   implicit val format: OFormat[DisplayResponseDetail] = Json.format[DisplayResponseDetail]

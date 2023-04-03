@@ -35,7 +35,7 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
   def map(details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val claim                 = details._1
     val declaration           = details._2.displayResponseDetail
-    val maybeConsigneeDetails = declaration.consigneeDetails
+    val maybeConsigneeDetails = declaration.effectiveConsigneeDetails
 
     // todo CDSR-1795 TPI05 creation and validation - factor out common code
     (for {
@@ -115,7 +115,7 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
       .withWhetherMainDeclarationReference(true)
       .withProcedureCode(declaration.procedureCode)
       .withDeclarantDetails(declaration.declarantDetails)
-      .withConsigneeDetails(declaration.consigneeDetails)
+      .withConsigneeDetails(declaration.effectiveConsigneeDetails)
       .withAccountDetails(declaration.accountDetails)
       .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
       .withNdrcDetails(
