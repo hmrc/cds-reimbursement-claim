@@ -23,7 +23,7 @@ final case class MRNInformation(
   EORI: Eori,
   legalName: String,
   establishmentAddress: Address,
-  contactDetails: ContactInformation
+  contactDetails: Option[ContactInformation]
 )
 
 object MRNInformation {

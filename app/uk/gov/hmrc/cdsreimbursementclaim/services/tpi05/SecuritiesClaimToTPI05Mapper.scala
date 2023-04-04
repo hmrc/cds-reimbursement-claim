@@ -55,13 +55,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                       )
       claimantEmail                                                 = Email(email)
       claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
-      _                                                            <- displayDeclaration.displayResponseDetail.declarantDetails.contactDetails.toRight(
-                                                                        CdsError("The declarant contact information is missing")
-                                                                      )
       declarantDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      _                                                            <- displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
-                                                                        .map(_.contactDetails.toRight(CdsError("The consignee contact information is missing")).map(_ => ()))
-                                                                        .getOrElse(().asRight)
       consigneeDetails                                              = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
                                                                         .map(mrnInfoFromClaimantDetails)
                                                                         .getOrElse(declarantDetails)
@@ -262,7 +256,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
             .fromEstablishmentAddress(claimantDetails.establishmentAddress)
             .copy(contactPerson = claimantDetails.contactDetails.flatMap(_.contactName))
       },
-      contactDetails = contactInfoFromClaimantDetails(claimantDetails)
+      contactDetails = Some(contactInfoFromClaimantDetails(claimantDetails))
     )
 
   private def contactInfoFromClaimantDetails(claimantDetails: ClaimantDetails): ContactInformation =

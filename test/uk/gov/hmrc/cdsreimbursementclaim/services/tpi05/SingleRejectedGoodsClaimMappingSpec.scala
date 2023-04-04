@@ -186,18 +186,20 @@ class SingleRejectedGoodsClaimMappingSpec
                       telephoneNumber = None,
                       emailAddress = None
                     ),
-                    contactDetails = ContactInformation(
-                      contactPerson = contactDetails.contactName,
-                      addressLine1 = contactDetails.addressLine1,
-                      addressLine2 = contactDetails.addressLine2,
-                      addressLine3 = contactDetails.addressLine3,
-                      street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
-                      city = contactDetails.addressLine3,
-                      countryCode = contactDetails.countryCode,
-                      postalCode = contactDetails.postalCode,
-                      telephoneNumber = contactDetails.telephone,
-                      faxNumber = None,
-                      emailAddress = contactDetails.emailAddress
+                    contactDetails = Some(
+                      ContactInformation(
+                        contactPerson = contactDetails.contactName,
+                        addressLine1 = contactDetails.addressLine1,
+                        addressLine2 = contactDetails.addressLine2,
+                        addressLine3 = contactDetails.addressLine3,
+                        street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
+                        city = contactDetails.addressLine3,
+                        countryCode = contactDetails.countryCode,
+                        postalCode = contactDetails.postalCode,
+                        telephoneNumber = contactDetails.telephone,
+                        faxNumber = None,
+                        emailAddress = contactDetails.emailAddress
+                      )
                     )
                   ).some
                 },
@@ -223,18 +225,20 @@ class SingleRejectedGoodsClaimMappingSpec
                       telephoneNumber = None,
                       emailAddress = None
                     ),
-                    contactDetails = ContactInformation(
-                      contactPerson = contactInformation.contactName,
-                      addressLine1 = contactInformation.addressLine1,
-                      addressLine2 = contactInformation.addressLine2,
-                      addressLine3 = contactInformation.addressLine3,
-                      street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
-                      city = contactInformation.addressLine3,
-                      countryCode = contactInformation.countryCode,
-                      postalCode = contactInformation.postalCode,
-                      telephoneNumber = contactInformation.telephone,
-                      faxNumber = None,
-                      emailAddress = contactInformation.emailAddress
+                    contactDetails = Some(
+                      ContactInformation(
+                        contactPerson = contactInformation.contactName,
+                        addressLine1 = contactInformation.addressLine1,
+                        addressLine2 = contactInformation.addressLine2,
+                        addressLine3 = contactInformation.addressLine3,
+                        street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
+                        city = contactInformation.addressLine3,
+                        countryCode = contactInformation.countryCode,
+                        postalCode = contactInformation.postalCode,
+                        telephoneNumber = contactInformation.telephone,
+                        faxNumber = None,
+                        emailAddress = contactInformation.emailAddress
+                      )
                     )
                   ).some
                 },

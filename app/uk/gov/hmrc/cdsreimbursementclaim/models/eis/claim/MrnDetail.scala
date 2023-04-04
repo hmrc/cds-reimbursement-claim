@@ -73,30 +73,29 @@ object MrnDetail {
 
     def withDeclarantDetails(declarantDetails: DeclarantDetails): Builder =
       copy(validated.andThen { mrnDetails =>
-        declarantDetails.contactDetails
-          .toValidNel(Error("The declarant contact information is missing"))
-          .map { contactDetails =>
-            mrnDetails.copy(declarantDetails =
-              Some(
-                MRNInformation(
-                  EORI = declarantDetails.EORI,
-                  legalName = declarantDetails.legalName,
-                  establishmentAddress = Address(
-                    contactPerson = None,
-                    addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
-                    addressLine2 = declarantDetails.establishmentAddress.addressLine2,
-                    addressLine3 = declarantDetails.establishmentAddress.addressLine3,
-                    street = Street.fromLines(
-                      Option(declarantDetails.establishmentAddress.addressLine1),
-                      declarantDetails.establishmentAddress.addressLine2
-                    ),
-                    city = declarantDetails.establishmentAddress.addressLine3,
-                    countryCode = declarantDetails.establishmentAddress.countryCode,
-                    postalCode = declarantDetails.establishmentAddress.postalCode,
-                    telephoneNumber = None,
-                    emailAddress = None
+        Valid(
+          mrnDetails.copy(declarantDetails =
+            Some(
+              MRNInformation(
+                EORI = declarantDetails.EORI,
+                legalName = declarantDetails.legalName,
+                establishmentAddress = Address(
+                  contactPerson = None,
+                  addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
+                  addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+                  addressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                  street = Street.fromLines(
+                    Option(declarantDetails.establishmentAddress.addressLine1),
+                    declarantDetails.establishmentAddress.addressLine2
                   ),
-                  contactDetails = ContactInformation(
+                  city = declarantDetails.establishmentAddress.addressLine3,
+                  countryCode = declarantDetails.establishmentAddress.countryCode,
+                  postalCode = declarantDetails.establishmentAddress.postalCode,
+                  telephoneNumber = None,
+                  emailAddress = None
+                ),
+                contactDetails = declarantDetails.contactDetails.map(contactDetails =>
+                  ContactInformation(
                     contactPerson = contactDetails.contactName,
                     addressLine1 = contactDetails.addressLine1,
                     addressLine2 = contactDetails.addressLine2,
@@ -112,7 +111,8 @@ object MrnDetail {
                 )
               )
             )
-          }
+          )
+        )
       })
 
     def withConsigneeDetails(maybeConsigneeDetails: Option[ConsigneeDetails]): Builder =
@@ -120,30 +120,29 @@ object MrnDetail {
         maybeConsigneeDetails
           .toValidNel(Error("The consignee details are missing"))
           .andThen { consigneeDetails =>
-            consigneeDetails.contactDetails
-              .toValidNel(Error("The consignee contact information is missing"))
-              .map { contactInformation =>
-                mrnDetails.copy(consigneeDetails =
-                  Some(
-                    MRNInformation(
-                      EORI = consigneeDetails.EORI,
-                      legalName = consigneeDetails.legalName,
-                      establishmentAddress = Address(
-                        contactPerson = None,
-                        addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
-                        addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
-                        addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
-                        street = Street.fromLines(
-                          Option(consigneeDetails.establishmentAddress.addressLine1),
-                          consigneeDetails.establishmentAddress.addressLine2
-                        ),
-                        city = consigneeDetails.establishmentAddress.addressLine3,
-                        countryCode = consigneeDetails.establishmentAddress.countryCode,
-                        postalCode = consigneeDetails.establishmentAddress.postalCode,
-                        telephoneNumber = None,
-                        emailAddress = None
+            Valid(
+              mrnDetails.copy(consigneeDetails =
+                Some(
+                  MRNInformation(
+                    EORI = consigneeDetails.EORI,
+                    legalName = consigneeDetails.legalName,
+                    establishmentAddress = Address(
+                      contactPerson = None,
+                      addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
+                      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+                      addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                      street = Street.fromLines(
+                        Option(consigneeDetails.establishmentAddress.addressLine1),
+                        consigneeDetails.establishmentAddress.addressLine2
                       ),
-                      contactDetails = ContactInformation(
+                      city = consigneeDetails.establishmentAddress.addressLine3,
+                      countryCode = consigneeDetails.establishmentAddress.countryCode,
+                      postalCode = consigneeDetails.establishmentAddress.postalCode,
+                      telephoneNumber = None,
+                      emailAddress = None
+                    ),
+                    contactDetails = consigneeDetails.contactDetails.map(contactInformation =>
+                      ContactInformation(
                         contactPerson = contactInformation.contactName,
                         addressLine1 = contactInformation.addressLine1,
                         addressLine2 = contactInformation.addressLine2,
@@ -159,7 +158,8 @@ object MrnDetail {
                     )
                   )
                 )
-              }
+              )
+            )
           }
       })
 
