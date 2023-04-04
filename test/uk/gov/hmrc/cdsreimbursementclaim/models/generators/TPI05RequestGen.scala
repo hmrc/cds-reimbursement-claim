@@ -181,7 +181,7 @@ object TPI05RequestGen {
       EORI = eori,
       legalName = legalName,
       establishmentAddress = establishmentAddress,
-      contactDetails = contactInformation
+      contactDetails = Some(contactInformation)
     )
 
   lazy val genMrnDetails: Gen[MrnDetail] =

@@ -44,10 +44,6 @@ object EORIInformation {
     val maybeEstablishmentAddressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
     val maybeEstablishmentAddressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3)
 
-    val maybeAddress1 = maybeContactDetails.flatMap(_.addressLine1)
-    val maybeAddress2 = maybeContactDetails.flatMap(_.addressLine2)
-    val maybeAddress3 = maybeContactDetails.flatMap(_.addressLine3)
-
     for {
       eoriNumber  <- maybeConsigneeDetails.map(_.EORI)
       cdsFullName <- maybeConsigneeDetails.map(_.legalName)
@@ -68,21 +64,25 @@ object EORIInformation {
         telephoneNumber = maybeTelephone,
         emailAddress = maybeEmailAddress
       ),
-      contactInformation = Some(
+      contactInformation = maybeConsigneeDetails.flatMap(_.contactDetails).map { contactDetails =>
+        val maybeAddress1 = contactDetails.addressLine1
+        val maybeAddress2 = contactDetails.addressLine2
+        val maybeAddress3 = contactDetails.addressLine3
+
         ContactInformation(
-          contactPerson = maybeContactDetails.flatMap(_.contactName),
+          contactPerson = contactDetails.contactName,
           addressLine1 = maybeAddress1,
           addressLine2 = maybeAddress2,
           addressLine3 = maybeAddress3,
           street = Street.fromLines(maybeAddress1, maybeAddress2),
           city = maybeAddress3,
-          countryCode = maybeContactDetails.flatMap(_.countryCode),
-          postalCode = maybeContactDetails.flatMap(_.postalCode),
+          countryCode = contactDetails.countryCode,
+          postalCode = contactDetails.postalCode,
           telephoneNumber = maybeTelephone,
           faxNumber = None,
           emailAddress = maybeEmailAddress
         )
-      )
+      }
     )
   }.toRight(CdsError("EORINumber and CDSFullName are mandatory"))
 
@@ -95,10 +95,6 @@ object EORIInformation {
     val establishmentAddressLine1      = consigneeDetails.establishmentAddress.addressLine1
     val maybeEstablishmentAddressLine2 = consigneeDetails.establishmentAddress.addressLine2
     val maybeEstablishmentAddressLine3 = consigneeDetails.establishmentAddress.addressLine3
-
-    val maybeAddress1 = maybeContactDetails.flatMap(_.addressLine1)
-    val maybeAddress2 = maybeContactDetails.flatMap(_.addressLine2)
-    val maybeAddress3 = maybeContactDetails.flatMap(_.addressLine3)
 
     EORIInformation(
       EORINumber = consigneeDetails.EORI,
@@ -115,21 +111,25 @@ object EORIInformation {
         telephoneNumber = maybeTelephone,
         emailAddress = maybeEmailAddress
       ),
-      contactInformation = Some(
+      contactInformation = consigneeDetails.contactDetails.map { contactDetails =>
+        val maybeAddress1 = contactDetails.addressLine1
+        val maybeAddress2 = contactDetails.addressLine2
+        val maybeAddress3 = contactDetails.addressLine3
+
         ContactInformation(
-          contactPerson = maybeContactDetails.flatMap(_.contactName),
+          contactPerson = contactDetails.contactName,
           addressLine1 = maybeAddress1,
           addressLine2 = maybeAddress2,
           addressLine3 = maybeAddress3,
           street = Street.fromLines(maybeAddress1, maybeAddress2),
           city = maybeAddress3,
-          countryCode = maybeContactDetails.flatMap(_.countryCode),
-          postalCode = maybeContactDetails.flatMap(_.postalCode),
+          countryCode = contactDetails.countryCode,
+          postalCode = contactDetails.postalCode,
           telephoneNumber = maybeTelephone,
           faxNumber = None,
           emailAddress = maybeEmailAddress
         )
-      )
+      }
     )
   }
 
