@@ -22,3 +22,5 @@ POST        /claims/rejected-goods-scheduled         uk.gov.hmrc.cdsreimbursemen
 POST        /claims/securities                       uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitSecuritiesClaim()
 
 POST        /claims/files                            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitFiles() 
+
+GET         /eori/xi                                 uk.gov.hmrc.cdsreimbursementclaim.controllers.GetXiEoriController.getXiEori

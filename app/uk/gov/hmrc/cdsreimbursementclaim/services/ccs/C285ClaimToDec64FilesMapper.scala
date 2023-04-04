@@ -22,7 +22,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 
 import java.util.UUID
 
-@deprecated("Is replaced by journey specific Overpayments Dec64 mappers")
 class C285ClaimToDec64FilesMapper extends ClaimToDec64Mapper[C285ClaimRequest] {
 
   def map(request: C285ClaimRequest, response: ClaimSubmitResponse): List[Envelope] =

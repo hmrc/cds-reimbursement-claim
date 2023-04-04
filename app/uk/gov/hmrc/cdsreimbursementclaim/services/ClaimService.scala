@@ -54,7 +54,6 @@ import scala.util.Try
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
 
-  @deprecated("Use journey specific overpayments calls instead")
   def submitC285Claim(
     c285ClaimRequest: C285ClaimRequest
   )(implicit

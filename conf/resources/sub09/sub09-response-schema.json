@@ -1,0 +1,314 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "SUB09",
+  "title": "SUB09-SUBSCRIPTION DISPLAY",
+  "description": "SUB09-MDG API JSON Specification",
+  "type": "object",
+  "minProperties": 1,
+  "maxProperties": 1,
+  "properties": {
+    "subscriptionDisplayResponse": {
+      "type": "object",
+      "properties": {
+        "responseCommon": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8
+            },
+            "statusText": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "processingDate": {
+              "type": "string",
+              "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
+            },
+            "returnParameters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "paramName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "paramValue": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                },
+                "required": [
+                  "paramName",
+                  "paramValue"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "status",
+            "processingDate"
+          ],
+          "additionalProperties": false
+        },
+        "responseDetail": {
+          "type": "object",
+          "properties": {
+            "EORINo": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 17,
+              "pattern": "^[A-Z]{2}[0-9A-Z]+$"
+            },
+            "EORIStartDate": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 10,
+              "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+            },
+            "EORIEndDate": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 10,
+              "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+            },
+            "CDSFullName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "CDSEstablishmentAddress": {
+              "type": "object",
+              "properties": {
+                "streetAndNumber": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 70
+                },
+                "city": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 35
+                },
+                "postalCode": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 9
+                },
+                "countryCode": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 2
+                }
+              },
+              "required": [
+                "streetAndNumber",
+                "city",
+                "countryCode"
+              ],
+              "additionalProperties": false
+            },
+            "typeOfLegalEntity": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            },
+            "contactInformation": {
+              "type": "object",
+              "properties": {
+                "personOfContact": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 70
+                },
+                "sepCorrAddrIndicator": {
+                  "type": "boolean"
+                },
+                "streetAndNumber": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 70
+                },
+                "city": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 35
+                },
+                "postalCode": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 9
+                },
+                "countryCode": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 2
+                },
+                "telephoneNumber": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 50
+                },
+                "faxNumber": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 50
+                },
+                "emailAddress": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 50
+                },
+                "emailVerificationTimestamp": {
+                  "type": "string",
+                  "pattern": "^(2[0-9]{3})-(0[1-9]|1[0-2])-(3[0-1]|[0-2][0-9])T(2[0-3]|[0-1][0-9]):([0-5][0-9]):([0-5][0-9])Z$"
+                }
+              },
+              "additionalProperties": false
+            },
+            "thirdCountryUniqueIdentificationNumber": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 17
+              }
+            },
+            "consentToDisclosureOfPersonalData": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1
+            },
+            "shortName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 70
+            },
+            "dateOfEstablishment": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 10,
+              "pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+            },
+            "typeOfPerson": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1,
+              "enum": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "principalEconomicActivity": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4
+            },
+            "ETMP_Master_Indicator": {
+              "type": "boolean"
+            },
+            "XI_Subscription": {
+              "type": "object",
+              "properties": {
+                "XI_EORINo": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 17,
+                  "pattern": "^[A-Z]{2}[0-9A-Z]+$"
+                },
+                "PBEAddress": {
+                  "type": "object",
+                  "properties": {
+                    "streetNumber1": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 35,
+                      "description": "Address Line 1"
+                    },
+                    "streetNumber2": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 35,
+                      "description": "Address Line 2"
+                    },
+                    "city": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 35
+                    },
+                    "postalCode": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 9,
+                      "description": "Mandatory if countryCode is 'GB'"
+                    },
+                    "countryCode": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 2
+                    }
+                  },
+                  "required": [
+                    "streetNumber1"
+                  ]
+                },
+                "XI_VATNumber": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 17
+                },
+                "EU_VATNumber": {
+                  "type": "object",
+                  "properties": {
+                    "countryCode": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 2
+                    },
+                    "VATId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 15
+                    }
+                  }
+                },
+                "XI_ConsentToDisclose": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1
+                },
+                "XI_SICCode": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4
+                }
+              },
+              "required": [
+                "XI_EORINo"
+              ]
+            }
+          },
+          "required": [
+            "CDSFullName",
+            "CDSEstablishmentAddress",
+            "ETMP_Master_Indicator"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "responseCommon",
+        "responseDetail"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

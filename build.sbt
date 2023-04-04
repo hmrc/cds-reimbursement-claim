@@ -25,7 +25,13 @@ lazy val wartremoverSettings =
       (Compile / routes).value ++
         (baseDirectory.value ** "*.sc").get ++
         Seq(sourceManaged.value / "main" / "sbt-buildinfo" / "BuildInfo.scala"),
-    Test / compile / wartremoverErrors --= Seq(Wart.NonUnitStatements, Wart.Null, Wart.PublicInference, Wart.Any)
+    Test / compile / wartremoverErrors --= Seq(
+      Wart.NonUnitStatements,
+      Wart.Null,
+      Wart.PublicInference,
+      Wart.Any,
+      Wart.OptionPartial
+    )
   )
 
 lazy val scoverageSettings =

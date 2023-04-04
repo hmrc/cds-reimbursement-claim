@@ -43,9 +43,6 @@ class SubmitClaimController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  @deprecated(
-    "Use specific journey calls: submitSingleOverpaymentsClaim, submitMultipleOverpaymentsClaim or submitScheduledOverpaymentsClaim"
-  )
   final val submitC285Claim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[C285ClaimRequest] {
       uploadDocumentsOnce {

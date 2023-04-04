@@ -1,0 +1,14 @@
+{
+  "errorDetail": {
+    "timestamp": "2016-10-10T14:30:44Z",
+    "correlationId": "6bbd0963-f9f0-4d00-8169-9438d8d3044d",
+    "errorCode": "400",
+    "errorMessage": "REGIME missing or invalid",
+    "source": "Back End",
+    "sourceFaultDetail": {
+      "detail": [
+        "002 - SAP_NUMBER missing or invalid"
+      ]
+    }
+  }
+}
