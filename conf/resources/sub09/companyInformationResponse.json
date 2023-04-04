@@ -1,0 +1,61 @@
+{
+  "subscriptionDisplayResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "statusText": "Optional status text from ETMP",
+      "processingDate": "2016-08-17T19:33:47Z",
+      "returnParameters": [
+        {
+          "paramName": "POSITION",
+          "paramValue": "LINK"
+        }
+      ]
+    },
+    "responseDetail": {
+      "EORINo": "MY_OWN_EORI",
+      "EORIStartDate": "1999-01-01",
+      "EORIEndDate": "2020-01-01",
+      "CDSFullName": "Tony Stark",
+      "CDSEstablishmentAddress": {
+        "streetAndNumber": "86 Mysore Road",
+        "city": "London",
+        "postalCode": "SW11 5RZ",
+        "countryCode": "GB"
+      },
+      "typeOfLegalEntity": "0001",
+      "contactInformation": {
+        "personOfContact": "Pepper Pott",
+        "streetAndNumber": "2nd floor, Alexander House",
+        "city": "Southend-on-sea",
+        "postalCode": "SS99 1AA",
+        "countryCode": "GB",
+        "telephoneNumber": "01702215001",
+        "faxNumber": "01702215002",
+        "emailAddress": "someemail@mail.com"
+      },
+      "thirdCountryUniqueIdentificationNumber": [
+        "321",
+        "222"
+      ],
+      "consentToDisclosureOfPersonalData": "1",
+      "shortName": "Robinson",
+      "dateOfEstablishment": "1963-04-01",
+      "typeOfPerson": "1",
+      "principalEconomicActivity": "2000",
+      "ETMP_Master_Indicator": true,
+      "XI_Subscription": {
+        "XI_EORINo": "MY_OWN_EORI",
+        "PBEAddress": {
+          "streetNumber1": "address line 1",
+          "streetNumber2": "address line 2",
+          "city": "city 1"
+        },
+        "XI_VATNumber": "GB123456789",
+        "EU_VATNumber": {
+          "countryCode": "GB",
+          "VATId": "123456891012"
+        }
+      }
+    }
+  }
+}

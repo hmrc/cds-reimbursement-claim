@@ -20,10 +20,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.C285ClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
-@deprecated("Is replaced by journey specific overpayments email mappers")
 class C285ClaimToEmailMapper extends ClaimToEmailMapper[C285ClaimRequest] {
-  override def map(claim: C285ClaimRequest): Either[CdsError, EmailRequest] = {
-    val x = for {
+  override def map(claim: C285ClaimRequest): Either[CdsError, EmailRequest] =
+    for {
       email       <- claim.claim.contactInformation.emailAddress.toRight(
                        CdsError("no email address provided with claim")
                      )
@@ -36,7 +35,4 @@ class C285ClaimToEmailMapper extends ClaimToEmailMapper[C285ClaimRequest] {
       contactName,
       claimAmount
     )
-
-    x
-  }
 }

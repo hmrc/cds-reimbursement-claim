@@ -1,0 +1,33 @@
+{
+  "subscriptionDisplayResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "statusText": "Processed Successfully",
+      "processingDate": "2019-12-18T10:27:24Z",
+      "returnParameters": [
+        {
+          "paramName": "ETMPFORMBUNDLENUMBER",
+          "paramValue": "093000026846"
+        }
+      ]
+    },
+    "responseDetail": {
+      "EORIStartDate": "2009-05-16",
+      "CDSEstablishmentAddress": {
+        "streetAndNumber": "My Company",
+        "city": "Shipley",
+        "postalCode": "BD18 3ER",
+        "countryCode": "GB"
+      },
+      "contactInformation": {
+        "personOfContact": "Peter",
+        "sepCorrAddrIndicator": true
+      },
+      "ETMP_Master_Indicator": false,
+      "EORINo": "NOEMAIL",
+      "consentToDisclosureOfPersonalData": "0",
+      "CDSFullName": "NOEMAIL",
+      "shortName": "NOEMAIL"
+    }
+  }
+}
