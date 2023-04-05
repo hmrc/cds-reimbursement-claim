@@ -22,7 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.time.LocalDate
 
-trait RejectedGoodsClaim extends Product with Serializable {
+trait RejectedGoodsClaim extends HasClaimantInformation {
 
   val claimantType: ClaimantType
 

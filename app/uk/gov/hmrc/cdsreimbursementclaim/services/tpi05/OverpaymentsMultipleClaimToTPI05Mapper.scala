@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.{catsSyntaxEq, catsSyntaxOption}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, MultipleOverpaymentsClaim, TypeOfClaimAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, MultipleOverpaymentsClaim, TypeOfClaimAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
@@ -29,7 +29,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsMultipleClaimToTPI05Mapper
-    extends ClaimToTPI05Mapper[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] {
+    extends ClaimToTPI05Mapper[(MultipleOverpaymentsClaim, List[DisplayDeclaration])]
+    with GetEoriDetails[MultipleOverpaymentsClaim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
@@ -45,14 +46,9 @@ class OverpaymentsMultipleClaimToTPI05Mapper
       details._2.headOption.flatMap(_.displayResponseDetail.effectiveConsigneeDetails)
 
     (for {
-      email        <- contactInfo.emailAddress.toRight(
-                        CdsError("Email address is missing")
-                      )
-      claimantName <- contactInfo.contactPerson.toRight(
-                        CdsError("Email address is missing")
-                      )
-      claimantEmail = Email(email)
-
+      email            <- contactInfo.emailAddress.toRight(CdsError("Email address is missing"))
+      claimantName     <- contactInfo.contactPerson.toRight(CdsError("Email address is missing"))
+      claimantEmail     = Email(email)
       consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
     } yield TPI05
       .request(
@@ -79,28 +75,6 @@ class OverpaymentsMultipleClaimToTPI05Mapper
       .withEORIDetails(getEoriDetails(consigneeDetails, claim))
       .withMrnDetails(getMrnDetails(claim, declarations))).flatMap(_.verify)
   }
-
-  private def getEoriDetails(consigneeDetails: ConsigneeDetails, claim: MultipleOverpaymentsClaim): EoriDetails =
-    EoriDetails(
-      importerEORIDetails = EORIInformation.forConsignee(consigneeDetails),
-      agentEORIDetails = EORIInformation(
-        EORINumber = claim.claimantInformation.eori,
-        CDSFullName = claim.claimantInformation.fullName,
-        CDSEstablishmentAddress = Address(
-          contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
-          addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
-          addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-          addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-          street = claim.claimantInformation.establishmentAddress.street,
-          city = claim.claimantInformation.establishmentAddress.city,
-          countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
-          postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-          telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
-          emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
-        ),
-        contactInformation = Some(claim.claimantInformation.contactInformation)
-      )
-    )
 
   private def getMrnDetails(
     claim: MultipleOverpaymentsClaim,

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
-
-trait OverpaymentsClaim extends HasClaimantInformation {
-  def bankAccountDetailsAnswer: Option[BankAccountDetails]
+trait HasClaimantInformation {
+  def claimantInformation: ClaimantInformation
 }
