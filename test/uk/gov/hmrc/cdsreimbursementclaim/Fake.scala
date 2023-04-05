@@ -20,7 +20,7 @@ import play.api.mvc._
 import play.api.test.Helpers
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.{AuthenticateWithUserActions, AuthenticatedUser, AuthenticatedUserRequest}
 import uk.gov.hmrc.http.HeaderCarrier
-
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
@@ -46,7 +46,7 @@ object Fake {
       override protected def executionContext: ExecutionContext = ExecutionContext.global
     }
 
-  val user: AuthenticatedUser = AuthenticatedUser("ggCredId")
+  val user: AuthenticatedUser = AuthenticatedUser("ggCredId", Some("name"), Some(Email("email@example.com")))
 
   def login(eori: Eori): AuthorisedActions =
     new AuthorisedActions {

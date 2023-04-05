@@ -19,16 +19,19 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import cats.implicits.catsSyntaxEq
 import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUser
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaim.DuplicateEntry
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.genEmail
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.genContactInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.OverpaymentsSingleClaimData
 
 import java.net.URL
 import scala.jdk.CollectionConverters.asScalaBufferConverter
@@ -107,7 +110,7 @@ object OverpaymentsClaimGen {
       documentType = documentType
     )
 
-  lazy val genOverpaymentsSingleClaim: Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+  lazy val genOverpaymentsSingleClaim: Gen[OverpaymentsSingleClaimData] =
     for {
       mrn                      <- genMRN
       claimantType             <- Gen.oneOf(ClaimantType.values)
@@ -126,7 +129,11 @@ object OverpaymentsClaimGen {
       evidences                <- Gen.nonEmptyListOf(genEvidences)
       whetherInNorthernIreland <- Gen.oneOf(true, false)
       additionalDetails        <- genRandomString
-    } yield (
+      userEmail                <- Gen.some(genEmail)
+      firstName                <- genStringWithMaxSizeOfN(15)
+      lastName                 <- genStringWithMaxSizeOfN(15)
+      ggCredId                 <- genStringWithMaxSizeOfN(15)
+    } yield OverpaymentsSingleClaimData(
       SingleOverpaymentsClaim(
         movementReferenceNumber = mrn,
         duplicateMovementReferenceNumber = duplicateMrn,
@@ -141,7 +148,12 @@ object OverpaymentsClaimGen {
         supportingEvidences = evidences
       ),
       declaration,
-      duplicateDeclaration
+      duplicateDeclaration,
+      AuthenticatedUser(
+        ggCredId,
+        Some(s"$firstName $lastName"),
+        userEmail
+      )
     )
 
   lazy val genOverpaymentsMultipleClaim: Gen[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
@@ -236,7 +248,7 @@ object OverpaymentsClaimGen {
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
   implicit lazy val arbitrarySingleOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]       =
-    Arbitrary(genOverpaymentsSingleClaim.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
+    Arbitrary(genOverpaymentsSingleClaim.map { case OverpaymentsSingleClaimData(claim, _, _, _) => SingleOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitraryMultipleOverpaymentsRequest: Typeclass[MultipleOverpaymentsClaimRequest]   =
     Arbitrary(genOverpaymentsMultipleClaim.map { case (claim, _) => MultipleOverpaymentsClaimRequest(claim) })
@@ -245,13 +257,13 @@ object OverpaymentsClaimGen {
     Arbitrary(genOverpaymentsScheduledClaim.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitrarySingleOverpaymentsClaimDetails
-    : Typeclass[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])]              =
+    : Typeclass[OverpaymentsSingleClaimData]              =
     Arbitrary(genOverpaymentsSingleClaim)
 
   implicit lazy val arbitraryOverpaymentsSingleClaim: Typeclass[SingleOverpaymentsClaim] =
     Arbitrary(
       for {
-        (claim, _, _) <- genOverpaymentsSingleClaim
+        OverpaymentsSingleClaimData(claim, _, _, _) <- genOverpaymentsSingleClaim
       } yield claim
     )
 

@@ -20,13 +20,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SingleOverpaymentsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.OverpaymentsSingleClaimData
 
 class OverpaymentsSingleClaimToEmailMapper
-    extends ClaimToEmailMapper[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] {
+    extends ClaimToEmailMapper[OverpaymentsSingleClaimData] {
   override def map(
-    claim: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])
+    claim: OverpaymentsSingleClaimData
   ): Either[CdsError, EmailRequest] = {
-    val (overpaymentsClaim, _, _) = claim
+    val OverpaymentsSingleClaimData(overpaymentsClaim, _, _, _) = claim
     for {
       email       <- overpaymentsClaim.claimantInformation.contactInformation.emailAddress.toRight(
                        CdsError("no email address provided with claim")

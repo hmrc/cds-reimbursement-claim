@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
+import cats.implicits.catsSyntaxTuple2Semigroupal
 import com.google.inject.ImplementedBy
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
@@ -23,12 +24,12 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
-
+import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email => CdsEmail}
 import java.time.LocalDateTime
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-final case class AuthenticatedUser(ggCredId: String)
+final case class AuthenticatedUser(ggCredId: String, name: Option[String], email: Option[CdsEmail])
 class AuthenticatedUserRequest[+A](
   val user: AuthenticatedUser,
   val timestamp: LocalDateTime,
@@ -54,10 +55,18 @@ class AuthenticateWithUserActionBuilder @Inject() (
     val forbidden = Results.Forbidden("Forbidden")
     val carrier   = hc(request)
     authorised(AuthProviders(GovernmentGateway))
-      .retrieve(v2.Retrievals.credentials) {
-        case Some(credentials) =>
-          val user = AuthenticatedUser(credentials.providerId)
-          block(new AuthenticatedUserRequest[A](user, LocalDateTime.now(), carrier, request))
+      .retrieve(v2.Retrievals.credentials and v2.Retrievals.name and v2.Retrievals.email) {
+        case Some(credentials) ~ name ~ email =>
+          val user = AuthenticatedUser(
+            credentials.providerId,
+            name.flatMap(x => (x.name, x.lastName).mapN((name, lastName) => s"$name $lastName")),
+            email.map(CdsEmail.apply)
+          )
+          block(new AuthenticatedUserRequest[A](
+            user,
+            LocalDateTime.now(),
+            carrier,
+            request))
         case _                 => Future.successful(forbidden)
       }(carrier, executionContext)
       .recover { case _: NoActiveSession =>

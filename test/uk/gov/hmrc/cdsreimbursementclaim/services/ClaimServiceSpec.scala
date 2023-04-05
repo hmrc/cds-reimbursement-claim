@@ -29,6 +29,7 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUser
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -45,7 +46,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
 import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsMultipleClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
-import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimData, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -269,10 +270,10 @@ class ClaimServiceSpec
 
       "successfully submit a Single Overpayments claim" in forAll(genOverpaymentsSingleClaim, genC285EisRequest) {
         (
-          singleOverpaymentsClaimData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]),
+          singleOverpaymentsClaimData: OverpaymentsSingleClaimData,
           eisRequest: EisSubmitClaimRequest
         ) =>
-          val (claim, declaration, duplicateDeclaration) = singleOverpaymentsClaimData
+          val OverpaymentsSingleClaimData(claim, declaration, duplicateDeclaration, user) = singleOverpaymentsClaimData
           val responseJsonBody                           = Json.parse(
             """
                 |{
@@ -298,8 +299,8 @@ class ClaimServiceSpec
           inSequence {
             mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
             (overpaymentsSingleClaimMapper
-              .map(_: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])))
-              .expects((claim, declaration, duplicateDeclaration))
+              .map(_: OverpaymentsSingleClaimData))
+              .expects(OverpaymentsSingleClaimData(claim, declaration, duplicateDeclaration, user))
               .returning(Right(eisRequest))
             (claim.duplicateMovementReferenceNumber, duplicateDeclaration).mapN(
               mockDeclarationRetrieving(_)(_)
@@ -319,7 +320,7 @@ class ClaimServiceSpec
           }
 
           await(
-            claimService.submitSingleOverpaymentsClaim(SingleOverpaymentsClaimRequest(claim)).value
+            claimService.submitSingleOverpaymentsClaim(SingleOverpaymentsClaimRequest(claim), user).value
           ) shouldBe Right(submitClaimResponse)
       }
 

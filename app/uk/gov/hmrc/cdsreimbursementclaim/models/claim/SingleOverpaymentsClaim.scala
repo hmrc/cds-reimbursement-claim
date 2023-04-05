@@ -27,7 +27,7 @@ final case class SingleOverpaymentsClaim(
   claimantType: ClaimantType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
-  whetherNorthernIreland: Boolean,
+  whetherNorthernIreland: Boolean, //Where is this used and why is it needed?
   additionalDetails: String,
   reimbursementClaims: Map[TaxCode, BigDecimal],
   reimbursementMethod: ReimbursementMethodAnswer,

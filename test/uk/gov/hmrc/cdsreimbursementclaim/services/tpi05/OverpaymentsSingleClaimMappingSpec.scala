@@ -51,12 +51,12 @@ class OverpaymentsSingleClaimMappingSpec
   "The OverpaymentsSingle claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll(genOverpaymentsSingleClaim) {
-      singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]) =>
+      singleOverpaymentsData: OverpaymentsSingleClaimData =>
         val tpi05Request = overpaymentsSingleClaimToTPI05Mapper map singleOverpaymentsData
 
-        val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
-        val declarant                                         = displayDeclaration.displayResponseDetail.declarantDetails
-        val nrdcDetailsMap                                    = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
+        val OverpaymentsSingleClaimData(claim, displayDeclaration, duplicateDeclaration, user) = singleOverpaymentsData
+        val declarant      = displayDeclaration.displayResponseDetail.declarantDetails
+        val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
           .groupBy(_.taxType)
           .mapValues(_.sortBy(_.taxType).headOption.value)
           .mapValues(ndrc => ndrc.copy(amount = BigDecimal(ndrc.amount).roundToTwoDecimalPlaces.toString()))
