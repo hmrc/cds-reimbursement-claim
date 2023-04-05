@@ -256,24 +256,26 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
             .fromEstablishmentAddress(claimantDetails.establishmentAddress)
             .copy(contactPerson = claimantDetails.contactDetails.flatMap(_.contactName))
       },
-      contactDetails = Some(contactInfoFromClaimantDetails(claimantDetails))
+      contactDetails = contactInfoFromClaimantDetails(claimantDetails)
     )
 
-  private def contactInfoFromClaimantDetails(claimantDetails: ClaimantDetails): ContactInformation =
-    new ContactInformation(
-      contactPerson = claimantDetails.contactDetails.flatMap(_.contactName),
-      addressLine1 = claimantDetails.contactDetails.flatMap(_.addressLine1),
-      addressLine2 = claimantDetails.contactDetails.flatMap(_.addressLine2),
-      addressLine3 = claimantDetails.contactDetails.flatMap(_.addressLine3),
-      street = Street.fromLines(
-        claimantDetails.contactDetails.flatMap(_.addressLine1),
-        claimantDetails.contactDetails.flatMap(_.addressLine2)
-      ),
-      city = claimantDetails.contactDetails.flatMap(_.addressLine3),
-      countryCode = claimantDetails.contactDetails.flatMap(_.countryCode),
-      postalCode = claimantDetails.contactDetails.flatMap(_.postalCode),
-      telephoneNumber = None,
-      faxNumber = None,
-      emailAddress = claimantDetails.contactDetails.flatMap(_.emailAddress)
+  private def contactInfoFromClaimantDetails(claimantDetails: ClaimantDetails): Option[ContactInformation] =
+    claimantDetails.contactDetails.map(contactDetails =>
+      new ContactInformation(
+        contactPerson = contactDetails.contactName,
+        addressLine1 = contactDetails.addressLine1,
+        addressLine2 = contactDetails.addressLine2,
+        addressLine3 = contactDetails.addressLine3,
+        street = Street.fromLines(
+          contactDetails.addressLine1,
+          contactDetails.addressLine2
+        ),
+        city = contactDetails.addressLine3,
+        countryCode = contactDetails.countryCode,
+        postalCode = contactDetails.postalCode,
+        telephoneNumber = None,
+        faxNumber = None,
+        emailAddress = contactDetails.emailAddress
+      )
     )
 }
