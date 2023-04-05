@@ -55,8 +55,8 @@ class OverpaymentsSingleClaimMappingSpec
         val tpi05Request = overpaymentsSingleClaimToTPI05Mapper map singleOverpaymentsData
 
         val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
-        val declarant                                         = displayDeclaration.displayResponseDetail.declarantDetails
-        val nrdcDetailsMap                                    = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
+
+        val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
           .groupBy(_.taxType)
           .mapValues(_.sortBy(_.taxType).headOption.value)
           .mapValues(ndrc => ndrc.copy(amount = BigDecimal(ndrc.amount).roundToTwoDecimalPlaces.toString()))
@@ -91,22 +91,19 @@ class OverpaymentsSingleClaimMappingSpec
             'EORIDetails (
               EoriDetails(
                 agentEORIDetails = EORIInformation(
-                  EORINumber = declarant.EORI,
-                  CDSFullName = declarant.legalName,
+                  EORINumber = claim.claimantInformation.eori,
+                  CDSFullName = claim.claimantInformation.fullName,
                   CDSEstablishmentAddress = Address(
-                    contactPerson = declarant.contactDetails.flatMap(_.contactName),
-                    addressLine1 = declarant.contactDetails.flatMap(_.addressLine1),
-                    addressLine2 = declarant.contactDetails.flatMap(_.addressLine2),
-                    addressLine3 = declarant.contactDetails.flatMap(_.addressLine3),
-                    street = Street.fromLines(
-                      declarant.contactDetails.flatMap(_.addressLine1),
-                      declarant.contactDetails.flatMap(_.addressLine2)
-                    ),
-                    city = declarant.contactDetails.flatMap(_.addressLine4),
-                    postalCode = declarant.contactDetails.flatMap(_.postalCode),
-                    countryCode = declarant.contactDetails.flatMap(_.countryCode).value,
-                    emailAddress = declarant.contactDetails.flatMap(_.emailAddress),
-                    telephoneNumber = None
+                    contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
+                    addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
+                    addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
+                    addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+                    street = claim.claimantInformation.establishmentAddress.street,
+                    city = claim.claimantInformation.establishmentAddress.city,
+                    countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
+                    postalCode = claim.claimantInformation.establishmentAddress.postalCode,
+                    telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
+                    emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
                   ),
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),

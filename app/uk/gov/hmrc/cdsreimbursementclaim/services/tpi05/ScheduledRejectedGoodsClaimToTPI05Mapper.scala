@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ScheduledRejectedGoodsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayResponseDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class ScheduledRejectedGoodsClaimToTPI05Mapper
-    extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] {
+    extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)]
+    with GetEoriDetails[ScheduledRejectedGoodsClaim] {
 
   def map(details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val claim                 = details._1
@@ -81,28 +79,6 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
           countryCode = claim.inspectionAddress.countryCode,
           postalCode = claim.inspectionAddress.postalCode
         )
-      )
-    )
-
-  private def getEoriDetails(consigneeDetails: ConsigneeDetails, claim: ScheduledRejectedGoodsClaim) =
-    EoriDetails(
-      importerEORIDetails = EORIInformation.forConsignee(consigneeDetails),
-      agentEORIDetails = EORIInformation(
-        EORINumber = claim.claimantInformation.eori,
-        CDSFullName = claim.claimantInformation.fullName,
-        CDSEstablishmentAddress = Address(
-          contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
-          addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
-          addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-          addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-          street = claim.claimantInformation.establishmentAddress.street,
-          city = claim.claimantInformation.establishmentAddress.city,
-          countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
-          postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-          telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
-          emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
-        ),
-        contactInformation = Some(claim.claimantInformation.contactInformation)
       )
     )
 

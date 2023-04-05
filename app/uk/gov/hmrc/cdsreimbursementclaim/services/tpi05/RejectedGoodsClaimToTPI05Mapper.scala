@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.implicits.catsSyntaxEq
-import cats.implicits.catsSyntaxOption
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country
+import cats.implicits.{catsSyntaxEq, catsSyntaxOption}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.RejectedGoodsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayResponseDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
@@ -34,7 +31,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
 class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
-    extends ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])] {
+    extends ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])]
+    with GetEoriDetails[Claim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
@@ -88,28 +86,6 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
           countryCode = claim.inspectionAddress.countryCode,
           postalCode = claim.inspectionAddress.postalCode
         )
-      )
-    )
-
-  private def getEoriDetails(consigneeDetails: ConsigneeDetails, claim: Claim): EoriDetails =
-    EoriDetails(
-      importerEORIDetails = EORIInformation.forConsignee(consigneeDetails),
-      agentEORIDetails = EORIInformation(
-        EORINumber = claim.claimantInformation.eori,
-        CDSFullName = claim.claimantInformation.fullName,
-        CDSEstablishmentAddress = Address(
-          contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
-          addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
-          addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-          addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-          street = claim.claimantInformation.establishmentAddress.street,
-          city = claim.claimantInformation.establishmentAddress.city,
-          countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
-          postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-          telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
-          emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
-        ),
-        contactInformation = Some(claim.claimantInformation.contactInformation)
       )
     )
 

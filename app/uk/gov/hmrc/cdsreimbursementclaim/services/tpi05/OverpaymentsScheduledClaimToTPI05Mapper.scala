@@ -24,9 +24,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclarat
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
 
 class OverpaymentsScheduledClaimToTPI05Mapper
-    extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, DisplayDeclaration)] {
+    extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, DisplayDeclaration)]
+    with GetEoriDetails[ScheduledOverpaymentsClaim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
@@ -35,24 +37,20 @@ class OverpaymentsScheduledClaimToTPI05Mapper
     val (claim, declaration) = details
     val contactInfo          = claim.claimantInformation.contactInformation
 
+    val maybeConsigneeDetails: Option[ConsigneeDetails] =
+      declaration.displayResponseDetail.effectiveConsigneeDetails
+
     (for {
-      claimantEmail <- contactInfo.emailAddress.toRight(
-                         CdsError("Email address is missing")
-                       )
-      contactPerson <- contactInfo.contactPerson.toRight(
-                         CdsError("Email address is missing")
-                       )
-      importerEori  <- declaration.displayResponseDetail.effectiveConsigneeDetails
-                         .map(EORIInformation.forConsignee)
-                         .toRight(CdsError("Could not deduce consignee EORI information"))
-      agentEori     <- EORIInformation.forDeclarant(
-                         declaration.displayResponseDetail.declarantDetails,
-                         Some(claim.claimantInformation.contactInformation)
-                       )
-      eoriDetails    = EoriDetails(
-                         importerEORIDetails = importerEori,
-                         agentEORIDetails = agentEori
-                       )
+      claimantEmail    <- contactInfo.emailAddress.toRight(
+                            CdsError("Email address is missing")
+                          )
+      contactPerson    <- contactInfo.contactPerson.toRight(
+                            CdsError("Email address is missing")
+                          )
+      importerEori     <- maybeConsigneeDetails
+                            .map(EORIInformation.forConsignee)
+                            .toRight(CdsError("Could not deduce consignee EORI information"))
+      consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -75,7 +73,7 @@ class OverpaymentsScheduledClaimToTPI05Mapper
           })
         )
       )
-      .withEORIDetails(eoriDetails)
+      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
       .withMrnDetails(getMrnDetails(claim, declaration.displayResponseDetail))).flatMap(_.verify)
   }
 

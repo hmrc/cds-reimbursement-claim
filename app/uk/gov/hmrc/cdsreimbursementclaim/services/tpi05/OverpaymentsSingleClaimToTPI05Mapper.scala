@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails, ConsigneeDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
@@ -36,7 +36,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
 class OverpaymentsSingleClaimToTPI05Mapper
-    extends ClaimToTPI05Mapper[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] {
+    extends ClaimToTPI05Mapper[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])]
+    with GetEoriDetails[SingleOverpaymentsClaim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
@@ -45,24 +46,20 @@ class OverpaymentsSingleClaimToTPI05Mapper
     val (claim, declaration, duplicateDeclaration) = details
     val contactInfo                                = claim.claimantInformation.contactInformation
 
+    val maybeConsigneeDetails: Option[ConsigneeDetails] =
+      declaration.displayResponseDetail.effectiveConsigneeDetails
+
     (for {
-      claimantEmail <- contactInfo.emailAddress.toRight(
-                         CdsError("Email address is missing")
-                       )
-      contactPerson <- contactInfo.contactPerson.toRight(
-                         CdsError("Email address is missing")
-                       )
-      importerEori  <- declaration.displayResponseDetail.effectiveConsigneeDetails
-                         .map(EORIInformation.forConsignee)
-                         .toRight(CdsError("Could not deduce consignee EORI information"))
-      agentEori     <- EORIInformation.forDeclarant(
-                         declaration.displayResponseDetail.declarantDetails,
-                         Some(claim.claimantInformation.contactInformation)
-                       )
-      eoriDetails    = EoriDetails(
-                         importerEORIDetails = importerEori,
-                         agentEORIDetails = agentEori
-                       )
+      claimantEmail    <- contactInfo.emailAddress.toRight(
+                            CdsError("Email address is missing")
+                          )
+      contactPerson    <- contactInfo.contactPerson.toRight(
+                            CdsError("Email address is missing")
+                          )
+      importerEori     <- maybeConsigneeDetails
+                            .map(EORIInformation.forConsignee)
+                            .toRight(CdsError("Could not deduce consignee EORI information"))
+      consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -85,7 +82,7 @@ class OverpaymentsSingleClaimToTPI05Mapper
           })
         )
       )
-      .withEORIDetails(eoriDetails)
+      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
       .withMrnDetails(getMrnDetails(claim, declaration) :: Nil)
       .withMaybeDuplicateMrnDetails(
         duplicateDeclaration.map(d => getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId)), false))

@@ -140,6 +140,7 @@ object EORIInformation {
     for {
       countryCode <- declarantDetails.contactDetails
                        .flatMap(_.countryCode)
+                       .orElse(Some(Country.uk.code))
                        .toRight(CdsError("Country code not present in ACC14 response"))
     } yield EORIInformation(
       EORINumber = declarantDetails.EORI,
@@ -156,7 +157,7 @@ object EORIInformation {
         city = declarantDetails.contactDetails.flatMap(_.addressLine4),
         postalCode = declarantDetails.contactDetails.flatMap(_.postalCode),
         countryCode = countryCode,
-        telephoneNumber = None, // declarantDetails.contactDetails.flatMap(_.telephone),
+        telephoneNumber = declarantDetails.contactDetails.flatMap(_.telephone),
         emailAddress = declarantDetails.contactDetails.flatMap(_.emailAddress)
       ),
       contactInformation = contactInformation

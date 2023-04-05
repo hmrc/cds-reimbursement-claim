@@ -55,7 +55,6 @@ class OverpaymentsScheduledClaimMappingSpec
         val tpi05Request = overpaymentsScheduledClaimToTPI05Mapper map scheduledOverpaymentsData
 
         val (claim, displayDeclaration) = scheduledOverpaymentsData
-        val declarant                   = displayDeclaration.displayResponseDetail.declarantDetails
 
         inside(tpi05Request) {
           case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details: RequestDetail))) =>
@@ -87,22 +86,20 @@ class OverpaymentsScheduledClaimMappingSpec
               'EORIDetails (
                 EoriDetails(
                   agentEORIDetails = EORIInformation(
-                    EORINumber = declarant.EORI,
-                    CDSFullName = declarant.legalName,
+                    EORINumber = claim.claimantInformation.eori,
+                    CDSFullName = claim.claimantInformation.fullName,
                     CDSEstablishmentAddress = Address(
-                      contactPerson = declarant.contactDetails.flatMap(_.contactName),
-                      addressLine1 = declarant.contactDetails.flatMap(_.addressLine1),
-                      addressLine2 = declarant.contactDetails.flatMap(_.addressLine2),
-                      addressLine3 = declarant.contactDetails.flatMap(_.addressLine3),
-                      street = Street.fromLines(
-                        declarant.contactDetails.flatMap(_.addressLine1),
-                        declarant.contactDetails.flatMap(_.addressLine2)
-                      ),
-                      city = declarant.contactDetails.flatMap(_.addressLine4),
-                      postalCode = declarant.contactDetails.flatMap(_.postalCode),
-                      countryCode = declarant.contactDetails.flatMap(_.countryCode).value,
-                      emailAddress = declarant.contactDetails.flatMap(_.emailAddress),
-                      telephoneNumber = None
+                      contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
+                      addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
+                      addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
+                      addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+                      street = claim.claimantInformation.establishmentAddress.street,
+                      city = claim.claimantInformation.establishmentAddress.city,
+                      countryCode =
+                        claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
+                      postalCode = claim.claimantInformation.establishmentAddress.postalCode,
+                      telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
+                      emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
                     ),
                     contactInformation = claim.claimantInformation.contactInformation.some
                   ),
