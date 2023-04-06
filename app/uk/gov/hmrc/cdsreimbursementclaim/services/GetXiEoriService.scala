@@ -24,15 +24,15 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[GetXIEoriServiceImpl])
-trait GetXIEoriService {
+@ImplementedBy(classOf[GetXiEoriServiceImpl])
+trait GetXiEoriService {
   def getXIEori(eori: Eori)(implicit hc: HeaderCarrier): Future[Option[Eori]]
 }
 
 @Singleton
-class GetXIEoriServiceImpl @Inject()(connector: SubscriptionConnector)(implicit
+class GetXiEoriServiceImpl @Inject() (connector: SubscriptionConnector)(implicit
   executionContext: ExecutionContext
-) extends GetXIEoriService {
+) extends GetXiEoriService {
 
   def getXIEori(eori: Eori)(implicit hc: HeaderCarrier): Future[Option[Eori]] =
     connector

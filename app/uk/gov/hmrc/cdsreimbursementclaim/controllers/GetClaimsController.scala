@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthorisedActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsResponse, ClaimsSelector, ErrorResponse, GetReimbursementClaimsResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.services.{GetClaimsService, GetXIEoriService}
+import uk.gov.hmrc.cdsreimbursementclaim.services.{GetClaimsService, GetXiEoriService}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import cats.implicits._
@@ -33,47 +33,53 @@ import scala.util.control.NonFatal
 class GetClaimsController @Inject() (
   authorised: AuthorisedActions,
   service: GetClaimsService,
-  xiEoriService: GetXIEoriService,
+  xiEoriService: GetXiEoriService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  final val getAllGbClaims: Action[AnyContent]           = getGbClaims(ClaimsSelector.All)
-  final val getOverpaymentsGbClaims: Action[AnyContent]  = getGbClaims(ClaimsSelector.Overpayments)
-  final val getNdrcGbClaims: Action[AnyContent]          = getGbClaims(ClaimsSelector.Ndrc)
-  final val getSecuritiesGbClaims: Action[AnyContent]    = getGbClaims(ClaimsSelector.Securities)
-  final val getUnderpaymentsGbClaims: Action[AnyContent] = getGbClaims(ClaimsSelector.Underpayments)
+  final def getAllClaims(includeXiClaims: Boolean = false): Action[AnyContent]           =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.All) else getGbClaims(ClaimsSelector.All)
+  final def getOverpaymentsClaims(includeXiClaims: Boolean = false): Action[AnyContent]  =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Overpayments) else getGbClaims(ClaimsSelector.Overpayments)
+  final def getNdrcClaims(includeXiClaims: Boolean = false): Action[AnyContent]          =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Ndrc) else getGbClaims(ClaimsSelector.Ndrc)
+  final def getSecuritiesClaims(includeXiClaims: Boolean = false): Action[AnyContent]    =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Securities) else getGbClaims(ClaimsSelector.Securities)
+  final def getUnderpaymentsClaims(includeXiClaims: Boolean = false): Action[AnyContent] =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Underpayments) else getGbClaims(ClaimsSelector.Underpayments)
 
-  final val getAllGbAndXiClaims: Action[AnyContent] = getGbAndXiClaims(ClaimsSelector.All)
-  final val getOverpaymentsGbAndXiClaims: Action[AnyContent] = getGbAndXiClaims(ClaimsSelector.Overpayments)
-  final val getNdrcGbAndXiClaims: Action[AnyContent] = getGbAndXiClaims(ClaimsSelector.Ndrc)
-  final val getSecuritiesGbAndXiClaims: Action[AnyContent] = getGbAndXiClaims(ClaimsSelector.Securities)
-  final val getUnderpaymentsGbAndXiClaims: Action[AnyContent] = getGbAndXiClaims(ClaimsSelector.Underpayments)
+  private def wrapResponse(claimsResponse: ClaimsResponse): Result = Ok(
+    Json.obj(
+      "claims" -> Json.toJson(
+        claimsResponse
+      )
+    )
+  )
+
   private def getGbAndXiClaims(claimsSelector: ClaimsSelector): Action[AnyContent] =
     authorised.async({ case (r, eori) =>
       implicit val request: Request[AnyContent] = r
-      val response = for {
+      val response                              = for {
         gbClaimsResponse <- service.getClaims(eori, claimsSelector)
-        xiEori <- xiEoriService.getXIEori(eori)
+        xiEori           <- xiEoriService.getXIEori(eori)
         xiClaimsResponse <- xiEori.traverse(service.getClaims(_, claimsSelector).map(_.toOption)).map(_.flatten)
-        xiClaims = xiClaimsResponse.flatMap(_.responseDetail)
+        xiClaims          = xiClaimsResponse.flatMap(_.responseDetail)
       } yield (gbClaimsResponse, xiClaims) match {
         case (Right(GetReimbursementClaimsResponse(gbResponseCommon, gbResponseDetail)), xiResponseDetail) =>
           (gbResponseDetail, xiResponseDetail) match {
-            case (Some(gbResponseDetail), Some(xiResponseDetail)) => Ok(Json.obj("claims" -> Json.toJson(
-              ClaimsResponse.fromTpi01Response(gbResponseDetail) ++
-              ClaimsResponse.fromTpi01Response(xiResponseDetail)
-            )))
-            case (Some(gbResponseDetail), None) => Ok(Json.obj("claims" -> Json.toJson(
-              ClaimsResponse.fromTpi01Response(gbResponseDetail)
-            )))
-            case (None, Some(xiResponseDetail)) => Ok(Json.obj("claims" -> Json.toJson(
-              ClaimsResponse.fromTpi01Response(xiResponseDetail)
-            )))
-            case (None, None) => BadRequest(Json.toJson(gbResponseCommon))
+            case (Some(gbResponseDetail), Some(xiResponseDetail)) =>
+              wrapResponse(
+                ClaimsResponse.fromTpi01Response(gbResponseDetail) ++ ClaimsResponse.fromTpi01Response(xiResponseDetail)
+              )
+            case (Some(gbResponseDetail), None)                   =>
+              wrapResponse(ClaimsResponse.fromTpi01Response(gbResponseDetail))
+            case (None, Some(xiResponseDetail))                   =>
+              wrapResponse(ClaimsResponse.fromTpi01Response(xiResponseDetail))
+            case (None, None)                                     => BadRequest(Json.toJson(gbResponseCommon))
           }
-        case (Left(ErrorResponse(status, errorDetails)), _) =>
+        case (Left(ErrorResponse(status, errorDetails)), _)                                                =>
           if (status < 499)
             BadRequest(Json.toJson(errorDetails))
           else
@@ -91,7 +97,6 @@ class GetClaimsController @Inject() (
       }
     }: AuthorisedActions.Input[AnyContent] => Future[Result])
 
-
   private def getGbClaims(claimsSelector: ClaimsSelector): Action[AnyContent] =
     authorised.async({ case (r, eori) =>
       implicit val request: Request[AnyContent] = r
@@ -99,9 +104,9 @@ class GetClaimsController @Inject() (
         .getClaims(eori, claimsSelector)
         .map {
           case Right(GetReimbursementClaimsResponse(_, Some(responseDetail))) =>
-            Ok(Json.obj("claims" -> Json.toJson(ClaimsResponse.fromTpi01Response(responseDetail))))
+            wrapResponse(ClaimsResponse.fromTpi01Response(responseDetail))
 
-          case Right(GetReimbursementClaimsResponse(responseCommon, None))                 =>
+          case Right(GetReimbursementClaimsResponse(responseCommon, None)) =>
             BadRequest(Json.toJson(responseCommon))
 
           case Left(ErrorResponse(status, errorDetails)) =>

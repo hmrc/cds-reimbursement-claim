@@ -31,6 +31,15 @@ trait ForSampledValueCheck {
     block(value)
   }
 
+  final def forSampledValue[A, B](gen1: Gen[A], gen2: Gen[B])(block: (A, B) => Assertion) = {
+    val value1: A =
+      gen1.sample.getOrElse(fail("Cannot sample test value"))
+    val value2: B =
+      gen2.sample.getOrElse(fail("Cannot sample test value"))
+
+    block(value1, value2)
+  }
+
   final def forSampledValue[A : Gen](block: A => Assertion) = {
     val value: A =
       implicitly[Gen[A]].sample.getOrElse(fail("Cannot sample test value"))
