@@ -4,11 +4,17 @@ GET         /declaration/:id                         uk.gov.hmrc.cdsreimbursemen
 GET         /declaration/:id/reason-for-security     uk.gov.hmrc.cdsreimbursementclaim.controllers.DeclarationController.declarationWithReasonForSecurity(id: MRN, reasonForSecurity: ReasonForSecurity)
 GET         /declaration/:id/claim-exists            uk.gov.hmrc.cdsreimbursementclaim.controllers.ExistingClaimController.claimExists(id: MRN, reasonForSecurity: ReasonForSecurity)
 
-GET         /claims                                  uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getAllClaims
-GET         /claims/ndrc                             uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getNdrcClaims
-GET         /claims/overpayments                     uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getOverpaymentsClaims
-GET         /claims/securities                       uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getSecuritiesClaims
-GET         /claims/underpayments                    uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getUnderpaymentsClaims
+GET         /claims                                  uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getAllGbClaims
+GET         /claims/ndrc                             uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getNdrcGbClaims
+GET         /claims/overpayments                     uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getOverpaymentsGbClaims
+GET         /claims/securities                       uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getSecuritiesGbClaims
+GET         /claims/underpayments                    uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getUnderpaymentsGbClaims
+
+GET         /claims/gbxi                             uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getAllGbAndXiClaims
+GET         /claims/gbxi/ndrc                        uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getNdrcGbAndXiClaims
+GET         /claims/gbxi/overpayments                uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getOverpaymentsGbAndXiClaims
+GET         /claims/gbxi/securities                  uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getSecuritiesGbAndXiClaims
+GET         /claims/gbxi/underpayments               uk.gov.hmrc.cdsreimbursementclaim.controllers.GetClaimsController.getUnderpaymentsGbAndXiClaims
 
 GET         /claims/:cdfPayService/:cdfPayCaseNumber uk.gov.hmrc.cdsreimbursementclaim.controllers.GetSpecificClaimController.getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)
 

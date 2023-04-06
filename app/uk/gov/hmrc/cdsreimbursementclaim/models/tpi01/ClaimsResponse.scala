@@ -20,7 +20,10 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
 
-final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem])
+final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem]) {
+  def ++(other: ClaimsResponse): ClaimsResponse =
+    ClaimsResponse(this.sctyClaims ++ other.sctyClaims, this.ndrcClaims ++ other.ndrcClaims)
+}
 
 object ClaimsResponse {
   implicit val format: OFormat[ClaimsResponse] = Json.format[ClaimsResponse]
