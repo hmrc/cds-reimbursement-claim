@@ -20,9 +20,10 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthorisedActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsResponse, ClaimsSelector, ErrorResponse, GetReimbursementClaimsResponse}
-import uk.gov.hmrc.cdsreimbursementclaim.services.GetClaimsService
+import uk.gov.hmrc.cdsreimbursementclaim.services.{GetClaimsService, GetXiEoriService}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import cats.implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,27 +33,80 @@ import scala.util.control.NonFatal
 class GetClaimsController @Inject() (
   authorised: AuthorisedActions,
   service: GetClaimsService,
+  xiEoriService: GetXiEoriService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  final val getAllClaims: Action[AnyContent]           = getClaims(ClaimsSelector.All)
-  final val getOverpaymentsClaims: Action[AnyContent]  = getClaims(ClaimsSelector.Overpayments)
-  final val getNdrcClaims: Action[AnyContent]          = getClaims(ClaimsSelector.Ndrc)
-  final val getSecuritiesClaims: Action[AnyContent]    = getClaims(ClaimsSelector.Securities)
-  final val getUnderpaymentsClaims: Action[AnyContent] = getClaims(ClaimsSelector.Underpayments)
+  final def getAllClaims(includeXiClaims: Boolean = false): Action[AnyContent]           =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.All) else getGbClaims(ClaimsSelector.All)
+  final def getOverpaymentsClaims(includeXiClaims: Boolean = false): Action[AnyContent]  =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Overpayments) else getGbClaims(ClaimsSelector.Overpayments)
+  final def getNdrcClaims(includeXiClaims: Boolean = false): Action[AnyContent]          =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Ndrc) else getGbClaims(ClaimsSelector.Ndrc)
+  final def getSecuritiesClaims(includeXiClaims: Boolean = false): Action[AnyContent]    =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Securities) else getGbClaims(ClaimsSelector.Securities)
+  final def getUnderpaymentsClaims(includeXiClaims: Boolean = false): Action[AnyContent] =
+    if (includeXiClaims) getGbAndXiClaims(ClaimsSelector.Underpayments) else getGbClaims(ClaimsSelector.Underpayments)
 
-  private def getClaims(claimsSelector: ClaimsSelector): Action[AnyContent] =
+  private def wrapResponse(claimsResponse: ClaimsResponse): Result = Ok(
+    Json.obj(
+      "claims" -> Json.toJson(
+        claimsResponse
+      )
+    )
+  )
+
+  private def getGbAndXiClaims(claimsSelector: ClaimsSelector): Action[AnyContent] =
+    authorised.async({ case (r, eori) =>
+      implicit val request: Request[AnyContent] = r
+      val response                              = for {
+        gbClaimsResponse <- service.getClaims(eori, claimsSelector)
+        xiEori           <- xiEoriService.getXIEori(eori)
+        xiClaimsResponse <- xiEori.traverse(service.getClaims(_, claimsSelector).map(_.toOption)).map(_.flatten)
+        xiClaims          = xiClaimsResponse.flatMap(_.responseDetail)
+      } yield (gbClaimsResponse, xiClaims) match {
+        case (Right(GetReimbursementClaimsResponse(gbResponseCommon, gbResponseDetail)), xiResponseDetail) =>
+          (gbResponseDetail, xiResponseDetail) match {
+            case (Some(gbResponseDetail), Some(xiResponseDetail)) =>
+              wrapResponse(
+                ClaimsResponse.fromTpi01Response(gbResponseDetail) ++ ClaimsResponse.fromTpi01Response(xiResponseDetail)
+              )
+            case (Some(gbResponseDetail), None)                   =>
+              wrapResponse(ClaimsResponse.fromTpi01Response(gbResponseDetail))
+            case (None, Some(xiResponseDetail))                   =>
+              wrapResponse(ClaimsResponse.fromTpi01Response(xiResponseDetail))
+            case (None, None)                                     => BadRequest(Json.toJson(gbResponseCommon))
+          }
+        case (Left(ErrorResponse(status, errorDetails)), _)                                                =>
+          if (status < 499)
+            BadRequest(Json.toJson(errorDetails))
+          else
+            ServiceUnavailable(Json.toJson(errorDetails))
+      }
+
+      response.recover {
+        case ex if ex.getMessage.contains("JSON validation") =>
+          logger.error(s"getClaims failed JSON validation: ${ex.getMessage}")
+          BadRequest(ex.getMessage)
+
+        case NonFatal(error) =>
+          logger.error(s"getClaims failed: ${error.getClass}: ${error.getMessage}")
+          ServiceUnavailable(error.getMessage)
+      }
+    }: AuthorisedActions.Input[AnyContent] => Future[Result])
+
+  private def getGbClaims(claimsSelector: ClaimsSelector): Action[AnyContent] =
     authorised.async({ case (r, eori) =>
       implicit val request: Request[AnyContent] = r
       service
         .getClaims(eori, claimsSelector)
         .map {
-          case Right(GetReimbursementClaimsResponse(responseCommon, Some(responseDetail))) =>
-            Ok(Json.obj("claims" -> Json.toJson(ClaimsResponse.fromTpi01Response(responseDetail))))
+          case Right(GetReimbursementClaimsResponse(_, Some(responseDetail))) =>
+            wrapResponse(ClaimsResponse.fromTpi01Response(responseDetail))
 
-          case Right(GetReimbursementClaimsResponse(responseCommon, None))                 =>
+          case Right(GetReimbursementClaimsResponse(responseCommon, None)) =>
             BadRequest(Json.toJson(responseCommon))
 
           case Left(ErrorResponse(status, errorDetails)) =>
