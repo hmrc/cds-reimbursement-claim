@@ -64,6 +64,7 @@ object ScheduledOverpaymentsClaim {
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
         .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithCorrect.empty))
+        .toMap
 
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithCorrect]] =
     MapFormat[TaxCode, AmountPaidWithCorrect]

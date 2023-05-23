@@ -54,7 +54,7 @@ final case class ScheduledRejectedGoodsClaim(
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
-    (movementReferenceNumber, combinedReimbursementClaims.mapValues(_.refundAmount)) :: Nil
+    (movementReferenceNumber, combinedReimbursementClaims.mapValues(_.refundAmount).toMap) :: Nil
 
   def getClaimedReimbursements: List[ClaimedReimbursement] =
     combinedReimbursementClaims.toList
@@ -81,6 +81,7 @@ object ScheduledRejectedGoodsClaim {
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
         .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithRefund.empty))
+        .toMap
 
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithRefund]] =
     MapFormat[TaxCode, AmountPaidWithRefund]
