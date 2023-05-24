@@ -16,11 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import org.joda.time.{DateTime, DateTimeZone}
-
-import java.time.Clock
 import java.time.temporal.TemporalAccessor
-import java.util.TimeZone
 
 package object dates {
 
@@ -31,8 +27,4 @@ package object dates {
     def toCdsDateTime: String = CdsDateTime.of(temporalAccessor)
   }
 
-  implicit class JavaToJoda(val clock: Clock) extends AnyVal {
-    def nowAsJoda: DateTime =
-      new DateTime(clock.instant().toEpochMilli, DateTimeZone.forTimeZone(TimeZone.getTimeZone(clock.getZone)))
-  }
 }
