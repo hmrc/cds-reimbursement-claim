@@ -3,8 +3,10 @@ import sbt._
 
 object AppDependencies {
 
+  val bootstrapVersion = "7.3.0"
+
   val compile = Seq(
-    "uk.gov.hmrc"       %% "bootstrap-backend-play-28"         % "7.3.0",
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-28"         % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-work-item-repo-play-28" % "0.71.0",
     "org.typelevel"     %% "cats-core"                         % "2.3.1",
     "org.julienrf"      %% "play-json-derived-codecs"          % "7.0.0",
@@ -14,6 +16,7 @@ object AppDependencies {
   )
 
   val test = Seq(
+    "uk.gov.hmrc"                %% "bootstrap-test-play-28"     % bootstrapVersion   % Test,
     "com.typesafe.play"          %% "play-test"                  % current   % Test,
     "org.scalatest"              %% "scalatest"                  % "3.2.3"   % Test,
     "org.scalamock"              %% "scalamock"                  % "5.1.0"   % Test,

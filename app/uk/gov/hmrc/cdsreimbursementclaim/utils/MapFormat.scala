@@ -29,15 +29,15 @@ object MapFormat {
       Reads {
         case o: JsObject =>
           Try(
-            (
+            Map(
               o.fields.map {
                 case (k, o2: JsObject) if k.startsWith(entryPrefix) =>
                   (o2 \ "k").as[K] -> (o2 \ "v").as[V]
 
                 case (k, valueJson)                                 =>
                   JsString(k).as[K] -> valueJson.as[V]
-              }
-            ).toMap
+              }: _*
+            )
           ).fold[JsResult[Map[K, V]]](
             error => JsError(error.toString),
             mapInstance => JsSuccess(mapInstance)
