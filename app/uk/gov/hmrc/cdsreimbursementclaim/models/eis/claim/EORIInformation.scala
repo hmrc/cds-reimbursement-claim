@@ -163,5 +163,6 @@ object EORIInformation {
       contactInformation = contactInformation
     )
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[EORIInformation] = Json.format[EORIInformation]
 }

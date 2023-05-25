@@ -27,6 +27,7 @@ import cats.implicits.catsSyntaxSemigroup
 
 import java.time.LocalDate
 import cats.kernel.Semigroup
+import collection.immutable.Seq
 
 final case class ScheduledRejectedGoodsClaim(
   movementReferenceNumber: MRN,
@@ -86,6 +87,7 @@ object ScheduledRejectedGoodsClaim {
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithRefund]] =
     MapFormat[TaxCode, AmountPaidWithRefund]
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[ScheduledRejectedGoodsClaim] =
     Json.format[ScheduledRejectedGoodsClaim]
 }

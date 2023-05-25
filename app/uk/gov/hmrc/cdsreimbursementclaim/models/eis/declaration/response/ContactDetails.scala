@@ -31,6 +31,7 @@ final case class ContactDetails(
   emailAddress: Option[String]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ContactDetails {
   implicit val format: OFormat[ContactDetails] = derived.oformat[ContactDetails]()
 }

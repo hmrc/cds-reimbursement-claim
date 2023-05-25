@@ -38,6 +38,7 @@ final case class SCTYCaseDetails(
       totalVATClaimAmount.map(BigDecimal.apply).getOrElse(ZERO)
 }
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SCTYCaseDetails {
   implicit val format: OFormat[SCTYCaseDetails] = Json.format[SCTYCaseDetails]
 }

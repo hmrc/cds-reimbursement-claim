@@ -34,6 +34,7 @@ object InspectionAddress {
   implicit val equality: Eq[InspectionAddress] =
     Eq.fromUniversalEquals[InspectionAddress]
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[InspectionAddress] =
     Json.format[InspectionAddress]
 }

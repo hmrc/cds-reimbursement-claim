@@ -60,7 +60,7 @@ class GetXiEoriController @Inject() (
             Results.NoContent
         }
         .recover { case NonFatal(error) =>
-          logger.error(s"getXiEori failed: ${error.getClass}: ${error.getMessage}")
+          logger.error(s"getXiEori failed: ${error.getClass.toString}: ${error.getMessage}")
           ServiceUnavailable(error.getMessage)
         }
     }: AuthorisedActions.Input[AnyContent] => Future[Result])

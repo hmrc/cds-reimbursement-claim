@@ -92,7 +92,7 @@ class GetClaimsController @Inject() (
           BadRequest(ex.getMessage)
 
         case NonFatal(error) =>
-          logger.error(s"getClaims failed: ${error.getClass}: ${error.getMessage}")
+          logger.error(s"getClaims failed: ${error.getClass.toString}: ${error.getMessage}")
           ServiceUnavailable(error.getMessage)
       }
     }: AuthorisedActions.Input[AnyContent] => Future[Result])
@@ -121,7 +121,7 @@ class GetClaimsController @Inject() (
             BadRequest(ex.getMessage)
 
           case NonFatal(error) =>
-            logger.error(s"getClaims failed: ${error.getClass}: ${error.getMessage}")
+            logger.error(s"getClaims failed: ${error.getClass.toString}: ${error.getMessage}")
             ServiceUnavailable(error.getMessage)
         }
     }: AuthorisedActions.Input[AnyContent] => Future[Result])

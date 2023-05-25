@@ -68,6 +68,7 @@ object MultipleRejectedGoodsClaim {
   implicit lazy val mrnsReimbursementFormat: Format[Map[MRN, Map[TaxCode, BigDecimal]]] =
     MapFormat[MRN, Map[TaxCode, BigDecimal]]
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[MultipleRejectedGoodsClaim] =
     Format(
       (

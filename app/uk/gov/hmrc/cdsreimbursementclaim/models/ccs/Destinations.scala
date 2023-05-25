@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
 
 final case class Destinations(@xmlns(mdg) destination: List[Destination] = Nil)
 
+@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.Null"))
 object Destinations {
   implicit val destinationsTypeEnc: ElementEncoder[Destinations] = deriveElementEncoder[Destinations]
 }

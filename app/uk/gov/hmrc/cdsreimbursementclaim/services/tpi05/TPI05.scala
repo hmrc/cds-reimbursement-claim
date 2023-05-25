@@ -36,6 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05 {
 
+  @SuppressWarnings(Array("org.wartremover.warts.CaseClassPrivateApply"))
   def request(
     claimantEORI: Eori,
     claimantEmailAddress: Email,

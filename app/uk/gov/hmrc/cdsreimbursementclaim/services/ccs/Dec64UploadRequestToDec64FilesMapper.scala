@@ -62,5 +62,5 @@ class Dec64UploadRequestToDec64FilesMapper extends ClaimToDec64Mapper[Dec64Uploa
           )
         )
       )
-    }.toList
+    }
 }

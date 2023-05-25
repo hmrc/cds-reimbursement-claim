@@ -34,6 +34,7 @@ final case class ResponseDetail(
   securityDetails: Option[List[SecurityDetails]]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ResponseDetail {
   implicit val format: OFormat[ResponseDetail] = Json.format[ResponseDetail]
 }

@@ -42,6 +42,7 @@ final case class BatchFileInterfaceMetadata(
   @xmlns(mdg) destinations: Destinations = Destinations(List(Destination(Dec64.CDFPay)))
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.Null"))
 object BatchFileInterfaceMetadata {
   implicit val batchFileInterfaceMetadataEncoder: ElementEncoder[BatchFileInterfaceMetadata] =
     deriveElementEncoder[BatchFileInterfaceMetadata]

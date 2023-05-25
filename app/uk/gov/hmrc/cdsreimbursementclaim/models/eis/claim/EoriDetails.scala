@@ -23,6 +23,7 @@ final case class EoriDetails(
   importerEORIDetails: EORIInformation
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object EoriDetails {
   implicit val format: OFormat[EoriDetails] = Json.format[EoriDetails]
 }

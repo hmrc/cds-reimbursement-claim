@@ -23,6 +23,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
 
 final case class Body(@xmlns(mdg) BatchFileInterfaceMetadata: BatchFileInterfaceMetadata)
 
+@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.Null"))
 object Body {
   implicit val batchFileInterfaceMetadataEncoder: ElementEncoder[Body] = deriveElementEncoder[Body]
 }

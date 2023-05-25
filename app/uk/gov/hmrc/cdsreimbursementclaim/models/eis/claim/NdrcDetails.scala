@@ -91,5 +91,6 @@ object NdrcDetails {
       Validated.condNel(taxCode.value.length === 3, taxCode, Error(s"Tax type size is less than 3: ${taxCode.value}"))
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[NdrcDetails] = Json.format[NdrcDetails]
 }

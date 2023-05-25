@@ -116,5 +116,6 @@ object BasisOfClaim {
 
   implicit val equality: Eq[BasisOfClaim] = Eq.fromUniversalEquals
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
 }

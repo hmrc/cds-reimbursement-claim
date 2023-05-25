@@ -27,6 +27,7 @@ final case class ClaimantInformation(
   contactInformation: ContactInformation
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ClaimantInformation {
   implicit val format: Format[ClaimantInformation] = Json.format[ClaimantInformation]
 }

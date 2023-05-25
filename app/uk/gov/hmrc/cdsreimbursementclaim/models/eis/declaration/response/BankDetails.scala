@@ -28,6 +28,7 @@ final case class BankDetails(
 
 object BankDetails {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   private val bankAccountDetailsReads: Reads[BankAccountDetails] = (
     (JsPath \ "accountHolderName").read[String].map(AccountName(_)) and
       (JsPath \ "sortCode").read[String].map(SortCode(_)) and
@@ -40,6 +41,7 @@ object BankDetails {
       (JsPath \ "accountNumber").write[AccountNumber]
   )(unlift(BankAccountDetails.unapply))
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val maskedBankDetailsFormat: Format[BankDetails] =
     Format(
       (

@@ -28,6 +28,7 @@ final case class EmailRequest(
 
 object EmailRequest {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   def apply(details: RequestDetail): Option[EmailRequest] = (
     details.EORIDetails
       .flatMap(_.agentEORIDetails.contactInformation)
@@ -35,5 +36,6 @@ object EmailRequest {
     details.claimAmountTotal.map(BigDecimal(_))
   ) mapN (EmailRequest(details.claimantEmailAddress, _, _))
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[EmailRequest] = Json.format[EmailRequest]
 }

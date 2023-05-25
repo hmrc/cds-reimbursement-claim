@@ -85,7 +85,7 @@ class DefaultDeclarationService @Inject() (
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
         } else {
-          logger.warn(s"could not get declaration: http status: ${response.status}")
+          logger.warn(s"could not get declaration: http status: ${response.status.toString}")
           Left(Error("call to get declaration failed"))
         }
       }
@@ -138,7 +138,7 @@ class DefaultDeclarationService @Inject() (
               }.asLeft[DisplayDeclaration]
           }
         } else {
-          logger.warn(s"could not get declaration: http status: ${response.status}")
+          logger.warn(s"could not get declaration: http status: ${response.status.toString}")
           Left(GetDeclarationError.unexpectedError)
         }
       }

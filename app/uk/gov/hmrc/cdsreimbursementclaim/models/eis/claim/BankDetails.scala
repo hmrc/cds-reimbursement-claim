@@ -23,6 +23,7 @@ final case class BankDetails(
   declarantBankDetails: Option[BankDetail]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object BankDetails {
   implicit val format: OFormat[BankDetails] = Json.format[BankDetails]
 }

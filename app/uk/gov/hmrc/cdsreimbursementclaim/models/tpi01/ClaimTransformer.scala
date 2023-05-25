@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
 import cats.implicits.catsSyntaxEq
+import collection.immutable.Seq
 
 abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
   private val ENTRY_NUMBER = "^[0-9]{9}[a-zA-Z]{1}[0-9]{8}$".r

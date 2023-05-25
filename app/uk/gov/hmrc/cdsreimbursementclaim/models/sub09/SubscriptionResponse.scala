@@ -100,6 +100,7 @@ final case class EmailAddress(value: String)
 
 final case class EORI(value: String)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SubscriptionResponse {
   implicit val emailAddressFormat: Format[EmailAddress]                                = SimpleStringFormat(EmailAddress.apply, _.value)
   implicit val eoriFormat: Format[EORI]                                                = SimpleStringFormat(EORI.apply, _.value)

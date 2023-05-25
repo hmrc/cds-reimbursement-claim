@@ -67,8 +67,8 @@ class CcsSubmissionPoller @Inject() (
     )
 
   def getLogMessage(workItem: WorkItem[CcsSubmissionRequest], stateIndicator: String): String =
-    s"CCS File Submission poller: $stateIndicator:  work-item-id: ${workItem.id}, work-item-failure-count: ${workItem.failureCount}, " +
-      s"work-item-status: ${workItem.status}, work-item-updatedAt : ${workItem.updatedAt}"
+    s"CCS File Submission poller: $stateIndicator:  work-item-id: ${workItem.id.toString}, work-item-failure-count: ${workItem.failureCount.toString}, " +
+      s"work-item-status: ${workItem.status.toString}, work-item-updatedAt : ${workItem.updatedAt.toString}"
 
   def run(): Runnable = () => {
     poller()
@@ -93,15 +93,18 @@ class CcsSubmissionPoller @Inject() (
             )
             .fold(
               { error =>
-                logger.warn(getLogMessage(workItem, s"work-item ccs submission failed with error: $error"))
+                logger.warn(getLogMessage(workItem, s"work-item ccs submission failed with error: ${error.toString}"))
                 val _ = ccsSubmissionService.setProcessingStatus(workItem.id, Failed)
               },
               httpResponse =>
                 if (httpResponse.status === Status.NO_CONTENT) {
-                  logger.info(getLogMessage(workItem, s"work-item ccs submission succeeded: ${httpResponse.status}"))
+                  logger.info(
+                    getLogMessage(workItem, s"work-item ccs submission succeeded: ${httpResponse.status.toString}")
+                  )
                   val _ = ccsSubmissionService.setResultStatus(workItem.id, Succeeded)
                 } else {
-                  logger.warn(getLogMessage(workItem, s"work-item ccs submission failed: ${httpResponse.status}"))
+                  logger
+                    .warn(getLogMessage(workItem, s"work-item ccs submission failed: ${httpResponse.status.toString}"))
                   val _ = ccsSubmissionService.setResultStatus(workItem.id, Failed)
                 }
             )

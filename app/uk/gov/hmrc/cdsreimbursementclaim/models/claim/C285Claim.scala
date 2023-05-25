@@ -107,5 +107,6 @@ final case class C285Claim(
 
 object C285Claim {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[C285Claim] = Json.format[C285Claim]
 }

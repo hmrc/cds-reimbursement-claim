@@ -64,7 +64,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       acceptanceDate                                               <- AcceptanceDate
                                                                         .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
                                                                         .toEither
-                                                                        .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
+                                                                        .leftMap(x => CdsError(s"acceptance date could not be parsed: ${x.toString}"))
       declarantReferenceNumber                                      = displayDeclaration.displayResponseDetail.declarantReferenceNumber
       btaSource                                                     = displayDeclaration.displayResponseDetail.btaSource
       btaDueDate                                                    = displayDeclaration.displayResponseDetail.btaDueDate
@@ -115,7 +115,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       claimantAddress                                              <-
         Address
           .fromContactInformation(claim.claimantInformation.contactInformation)
-          .leftMap(error => CdsError(s"Claimant Address could not be parsed: $error"))
+          .leftMap(error => CdsError(s"Claimant Address could not be parsed: ${error.toString}"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,

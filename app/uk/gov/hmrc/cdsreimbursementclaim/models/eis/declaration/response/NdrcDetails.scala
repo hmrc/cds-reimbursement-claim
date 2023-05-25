@@ -26,6 +26,7 @@ final case class NdrcDetails(
   cmaEligible: Option[String]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object NdrcDetails {
   implicit val format: OFormat[NdrcDetails] = Json.format[NdrcDetails]
 }

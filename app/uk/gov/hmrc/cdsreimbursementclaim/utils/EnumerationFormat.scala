@@ -21,6 +21,7 @@ import cats.syntax.eq._
 import play.api.libs.json.Format
 import play.api.mvc.PathBindable
 import play.api.mvc.QueryStringBindable
+import collection.immutable.Seq
 
 /** Provides capabilities to the set of case objects of a sealed trait T:
   * - JOSN serialization
@@ -36,6 +37,7 @@ trait EnumerationFormat[T] {
   private final lazy val valueMap: Map[String, T] =
     values.map(v => (v.toString, v)).toMap
 
+  @SuppressWarnings(Array("org.wartremover.warts.PlatformDefault"))
   final def parse(key: String): Option[T] =
     valueMap
       .get(key)
@@ -48,6 +50,7 @@ trait EnumerationFormat[T] {
       throw new IllegalArgumentException(s"The [$key] is NOT a value of the expected enum class.")
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.PlatformDefault"))
   final def tryParse(key: String): T =
     valueMap
       .get(key)
@@ -56,6 +59,7 @@ trait EnumerationFormat[T] {
         throw new IllegalArgumentException(s"The [$key] is NOT a value of the expected enum class.")
       )
 
+  @SuppressWarnings(Array("org.wartremover.warts.PlatformDefault"))
   final def hasKey(key: String): Boolean =
     valueMap.contains(key) ||
       values.exists(keyOf(_).toLowerCase() === key.toLowerCase())

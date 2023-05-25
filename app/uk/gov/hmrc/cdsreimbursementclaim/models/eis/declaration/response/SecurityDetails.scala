@@ -32,6 +32,7 @@ final case class SecurityDetails(
   def isBankAccountPayment: Boolean = paymentMethod === "001"
 }
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SecurityDetails {
   implicit val format: OFormat[SecurityDetails] = Json.format[SecurityDetails]
 }

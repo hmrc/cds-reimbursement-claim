@@ -35,5 +35,6 @@ object BankDetail {
       bankAccountDetails.accountNumber
     )
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[BankDetail] = Json.format[BankDetail]
 }

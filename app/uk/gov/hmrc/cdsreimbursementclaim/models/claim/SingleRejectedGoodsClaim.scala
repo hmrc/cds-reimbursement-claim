@@ -27,6 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
 import java.time.LocalDate
+import collection.immutable.Seq
 
 final case class SingleRejectedGoodsClaim(
   movementReferenceNumber: MRN,
@@ -64,5 +65,6 @@ object SingleRejectedGoodsClaim {
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =
     MapFormat[TaxCode, BigDecimal]
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[SingleRejectedGoodsClaim] = Json.format[SingleRejectedGoodsClaim]
 }

@@ -36,5 +36,6 @@ object ClaimedReimbursement {
     def total: BigDecimal = claims.map(c => c.claimAmount).toList.sum
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[ClaimedReimbursement] = Json.format[ClaimedReimbursement]
 }

@@ -66,5 +66,6 @@ object Address {
       emailAddress = None
     )
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[Address] = Json.format[Address]
 }

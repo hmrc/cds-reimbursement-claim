@@ -37,6 +37,7 @@ object AmountPaidWithCorrect {
       )
 
   implicit val equality: Eq[AmountPaidWithCorrect]   = Eq.fromUniversalEquals[AmountPaidWithCorrect]
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[AmountPaidWithCorrect] = Json.format[AmountPaidWithCorrect]
 
 }

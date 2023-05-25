@@ -30,6 +30,7 @@ final case class GoodsDetails(
   dateOfInspection: Option[String] = None
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object GoodsDetails {
   implicit val reads: Reads[GoodsDetails]    = Json.reads[GoodsDetails]
   implicit val writes: OWrites[GoodsDetails] = Json.writes[GoodsDetails]

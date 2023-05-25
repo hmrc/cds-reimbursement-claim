@@ -27,6 +27,7 @@ final case class SecurityDetail(
   taxDetails: List[TaxReclaimDetail]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SecurityDetail {
   implicit val format: OFormat[SecurityDetail] = Json.format[SecurityDetail]
 }

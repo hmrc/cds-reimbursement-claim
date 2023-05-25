@@ -23,6 +23,7 @@ final case class RequestDetail(
   securityReason: Option[String]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object RequestDetail {
   implicit val format: OFormat[RequestDetail] = Json.format[RequestDetail]
 }

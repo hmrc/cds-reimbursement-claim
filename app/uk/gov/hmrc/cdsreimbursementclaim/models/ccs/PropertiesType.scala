@@ -20,9 +20,11 @@ import ru.tinkoff.phobos.derivation.semiauto.deriveElementEncoder
 import ru.tinkoff.phobos.encoding.ElementEncoder
 import ru.tinkoff.phobos.syntax.xmlns
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
+import collection.immutable.Seq
 
 final case class PropertiesType(@xmlns(mdg) property: Seq[PropertyType] = Nil)
 
+@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.Null"))
 object PropertiesType {
   implicit val propertiesTypeEnc: ElementEncoder[PropertiesType] = deriveElementEncoder[PropertiesType]
 }

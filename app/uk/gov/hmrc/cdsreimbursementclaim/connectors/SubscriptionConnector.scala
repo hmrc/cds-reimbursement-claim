@@ -29,6 +29,7 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.http.HttpResponse
+import collection.immutable.Seq
 
 @ImplementedBy(classOf[DefaultSubscriptionConnector])
 trait SubscriptionConnector {
@@ -70,7 +71,9 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
         case response if response.status === 404 =>
           Future.successful(None)
         case response                            =>
-          Future.failed(new Exception(s"Request to GET $url returned ${response.status} with body:\n${response.body}"))
+          Future.failed(
+            new Exception(s"Request to GET $url returned ${response.status.toString} with body:\n${response.body}")
+          )
       }
   }
 

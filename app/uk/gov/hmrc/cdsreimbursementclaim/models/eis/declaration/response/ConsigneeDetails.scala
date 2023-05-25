@@ -37,6 +37,7 @@ object ConsigneeDetails {
       contactDetails = declarant.contactDetails
     )
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   private val reads: Reads[ConsigneeDetails] = (
     (JsPath \ "consigneeEORI").read[Eori] and
       (JsPath \ "legalName").read[String] and

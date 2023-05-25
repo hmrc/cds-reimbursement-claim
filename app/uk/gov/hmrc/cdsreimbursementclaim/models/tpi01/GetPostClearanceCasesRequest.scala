@@ -21,18 +21,21 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class GetPostClearanceCasesRequest(requestCommon: RequestCommon, requestDetail: RequestDetail)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object GetPostClearanceCasesRequest {
   implicit val format: OFormat[GetPostClearanceCasesRequest] = Json.format[GetPostClearanceCasesRequest]
 }
 
 final case class RequestCommon(originatingSystem: String, receiptDate: String, acknowledgementReference: String)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object RequestCommon {
   implicit val format: OFormat[RequestCommon] = Json.format[RequestCommon]
 }
 
 final case class RequestDetail(EORI: Eori, appType: String)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object RequestDetail {
   implicit val format: OFormat[RequestDetail] = Json.format[RequestDetail]
 }

@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class ReturnParameter(paramName: String, paramValue: String)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ReturnParameter {
   implicit val format: OFormat[ReturnParameter] = Json.format[ReturnParameter]
 }

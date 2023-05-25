@@ -26,6 +26,7 @@ final case class AccountDetails(
   contactDetails: Option[ContactDetails]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object AccountDetails {
   implicit val format: OFormat[AccountDetails] = Json.format[AccountDetails]
 }

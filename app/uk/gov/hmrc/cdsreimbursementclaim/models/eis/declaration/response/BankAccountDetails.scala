@@ -25,6 +25,7 @@ final case class BankAccountDetails(
   accountNumber: AccountNumber
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object BankAccountDetails {
   implicit val format: OFormat[BankAccountDetails] = Json.format[BankAccountDetails]
 }

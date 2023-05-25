@@ -27,6 +27,7 @@ final case class SpecificClaimResponse(
   SCTYCase: Option[SctyClaimDetails]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SpecificClaimResponse {
   implicit val format: OFormat[SpecificClaimResponse] = Json.format[SpecificClaimResponse]
 

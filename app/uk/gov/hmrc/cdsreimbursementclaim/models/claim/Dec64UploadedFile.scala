@@ -31,6 +31,7 @@ final case class Dec64UploadedFile(
   description: String
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object Dec64UploadedFile {
   implicit val format: Format[Dec64UploadedFile] = Json.format[Dec64UploadedFile]
 }

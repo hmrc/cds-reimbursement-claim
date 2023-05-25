@@ -34,6 +34,7 @@ object TypeOfClaimAnswer {
   implicit val equality: Eq[TypeOfClaimAnswer] =
     Eq.fromUniversalEquals[TypeOfClaimAnswer]
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val typeOfClaimAnswerFormat: OFormat[TypeOfClaimAnswer] =
     derived.oformat[TypeOfClaimAnswer]()
 }

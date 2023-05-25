@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
 import cats.syntax.eq._
 import play.api.libs.json._
+import collection.immutable.Seq
 
 final case class GetReimbursementClaimsResponse(
   responseCommon: ResponseCommon,
@@ -26,12 +27,14 @@ final case class GetReimbursementClaimsResponse(
   val mdtpError: Boolean = responseCommon.returnParameters.exists(_.exists(_.paramName === "POSITION"))
 }
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object GetReimbursementClaimsResponse {
   implicit val format: OFormat[GetReimbursementClaimsResponse] = Json.format[GetReimbursementClaimsResponse]
 }
 
 final case class ReturnParameter(paramName: String, paramValue: String)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ReturnParameter {
   implicit val format: OFormat[ReturnParameter] = Json.format[ReturnParameter]
 }
@@ -44,12 +47,14 @@ final case class ResponseCommon(
   returnParameters: Option[List[ReturnParameter]]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ResponseCommon {
   implicit val format: OFormat[ResponseCommon] = Json.format[ResponseCommon]
 }
 
 final case class ResponseDetail(NDRCCasesFound: Boolean, SCTYCasesFound: Boolean, CDFPayCase: Option[CDFPayCase]) {}
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ResponseDetail {
   implicit val format: OFormat[ResponseDetail] = Json.format[ResponseDetail]
 }
@@ -61,6 +66,7 @@ final case class CDFPayCase(
   SCTYCases: Option[Seq[SCTYCaseDetails]]
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object CDFPayCase {
   implicit val format: OFormat[CDFPayCase] = Json.format[CDFPayCase]
 }

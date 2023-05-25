@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class ClaimConfirmationEmailSentEvent(emailAddress: String, caseNumber: String)
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ClaimConfirmationEmailSentEvent {
   implicit val format: OFormat[ClaimConfirmationEmailSentEvent] =
     Json.format[ClaimConfirmationEmailSentEvent]

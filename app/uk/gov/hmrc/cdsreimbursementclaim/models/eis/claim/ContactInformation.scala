@@ -73,5 +73,6 @@ object ContactInformation {
     )
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[ContactInformation] = Json.format[ContactInformation]
 }

@@ -23,6 +23,7 @@ final case class TaxDetail(
   amount: String
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object TaxDetail {
   implicit val format: OFormat[TaxDetail] = Json.format[TaxDetail]
 }
@@ -33,6 +34,7 @@ final case class TaxReclaimDetail(
   claimAmount: String
 )
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object TaxReclaimDetail {
   implicit val format: OFormat[TaxReclaimDetail] = Json.format[TaxReclaimDetail]
 }

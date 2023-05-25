@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class ErrorResponse(status: Int, errorDetail: Option[ErrorDetail])
 
+@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ErrorResponse {
   implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }
