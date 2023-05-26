@@ -23,7 +23,6 @@ final case class VATDetail(
   countryCode: String
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object VATDetail {
   implicit val format: OFormat[VATDetail] = Json.format[VATDetail]
 }

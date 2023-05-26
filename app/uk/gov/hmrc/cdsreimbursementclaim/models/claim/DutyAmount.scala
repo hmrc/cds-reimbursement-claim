@@ -24,7 +24,6 @@ final case class DutyAmount(
   claim: Option[BigDecimal]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object DutyAmount {
   implicit val format: OFormat[DutyAmount] = Json.format[DutyAmount]
 }

@@ -38,7 +38,6 @@ final case class SecurityInfo(
   securityDetails: Option[List[SecurityDetail]] = None
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SecurityInfo {
   implicit val format: OFormat[SecurityInfo] = Json.format[SecurityInfo]
 }

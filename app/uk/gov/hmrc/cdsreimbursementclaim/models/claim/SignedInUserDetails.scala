@@ -28,7 +28,6 @@ final case class SignedInUserDetails(
   contactName: ContactName
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SignedInUserDetails {
   implicit val format: OFormat[SignedInUserDetails] = Json.format[SignedInUserDetails]
 }

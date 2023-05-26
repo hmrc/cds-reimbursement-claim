@@ -27,7 +27,6 @@ final case class SubmitClaimResponseEvent[A](
 
 object SubmitClaimResponseEvent {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit def format[A](implicit requestFormat: Format[A]): OFormat[SubmitClaimResponseEvent[A]] =
     Json.format[SubmitClaimResponseEvent[A]]
 }

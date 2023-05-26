@@ -18,11 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import play.api.libs.json.OFormat
 import play.api.libs.json.Json
-import collection.immutable.Seq
 
 final case class CcsSubmissionRequest(payload: String, headers: Seq[(String, String)])
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object CcsSubmissionRequest {
   implicit val ccsSubmissionRequestFormat: OFormat[CcsSubmissionRequest] =
     Json.format[CcsSubmissionRequest]

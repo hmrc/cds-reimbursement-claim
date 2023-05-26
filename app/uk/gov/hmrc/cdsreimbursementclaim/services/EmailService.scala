@@ -66,7 +66,7 @@ class DefaultEmailService @Inject() (connector: EmailConnector, auditService: Au
           Right(auditClaimConfirmationEmailSent(emailRequest, submitClaimResponse))
         else {
           metrics.submitClaimConfirmationEmailErrorCounter.inc()
-          Left(Error(s"call to send claim confirmation email came back with status ${httpResponse.status.toString}"))
+          Left(Error(s"call to send claim confirmation email came back with status ${httpResponse.status}"))
         }
       }
   }

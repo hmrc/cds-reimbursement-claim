@@ -23,7 +23,6 @@ final case class ReturnParameters(
   paramValue: String
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ReturnParameters {
   implicit val format: OFormat[ReturnParameters] = Json.format[ReturnParameters]
 }

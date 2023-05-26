@@ -25,7 +25,6 @@ final case class ResponseCommon(
   returnParameters: Option[List[ReturnParameters]]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ResponseCommon {
   implicit val format: OFormat[ResponseCommon] = Json.format[ResponseCommon]
 }

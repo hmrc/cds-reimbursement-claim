@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
-import collection.immutable.Seq
 
 final case class SctyClaimDetails(
   CDFPayCaseNumber: String,
@@ -43,7 +42,6 @@ final case class SctyClaimDetails(
   reimbursements: Option[Seq[Reimbursement]]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SctyClaimDetails {
   implicit val format: OFormat[SctyClaimDetails] = Json.format[SctyClaimDetails]
 

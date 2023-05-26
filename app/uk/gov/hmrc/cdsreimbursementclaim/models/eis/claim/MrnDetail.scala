@@ -239,6 +239,5 @@ object MrnDetail {
       )
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[MrnDetail] = Json.format[MrnDetail]
 }

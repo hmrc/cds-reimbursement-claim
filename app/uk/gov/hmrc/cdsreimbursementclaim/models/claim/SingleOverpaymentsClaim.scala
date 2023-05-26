@@ -20,7 +20,6 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
-import collection.immutable.Seq
 
 final case class SingleOverpaymentsClaim(
   movementReferenceNumber: MRN,
@@ -39,7 +38,6 @@ final case class SingleOverpaymentsClaim(
   override def bankAccountDetailsAnswer: Option[BankAccountDetails] = bankAccountDetails
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SingleOverpaymentsClaim {
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, BigDecimal]] =
     MapFormat[TaxCode, BigDecimal]

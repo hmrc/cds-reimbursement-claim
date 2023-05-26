@@ -21,7 +21,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
-import collection.immutable.Seq
 
 trait JsonHeaders {
 

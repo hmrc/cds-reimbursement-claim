@@ -24,7 +24,6 @@ final case class NDRCCase(
   NDRCAmounts: NDRCAmounts
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object NDRCCase {
   implicit val reads: Reads[NDRCCase] =
     (JsPath.read[NDRCDetail] and JsPath.read[NDRCAmounts])(NDRCCase.apply _)

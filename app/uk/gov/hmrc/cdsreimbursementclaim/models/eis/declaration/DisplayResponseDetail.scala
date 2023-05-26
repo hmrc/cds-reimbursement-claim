@@ -44,7 +44,6 @@ final case class DisplayResponseDetail(
 
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object DisplayResponseDetail {
   implicit val format: OFormat[DisplayResponseDetail] = Json.format[DisplayResponseDetail]
 }

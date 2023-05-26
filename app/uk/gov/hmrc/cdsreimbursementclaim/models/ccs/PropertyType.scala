@@ -26,7 +26,6 @@ final case class PropertyType(
   @xmlns(mdg) value: String
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.Null"))
 object PropertyType {
   implicit val propertyTypeEnc: ElementEncoder[PropertyType] = deriveElementEncoder[PropertyType]
 }

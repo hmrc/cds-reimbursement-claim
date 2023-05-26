@@ -25,7 +25,6 @@ final case class Envelope(
   @xmlns(soap) Body: Body
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.Null"))
 object Envelope {
   implicit val envelopeEncoder: XmlEncoder[Envelope] = deriveXmlEncoder("Envelope", Namespaces.soap)
 }

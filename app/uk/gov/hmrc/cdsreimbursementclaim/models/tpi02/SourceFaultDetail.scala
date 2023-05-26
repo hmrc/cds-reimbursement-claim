@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02
 
 import play.api.libs.json.{Json, OFormat}
-import collection.immutable.Seq
 
 final case class SourceFaultDetail(detail: Seq[String])
 

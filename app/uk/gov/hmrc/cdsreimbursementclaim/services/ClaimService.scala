@@ -216,7 +216,7 @@ class DefaultClaimService @Inject() (
   ): EitherT[Future, Error, List[DisplayDeclaration]] =
     for {
       decs <- declarations
-      dec  <- maybeDeclaration.subflatMap(_.toRight(Error(s"Could not retrieve display declaration ${mrn.toString}")))
+      dec  <- maybeDeclaration.subflatMap(_.toRight(Error(s"Could not retrieve display declaration $mrn")))
     } yield dec :: decs
 
   def obtainAcc14Declarations(mrns: List[MRN])(implicit
@@ -278,7 +278,7 @@ class DefaultClaimService @Inject() (
     for {
       eisSubmitRequest       <- EitherT
                                   .fromEither[Future](EisSubmitClaimRequest(claimRequest))
-                                  .leftMap(e => Error(s"could not make TPIO5 payload. Cause: ${e.toString}"))
+                                  .leftMap(e => Error(s"could not make TPIO5 payload. Cause: $e"))
       _                      <- auditClaimBeforeSubmit(eisSubmitRequest)
       returnHttpResponse     <- submitClaimAndAudit(auditable, eisSubmitRequest)
       eisSubmitClaimResponse <- EitherT.fromEither[Future](
@@ -289,7 +289,7 @@ class DefaultClaimService @Inject() (
       _                      <- emailService
                                   .sendClaimConfirmationEmail(emailRequest, claimResponse)
                                   .leftFlatMap { e =>
-                                    logger.error(s"could not send claim submission confirmation email or audit event ${e.toString}")
+                                    logger.error(s"could not send claim submission confirmation email or audit event $e")
                                     EitherT.pure[Future, Error](())
                                   }
     } yield claimResponse
@@ -330,7 +330,7 @@ class DefaultClaimService @Inject() (
           httpResponse.status === OK,
           httpResponse, {
             metrics.submitClaimErrorCounter.inc()
-            Error(s"call to submit claim came back with status ${httpResponse.status.toString}")
+            Error(s"call to submit claim came back with status ${httpResponse.status}")
           }
         )
       }
@@ -367,8 +367,7 @@ class DefaultClaimService @Inject() (
           Left(
             Error(
               s"""submission of claim failed : $error | ${response.postNewClaimsResponse.responseCommon.returnParameters
-                .map(e => e.mkString("; "))
-                .toString}"""
+                .map(e => e.mkString("; "))}"""
             )
           )
         case None        =>

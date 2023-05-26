@@ -24,7 +24,6 @@ final case class TemporaryAdmissionMethodOfDisposalDetail(
   exportMRNs: Option[List[ExportMRN]]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object TemporaryAdmissionMethodOfDisposalDetail {
   implicit val format: OFormat[TemporaryAdmissionMethodOfDisposalDetail] =
     Json.format[TemporaryAdmissionMethodOfDisposalDetail]

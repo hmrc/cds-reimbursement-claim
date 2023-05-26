@@ -21,7 +21,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 final case class ClaimsRequest(eori: Eori, appType: String)
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ClaimsRequest {
   implicit val format: Format[ClaimsRequest] = Json.format[ClaimsRequest]
 }

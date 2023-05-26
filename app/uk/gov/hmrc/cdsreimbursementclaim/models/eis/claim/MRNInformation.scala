@@ -26,7 +26,6 @@ final case class MRNInformation(
   contactDetails: Option[ContactInformation]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object MRNInformation {
   implicit val format: OFormat[MRNInformation] = Json.format[MRNInformation]
 }

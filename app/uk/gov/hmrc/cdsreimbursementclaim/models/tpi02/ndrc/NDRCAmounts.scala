@@ -30,7 +30,6 @@ final case class NDRCAmounts(
   totalReimbursmentAmount: Option[String]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object NDRCAmounts {
   implicit val format: OFormat[NDRCAmounts] = Json.format[NDRCAmounts]
 }

@@ -27,7 +27,6 @@ final case class DetailsRegisteredWithCdsAnswer(
   addCompanyDetails: Boolean
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object DetailsRegisteredWithCdsAnswer {
   implicit val format: OFormat[DetailsRegisteredWithCdsAnswer] = derived.oformat[DetailsRegisteredWithCdsAnswer]()
 }

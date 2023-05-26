@@ -18,7 +18,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
 
 import play.api.http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import collection.immutable.Seq
 
 trait EisConnector {
 

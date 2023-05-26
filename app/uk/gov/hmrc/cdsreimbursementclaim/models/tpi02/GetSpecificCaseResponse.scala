@@ -23,7 +23,6 @@ final case class GetSpecificCaseResponse(responseCommon: ResponseCommon, respons
   val mdtpError: Boolean = responseCommon.returnParameters.exists(_.exists(_.paramName === "POSITION"))
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object GetSpecificCaseResponse {
   implicit val format: OFormat[GetSpecificCaseResponse] = Json.format[GetSpecificCaseResponse]
 }

@@ -40,7 +40,6 @@ final case class NDRCCaseDetails(
       totalExciseClaimAmount.map(BigDecimal.apply).getOrElse(ZERO)
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object NDRCCaseDetails {
   implicit val format: OFormat[NDRCCaseDetails] = Json.format[NDRCCaseDetails]
 }

@@ -34,7 +34,6 @@ object DeclarantTypeAnswer {
   implicit val equality: Eq[DeclarantTypeAnswer] =
     Eq.fromUniversalEquals[DeclarantTypeAnswer]
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[DeclarantTypeAnswer] =
     derived.oformat[DeclarantTypeAnswer]()
 }

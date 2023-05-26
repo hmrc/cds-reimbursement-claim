@@ -16,6 +16,4 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ccs
 
-import collection.immutable.Seq
-
 final case class CcsSubmissionPayload(dec64Body: String, headers: Seq[(String, String)])

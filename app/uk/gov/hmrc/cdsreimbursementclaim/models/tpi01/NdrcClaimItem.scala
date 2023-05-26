@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimItem, ClaimTransformer, NDRCCaseDetails, ResponseDetail}
-import collection.immutable.Seq
 
 /** Model of an NDRC type of claim data returned from /claims endpoint */
 final case class NdrcClaimItem(
@@ -39,7 +38,6 @@ final case class NdrcClaimItem(
   basisOfClaim: Option[String]
 ) extends ClaimItem
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object NdrcClaimItem extends ClaimTransformer[NDRCCaseDetails, NdrcClaimItem] {
   implicit val format: OFormat[NdrcClaimItem]                     = Json.format[NdrcClaimItem]
   def convert(responseDetail: ResponseDetail): Seq[NdrcClaimItem] =

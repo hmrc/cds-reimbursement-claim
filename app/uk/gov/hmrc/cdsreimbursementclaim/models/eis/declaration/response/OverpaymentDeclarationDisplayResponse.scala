@@ -23,7 +23,6 @@ final case class OverpaymentDeclarationDisplayResponse(
   responseDetail: Option[ResponseDetail]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object OverpaymentDeclarationDisplayResponse {
   implicit val format: OFormat[OverpaymentDeclarationDisplayResponse] =
     Json.format[OverpaymentDeclarationDisplayResponse]

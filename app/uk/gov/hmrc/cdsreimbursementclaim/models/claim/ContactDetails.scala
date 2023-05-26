@@ -25,7 +25,6 @@ final case class ContactDetails(
   phoneNumber: Option[PhoneNumber]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ContactDetails {
   implicit val format: OFormat[ContactDetails] = Json.format[ContactDetails]
 }

@@ -21,7 +21,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAcc
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.time.LocalDate
-import collection.immutable.Seq
 
 trait RejectedGoodsClaim extends HasClaimantInformation {
 

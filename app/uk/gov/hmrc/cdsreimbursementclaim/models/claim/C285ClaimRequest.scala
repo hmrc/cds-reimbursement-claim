@@ -26,7 +26,6 @@ final case class C285ClaimRequest(
   signedInUserDetails: SignedInUserDetails
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object C285ClaimRequest {
   implicit val format: OFormat[C285ClaimRequest] = Json.format
 }

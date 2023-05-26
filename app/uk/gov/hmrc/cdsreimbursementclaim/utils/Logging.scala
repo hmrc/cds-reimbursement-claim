@@ -30,7 +30,7 @@ object Logging {
 
     def warn(msg: => String, e: => Error): Unit = e.value match {
       case throwable: Throwable => logger.warn(s"$msg because", throwable)
-      case message              => logger.warn(s"$msg because ${message.toString}")
+      case message              => logger.warn(s"$msg because $message")
     }
   }
 }

@@ -23,7 +23,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissi
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
-import collection.immutable.Seq
 
 final case class SecuritiesClaim(
   movementReferenceNumber: MRN,
@@ -45,7 +44,6 @@ object SecuritiesClaim {
   implicit val securitiesReclaimsMapFormat: Format[Map[String, Map[TaxCode, BigDecimal]]] =
     MapFormat[String, Map[TaxCode, BigDecimal]]
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[SecuritiesClaim] =
     Json.format[SecuritiesClaim]
 }

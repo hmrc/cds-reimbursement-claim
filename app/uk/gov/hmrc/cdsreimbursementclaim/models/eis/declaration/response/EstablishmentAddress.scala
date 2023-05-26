@@ -27,7 +27,6 @@ final case class EstablishmentAddress(
   countryCode: String
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object EstablishmentAddress {
   implicit val format: OFormat[EstablishmentAddress] = derived.oformat[EstablishmentAddress]()
 }

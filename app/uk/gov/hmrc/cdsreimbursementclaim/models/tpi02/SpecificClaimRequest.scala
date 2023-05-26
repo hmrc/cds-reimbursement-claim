@@ -20,7 +20,6 @@ import play.api.libs.json.{Format, Json}
 
 final case class SpecificClaimRequest(cdfPayService: String, cdfPayCaseNumber: String)
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object SpecificClaimRequest {
   implicit val format: Format[SpecificClaimRequest] = Json.format[SpecificClaimRequest]
 }

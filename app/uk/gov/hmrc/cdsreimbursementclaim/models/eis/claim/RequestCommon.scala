@@ -24,7 +24,6 @@ final case class RequestCommon(
   acknowledgementReference: String
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object RequestCommon {
   implicit val format: OFormat[RequestCommon] = Json.format[RequestCommon]
 }

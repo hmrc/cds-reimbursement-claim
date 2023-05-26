@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 import cats.syntax.eq._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 import play.api.mvc.QueryStringBindable
-import collection.immutable.Seq
 
 sealed class ReasonForSecurity(val acc14Code: String, val dec64DisplayString: String)
 

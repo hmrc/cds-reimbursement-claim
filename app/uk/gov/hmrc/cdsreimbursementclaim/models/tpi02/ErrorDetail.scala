@@ -27,7 +27,6 @@ final case class ErrorDetail(
   sourceFaultDetail: SourceFaultDetail
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ErrorDetail {
   implicit val format: OFormat[ErrorDetail] = Json.format[ErrorDetail]
 }

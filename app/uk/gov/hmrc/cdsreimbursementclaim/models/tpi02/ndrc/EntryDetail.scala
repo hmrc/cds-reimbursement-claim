@@ -20,7 +20,6 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class EntryDetail(entryNumber: String, mainDeclarationReference: Boolean)
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object EntryDetail {
   implicit val format: OFormat[EntryDetail] = Json.format[EntryDetail]
 }

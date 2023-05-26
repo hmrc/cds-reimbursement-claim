@@ -32,7 +32,6 @@ final case class EvidenceDocument(
   documentType: UploadDocumentType
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object EvidenceDocument {
   implicit val equality: Eq[EvidenceDocument]   = Eq.fromUniversalEquals
   implicit val format: Format[EvidenceDocument] = Json.format

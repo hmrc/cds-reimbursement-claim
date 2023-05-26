@@ -20,21 +20,18 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class GetSpecificCaseRequest(requestCommon: RequestCommon, requestDetail: RequestDetail)
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object GetSpecificCaseRequest {
   implicit val format: OFormat[GetSpecificCaseRequest] = Json.format[GetSpecificCaseRequest]
 }
 
 final case class RequestCommon(originatingSystem: String, receiptDate: String, acknowledgementReference: String)
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object RequestCommon {
   implicit val format: OFormat[RequestCommon] = Json.format[RequestCommon]
 }
 
 final case class RequestDetail(CDFPayService: String, CDFPayCaseNumber: String)
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object RequestDetail {
   implicit val format: OFormat[RequestDetail] = Json.format[RequestDetail]
 }

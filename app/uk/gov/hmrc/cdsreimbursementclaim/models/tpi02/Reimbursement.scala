@@ -25,7 +25,6 @@ final case class Reimbursement(
   reimbursementMethod: String
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object Reimbursement {
   implicit val format: OFormat[Reimbursement] = Json.format[Reimbursement]
 

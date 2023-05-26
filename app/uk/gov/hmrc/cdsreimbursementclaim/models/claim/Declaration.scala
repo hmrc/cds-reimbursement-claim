@@ -31,6 +31,5 @@ final case class Declaration(
 
 object Declaration {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[Declaration] = Json.format[Declaration]
 }

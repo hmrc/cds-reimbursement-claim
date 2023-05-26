@@ -22,7 +22,6 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
-import collection.immutable.Seq
 
 final case class ScheduledOverpaymentsClaim(
   movementReferenceNumber: MRN,
@@ -70,7 +69,6 @@ object ScheduledOverpaymentsClaim {
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithCorrect]] =
     MapFormat[TaxCode, AmountPaidWithCorrect]
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: Format[ScheduledOverpaymentsClaim] = Json.format[ScheduledOverpaymentsClaim]
 }
 

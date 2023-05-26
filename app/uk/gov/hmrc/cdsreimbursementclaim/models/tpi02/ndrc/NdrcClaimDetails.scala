@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
-import collection.immutable.Seq
 
 final case class NdrcClaimDetails(
   CDFPayCaseNumber: String,
@@ -43,7 +42,6 @@ final case class NdrcClaimDetails(
   MRNDetails: Option[Seq[ProcedureDetail]]
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object NdrcClaimDetails {
   implicit val format: OFormat[NdrcClaimDetails] = Json.format[NdrcClaimDetails]
 

@@ -31,7 +31,6 @@ final case class ContactAddress(
 
 object ContactAddress {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val format: OFormat[ContactAddress] = derived.oformat[ContactAddress]()
 
   implicit val eq: Eq[ContactAddress] = Eq.fromUniversalEquals

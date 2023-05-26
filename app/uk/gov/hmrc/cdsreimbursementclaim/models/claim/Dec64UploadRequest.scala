@@ -29,7 +29,6 @@ final case class Dec64UploadRequest(
   reasonForSecurity: Option[String] = None
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object Dec64UploadRequest {
   implicit val format: Format[Dec64UploadRequest] = Json.format[Dec64UploadRequest]
 }

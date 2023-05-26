@@ -52,7 +52,7 @@ object MapFormat {
                 keyString -> valueFormat.writes(v)
               // otherwise use intermediate object to handle key and value
               case keyJson             =>
-                s"$entryPrefix${i.toString}" -> Json.obj("k" -> keyJson, "v" -> valueFormat.writes(v))
+                s"$entryPrefix$i" -> Json.obj("k" -> keyJson, "v" -> valueFormat.writes(v))
             }
           }
         )

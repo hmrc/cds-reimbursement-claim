@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
 import play.api.libs.json.{Json, OFormat}
-import collection.immutable.Seq
 
 final case class DeclarationErrorResponse(errorDetail: ErrorDetail)
 
@@ -35,7 +34,6 @@ final case class ErrorDetail(
   sourceFaultDetail: SourceFaultDetail
 )
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object ErrorDetail {
   implicit val format: OFormat[ErrorDetail] = Json.format[ErrorDetail]
 }

@@ -27,7 +27,6 @@ final case class DeclarantDetails(
   contactDetails: Option[ContactDetails]
 ) extends ClaimantDetails
 
-@SuppressWarnings(Array("org.wartremover.warts.Any"))
 object DeclarantDetails {
   private val reads: Reads[DeclarantDetails] = (
     (JsPath \ "declarantEORI").read[Eori] and
