@@ -27,10 +27,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.genContactInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
+
 import java.net.URL
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import scala.jdk.CollectionConverters.asScalaBufferConverter
+
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object RejectedGoodsClaimGen {

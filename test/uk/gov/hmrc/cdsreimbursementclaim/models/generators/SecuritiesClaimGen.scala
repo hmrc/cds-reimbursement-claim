@@ -159,7 +159,7 @@ object SecuritiesClaimGen {
                             )
       securitiesClaim    <- genSecuritiesClaim.map(
                               _.claim.copy(
-                                securitiesReclaims = reclaims
+                                securitiesReclaims = reclaims.toMap
                               )
                             )
     } yield (securitiesClaim, displayDeclaration)

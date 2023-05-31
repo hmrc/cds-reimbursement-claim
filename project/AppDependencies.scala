@@ -29,7 +29,7 @@ object AppDependencies {
     "com.github.chocpanda"       %% "scalacheck-magnolia"        % "0.6.0"            % Test,
     "com.vladsch.flexmark"        % "flexmark-all"               % "0.64.0"           % Test,
     "org.pegdown"                 % "pegdown"                    % "1.6.0"            % Test,
-    "com.typesafe.akka"          %% "akka-testkit"               % "2.6.20"           % Test,
+    "com.typesafe.akka"          %% "akka-testkit"               % "2.6.19"           % Test,
     "org.scala-lang.modules"     %% "scala-xml"                  % "2.1.0"            % Test,
     "com.eclipsesource"          %% "play-json-schema-validator" % "0.9.5"            % Test,
     "joda-time"                   % "joda-time"                  % "2.12.5"           % Test,

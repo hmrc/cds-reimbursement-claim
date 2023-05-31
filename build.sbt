@@ -22,7 +22,8 @@ lazy val wartremoverSettings =
       Wart.Equals,
       Wart.StringPlusAny,
       Wart.PlatformDefault,
-      Wart.Null
+      Wart.Null,
+      Wart.GlobalExecutionContext
     ),
     WartRemover.autoImport.wartremoverExcluded += target.value,
     Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
