@@ -95,7 +95,7 @@ class CcsSubmissionPollerSpec
   def mockCcsSubmissionRequestDequeue()(
     response: Either[Error, Option[WorkItem[CcsSubmissionRequest]]]
   ): CallHandler0[EitherT[Future, models.Error, Option[WorkItem[CcsSubmissionRequest]]]] =
-    (mockCcsSubmissionService.dequeue _)
+    (() => mockCcsSubmissionService.dequeue)
       .expects()
       .returning(EitherT.fromEither[Future](response))
 

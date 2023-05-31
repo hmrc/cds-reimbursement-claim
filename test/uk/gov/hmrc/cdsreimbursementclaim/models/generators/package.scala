@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
+import akka.http.scaladsl.model.DateTime
 import akka.util.ByteString
-import org.joda.time.DateTime
 import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
 import org.bson.types.ObjectId
@@ -92,7 +92,7 @@ package object generators {
     Arbitrary(
       Gen
         .chooseNum(0L, 10000L)
-        .map(l => new DateTime(l))
+        .map(l => DateTime(l))
     )
 
   implicit lazy val byteStringArb: Arbitrary[ByteString] =

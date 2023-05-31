@@ -168,7 +168,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
   def mockCcsSubmissionRequestGet()(
     response: Either[Error, Option[WorkItem[CcsSubmissionRequest]]]
   ): CallHandler0[EitherT[Future, models.Error, Option[WorkItem[CcsSubmissionRequest]]]] =
-    (ccsSubmissionRepositoryMock.get _)
+    (() => ccsSubmissionRepositoryMock.get)
       .expects()
       .returning(EitherT.fromEither[Future](response))
 

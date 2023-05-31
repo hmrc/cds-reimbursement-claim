@@ -60,25 +60,25 @@ class C285ClaimMappingSpec
         details.claimantEmailAddress should ===(c285ClaimRequest.signedInUserDetails.email.value)
 
         details should have(
-          'CDFPayService (NDRC),
-          'dateReceived (ISOLocalDate.now.some),
-          'customDeclarationType (CustomDeclarationType.MRN.some),
-          'claimDate (ISOLocalDate.now.some),
-          'claimType (ClaimType.C285.some),
-          'claimant (c285ClaimRequest.claim.claimant.some),
-          'payeeIndicator (c285ClaimRequest.claim.claimant.some),
-          'declarationMode (c285ClaimRequest.claim.declarationMode.some),
-          'claimAmountTotal (c285ClaimRequest.claim.claimedAmountAsString.some),
-          'reimbursementMethod (c285ClaimRequest.claim.reimbursementMethod.some),
-          'basisOfClaim (c285ClaimRequest.claim.basisOfClaimAnswer.toTPI05DisplayString.some),
-          'caseType (c285ClaimRequest.claim.caseType.some),
-          'goodsDetails (
+          Symbol("CDFPayService")(NDRC),
+          Symbol("dateReceived")(ISOLocalDate.now.some),
+          Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
+          Symbol("claimDate")(ISOLocalDate.now.some),
+          Symbol("claimType")(ClaimType.C285.some),
+          Symbol("claimant")(c285ClaimRequest.claim.claimant.some),
+          Symbol("payeeIndicator")(c285ClaimRequest.claim.claimant.some),
+          Symbol("declarationMode")(c285ClaimRequest.claim.declarationMode.some),
+          Symbol("claimAmountTotal")(c285ClaimRequest.claim.claimedAmountAsString.some),
+          Symbol("reimbursementMethod")(c285ClaimRequest.claim.reimbursementMethod.some),
+          Symbol("basisOfClaim")(c285ClaimRequest.claim.basisOfClaimAnswer.toTPI05DisplayString.some),
+          Symbol("caseType")(c285ClaimRequest.claim.caseType.some),
+          Symbol("goodsDetails")(
             GoodsDetails(
               descOfGoods = c285ClaimRequest.claim.additionalDetailsAnswer.value.some,
               isPrivateImporter = c285ClaimRequest.claim.isForPrivateImporter.some
             ).some
           ),
-          'EORIDetails (
+          Symbol("EORIDetails")(
             EoriDetails(
               agentEORIDetails = EORIInformation(
                 EORINumber = c285ClaimRequest.claim.declarantDetails.map(_.EORI).value,
@@ -144,7 +144,7 @@ class C285ClaimMappingSpec
               }
             ).some
           ),
-          'MRNDetails (
+          Symbol("MRNDetails")(
             c285ClaimRequest.claim.displayDeclaration.toList.flatMap { displayDeclaration =>
               c285ClaimRequest.claim.multipleClaims.map { case (mrn, reimbursementClaim) =>
                 MrnDetail(
@@ -282,7 +282,7 @@ class C285ClaimMappingSpec
               }
             }.some
           ),
-          'duplicateMRNDetails (
+          Symbol("duplicateMRNDetails")(
             c285ClaimRequest.claim.duplicateDisplayDeclaration
               .map(_.displayResponseDetail)
               .map(details =>
