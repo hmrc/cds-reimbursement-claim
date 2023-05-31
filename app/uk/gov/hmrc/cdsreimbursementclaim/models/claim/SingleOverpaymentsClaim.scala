@@ -21,6 +21,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAcc
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
+import scala.collection.immutable
+
 final case class SingleOverpaymentsClaim(
   movementReferenceNumber: MRN,
   duplicateMovementReferenceNumber: Option[MRN],
@@ -32,7 +34,7 @@ final case class SingleOverpaymentsClaim(
   reimbursementClaims: Map[TaxCode, BigDecimal],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: immutable.Seq[EvidenceDocument]
 ) extends OverpaymentsClaim {
 
   override def bankAccountDetailsAnswer: Option[BankAccountDetails] = bankAccountDetails

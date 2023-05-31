@@ -20,6 +20,8 @@ import cats.syntax.eq._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 import play.api.mvc.QueryStringBindable
 
+import scala.collection.immutable
+
 sealed class ReasonForSecurity(val acc14Code: String, val dec64DisplayString: String)
 
 object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
@@ -74,7 +76,10 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
   implicit val binder: QueryStringBindable[ReasonForSecurity] = new QueryStringBindable[ReasonForSecurity] {
     private val strBinder: QueryStringBindable[String] = implicitly[QueryStringBindable[String]]
 
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ReasonForSecurity]] =
+    override def bind(
+      key: String,
+      params: Map[String, immutable.Seq[String]]
+    ): Option[Either[String, ReasonForSecurity]] =
       params
         .get(key)
         .flatMap(_.headOption)

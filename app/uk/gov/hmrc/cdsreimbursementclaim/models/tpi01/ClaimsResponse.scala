@@ -20,7 +20,9 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
 
-final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem]) {
+import scala.collection.immutable
+
+final case class ClaimsResponse(sctyClaims: immutable.Seq[SctyClaimItem], ndrcClaims: immutable.Seq[NdrcClaimItem]) {
   def ++(other: ClaimsResponse): ClaimsResponse =
     ClaimsResponse(this.sctyClaims ++ other.sctyClaims, this.ndrcClaims ++ other.ndrcClaims)
 }

@@ -28,6 +28,8 @@ import cats.implicits.catsSyntaxSemigroup
 import java.time.LocalDate
 import cats.kernel.Semigroup
 
+import scala.collection.immutable
+
 final case class ScheduledRejectedGoodsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
@@ -41,7 +43,7 @@ final case class ScheduledRejectedGoodsClaim(
   reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithRefund]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument],
+  supportingEvidences: immutable.Seq[EvidenceDocument],
   scheduledDocument: EvidenceDocument
 ) extends RejectedGoodsClaim {
 
@@ -70,7 +72,7 @@ final case class ScheduledRejectedGoodsClaim(
 
   override def declarationMode: DeclarationMode = ParentDeclaration
 
-  override def documents: Seq[EvidenceDocument] =
+  override def documents: immutable.Seq[EvidenceDocument] =
     scheduledDocument +: supportingEvidences
 }
 
