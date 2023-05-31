@@ -48,6 +48,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, Ove
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -252,7 +253,7 @@ class ClaimServiceSpec
             mockClaimMapping(c285ClaimRequest, eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
@@ -306,7 +307,7 @@ class ClaimServiceSpec
             )
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
@@ -361,7 +362,7 @@ class ClaimServiceSpec
 
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
@@ -419,7 +420,7 @@ class ClaimServiceSpec
             mockAuditSubmitClaimEvent(eisRequest)
 
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
@@ -469,7 +470,7 @@ class ClaimServiceSpec
             mockClaimMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
@@ -523,7 +524,7 @@ class ClaimServiceSpec
             mockClaimMapping((claim, reversedDeclarations), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               httpStatus = 200,
@@ -568,7 +569,7 @@ class ClaimServiceSpec
             mockClaimMapping(c285ClaimRequest, eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               200,
@@ -616,7 +617,7 @@ class ClaimServiceSpec
             mockClaimMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
+              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
             )
             mockAuditSubmitClaimResponseEvent(
               200,
@@ -660,7 +661,7 @@ class ClaimServiceSpec
               mockClaimMapping(c285ClaimRequest, eisRequest)
               mockAuditSubmitClaimEvent(eisRequest)
               mockSubmitClaim(eisRequest)(
-                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, Seq[String]]))
+                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, immutable.Seq[String]]))
               )
               mockAuditSubmitClaimResponseEvent(
                 200,
@@ -703,7 +704,7 @@ class ClaimServiceSpec
               mockClaimMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), eisRequest)
               mockAuditSubmitClaimEvent(eisRequest)
               mockSubmitClaim(eisRequest)(
-                Right(HttpResponse(400, errorResponseJsonBody, Map.empty[String, Seq[String]]))
+                Right(HttpResponse(400, errorResponseJsonBody, Map.empty[String, immutable.Seq[String]]))
               )
               mockAuditSubmitClaimResponseEvent(
                 400,
@@ -736,7 +737,7 @@ class ClaimServiceSpec
               mockClaimMapping(c285ClaimRequest, eisRequest)
               mockAuditSubmitClaimEvent(eisRequest)
               mockSubmitClaim(eisRequest)(
-                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, Seq[String]]))
+                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, immutable.Seq[String]]))
               )
               mockAuditSubmitClaimResponseEvent(
                 200,

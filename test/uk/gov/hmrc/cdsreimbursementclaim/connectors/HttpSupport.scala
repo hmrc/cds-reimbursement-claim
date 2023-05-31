@@ -21,15 +21,16 @@ import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpSupport { this: MockFactory with Matchers =>
 
   val mockHttp: HttpClient = mock[HttpClient]
 
-  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(result: Option[HttpResponse]) =
+  def mockPost[A](url: String, headers: immutable.Seq[(String, String)], body: A)(result: Option[HttpResponse]) =
     (mockHttp
-      .POST(_: String, _: A, _: Seq[(String, String)])(
+      .POST(_: String, _: A, _: immutable.Seq[(String, String)])(
         _: Writes[A],
         _: HttpReads[HttpResponse],
         _: HeaderCarrier,
@@ -40,7 +41,7 @@ trait HttpSupport { this: MockFactory with Matchers =>
         result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
-  def mockPostObject[I, O](url: String, headers: Seq[(String, String)], body: I)(result: Option[O]) =
+  def mockPostObject[I, O](url: String, headers: immutable.Seq[(String, String)], body: I)(result: Option[O]) =
     (mockHttp
       .POST(_: String, _: I, _: Seq[(String, String)])(
         _: Writes[I],
@@ -53,7 +54,9 @@ trait HttpSupport { this: MockFactory with Matchers =>
         result.fold[Future[O]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
-  def mockPostString[A](url: String, headers: Seq[(String, String)], body: String)(result: Option[HttpResponse]) =
+  def mockPostString[A](url: String, headers: immutable.Seq[(String, String)], body: String)(
+    result: Option[HttpResponse]
+  ) =
     (mockHttp
       .POSTString(_: String, _: String, _: Seq[(String, String)])(
         _: HttpReads[HttpResponse],

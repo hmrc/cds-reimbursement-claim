@@ -31,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
@@ -60,7 +61,7 @@ class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactor
   )
 
   val connector: DefaultDeclarationConnector = new DefaultDeclarationConnector(mockHttp, new ServicesConfig(config)) {
-    override def getExtraHeaders: Seq[(String, String)] =
+    override def getExtraHeaders: immutable.Seq[(String, String)] =
       Seq(
         HeaderNames.DATE                   -> "some-date",
         CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",
