@@ -58,6 +58,7 @@ class OverpaymentsSingleClaimMappingSpec
 
         val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
           .groupBy(_.taxType)
+          .view
           .mapValues(_.sortBy(_.taxType).headOption.value)
           .mapValues(ndrc => ndrc.copy(amount = BigDecimal(ndrc.amount).roundToTwoDecimalPlaces.toString()))
 
