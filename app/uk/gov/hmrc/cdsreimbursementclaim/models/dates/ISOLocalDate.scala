@@ -27,5 +27,5 @@ object ISOLocalDate {
   def of(date: TemporalAccessor): String =
     DateTimeFormatter.ISO_LOCAL_DATE
       .format(date)
-      .replace("-", "")
+      .replaceAllLiterally("-", "")
 }

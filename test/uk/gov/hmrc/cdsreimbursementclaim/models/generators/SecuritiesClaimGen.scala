@@ -149,7 +149,7 @@ object SecuritiesClaimGen {
       securityDetails     = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       taxDetails          = securityDetails.map(x => (x.securityDepositId, x.taxDetails)).toMap
       randomDivisor      <- Gen.choose(0.1, 1)
-      reclaims            = taxDetails.view.mapValues(
+      reclaims            = taxDetails.mapValues(
                               _.map(x =>
                                 (
                                   TaxCode.getOrFail(x.taxType),

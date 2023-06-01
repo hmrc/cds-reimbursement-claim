@@ -65,7 +65,6 @@ object ScheduledOverpaymentsClaim {
     (x: Map[TaxCode, AmountPaidWithCorrect], y: Map[TaxCode, AmountPaidWithCorrect]) =>
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
-        .view
         .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithCorrect.empty))
         .toMap
 
