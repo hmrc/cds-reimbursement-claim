@@ -81,6 +81,7 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= List(
       "-Xmigration",
       "-Yrangepos",
+      "-Xlint:-byname-implicit",
       "-language:postfixOps",
       "-Wconf:cat=unused-imports&site=<empty>:iv",
       "-Wconf:cat=unused-imports&site=prod:iv",
