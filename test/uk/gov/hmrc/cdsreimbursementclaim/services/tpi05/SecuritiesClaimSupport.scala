@@ -54,8 +54,8 @@ trait SecuritiesClaimSupport {
       claimItems: Map[TaxCode, BigDecimal]
     ): List[TaxReclaimDetail] =
       depositTaxes
-        .sortBy(_.taxType)
         .filter(dt => claimItems.keys.exists(_.value === dt.taxType))
+        .sortBy(_.taxType)
         .zip(claimItems.toList.sortBy(_._1.value))
         .map { case (TaxDetails(taxType, amount), (_, claimAmount)) =>
           TaxReclaimDetail(taxType, amount, claimAmount.toString())

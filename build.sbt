@@ -3,7 +3,8 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
 val appName = "cds-reimbursement-claim"
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml"        % VersionScheme.Always
+ThisBuild / scalafixDependencies += "com.github.liancheng"       %% "organize-imports" % "0.6.0"
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
@@ -23,7 +24,8 @@ lazy val wartremoverSettings =
       Wart.StringPlusAny,
       Wart.PlatformDefault,
       Wart.Null,
-      Wart.GlobalExecutionContext
+      Wart.GlobalExecutionContext,
+      Wart.JavaNetURLConstructors
     ),
     WartRemover.autoImport.wartremoverExcluded += target.value,
     Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
@@ -35,7 +37,8 @@ lazy val wartremoverSettings =
       Wart.Null,
       Wart.PublicInference,
       Wart.Any,
-      Wart.OptionPartial
+      Wart.OptionPartial,
+      Wart.TripleQuestionMark
     )
   )
 
@@ -55,13 +58,15 @@ lazy val scoverageSettings =
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
+    SbtAutoBuildPlugin,
+    SbtGitVersioning,
     SbtDistributablesPlugin
   )
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.13.8")
+  .settings(scalaVersion := "2.13.10")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test

@@ -22,7 +22,7 @@ import play.api.inject.DefaultApplicationLifecycle
 import play.api.mvc.{RequestHeader, Result}
 import play.api.routing.Router
 import play.api.test.WsTestClient
-import play.api.{BuiltInComponents, BuiltInComponentsFromContext, _}
+import play.api._
 import play.core.server.{ServerConfig, ServerProvider}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
@@ -40,7 +40,12 @@ trait EndpointStub {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
+  @SuppressWarnings(
+    Array(
+      "org.wartremover.warts.OptionPartial",
+      "org.wartremover.warts.TripleQuestionMark"
+    )
+  )
   final def givenEndpointStub[A](
     routes: PartialFunction[RequestHeader, Result]
   )(
