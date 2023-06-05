@@ -59,7 +59,7 @@ class OverpaymentsSingleClaimMappingSpec
         val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
           .groupBy(_.taxType)
           .view
-          .mapValues(_.sortBy(_.taxType).headOption.value)
+          .mapValues(_.minByOption(_.taxType).value)
           .mapValues(ndrc => ndrc.copy(amount = BigDecimal(ndrc.amount).roundToTwoDecimalPlaces.toString()))
 
         inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>

@@ -56,5 +56,4 @@ class C285ClaimToDec64FilesMapper extends ClaimToDec64Mapper[C285ClaimRequest] {
           )
         )
       }
-      .toList
 }

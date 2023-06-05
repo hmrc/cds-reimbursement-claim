@@ -23,7 +23,8 @@ lazy val wartremoverSettings =
       Wart.StringPlusAny,
       Wart.PlatformDefault,
       Wart.Null,
-      Wart.GlobalExecutionContext
+      Wart.GlobalExecutionContext,
+      Wart.JavaNetURLConstructors
     ),
     WartRemover.autoImport.wartremoverExcluded += target.value,
     Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
@@ -98,4 +99,3 @@ lazy val microservice = Project(appName, file("."))
   .settings(scoverageSettings: _*)
   .settings(PlayKeys.playDefaultPort := 7501)
   .settings(scalafmtOnCompile := true)
-  .settings(Compile / scalacOptions -= "utf8")

@@ -44,7 +44,7 @@ object Dec64UploadRequestGen {
     declarationId = mrn.value,
     entryNumber = false,
     applicationName = applicationName,
-    uploadedFiles = files.toList,
+    uploadedFiles = files,
     reasonForSecurity =
       if (applicationName === "Securities")
         Some(reasonForSecurity.acc14Code)

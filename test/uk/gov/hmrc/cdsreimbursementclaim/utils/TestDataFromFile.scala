@@ -30,7 +30,7 @@ trait TestDataFromFile {
     )
   )
   final def contentOfFile(filename: String): String = {
-    val in = getClass.getResourceAsStream(s"${filename.drop("conf".size)}")
+    val in = getClass.getResourceAsStream(s"${filename.drop("conf".length)}")
     if (in == null) throw new NullPointerException(s"Cannot read content of $filename")
     else
       Try(Source.fromInputStream(in).getLines().mkString)
