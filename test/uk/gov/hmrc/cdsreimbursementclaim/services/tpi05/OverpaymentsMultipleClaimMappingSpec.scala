@@ -68,27 +68,27 @@ class OverpaymentsMultipleClaimMappingSpec
             details.claimantEORI should ===(claim.claimantInformation.eori)
 
             details should have(
-              'CDFPayService (NDRC),
-              'dateReceived (ISOLocalDate.now.some),
-              'customDeclarationType (CustomDeclarationType.MRN.some),
-              'claimDate (ISOLocalDate.now.some),
-              'claimType (ClaimType.C285.some),
-              'claimant (Some(if (claim.claimantType === Consignee) Importer else Representative)),
-              'payeeIndicator (Some(if (claim.claimantType === Consignee) Importer else Representative)),
-              'declarationMode (Some(DeclarationMode.ParentDeclaration)),
-              'claimAmountTotal (claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
-              'reimbursementMethod (
+              Symbol("CDFPayService")(NDRC),
+              Symbol("dateReceived")(ISOLocalDate.now.some),
+              Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
+              Symbol("claimDate")(ISOLocalDate.now.some),
+              Symbol("claimType")(ClaimType.C285.some),
+              Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
+              Symbol("payeeIndicator")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
+              Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
+              Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
+              Symbol("reimbursementMethod")(
                 Some(if (claim.reimbursementMethod === BankAccountTransfer) BankTransfer else Deferment)
               ),
-              'basisOfClaim (claim.basisOfClaim.toTPI05DisplayString.some),
-              'caseType (Some(if (claim.reimbursementMethod === CurrentMonthAdjustment) CMA else Individual)),
-              'goodsDetails (
+              Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
+              Symbol("caseType")(Some(if (claim.reimbursementMethod === CurrentMonthAdjustment) CMA else Individual)),
+              Symbol("goodsDetails")(
                 GoodsDetails(
                   descOfGoods = claim.additionalDetails.some,
                   isPrivateImporter = Some(if (claim.claimantType === Consignee) Yes else No)
                 ).some
               ),
-              'MRNDetails {
+              Symbol("MRNDetails") {
                 claimsOverMrns.map { case (mrn, (claimedReimbursements, declaration)) =>
                   MrnDetail(
                     MRNNumber = mrn.some,

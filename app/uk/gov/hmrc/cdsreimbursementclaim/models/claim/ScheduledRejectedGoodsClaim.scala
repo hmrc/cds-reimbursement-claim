@@ -28,6 +28,8 @@ import cats.implicits.catsSyntaxSemigroup
 import java.time.LocalDate
 import cats.kernel.Semigroup
 
+import scala.collection.immutable
+
 final case class ScheduledRejectedGoodsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
@@ -41,7 +43,7 @@ final case class ScheduledRejectedGoodsClaim(
   reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithRefund]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument],
+  supportingEvidences: immutable.Seq[EvidenceDocument],
   scheduledDocument: EvidenceDocument
 ) extends RejectedGoodsClaim {
 
@@ -54,7 +56,7 @@ final case class ScheduledRejectedGoodsClaim(
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
-    (movementReferenceNumber, combinedReimbursementClaims.mapValues(_.refundAmount)) :: Nil
+    (movementReferenceNumber, combinedReimbursementClaims.view.mapValues(_.refundAmount).toMap) :: Nil
 
   def getClaimedReimbursements: List[ClaimedReimbursement] =
     combinedReimbursementClaims.toList
@@ -70,7 +72,7 @@ final case class ScheduledRejectedGoodsClaim(
 
   override def declarationMode: DeclarationMode = ParentDeclaration
 
-  override def documents: Seq[EvidenceDocument] =
+  override def documents: immutable.Seq[EvidenceDocument] =
     scheduledDocument +: supportingEvidences
 }
 
@@ -80,7 +82,9 @@ object ScheduledRejectedGoodsClaim {
     (x: Map[TaxCode, AmountPaidWithRefund], y: Map[TaxCode, AmountPaidWithRefund]) =>
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
+        .view
         .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithRefund.empty))
+        .toMap
 
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithRefund]] =
     MapFormat[TaxCode, AmountPaidWithRefund]

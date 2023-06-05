@@ -19,6 +19,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._
 
+import scala.collection.immutable
+
 class EnumerationFormatSpec extends AnyWordSpec with Matchers {
 
   import EnumerationFormatSpec._
@@ -75,7 +77,7 @@ class EnumerationFormatSpec extends AnyWordSpec with Matchers {
     }
 
     "bind an enum from query parameter" in {
-      val query: Map[String, Seq[String]] =
+      val query: Map[String, immutable.Seq[String]] =
         Seq("a", "b", "c", "abc", "d", "bar").flatMap { i =>
           Seq(i.toLowerCase -> Seq(i.toLowerCase()), i.toUpperCase() -> Seq(i.toUpperCase()))
         }.toMap

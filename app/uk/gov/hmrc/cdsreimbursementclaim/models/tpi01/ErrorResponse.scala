@@ -18,6 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
 import play.api.libs.json.{Json, OFormat}
 
+import scala.collection.immutable
+
 final case class ErrorResponse(status: Int, errorDetail: Option[ErrorDetail])
 
 object ErrorResponse {
@@ -37,7 +39,7 @@ object ErrorDetail {
   implicit val format: OFormat[ErrorDetail] = Json.format[ErrorDetail]
 }
 
-final case class SourceFaultDetail(detail: Seq[String])
+final case class SourceFaultDetail(detail: immutable.Seq[String])
 
 object SourceFaultDetail {
   implicit val format: OFormat[SourceFaultDetail] = Json.format[SourceFaultDetail]

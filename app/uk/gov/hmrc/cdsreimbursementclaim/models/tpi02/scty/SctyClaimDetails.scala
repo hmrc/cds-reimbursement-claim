@@ -19,6 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
+import scala.collection.Seq
 
 final case class SctyClaimDetails(
   CDFPayCaseNumber: String,

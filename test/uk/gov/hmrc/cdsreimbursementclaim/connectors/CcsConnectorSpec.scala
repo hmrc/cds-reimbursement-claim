@@ -32,6 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
@@ -63,7 +64,7 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
     )
 
     val connector = new DefaultCcsConnector(mockHttp, new ServicesConfig(config)) {
-      override def getExtraHeaders: Seq[(String, String)] =
+      override def getExtraHeaders: immutable.Seq[(String, String)] =
         Seq(
           HeaderNames.DATE                   -> "some-date",
           CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",
@@ -107,7 +108,9 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
 
     "Have the correct Headers" in {
       val connector = new DefaultCcsConnector(mockHttp, new ServicesConfig(config))
-      connector.getExtraHeaders.find(_._1 === HeaderNames.CONTENT_TYPE).getOrElse(fail)._2 should include(MimeTypes.XML)
+      connector.getExtraHeaders.find(_._1 === HeaderNames.CONTENT_TYPE).getOrElse(fail())._2 should include(
+        MimeTypes.XML
+      )
     }
 
   }

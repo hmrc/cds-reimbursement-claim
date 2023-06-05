@@ -32,6 +32,8 @@ import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 import scala.concurrent.Future
 import org.bson.types.ObjectId
 
+import scala.collection.immutable
+
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
 
@@ -82,9 +84,14 @@ class DefaultCcsSubmissionService @Inject() (
     val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
       claimToDec64FilesMapper
         .map(submitClaimRequest, submitClaimResponse)
-        .map(data =>
-          ccsSubmissionRepo.set(
-            CcsSubmissionRequest(XmlEncoder[Envelope].encode(data), DefaultCcsSubmissionService.getHeaders(hc))
+        .map(XmlEncoder[Envelope].encode(_))
+        .map(
+          _.fold(
+            _ => EitherT.leftT[Future, WorkItem[CcsSubmissionRequest]](Error("ERROR: failed to encode XML")),
+            encodedData =>
+              ccsSubmissionRepo.set(
+                CcsSubmissionRequest(encodedData, DefaultCcsSubmissionService.getHeaders(hc))
+              )
           )
         )
 
@@ -103,7 +110,7 @@ class DefaultCcsSubmissionService @Inject() (
 
 object DefaultCcsSubmissionService {
 
-  def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
+  def getHeaders(headerCarrier: HeaderCarrier): immutable.Seq[(String, String)] =
     List(
       headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
       headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),

@@ -20,6 +20,8 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimItem, ClaimTransformer, ResponseDetail, SCTYCaseDetails}
 
+import scala.collection.immutable
+
 /** Model of an SCTY type of claim data returned from /claims endpoint */
 final case class SctyClaimItem(
   CDFPayCaseNumber: String,
@@ -39,7 +41,7 @@ final case class SctyClaimItem(
 
 object SctyClaimItem extends ClaimTransformer[SCTYCaseDetails, SctyClaimItem] {
   implicit val format: OFormat[SctyClaimItem]                                 = Json.format[SctyClaimItem]
-  def convert(responseDetail: ResponseDetail): Seq[SctyClaimItem]             =
+  def convert(responseDetail: ResponseDetail): immutable.Seq[SctyClaimItem]   =
     super.convert(responseDetail, _.SCTYCases)
   override def fromTpi01Response(caseDetails: SCTYCaseDetails): SctyClaimItem =
     SctyClaimItem(

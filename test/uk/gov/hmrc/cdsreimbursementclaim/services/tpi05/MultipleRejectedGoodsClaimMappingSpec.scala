@@ -73,17 +73,17 @@ class MultipleRejectedGoodsClaimMappingSpec
           )
 
           details should have(
-            'CDFPayService (NDRC),
-            'dateReceived (ISOLocalDate.now.some),
-            'customDeclarationType (CustomDeclarationType.MRN.some),
-            'claimDate (ISOLocalDate.now.some),
-            'claimType (ClaimType.CE1179.some),
-            'claimant (claim.claimant.some),
-            'payeeIndicator (claim.claimant.some),
-            'claimAmountTotal (claim.claimedAmountAsString.some),
-            'reimbursementMethod (claim.tpi05ReimbursementMethod.some),
-            'basisOfClaim (claim.basisOfClaim.toTPI05DisplayString.some),
-            'goodsDetails (
+            Symbol("CDFPayService")(NDRC),
+            Symbol("dateReceived")(ISOLocalDate.now.some),
+            Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
+            Symbol("claimDate")(ISOLocalDate.now.some),
+            Symbol("claimType")(ClaimType.CE1179.some),
+            Symbol("claimant")(claim.claimant.some),
+            Symbol("payeeIndicator")(claim.claimant.some),
+            Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
+            Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
+            Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
+            Symbol("goodsDetails")(
               GoodsDetails(
                 descOfGoods = claim.detailsOfRejectedGoods.some,
                 anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
@@ -99,7 +99,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                 ).some
               ).some
             ),
-            'EORIDetails (
+            Symbol("EORIDetails")(
               EoriDetails(
                 agentEORIDetails = EORIInformation(
                   EORINumber = claim.claimantInformation.eori,
@@ -162,7 +162,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                 }
               ).some
             ),
-            'MRNDetails (
+            Symbol("MRNDetails")(
               claimsOverMrns.map { case (mrn, (claimedReimbursements, declaration)) =>
                 MrnDetail(
                   MRNNumber = mrn.some,
@@ -301,8 +301,8 @@ class MultipleRejectedGoodsClaimMappingSpec
                 )
               }.some
             ),
-            'caseType (Bulk.some),
-            'declarationMode (AllDeclaration.some)
+            Symbol("caseType")(Bulk.some),
+            Symbol("declarationMode")(AllDeclaration.some)
           )
         }
     }

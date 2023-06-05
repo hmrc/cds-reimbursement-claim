@@ -31,6 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.{SchemaValidation, TestDataFromFi
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext", "org.wartremover.warts.AsInstanceOf"))
@@ -191,7 +192,7 @@ trait WithTpi01Connector {
     )
 
     val connector: Tpi01Connector = new Tpi01Connector(httpClient, new ServicesConfig(config)) {
-      override def getExtraHeaders: Seq[(String, String)] =
+      override def getExtraHeaders: immutable.Seq[(String, String)] =
         Seq(
           HeaderNames.DATE                   -> "some-date",
           CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",

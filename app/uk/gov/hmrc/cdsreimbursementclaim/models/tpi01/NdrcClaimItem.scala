@@ -20,6 +20,8 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimItem, ClaimTransformer, NDRCCaseDetails, ResponseDetail}
 
+import scala.collection.immutable
+
 /** Model of an NDRC type of claim data returned from /claims endpoint */
 final case class NdrcClaimItem(
   CDFPayCaseNumber: String,
@@ -39,8 +41,8 @@ final case class NdrcClaimItem(
 ) extends ClaimItem
 
 object NdrcClaimItem extends ClaimTransformer[NDRCCaseDetails, NdrcClaimItem] {
-  implicit val format: OFormat[NdrcClaimItem]                     = Json.format[NdrcClaimItem]
-  def convert(responseDetail: ResponseDetail): Seq[NdrcClaimItem] =
+  implicit val format: OFormat[NdrcClaimItem]                               = Json.format[NdrcClaimItem]
+  def convert(responseDetail: ResponseDetail): immutable.Seq[NdrcClaimItem] =
     super.convert(responseDetail, _.NDRCCases)
 
   override def fromTpi01Response(caseDetails: NDRCCaseDetails): NdrcClaimItem =

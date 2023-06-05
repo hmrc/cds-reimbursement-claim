@@ -33,7 +33,7 @@ trait TestDataFromFile {
     val in = getClass.getResourceAsStream(s"${filename.drop("conf".size)}")
     if (in == null) throw new NullPointerException(s"Cannot read content of $filename")
     else
-      Try(Source.fromInputStream(in).getLines.mkString)
+      Try(Source.fromInputStream(in).getLines().mkString)
         .transform(
           s => Success(s),
           e => Try { in.close(); throw e }

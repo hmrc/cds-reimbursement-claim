@@ -79,7 +79,7 @@ class DefaultCcsSubmissionRepo @Inject() (
   override def set(ccsSubmissionRequest: CcsSubmissionRequest): EitherT[Future, Error, WorkItem[CcsSubmissionRequest]] =
     EitherT[Future, Error, WorkItem[CcsSubmissionRequest]](
       preservingMdc {
-        pushNew(ccsSubmissionRequest, now, (_: CcsSubmissionRequest) => ToDo).map(item => Right(item)).recover {
+        pushNew(ccsSubmissionRequest, now(), (_: CcsSubmissionRequest) => ToDo).map(item => Right(item)).recover {
           case exception: Exception => Left(Error(exception))
         }
       }
@@ -89,7 +89,7 @@ class DefaultCcsSubmissionRepo @Inject() (
     EitherT[Future, Error, Option[WorkItem[CcsSubmissionRequest]]](
       preservingMdc {
         super
-          .pullOutstanding(failedBefore = now.minusMillis(retryPeriod), availableBefore = now)
+          .pullOutstanding(failedBefore = now().minusMillis(retryPeriod), availableBefore = now())
           .map(workItem => Right(workItem))
           .recover { case exception: Exception =>
             Left(Error(exception))
@@ -103,7 +103,7 @@ class DefaultCcsSubmissionRepo @Inject() (
   ): EitherT[Future, Error, Boolean] =
     EitherT[Future, Error, Boolean](
       preservingMdc {
-        markAs(id, status, Some(now.plusMillis(retryPeriod)))
+        markAs(id, status, Some(now().plusMillis(retryPeriod)))
           .map(result => Right(result))
           .recover { case exception: Exception =>
             Left(Error(exception))

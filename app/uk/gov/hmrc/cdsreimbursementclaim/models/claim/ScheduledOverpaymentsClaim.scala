@@ -23,6 +23,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAcc
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
+import scala.collection.immutable
+
 final case class ScheduledOverpaymentsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
@@ -34,12 +36,12 @@ final case class ScheduledOverpaymentsClaim(
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   scheduledDocument: EvidenceDocument,
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: immutable.Seq[EvidenceDocument]
 ) extends OverpaymentsClaim {
   lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithCorrect] =
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
-  def documents: Seq[EvidenceDocument] = scheduledDocument +: supportingEvidences
+  def documents: immutable.Seq[EvidenceDocument] = scheduledDocument +: supportingEvidences
 
   def totalReimbursementAmount: BigDecimal =
     reimbursementClaims.values.map(_.values.map(_.refundAmount).sum).sum
@@ -63,7 +65,9 @@ object ScheduledOverpaymentsClaim {
     (x: Map[TaxCode, AmountPaidWithCorrect], y: Map[TaxCode, AmountPaidWithCorrect]) =>
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
+        .view
         .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithCorrect.empty))
+        .toMap
 
   implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithCorrect]] =
     MapFormat[TaxCode, AmountPaidWithCorrect]

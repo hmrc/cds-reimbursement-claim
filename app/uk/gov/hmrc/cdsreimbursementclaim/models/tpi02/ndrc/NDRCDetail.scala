@@ -19,6 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
 import play.api.libs.json.{Json, OFormat}
 
+import scala.collection.immutable
+
 final case class NDRCDetail(
   CDFPayCaseNumber: String,
   declarationID: Option[String],
@@ -35,9 +37,9 @@ final case class NDRCDetail(
   claimantName: Option[String],
   claimantEmailAddress: Option[String],
   closedDate: Option[String],
-  MRNDetails: Option[Seq[ProcedureDetail]],
-  entryDetails: Option[Seq[EntryDetail]],
-  reimbursement: Option[Seq[Reimbursement]]
+  MRNDetails: Option[immutable.Seq[ProcedureDetail]],
+  entryDetails: Option[immutable.Seq[EntryDetail]],
+  reimbursement: Option[immutable.Seq[Reimbursement]]
 )
 
 object NDRCDetail {

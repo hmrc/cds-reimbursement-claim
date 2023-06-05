@@ -53,6 +53,7 @@ import uk.gov.hmrc.mongo.workitem._
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
@@ -69,7 +70,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
     PropertyCheckConfiguration(minSuccessful = 1)
 
-  def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
+  def getHeaders(headerCarrier: HeaderCarrier): immutable.Seq[(String, String)] =
     List(
       headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
       headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),
@@ -168,7 +169,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
   def mockCcsSubmissionRequestGet()(
     response: Either[Error, Option[WorkItem[CcsSubmissionRequest]]]
   ): CallHandler0[EitherT[Future, models.Error, Option[WorkItem[CcsSubmissionRequest]]]] =
-    (ccsSubmissionRepositoryMock.get _)
+    (() => ccsSubmissionRepositoryMock.get)
       .expects()
       .returning(EitherT.fromEither[Future](response))
 

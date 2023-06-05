@@ -18,7 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class SourceFaultDetail(detail: Seq[String])
+import scala.collection.immutable
+
+final case class SourceFaultDetail(detail: immutable.Seq[String])
 
 object SourceFaultDetail {
   implicit val format: OFormat[SourceFaultDetail] = Json.format[SourceFaultDetail]

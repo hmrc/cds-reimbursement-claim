@@ -30,6 +30,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.http.HttpResponse
 
+import scala.collection.immutable
+
 @ImplementedBy(classOf[DefaultSubscriptionConnector])
 trait SubscriptionConnector {
   def getSubscription(eori: Eori)(implicit
@@ -56,12 +58,12 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
   private val getSubscriptionUrl: String =
     s"${config.baseUrl("subscription")}/subscriptions/subscriptiondisplay/v1"
 
-  private def getQueryParameters(eori: Eori): Seq[(String, String)] =
+  private def getQueryParameters(eori: Eori): immutable.Seq[(String, String)] =
     Seq("EORI" -> eori.value, "acknowledgementReference" -> acknowledgementReference, "regime" -> "CDS")
 
   override def getSubscription(eori: Eori)(implicit hc: HeaderCarrier): Future[Option[SubscriptionResponse]] = {
-    val url: String                            = getSubscriptionUrl
-    val queryParameters: Seq[(String, String)] = getQueryParameters(eori)
+    val url: String                                      = getSubscriptionUrl
+    val queryParameters: immutable.Seq[(String, String)] = getQueryParameters(eori)
     http
       .GET[HttpResponse](url, queryParameters, getEISRequiredHeaders)
       .flatMap {

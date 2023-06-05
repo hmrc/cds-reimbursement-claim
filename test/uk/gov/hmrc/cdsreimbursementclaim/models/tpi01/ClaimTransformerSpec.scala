@@ -20,6 +20,8 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.collection.immutable
+
 class ClaimTransformerSpec extends AnyWordSpec with Matchers with MockFactory {
 
   object Transformer extends ClaimTransformer[CaseDetails, SampleClass] {
@@ -33,7 +35,7 @@ class ClaimTransformerSpec extends AnyWordSpec with Matchers with MockFactory {
       val list =
         Seq(SampleClass(1, "Bob", "", None), SampleClass(1, "Bob", "", None), SampleClass(2, "Charlie", "", None))
 
-      val uniqueList: Seq[SampleClass] = Transformer.removeDuplicates(list, item => item.name)
+      val uniqueList: immutable.Seq[SampleClass] = Transformer.removeDuplicates(list, item => item.name)
 
       uniqueList.length shouldBe 2
       uniqueList          should contain only (SampleClass(1, "Bob", "", None), SampleClass(2, "Charlie", "", None))

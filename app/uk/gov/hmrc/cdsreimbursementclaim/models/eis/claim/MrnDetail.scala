@@ -24,7 +24,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Street
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BankAccountDetails, ConsigneeDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 final case class MrnDetail(
@@ -174,23 +174,24 @@ object MrnDetail {
       maybeBankAccountDetails: Option[BankAccountDetails]
     ): Builder = {
 
-      def selectBankDetails = (maybeBankDetails, maybeBankAccountDetails) match {
-        case (_, Some(bankAccountDetails)) =>
-          Some(
-            BankDetails(
-              consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
-              declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+      def selectBankDetails: Option[BankDetails] =
+        (maybeBankDetails, maybeBankAccountDetails) match {
+          case (_, Some(bankAccountDetails))                     =>
+            Some(
+              BankDetails(
+                consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
+                declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+              )
             )
-          )
-        case (Some(acc14BankDetails), _)   =>
-          Some(
-            BankDetails(
-              declarantBankDetails = acc14BankDetails.declarantBankDetails.map(BankDetail.from),
-              consigneeBankDetails = acc14BankDetails.consigneeBankDetails.map(BankDetail.from)
+          case (Some(acc14BankDetails: response.BankDetails), _) =>
+            Some(
+              BankDetails(
+                declarantBankDetails = acc14BankDetails.declarantBankDetails.map(BankDetail.from),
+                consigneeBankDetails = acc14BankDetails.consigneeBankDetails.map(BankDetail.from)
+              )
             )
-          )
-        case _                             => None
-      }
+          case _                                                 => None
+        }
 
       copy(validated.map(_.copy(bankDetails = selectBankDetails)))
     }

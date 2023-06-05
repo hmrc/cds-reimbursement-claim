@@ -31,7 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCod
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.net.URL
-import scala.jdk.CollectionConverters.asScalaBufferConverter
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object OverpaymentsClaimGen {

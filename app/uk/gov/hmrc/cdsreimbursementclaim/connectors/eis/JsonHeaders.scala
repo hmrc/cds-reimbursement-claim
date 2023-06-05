@@ -22,9 +22,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 
+import scala.collection.immutable
+
 trait JsonHeaders {
 
-  def getExtraHeaders: Seq[(String, String)] =
+  def getExtraHeaders: immutable.Seq[(String, String)] =
     Seq(
       HeaderNames.DATE                   -> RFC7231DateTime.now,
       CustomHeaderNames.X_CORRELATION_ID -> CorrelationId(),

@@ -1,6 +1,5 @@
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "cds-reimbursement-claim"
 
@@ -18,7 +17,13 @@ lazy val wartremoverSettings =
       Wart.ImplicitParameter,
       Wart.Nothing,
       Wart.Overloading,
-      Wart.ToString
+      Wart.ToString,
+      Wart.Any,
+      Wart.Equals,
+      Wart.StringPlusAny,
+      Wart.PlatformDefault,
+      Wart.Null,
+      Wart.GlobalExecutionContext
     ),
     WartRemover.autoImport.wartremoverExcluded += target.value,
     Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
@@ -56,7 +61,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.12.14")
+  .settings(scalaVersion := "2.13.8")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -72,11 +77,12 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
-    addCompilerPlugin(scalafixSemanticdb),
+    addCompilerPlugin(scalafixSemanticdb("4.7.7")),
     scalacOptions ++= List(
+      "-Xmigration",
       "-Yrangepos",
+      "-Xlint:-byname-implicit",
       "-language:postfixOps",
-      "-Ypartial-unification",
       "-Wconf:cat=unused-imports&site=<empty>:iv",
       "-Wconf:cat=unused-imports&site=prod:iv",
       "-Wconf:cat=unused-imports&site=upscan:iv",
@@ -85,7 +91,6 @@ lazy val microservice = Project(appName, file("."))
     ),
     Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )
-  .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(Test / resourceDirectory := baseDirectory.value / "/conf/resources")

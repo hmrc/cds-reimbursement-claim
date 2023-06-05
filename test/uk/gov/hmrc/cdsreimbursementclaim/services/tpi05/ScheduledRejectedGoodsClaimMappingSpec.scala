@@ -67,17 +67,17 @@ class ScheduledRejectedGoodsClaimMappingSpec
           )
 
           details should have(
-            'CDFPayService (NDRC),
-            'dateReceived (ISOLocalDate.now.some),
-            'customDeclarationType (CustomDeclarationType.MRN.some),
-            'claimDate (ISOLocalDate.now.some),
-            'claimType (ClaimType.CE1179.some),
-            'claimant (claim.claimant.some),
-            'payeeIndicator (claim.claimant.some),
-            'claimAmountTotal (claim.claimedAmountAsString.some),
-            'reimbursementMethod (claim.tpi05ReimbursementMethod.some),
-            'basisOfClaim (claim.basisOfClaim.toTPI05DisplayString.some),
-            'goodsDetails (
+            Symbol("CDFPayService")(NDRC),
+            Symbol("dateReceived")(ISOLocalDate.now.some),
+            Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
+            Symbol("claimDate")(ISOLocalDate.now.some),
+            Symbol("claimType")(ClaimType.CE1179.some),
+            Symbol("claimant")(claim.claimant.some),
+            Symbol("payeeIndicator")(claim.claimant.some),
+            Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
+            Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
+            Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
+            Symbol("goodsDetails")(
               GoodsDetails(
                 descOfGoods = claim.detailsOfRejectedGoods.some,
                 anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
@@ -93,7 +93,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
                 ).some
               ).some
             ),
-            'EORIDetails (
+            Symbol("EORIDetails")(
               EoriDetails(
                 agentEORIDetails = EORIInformation(
                   EORINumber = claim.claimantInformation.eori,
@@ -156,7 +156,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
                 }
               ).some
             ),
-            'MRNDetails (
+            Symbol("MRNDetails")(
               List(
                 MrnDetail(
                   MRNNumber = claim.movementReferenceNumber.some,
@@ -284,8 +284,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
                 )
               ).some
             ),
-            'caseType (Bulk.some),
-            'declarationMode (ParentDeclaration.some)
+            Symbol("caseType")(Bulk.some),
+            Symbol("declarationMode")(ParentDeclaration.some)
           )
         }
     }

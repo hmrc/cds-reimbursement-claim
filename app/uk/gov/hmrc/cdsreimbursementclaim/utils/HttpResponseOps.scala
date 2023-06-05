@@ -32,21 +32,21 @@ object HttpResponseOps {
       Try(
         path.fold[JsLookupResult](JsDefined(response.json))(response.json \ _)
       ) match {
-        case Success(jsLookupResult) ⇒
+        case Success(jsLookupResult) =>
           jsLookupResult.toOption
             .flatMap(Option(_))
             .fold[Either[String, A]](
               Left("no JSON found in body of http response")
             )(
               _.validate[A].fold[Either[String, A]](
-                errors ⇒
+                errors =>
                   Left(
                     s"could not parse http response JSON: ${JsError(errors).prettyPrint()}"
                   ),
                 Right(_)
               )
             )
-        case Failure(error) ⇒
+        case Failure(error)          =>
           Left(s"could not read http response as JSON: ${error.getMessage}")
       }
 
