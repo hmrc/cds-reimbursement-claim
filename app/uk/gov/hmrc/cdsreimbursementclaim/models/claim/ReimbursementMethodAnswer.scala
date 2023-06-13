@@ -24,6 +24,7 @@ object ReimbursementMethodAnswer extends EnumerationFormat[ReimbursementMethodAn
 
   final case object CurrentMonthAdjustment extends ReimbursementMethodAnswer
   final case object BankAccountTransfer extends ReimbursementMethodAnswer
+  final case object Subsidy extends ReimbursementMethodAnswer
 
-  val values: Set[ReimbursementMethodAnswer] = Set(BankAccountTransfer, CurrentMonthAdjustment)
+  val values: Set[ReimbursementMethodAnswer] = Set(BankAccountTransfer, CurrentMonthAdjustment, Subsidy)
 }

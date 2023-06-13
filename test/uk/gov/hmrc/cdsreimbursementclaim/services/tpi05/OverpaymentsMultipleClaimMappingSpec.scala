@@ -26,13 +26,13 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod.{BankTransfer, Deferment}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
@@ -78,7 +78,11 @@ class OverpaymentsMultipleClaimMappingSpec
               Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
               Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
               Symbol("reimbursementMethod")(
-                Some(if (claim.reimbursementMethod === BankAccountTransfer) BankTransfer else Deferment)
+                Some(
+                  if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                  else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
+                  else ReimbursementMethod.Deferment
+                )
               ),
               Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
               Symbol("caseType")(Some(if (claim.reimbursementMethod === CurrentMonthAdjustment) CMA else Individual)),

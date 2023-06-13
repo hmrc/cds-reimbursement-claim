@@ -18,11 +18,11 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, DeclarantTypeAnswer, TypeOfClaimAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285Claim, DeclarantTypeAnswer, ReimbursementMethodAnswer, TypeOfClaimAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, ReimbursementMethod, YesNo}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, ReimbursementMethod, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
@@ -53,7 +53,9 @@ trait C285ClaimSupport {
       if (claim.declarantTypeAnswer === DeclarantTypeAnswer.Importer) Yes else No
 
     def reimbursementMethod: ReimbursementMethod =
-      if (claim.reimbursementMethodAnswer === CurrentMonthAdjustment) ReimbursementMethod.Deferment
+      if (claim.reimbursementMethodAnswer === ReimbursementMethodAnswer.Subsidy) ReimbursementMethod.Subsidy
+      else if (claim.reimbursementMethodAnswer === ReimbursementMethodAnswer.CurrentMonthAdjustment)
+        ReimbursementMethod.Deferment
       else ReimbursementMethod.BankTransfer
 
     def firstNonEmptyBankDetails(maybeBankDetails: Option[response.BankDetails]): Option[BankDetails] =

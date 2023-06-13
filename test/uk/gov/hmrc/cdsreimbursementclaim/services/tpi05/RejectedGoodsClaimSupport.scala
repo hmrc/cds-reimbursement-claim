@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.Subsidy
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, RejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ReimbursementMethod}
@@ -36,7 +37,8 @@ trait RejectedGoodsClaimSupport {
       claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString()
 
     def tpi05ReimbursementMethod: ReimbursementMethod =
-      if (claim.reimbursementMethod === CurrentMonthAdjustment) ReimbursementMethod.Deferment
+      if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+      else if (claim.reimbursementMethod === CurrentMonthAdjustment) ReimbursementMethod.Deferment
       else ReimbursementMethod.BankTransfer
 
     def firstNonEmptyBankDetails(maybeBankDetails: Option[response.BankDetails]): Option[BankDetails] =
