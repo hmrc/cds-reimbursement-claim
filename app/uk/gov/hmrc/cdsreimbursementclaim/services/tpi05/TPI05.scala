@@ -20,18 +20,16 @@ import cats.data.Validated
 import cats.data.Validated.Valid
 import cats.implicits.{catsSyntaxEq, toTraverseOps}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{CurrentMonthAdjustment, Subsidy}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
-import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BtaSource}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, Eori}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05 {
@@ -91,7 +89,8 @@ object TPI05 {
         validatedRequest.map(
           _.copy(reimbursementMethod =
             Some(
-              if (reimbursementMethod === CurrentMonthAdjustment) ReimbursementMethod.Deferment
+              if (reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+              else if (reimbursementMethod === CurrentMonthAdjustment) ReimbursementMethod.Deferment
               else ReimbursementMethod.BankTransfer
             )
           )

@@ -42,6 +42,10 @@ object ReimbursementMethod extends EnumerationFormat[ReimbursementMethod] {
     override def toString: String = "Individual Guarantee"
   }
 
+  final case object Subsidy extends ReimbursementMethod {
+    override def toString: String = "Subsidy"
+  }
+
   lazy val values: Set[ReimbursementMethod] =
-    Set(Deferment, BankTransfer, PayableOrder, GeneralGuarantee, IndividualGuarantee)
+    Set(Deferment, BankTransfer, PayableOrder, GeneralGuarantee, IndividualGuarantee, Subsidy)
 }
