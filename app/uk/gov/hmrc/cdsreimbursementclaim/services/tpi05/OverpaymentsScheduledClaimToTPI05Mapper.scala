@@ -61,8 +61,8 @@ class OverpaymentsScheduledClaimToTPI05Mapper
       .withClaimant(Claimant.basedOn(claim.claimantType))
       .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)
-      .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Individual, claim.reimbursementMethod))
-      .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Individual))
+      .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Scheduled, claim.reimbursementMethod))
+      .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Scheduled))
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(
         GoodsDetails(
