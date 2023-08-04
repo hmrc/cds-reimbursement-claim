@@ -26,15 +26,13 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
@@ -75,7 +73,7 @@ class OverpaymentsMultipleClaimMappingSpec
               Symbol("claimType")(ClaimType.C285.some),
               Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
               Symbol("payeeIndicator")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
-              Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
+              Symbol("declarationMode")(Some(DeclarationMode.AllDeclaration)),
               Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
               Symbol("reimbursementMethod")(
                 Some(
@@ -85,7 +83,7 @@ class OverpaymentsMultipleClaimMappingSpec
                 )
               ),
               Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
-              Symbol("caseType")(Some(if (claim.reimbursementMethod === CurrentMonthAdjustment) CMA else Individual)),
+              Symbol("caseType")(Some(CaseType.Bulk)),
               Symbol("goodsDetails")(
                 GoodsDetails(
                   descOfGoods = claim.additionalDetails.some,
