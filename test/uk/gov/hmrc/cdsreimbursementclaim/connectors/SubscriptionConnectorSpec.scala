@@ -58,9 +58,9 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val response = await(connector.getSubscription(eori))
             inside(response) {
-              case Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details))) =>
+              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details)))) =>
                 details.XI_Subscription.get.XI_EORINo shouldBe "MY_OWN_EORI"
-              case None                                                                =>
+              case _                                                                          =>
                 fail("expected some subscription but got none")
             }
           }
@@ -78,9 +78,9 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val response = await(connector.getSubscription(eori))
             inside(response) {
-              case Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details))) =>
+              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details)))) =>
                 details.XI_Subscription.isEmpty shouldBe true
-              case None                                                                =>
+              case _                                                                          =>
                 fail("expected some subscription but got none")
             }
           }
@@ -96,9 +96,10 @@ class SubscriptionConnectorSpec
             Results.ExpectationFailed
         }(validateSubscriptionRequest) {
           givenSubscriptionConnector { connector =>
-            an[Exception] shouldBe thrownBy {
-              await(connector.getSubscription(eori))
-            }
+            val result = await(connector.getSubscription(eori))
+            result shouldBe Left(
+              """A call to SUB09 API returned unexpected status 400 with body: {  "errorDetail": {    "timestamp": "2016-10-10T14:30:44Z",    "correlationId": "6bbd0963-f9f0-4d00-8169-9438d8d3044d",    "errorCode": "400",    "errorMessage": "REGIME missing or invalid",    "source": "Back End",    "sourceFaultDetail": {      "detail": [        "002 - SAP_NUMBER missing or invalid"      ]    }  }}"""
+            )
           }
         }
       }
@@ -114,9 +115,9 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val response = await(connector.getSubscription(eori))
             inside(response) {
-              case Some(_) =>
+              case Right(Some(_)) =>
                 fail("expected none subscription but got some")
-              case None    =>
+              case _              =>
                 succeed
             }
           }
@@ -132,13 +133,28 @@ class SubscriptionConnectorSpec
             Results.ExpectationFailed
         }(validateSubscriptionRequest) {
           givenSubscriptionConnector { connector =>
-            an[Exception] shouldBe thrownBy {
-              await(connector.getSubscription(eori))
-            }
+            val result = await(connector.getSubscription(eori))
+            result shouldBe Left("A call to SUB09 API returned unexpected status 503 with empty body.")
           }
         }
       }
 
+      "get the 503 with non-empty body" in {
+        val eori = Generators.sample[Eori]
+        givenEndpointStub {
+          case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
+            Results.ServiceUnavailable("Some reason for the error.")
+          case _                                                                                                    =>
+            Results.ExpectationFailed
+        }(validateSubscriptionRequest) {
+          givenSubscriptionConnector { connector =>
+            val result = await(connector.getSubscription(eori))
+            result shouldBe Left(
+              "A call to SUB09 API returned unexpected status 503 with body: Some reason for the error."
+            )
+          }
+        }
+      }
     }
   }
 }

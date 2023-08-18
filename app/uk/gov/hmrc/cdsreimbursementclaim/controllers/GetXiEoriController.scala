@@ -43,7 +43,7 @@ class GetXiEoriController @Inject() (
       connector
         .getSubscription(eori)
         .map {
-          case Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details))) =>
+          case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details)))) =>
             details.XI_Subscription match {
               case Some(s) =>
                 Results.Ok(
@@ -56,12 +56,16 @@ class GetXiEoriController @Inject() (
                 Results.NoContent
             }
 
-          case None =>
+          case Right(None) =>
+            Results.NoContent
+
+          case Left(error) =>
+            logger.error(error)
             Results.NoContent
         }
         .recover { case NonFatal(error) =>
           logger.error(s"getXiEori failed: ${error.getClass}: ${error.getMessage}")
-          ServiceUnavailable(error.getMessage)
+          Results.NoContent
         }
     }: AuthorisedActions.Input[AnyContent] => Future[Result])
 }

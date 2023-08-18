@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.Logger
 
 @ImplementedBy(classOf[GetXiEoriServiceImpl])
 trait GetXiEoriService {
@@ -37,9 +38,14 @@ class GetXiEoriServiceImpl @Inject() (connector: SubscriptionConnector)(implicit
   def getXIEori(eori: Eori)(implicit hc: HeaderCarrier): Future[Option[Eori]] =
     connector
       .getSubscription(eori)
-      .map { subscription =>
-        subscription
-          .flatMap(_.subscriptionDisplayResponse.responseDetail.XI_Subscription)
-          .map(_.XI_EORINo)
+      .map {
+        case Right(subscriptionOpt) =>
+          subscriptionOpt
+            .flatMap(_.subscriptionDisplayResponse.responseDetail.XI_Subscription)
+            .map(_.XI_EORINo)
+
+        case Left(error) =>
+          Logger(getClass()).error(error)
+          None
       }
 }

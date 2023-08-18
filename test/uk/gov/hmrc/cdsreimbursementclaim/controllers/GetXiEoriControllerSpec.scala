@@ -58,7 +58,7 @@ class GetXiEoriControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
         .getSubscription(_: Eori)(_: HeaderCarrier)
       )
       .expects(eori, *)
-      .returning(Future.successful(response))
+      .returning(Future.successful(Right(response)))
 
   def mockFailedResponse(eori: Eori)(errorMessage: String) =
     (
@@ -117,8 +117,7 @@ class GetXiEoriControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
         }
 
         val result = controller.getXiEori(FakeRequest())
-        status(result)          shouldBe SERVICE_UNAVAILABLE
-        contentAsString(result) shouldBe "Sample error message"
+        status(result) shouldBe NO_CONTENT
       }
     }
   }
