@@ -19,7 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthorisedActions
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsResponse, ClaimsSelector, ErrorResponse, GetReimbursementClaimsResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsResponse, ClaimsSelector, GetReimbursementClaimsResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.{GetClaimsService, GetXiEoriService}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -79,7 +80,7 @@ class GetClaimsController @Inject() (
               wrapResponse(ClaimsResponse.fromTpi01Response(xiResponseDetail))
             case (None, None)                                     => BadRequest(Json.toJson(gbResponseCommon))
           }
-        case (Left(ErrorResponse(status, errorDetails)), _)                                                =>
+        case (Left(EisErrorResponse(status, errorDetails, _)), _)                                          =>
           if (status < 499)
             BadRequest(Json.toJson(errorDetails))
           else
@@ -109,11 +110,19 @@ class GetClaimsController @Inject() (
           case Right(GetReimbursementClaimsResponse(responseCommon, None)) =>
             BadRequest(Json.toJson(responseCommon))
 
-          case Left(ErrorResponse(status, errorDetails)) =>
+          case Left(error @ EisErrorResponse(status, Some(errorDetails), _)) =>
+            logger.error(error.getErrorDescriptionWithPrefix("A call to TPI01 API"))
             if (status < 499)
               BadRequest(Json.toJson(errorDetails))
             else
               ServiceUnavailable(Json.toJson(errorDetails))
+
+          case Left(error @ EisErrorResponse(status, None, _)) =>
+            logger.error(error.getErrorDescriptionWithPrefix("A call to TPI01 API"))
+            if (status < 499)
+              BadRequest
+            else
+              ServiceUnavailable
         }
         .recover {
           case ex if ex.getMessage.contains("JSON validation") =>

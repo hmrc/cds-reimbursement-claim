@@ -16,21 +16,18 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
-import cats.syntax.eq._
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.SubscriptionResponse
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.http.HttpResponse
-
 import scala.collection.immutable
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @ImplementedBy(classOf[DefaultSubscriptionConnector])
@@ -46,6 +43,8 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
 ) extends SubscriptionConnector
     with EisConnector
     with JsonHeaders {
+
+  import SubscriptionConnector._
 
   private val MDG_MAX_ACKNOWLEDGEMENT_REFERENCE_LENGTH = 32
 
@@ -68,25 +67,27 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
     val url: String                                      = getSubscriptionUrl
     val queryParameters: immutable.Seq[(String, String)] = getQueryParameters(eori)
     http
-      .GET[HttpResponse](url, queryParameters, getEISRequiredHeaders)
+      .GET[Either[EisErrorResponse, SubscriptionResponse]](url, queryParameters, getEISRequiredHeaders)
       .flatMap {
-        case response if response.status === 200 =>
-          Future(response.json.as[SubscriptionResponse]).map(Some.apply).map(Right.apply)
-        case response if response.status === 404 =>
-          Future.successful(Right(None))
-        case response                            =>
-          Future.successful(
-            Left(
-              if (response.body.isEmpty())
-                s"A call to SUB09 API returned unexpected status ${response.status} with empty body."
-              else
-                s"A call to SUB09 API returned unexpected status ${response.status} with body: ${response.body}"
-            )
-          )
+        case Right(subscriptionResponse) =>
+          Future(Right(Some(subscriptionResponse)))
+
+        case Left(errorResponse) =>
+          if (errorResponse.status == 404)
+            Future.successful(Right(None))
+          else
+            Future.successful(Left(errorResponse.getErrorDescriptionWithPrefix("A call to SUB09 API")))
       }
       .recover { case NonFatal(e) =>
         Left(s"A call to SUB09 API failed with the exception: $e")
       }
   }
+
+}
+
+object SubscriptionConnector {
+
+  final implicit val reads: HttpReads[Either[EisErrorResponse, SubscriptionResponse]] =
+    EisErrorResponse.readsErrorDetailOr[SubscriptionResponse]
 
 }

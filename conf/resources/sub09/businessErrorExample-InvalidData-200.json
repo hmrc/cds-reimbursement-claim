@@ -1,0 +1,15 @@
+{
+  "subscriptionDisplayResponse": {
+    "responseCommon": {
+      "status": "OK",
+      "statusText": "005 - No form bundle found",
+      "processingDate": "2016-08-17T19:33:47Z",
+      "returnParameters": [
+        {
+          "paramName": "POSITION",
+          "paramValue": "FAIL"
+        }
+      ]
+    }
+  }
+}

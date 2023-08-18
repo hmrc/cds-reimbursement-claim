@@ -1,0 +1,14 @@
+{
+  "errorDetail": {
+    "timestamp": "2016-10-10T14:12:20Z",
+    "correlationId": "ee8ef3d2-e9cc-4a42-8bf6-f82e809a23a7",
+    "errorCode": "404",
+    "errorMessage": "ID exists but no detail returned",
+    "source": "Back End",
+    "sourceFaultDetail": {
+      "detail": [
+        "taxPayerID or EORI exists but no detailreturned"
+      ]
+    }
+  }
+}

@@ -17,6 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
+import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, SourceFaultDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{ErrorDetail, SourceFaultDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.CdsDateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
@@ -249,9 +251,9 @@ object Tpi01ReponseGen {
       None
     )
 
-  def genErrorResponse(status: Int): Gen[ErrorResponse] =
+  def genErrorResponse(status: Int): Gen[EisErrorResponse] =
     Gen.const(
-      ErrorResponse(
+      EisErrorResponse(
         status,
         Some(
           ErrorDetail(

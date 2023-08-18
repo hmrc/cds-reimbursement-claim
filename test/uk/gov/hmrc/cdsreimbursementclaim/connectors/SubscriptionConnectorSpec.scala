@@ -87,6 +87,26 @@ class SubscriptionConnectorSpec
         }
       }
 
+      "get the 200 with business error" in {
+        val eori = Generators.sample[Eori]
+        givenEndpointStub {
+          case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
+            SubscriptionTestData.subscriptionResponse400WithBusinessError
+          case _                                                                                                    =>
+            Results.ExpectationFailed
+        }(validateSubscriptionRequest) {
+          givenSubscriptionConnector { connector =>
+            val response = await(connector.getSubscription(eori))
+            inside(response) {
+              case Left(error) =>
+                error shouldBe "A call to SUB09 API failed with status 400 and errorCode=400, and errorMessage=005 - No form bundle foundd, and correlationId=d60de98c-f499-47f5-b2d6-e80966e8d19e"
+              case other       =>
+                fail(s"expected error but got $other")
+            }
+          }
+        }
+      }
+
       "get the 400 with business error" in {
         val eori = Generators.sample[Eori]
         givenEndpointStub {
@@ -98,7 +118,7 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
             result shouldBe Left(
-              """A call to SUB09 API returned unexpected status 400 with body: {  "errorDetail": {    "timestamp": "2016-10-10T14:30:44Z",    "correlationId": "6bbd0963-f9f0-4d00-8169-9438d8d3044d",    "errorCode": "400",    "errorMessage": "REGIME missing or invalid",    "source": "Back End",    "sourceFaultDetail": {      "detail": [        "002 - SAP_NUMBER missing or invalid"      ]    }  }}"""
+              "A call to SUB09 API failed with status 400 and errorCode=400, and errorMessage=REGIME missing or invalid, and correlationId=6bbd0963-f9f0-4d00-8169-9438d8d3044d"
             )
           }
         }
@@ -124,6 +144,43 @@ class SubscriptionConnectorSpec
         }
       }
 
+      "get the 404 with business error" in {
+        val eori = Generators.sample[Eori]
+        givenEndpointStub {
+          case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
+            SubscriptionTestData.subscriptionResponse404WithResponseNotReturnedFromBackend
+          case _                                                                                                    =>
+            Results.ExpectationFailed
+        }(validateSubscriptionRequest) {
+          givenSubscriptionConnector { connector =>
+            val response = await(connector.getSubscription(eori))
+            inside(response) {
+              case Right(Some(_)) =>
+                fail("expected none subscription but got some")
+              case _              =>
+                succeed
+            }
+          }
+        }
+      }
+
+      "get the 500 system error" in {
+        val eori = Generators.sample[Eori]
+        givenEndpointStub {
+          case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
+            SubscriptionTestData.subscriptionResponse500WithSystemError
+          case _                                                                                                    =>
+            Results.ExpectationFailed
+        }(validateSubscriptionRequest) {
+          givenSubscriptionConnector { connector =>
+            val result = await(connector.getSubscription(eori))
+            result shouldBe Left(
+              "A call to SUB09 API failed with status 500 and errorCode=500, and errorMessage=Send timeout, and correlationId=ee8ef3d2-e9cc-4a42-8bf6-f82e809a23a7"
+            )
+          }
+        }
+      }
+
       "get the 503" in {
         val eori = Generators.sample[Eori]
         givenEndpointStub {
@@ -134,7 +191,7 @@ class SubscriptionConnectorSpec
         }(validateSubscriptionRequest) {
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
-            result shouldBe Left("A call to SUB09 API returned unexpected status 503 with empty body.")
+            result shouldBe Left("A call to SUB09 API failed with status 503 and empty body.")
           }
         }
       }
@@ -149,9 +206,7 @@ class SubscriptionConnectorSpec
         }(validateSubscriptionRequest) {
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
-            result shouldBe Left(
-              "A call to SUB09 API returned unexpected status 503 with body: Some reason for the error."
-            )
+            result shouldBe Left("A call to SUB09 API failed with status 503 and body: Some reason for the error.")
           }
         }
       }
@@ -218,6 +273,34 @@ object SubscriptionTestData extends TestDataFromFile {
   lazy val subscriptionResponse400WithError: Result =
     Results
       .BadRequest(contentOfFile("conf/resources/sub09/companyInformationErrorResponse.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val subscriptionResponse200WithBusinessError: Result =
+    Results
+      .Ok(contentOfFile("conf/resources/sub09/businessErrorExample-InvalidData-200.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val subscriptionResponse400WithBusinessError: Result =
+    Results
+      .BadRequest(contentOfFile("conf/resources/sub09/businessErrorExample-InvalidData-400.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val subscriptionResponse404WithResponseNotReturnedFromBackend: Result =
+    Results
+      .NotFound(
+        contentOfFile(
+          "conf/resources/sub09/businessErrorExample-SubscriptionDisplay-ResponseNotReturnedFromBackend.json"
+        )
+      )
+      .withHeaders(jsonContentType)
+
+  lazy val subscriptionResponse500WithSystemError: Result =
+    Results
+      .InternalServerError(
+        contentOfFile(
+          "conf/resources/sub09/systemErrorExample-Timeout.json"
+        )
+      )
       .withHeaders(jsonContentType)
 
 }

@@ -25,6 +25,8 @@ import play.api.routing.sird._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
+import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.SourceFaultDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TestDataFromFile, ValidateEisHeaders}
 import uk.gov.hmrc.http.HttpClient
@@ -129,7 +131,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
-            inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
+            inside(response) { case Left(EisErrorResponse(400, Some(errorDetails), _)) =>
               errorDetails.errorCode    shouldBe "400"
               errorDetails.errorMessage shouldBe "Invalid message"
               errorDetails.source       shouldBe "ct-api"
@@ -146,7 +148,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
-            inside(response) { case Left(ErrorResponse(400, Some(errorDetails))) =>
+            inside(response) { case Left(EisErrorResponse(400, Some(errorDetails), _)) =>
               errorDetails.errorCode    shouldBe "400"
               errorDetails.errorMessage shouldBe "Invalid message"
               errorDetails.source       shouldBe "ct-api"
@@ -163,7 +165,7 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
         }(validateTpi02Request) {
           givenTpi02Connector { connector =>
             val response = await(connector.getSpecificClaim(CDFPayService.NDRC, "ABC-123"))
-            inside(response) { case Left(ErrorResponse(500, Some(errorDetails))) =>
+            inside(response) { case Left(EisErrorResponse(500, Some(errorDetails), _)) =>
               errorDetails.errorCode    shouldBe "500"
               errorDetails.errorMessage shouldBe "Error connecting to the server"
               errorDetails.source       shouldBe "Backend"

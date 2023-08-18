@@ -24,7 +24,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurit
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.{EntryDetail, NDRCAmounts, NDRCCase, NDRCDetail, ProcedureDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.{Goods, SCTYCase}
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorDetail, ErrorResponse, GetSpecificCaseResponse, Reimbursement, ResponseCommon, ResponseDetail, ReturnParameter, SourceFaultDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{GetSpecificCaseResponse, Reimbursement, ResponseCommon, ResponseDetail, ReturnParameter}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, SourceFaultDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{ErrorDetail, SourceFaultDetail}
 
 object Tpi02ReponseGen {
 
@@ -248,9 +250,9 @@ object Tpi02ReponseGen {
       responseCommon <- genResponseCommonError
     } yield GetSpecificCaseResponse(responseCommon, None)
 
-  def genErrorResponse(status: Int): Gen[ErrorResponse] =
+  def genErrorResponse(status: Int): Gen[EisErrorResponse] =
     Gen.const(
-      ErrorResponse(
+      EisErrorResponse(
         status,
         Some(
           ErrorDetail(
