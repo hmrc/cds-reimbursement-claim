@@ -31,12 +31,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.http.HttpResponse
 
 import scala.collection.immutable
+import scala.util.control.NonFatal
 
 @ImplementedBy(classOf[DefaultSubscriptionConnector])
 trait SubscriptionConnector {
   def getSubscription(eori: Eori)(implicit
     hc: HeaderCarrier
-  ): Future[Option[SubscriptionResponse]]
+  ): Future[Either[String, Option[SubscriptionResponse]]]
 }
 
 @Singleton
@@ -61,18 +62,30 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
   private def getQueryParameters(eori: Eori): immutable.Seq[(String, String)] =
     Seq("EORI" -> eori.value, "acknowledgementReference" -> acknowledgementReference, "regime" -> "CDS")
 
-  override def getSubscription(eori: Eori)(implicit hc: HeaderCarrier): Future[Option[SubscriptionResponse]] = {
+  override def getSubscription(
+    eori: Eori
+  )(implicit hc: HeaderCarrier): Future[Either[String, Option[SubscriptionResponse]]] = {
     val url: String                                      = getSubscriptionUrl
     val queryParameters: immutable.Seq[(String, String)] = getQueryParameters(eori)
     http
       .GET[HttpResponse](url, queryParameters, getEISRequiredHeaders)
       .flatMap {
         case response if response.status === 200 =>
-          Future(response.json.as[SubscriptionResponse]).map(Some.apply)
+          Future(response.json.as[SubscriptionResponse]).map(Some.apply).map(Right.apply)
         case response if response.status === 404 =>
-          Future.successful(None)
+          Future.successful(Right(None))
         case response                            =>
-          Future.failed(new Exception(s"Request to GET $url returned ${response.status} with body:\n${response.body}"))
+          Future.successful(
+            Left(
+              if (response.body.isEmpty())
+                s"A call to SUB09 API returned unexpected status ${response.status} with empty body."
+              else
+                s"A call to SUB09 API returned unexpected status ${response.status} with body: ${response.body}"
+            )
+          )
+      }
+      .recover { case NonFatal(e) =>
+        Left(s"A call to SUB09 API failed with the exception: $e")
       }
   }
 
