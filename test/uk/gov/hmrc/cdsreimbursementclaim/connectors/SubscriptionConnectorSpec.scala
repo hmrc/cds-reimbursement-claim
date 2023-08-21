@@ -58,9 +58,9 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val response = await(connector.getSubscription(eori))
             inside(response) {
-              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details)))) =>
+              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
                 details.XI_Subscription.get.XI_EORINo shouldBe "MY_OWN_EORI"
-              case _                                                                          =>
+              case _                                                                                =>
                 fail("expected some subscription but got none")
             }
           }
@@ -78,9 +78,9 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val response = await(connector.getSubscription(eori))
             inside(response) {
-              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details)))) =>
+              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
                 details.XI_Subscription.isEmpty shouldBe true
-              case _                                                                          =>
+              case _                                                                                =>
                 fail("expected some subscription but got none")
             }
           }
@@ -88,6 +88,26 @@ class SubscriptionConnectorSpec
       }
 
       "get the 200 with business error" in {
+        val eori = Generators.sample[Eori]
+        givenEndpointStub {
+          case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
+            SubscriptionTestData.subscriptionResponse200WithBusinessError
+          case _                                                                                                    =>
+            Results.ExpectationFailed
+        }(validateSubscriptionRequest) {
+          givenSubscriptionConnector { connector =>
+            val response = await(connector.getSubscription(eori))
+            inside(response) {
+              case Left(error) =>
+                error shouldBe "A call to SUB09 API failed with business error OK 005 - No form bundle found"
+              case other       =>
+                fail(s"expected error but got $other")
+            }
+          }
+        }
+      }
+
+      "get the 400 with business error" in {
         val eori = Generators.sample[Eori]
         givenEndpointStub {
           case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
@@ -107,7 +127,7 @@ class SubscriptionConnectorSpec
         }
       }
 
-      "get the 400 with business error" in {
+      "get the 400 with error" in {
         val eori = Generators.sample[Eori]
         givenEndpointStub {
           case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>

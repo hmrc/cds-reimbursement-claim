@@ -27,7 +27,7 @@ final case class SubscriptionResponse(
 
 final case class SubscriptionDisplayResponse(
   responseCommon: ResponseCommon,
-  responseDetail: ResponseDetail
+  responseDetail: Option[ResponseDetail]
 )
 
 final case class CdsEstablishmentAddress(

@@ -70,7 +70,16 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
       .GET[Either[EisErrorResponse, SubscriptionResponse]](url, queryParameters, getEISRequiredHeaders)
       .flatMap {
         case Right(subscriptionResponse) =>
-          Future(Right(Some(subscriptionResponse)))
+          subscriptionResponse.subscriptionDisplayResponse.responseDetail match {
+            case Some(_) => Future(Right(Some(subscriptionResponse)))
+            case None    =>
+              Future.successful(
+                Left(
+                  s"A call to SUB09 API failed with business error ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.status} ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.statusText
+                    .getOrElse("")}"
+                )
+              )
+          }
 
         case Left(errorResponse) =>
           if (errorResponse.status == 404)

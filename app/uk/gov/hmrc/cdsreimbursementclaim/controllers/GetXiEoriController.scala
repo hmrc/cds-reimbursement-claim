@@ -43,7 +43,7 @@ class GetXiEoriController @Inject() (
       connector
         .getSubscription(eori)
         .map {
-          case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, details)))) =>
+          case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
             details.XI_Subscription match {
               case Some(s) =>
                 Results.Ok(
@@ -56,11 +56,11 @@ class GetXiEoriController @Inject() (
                 Results.NoContent
             }
 
-          case Right(None) =>
-            Results.NoContent
-
           case Left(error) =>
             logger.error(error)
+            Results.NoContent
+
+          case _ =>
             Results.NoContent
         }
         .recover { case NonFatal(error) =>

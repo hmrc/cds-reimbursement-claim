@@ -20,6 +20,7 @@ import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubscriptionConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.{SubscriptionDisplayResponse, SubscriptionResponse}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,13 +40,14 @@ class GetXiEoriServiceImpl @Inject() (connector: SubscriptionConnector)(implicit
     connector
       .getSubscription(eori)
       .map {
-        case Right(subscriptionOpt) =>
-          subscriptionOpt
-            .flatMap(_.subscriptionDisplayResponse.responseDetail.XI_Subscription)
-            .map(_.XI_EORINo)
+        case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
+          details.XI_Subscription.map(_.XI_EORINo)
 
         case Left(error) =>
           Logger(getClass()).error(error)
+          None
+
+        case _ =>
           None
       }
 }
