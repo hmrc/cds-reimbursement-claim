@@ -17,9 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import play.api.libs.json.{Json, OWrites, Reads}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.WAFRules
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 
-final case class GoodsDetails(
+final case class GoodsDetails private (
   descOfGoods: Option[String],
   isPrivateImporter: Option[YesNo] = None,
   placeOfImport: Option[String] = None,
@@ -31,6 +32,28 @@ final case class GoodsDetails(
 )
 
 object GoodsDetails {
+
+  final def apply(
+    descOfGoods: Option[String],
+    isPrivateImporter: Option[YesNo] = None,
+    placeOfImport: Option[String] = None,
+    groundsForRepaymentApplication: Option[String] = None,
+    atTheImporterOrDeclarantAddress: Option[String] = None,
+    inspectionAddress: Option[InspectionAddress] = None,
+    anySpecialCircumstances: Option[String] = None,
+    dateOfInspection: Option[String] = None
+  ): GoodsDetails =
+    new GoodsDetails(
+      descOfGoods.map(WAFRules.asSafeText),
+      isPrivateImporter,
+      placeOfImport,
+      groundsForRepaymentApplication,
+      atTheImporterOrDeclarantAddress,
+      inspectionAddress,
+      anySpecialCircumstances.map(WAFRules.asSafeText),
+      dateOfInspection
+    )
+
   implicit val reads: Reads[GoodsDetails]    = Json.reads[GoodsDetails]
   implicit val writes: OWrites[GoodsDetails] = Json.writes[GoodsDetails]
 }

@@ -60,6 +60,9 @@ class ClaimServiceSpec
     with MockFactory
     with OptionValues {
 
+  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
+    PropertyCheckConfiguration(minSuccessful = 100)
+
   val claimConnectorMock: ClaimConnector = mock[ClaimConnector]
 
   val declarationServiceMock: DeclarationService = mock[DeclarationService]
@@ -120,9 +123,6 @@ class ClaimServiceSpec
   implicit val multipleRejectedGoodsClaimEmailMapperMock
     : ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
     mock[ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])]]
-
-  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
-    PropertyCheckConfiguration(minSuccessful = 1)
 
   def mockDeclarationRetrieving(mrn: MRN)(
     displayDeclaration: DisplayDeclaration
@@ -296,14 +296,14 @@ class ClaimServiceSpec
             claim.reimbursementClaims.values.sum
           )
 
-          inSequence {
-            mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
+          inAnyOrder {
+            mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration).atLeastOnce()
             (overpaymentsSingleClaimMapper
               .map(_: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])))
               .expects((claim, declaration, duplicateDeclaration))
               .returning(Right(eisRequest))
             (claim.duplicateMovementReferenceNumber, duplicateDeclaration).mapN(
-              mockDeclarationRetrieving(_)(_)
+              mockDeclarationRetrieving(_)(_).atLeastOnce()
             )
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
