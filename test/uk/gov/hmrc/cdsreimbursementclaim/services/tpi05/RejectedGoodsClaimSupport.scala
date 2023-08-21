@@ -24,7 +24,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Import
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
-import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 trait RejectedGoodsClaimSupport {
 

@@ -35,7 +35,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 class OverpaymentsMultipleClaimMappingSpec
     extends AnyWordSpec
@@ -86,7 +86,7 @@ class OverpaymentsMultipleClaimMappingSpec
               Symbol("caseType")(Some(CaseType.Bulk)),
               Symbol("goodsDetails")(
                 GoodsDetails(
-                  descOfGoods = claim.additionalDetails.some,
+                  descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
                   isPrivateImporter = Some(if (claim.claimantType === Consignee) Yes else No)
                 ).some
               ),

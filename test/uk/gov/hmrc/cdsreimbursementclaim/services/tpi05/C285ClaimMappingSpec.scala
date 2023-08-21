@@ -38,7 +38,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimedReimbursementGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 class C285ClaimMappingSpec
     extends AnyWordSpec
@@ -47,6 +47,9 @@ class C285ClaimMappingSpec
     with Matchers
     with OptionValues
     with TypeCheckedTripleEquals {
+
+  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
+    PropertyCheckConfiguration(minSuccessful = 100)
 
   "The C285 claim mapper" should {
 
@@ -74,7 +77,7 @@ class C285ClaimMappingSpec
           Symbol("caseType")(c285ClaimRequest.claim.caseType.some),
           Symbol("goodsDetails")(
             GoodsDetails(
-              descOfGoods = c285ClaimRequest.claim.additionalDetailsAnswer.value.some,
+              descOfGoods = c285ClaimRequest.claim.additionalDetailsAnswer.value.some.map(WAFRules.asSafeText),
               isPrivateImporter = c285ClaimRequest.claim.isForPrivateImporter.some
             ).some
           ),

@@ -37,7 +37,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclarati
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
 
@@ -76,8 +76,8 @@ class SingleRejectedGoodsClaimMappingSpec
           Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
           Symbol("goodsDetails")(
             GoodsDetails(
-              descOfGoods = claim.detailsOfRejectedGoods.some,
-              anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances,
+              descOfGoods = claim.detailsOfRejectedGoods.some.map(WAFRules.asSafeText),
+              anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances.map(WAFRules.asSafeText),
               dateOfInspection = claim.inspectionDate.toIsoLocalDate.some,
               atTheImporterOrDeclarantAddress = claim.inspectionAddress.addressType.toTPI05DisplayString.some,
               inspectionAddress = InspectionAddress(
