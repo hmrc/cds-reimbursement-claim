@@ -20,8 +20,6 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-import scala.collection.immutable
-
 class ClaimTransformerSpec extends AnyWordSpec with Matchers with MockFactory {
 
   object Transformer extends ClaimTransformer[CaseDetails, SampleClass] {

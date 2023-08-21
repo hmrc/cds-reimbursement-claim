@@ -18,8 +18,9 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.Tpi01Connector
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, ErrorResponse, GetReimbursementClaimsResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, GetReimbursementClaimsResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -29,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait GetClaimsService {
   def getClaims(eori: Eori, claimsSelector: ClaimsSelector)(implicit
     hc: HeaderCarrier
-  ): Future[Either[ErrorResponse, GetReimbursementClaimsResponse]]
+  ): Future[Either[EisErrorResponse, GetReimbursementClaimsResponse]]
 }
 
 @Singleton
@@ -39,7 +40,7 @@ class GetClaimsServiceImpl @Inject() (tpi01Connector: Tpi01Connector)(implicit
 
   def getClaims(eori: Eori, claimsSelector: ClaimsSelector)(implicit
     hc: HeaderCarrier
-  ): Future[Either[ErrorResponse, GetReimbursementClaimsResponse]] =
+  ): Future[Either[EisErrorResponse, GetReimbursementClaimsResponse]] =
     tpi01Connector
       .getClaims(eori, claimsSelector)
       .map(_.map(_.getPostClearanceCasesResponse))

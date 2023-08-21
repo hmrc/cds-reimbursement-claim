@@ -19,7 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseResponse, SpecificClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{GetSpecificCaseResponse, SpecificClaimResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetSpecificClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -54,11 +55,19 @@ class GetSpecificClaimController @Inject() (
           case Right(GetSpecificCaseResponse(responseCommon, None)) =>
             BadRequest(Json.toJson(responseCommon))
 
-          case Left(ErrorResponse(status, errorDetails)) =>
+          case Left(error @ EisErrorResponse(status, Some(errorDetails), _)) =>
+            logger.error(error.getErrorDescriptionWithPrefix("A call to TPI02 API"))
             if (status < 499)
               BadRequest(Json.toJson(errorDetails))
             else
               ServiceUnavailable(Json.toJson(errorDetails))
+
+          case Left(error @ EisErrorResponse(status, None, _)) =>
+            logger.error(error.getErrorDescriptionWithPrefix("A call to TPI02 API"))
+            if (status < 499)
+              BadRequest
+            else
+              ServiceUnavailable
         }
         .recover {
           case ex if ex.getMessage.contains("JSON validation") =>

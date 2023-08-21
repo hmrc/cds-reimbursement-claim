@@ -21,8 +21,9 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, ErrorResponse, GetReimbursementClaimsResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, GetReimbursementClaimsResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.{GetClaimsService, GetXiEoriService}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -56,7 +57,7 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
   )
 
   def mockGetClaimsResponse(eori: Eori, claimsSelector: ClaimsSelector)(
-    response: Either[ErrorResponse, GetReimbursementClaimsResponse]
+    response: Either[EisErrorResponse, GetReimbursementClaimsResponse]
   ) =
     (
       mockGetClaimsService

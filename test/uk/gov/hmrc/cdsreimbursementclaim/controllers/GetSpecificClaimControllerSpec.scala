@@ -21,8 +21,9 @@ import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.GetSpecificCaseResponse
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetSpecificClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.ForSampledValueCheck
 import uk.gov.hmrc.http.HeaderCarrier
@@ -53,7 +54,7 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
   )
 
   def mockGetClaimsResponse(cdfPayService: CDFPayService, cdfPayCaseNumber: String)(
-    response: Either[ErrorResponse, GetSpecificCaseResponse]
+    response: Either[EisErrorResponse, GetSpecificCaseResponse]
   ) =
     (
       mockGetSpecificClaimService

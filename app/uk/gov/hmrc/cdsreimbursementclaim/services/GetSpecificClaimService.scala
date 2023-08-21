@@ -19,7 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 import com.google.inject.ImplementedBy
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.Tpi02Connector
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{ErrorResponse, GetSpecificCaseResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.GetSpecificCaseResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -29,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait GetSpecificClaimService {
   def getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)(implicit
     hc: HeaderCarrier
-  ): Future[Either[ErrorResponse, GetSpecificCaseResponse]]
+  ): Future[Either[EisErrorResponse, GetSpecificCaseResponse]]
 }
 @Singleton
 class GetSpecificClaimServiceImpl @Inject() (tpi02Connector: Tpi02Connector)(implicit
@@ -38,7 +39,7 @@ class GetSpecificClaimServiceImpl @Inject() (tpi02Connector: Tpi02Connector)(imp
 
   def getSpecificClaim(cdfPayService: CDFPayService, cdfPayCaseNumber: String)(implicit
     hc: HeaderCarrier
-  ): Future[Either[ErrorResponse, GetSpecificCaseResponse]] =
+  ): Future[Either[EisErrorResponse, GetSpecificCaseResponse]] =
     tpi02Connector
       .getSpecificClaim(cdfPayService, cdfPayCaseNumber)
       .map(_.map(_.getSpecificCaseResponse))
