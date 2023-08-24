@@ -270,7 +270,6 @@ class SingleRejectedGoodsClaimMappingSpec
                 bankDetails = claim.firstNonEmptyBankDetails(declaration.displayResponseDetail.bankDetails),
                 NDRCDetails = {
                   val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
-
                   claim.reimbursementClaims.map { case (taxCode, claimedAmount) =>
                     ndrcDetails
                       .find(_.taxType === taxCode.value)

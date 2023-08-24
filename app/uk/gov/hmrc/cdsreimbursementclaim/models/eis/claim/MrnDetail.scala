@@ -26,6 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BankAccountDetails, ConsigneeDetails, DeclarantDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 
 final case class MrnDetail(
   MRNNumber: Option[MRN] = None,
@@ -165,23 +166,33 @@ object MrnDetail {
 
     def withFirstNonEmptyBankDetailsWhen(isTrue: Boolean)(
       maybeBankDetails: Option[response.BankDetails],
-      maybeBankAccountDetails: Option[BankAccountDetails]
+      maybeBankAccountDetails: Option[BankAccountDetails],
+      claimantType: Claimant
     ): Builder =
-      if (isTrue) withFirstNonEmptyBankDetails(maybeBankDetails, maybeBankAccountDetails) else this
+      if (isTrue) withFirstNonEmptyBankDetails(maybeBankDetails, maybeBankAccountDetails, claimantType) else this
 
     def withFirstNonEmptyBankDetails(
       maybeBankDetails: Option[response.BankDetails],
-      maybeBankAccountDetails: Option[BankAccountDetails]
+      maybeBankAccountDetails: Option[BankAccountDetails],
+      claimantType: Claimant
     ): Builder = {
 
       def selectBankDetails: Option[BankDetails] =
         (maybeBankDetails, maybeBankAccountDetails) match {
-          case (_, Some(bankAccountDetails))                     =>
+          case (acc14BankDetailsOpt, Some(bankAccountDetails))   =>
             Some(
-              BankDetails(
-                consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
-                declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
-              )
+              claimantType match {
+                case Claimant.Importer       =>
+                  BankDetails(
+                    consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
+                    declarantBankDetails = acc14BankDetailsOpt.flatMap(_.declarantBankDetails.map(BankDetail.from))
+                  )
+                case Claimant.Representative =>
+                  BankDetails(
+                    consigneeBankDetails = acc14BankDetailsOpt.flatMap(_.consigneeBankDetails.map(BankDetail.from)),
+                    declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+                  )
+              }
             )
           case (Some(acc14BankDetails: response.BankDetails), _) =>
             Some(

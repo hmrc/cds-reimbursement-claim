@@ -69,7 +69,11 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
             .withProcedureCode(displayDeclaration.procedureCode)
             .withDeclarantDetails(displayDeclaration.declarantDetails)
             .withConsigneeDetails(displayDeclaration.effectiveConsigneeDetails)
-            .withFirstNonEmptyBankDetails(displayDeclaration.bankDetails, request.claim.bankAccountDetailsAnswer)
+            .withFirstNonEmptyBankDetails(
+              displayDeclaration.bankDetails,
+              request.claim.bankAccountDetailsAnswer,
+              Claimant.basedOn(request.claim.declarantTypeAnswer)
+            )
             .withNdrcDetails(
               request.claim.claims.toList.map { reimbursement =>
                 NdrcDetails.buildChecking(
@@ -129,7 +133,8 @@ class C285ClaimToTPI05Mapper extends ClaimToTPI05Mapper[C285ClaimRequest] {
           .withAccountDetails(displayDeclaration.displayResponseDetail.accountDetails)
           .withFirstNonEmptyBankDetailsWhen(request.claim.movementReferenceNumber.value === mrn.value)(
             displayDeclaration.displayResponseDetail.bankDetails,
-            request.claim.bankAccountDetailsAnswer
+            request.claim.bankAccountDetailsAnswer,
+            Claimant.basedOn(request.claim.declarantTypeAnswer)
           )
           .withNdrcDetails(
             reimbursementClaim.toList.map(reimbursement =>
