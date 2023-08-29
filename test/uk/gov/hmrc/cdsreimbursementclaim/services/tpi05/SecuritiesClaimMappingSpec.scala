@@ -160,7 +160,7 @@ class SecuritiesClaimMappingSpec
 
       val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
 
-      tpi05Request.left.map(_.value should be("claimant email address is mandatory"))
+      tpi05Request.left.map(_.value should be("Email address is missing"))
 
     }
 
@@ -179,7 +179,7 @@ class SecuritiesClaimMappingSpec
 
       val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
 
-      tpi05Request.left.map(_.value should be("claimant contact name is mandatory"))
+      tpi05Request.left.map(_.value should be("Claimant name is missing"))
 
     }
 
