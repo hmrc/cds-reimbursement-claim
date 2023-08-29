@@ -19,6 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.OverpaymentsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 
 trait OverpaymentsClaimSupport {
 
@@ -26,21 +27,29 @@ trait OverpaymentsClaimSupport {
 
     def firstNonEmptyBankDetails(maybeBankDetails: Option[response.BankDetails]): Option[BankDetails] =
       (maybeBankDetails, claim.bankAccountDetailsAnswer) match {
-        case (_, Some(bankAccountDetails)) =>
+        case (acc14BankDetailsOpt, Some(bankAccountDetails)) =>
           Some(
-            BankDetails(
-              Some(BankDetail.from(bankAccountDetails)),
-              Some(BankDetail.from(bankAccountDetails))
-            )
+            Claimant.basedOn(claim.claimantType) match {
+              case Claimant.Importer       =>
+                BankDetails(
+                  consigneeBankDetails = Some(BankDetail.from(bankAccountDetails)),
+                  declarantBankDetails = acc14BankDetailsOpt.flatMap(_.declarantBankDetails.map(BankDetail.from))
+                )
+              case Claimant.Representative =>
+                BankDetails(
+                  consigneeBankDetails = acc14BankDetailsOpt.flatMap(_.consigneeBankDetails.map(BankDetail.from)),
+                  declarantBankDetails = Some(BankDetail.from(bankAccountDetails))
+                )
+            }
           )
-        case (Some(acc14BankDetails), _)   =>
+        case (Some(acc14BankDetails), _)                     =>
           Some(
             BankDetails(
               declarantBankDetails = acc14BankDetails.declarantBankDetails.map(BankDetail.from),
               consigneeBankDetails = acc14BankDetails.consigneeBankDetails.map(BankDetail.from)
             )
           )
-        case _                             => None
+        case _                                               => None
       }
   }
 }

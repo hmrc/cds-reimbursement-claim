@@ -95,7 +95,11 @@ class OverpaymentsMultipleClaimToTPI05Mapper
         .withDeclarantDetails(declaration.declarantDetails)
         .withConsigneeDetails(declaration.effectiveConsigneeDetails)
         .withAccountDetails(declaration.accountDetails)
-        .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
+        .withFirstNonEmptyBankDetails(
+          declaration.bankDetails,
+          claim.bankAccountDetails,
+          Claimant.basedOn(claim.claimantType)
+        )
         .withNdrcDetails {
           val ndrcDetails = declaration.ndrcDetails.toList.flatten
 

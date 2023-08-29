@@ -41,6 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 import java.time.LocalDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 
 class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)] {
 
@@ -189,7 +190,9 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     bankAccountDetails: Option[BankAccountDetails],
     maybeBankDetails: Option[response.BankDetails]
   ): Either[CdsError, BankDetails] =
-    MrnDetail.build.withFirstNonEmptyBankDetails(maybeBankDetails, bankAccountDetails).validated match {
+    MrnDetail.build
+      .withFirstNonEmptyBankDetails(maybeBankDetails, bankAccountDetails, Claimant.basedOn(claimantType))
+      .validated match {
       case Valid(a)   => Right(a.bankDetails.getOrElse(BankDetails(None, None)))
       case Invalid(e) => Left(e.head)
     }

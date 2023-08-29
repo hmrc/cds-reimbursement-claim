@@ -92,7 +92,11 @@ class OverpaymentsScheduledClaimToTPI05Mapper
       .withDeclarantDetails(displayResponseDetail.declarantDetails)
       .withConsigneeDetails(displayResponseDetail.effectiveConsigneeDetails)
       .withAccountDetails(displayResponseDetail.accountDetails)
-      .withFirstNonEmptyBankDetails(displayResponseDetail.bankDetails, claim.bankAccountDetails)
+      .withFirstNonEmptyBankDetails(
+        displayResponseDetail.bankDetails,
+        claim.bankAccountDetails,
+        Claimant.basedOn(claim.claimantType)
+      )
       .withNdrcDetails(
         claimedReimbursement.map(reimbursement =>
           NdrcDetails.buildChecking(

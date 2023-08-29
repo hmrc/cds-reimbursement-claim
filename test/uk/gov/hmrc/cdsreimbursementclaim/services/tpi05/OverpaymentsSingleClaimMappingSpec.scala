@@ -39,6 +39,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclarati
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsSingleClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 
 class OverpaymentsSingleClaimMappingSpec
     extends AnyWordSpec
@@ -275,7 +276,20 @@ class OverpaymentsSingleClaimMappingSpec
                     .filter(_ === true)
                     .flatMap(_ =>
                       claim.bankAccountDetails
-                        .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
+                        .map { bd =>
+                          if (Claimant.basedOn(claim.claimantType) == Claimant.Representative)
+                            BankDetails(
+                              displayDeclaration.displayResponseDetail.bankDetails
+                                .flatMap(_.consigneeBankDetails.map(BankDetail.from)),
+                              BankDetail.from(bd).some
+                            )
+                          else
+                            BankDetails(
+                              BankDetail.from(bd).some,
+                              displayDeclaration.displayResponseDetail.bankDetails
+                                .flatMap(_.declarantBankDetails.map(BankDetail.from))
+                            )
+                        }
                         .orElse(
                           displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
                             BankDetails(

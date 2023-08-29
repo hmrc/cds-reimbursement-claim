@@ -108,7 +108,8 @@ class OverpaymentsSingleClaimToTPI05Mapper
       .withAccountDetails(if (includeAccountDetails) displayDeclaration.displayResponseDetail.accountDetails else None)
       .withFirstNonEmptyBankDetails(
         displayDeclaration.displayResponseDetail.bankDetails,
-        claim.bankAccountDetails
+        claim.bankAccountDetails,
+        Claimant.basedOn(claim.claimantType)
       )
       .withNdrcDetails(
         for {

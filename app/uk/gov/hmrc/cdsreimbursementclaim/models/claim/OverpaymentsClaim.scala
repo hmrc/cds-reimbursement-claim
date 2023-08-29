@@ -20,4 +20,5 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAcc
 
 trait OverpaymentsClaim extends HasClaimantInformation {
   def bankAccountDetailsAnswer: Option[BankAccountDetails]
+  def claimantType: ClaimantType
 }

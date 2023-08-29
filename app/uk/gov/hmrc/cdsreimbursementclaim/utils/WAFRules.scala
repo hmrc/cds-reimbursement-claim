@@ -30,5 +30,5 @@ object WAFRules {
       .map(c => if (isAllowedCharacter(c)) c else ' ')
 
   def isAllowedCharacter(c: Char): Boolean =
-    Character.isLetterOrDigit(c) || Character.isSpaceChar(c) || c == '.' || c == '-'
+    Character.isLetterOrDigit(c) || Character.isSpaceChar(c) || c == '.' || c == '-' || c == ',' || c == ';'
 }
