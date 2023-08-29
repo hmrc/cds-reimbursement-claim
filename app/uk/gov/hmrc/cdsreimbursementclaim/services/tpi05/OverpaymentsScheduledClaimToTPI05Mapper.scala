@@ -45,7 +45,7 @@ class OverpaymentsScheduledClaimToTPI05Mapper
                             CdsError("Email address is missing")
                           )
       contactPerson    <- contactInfo.contactPerson.toRight(
-                            CdsError("Email address is missing")
+                            CdsError("Claimant name is missing")
                           )
       importerEori     <- maybeConsigneeDetails
                             .map(EORIInformation.forConsignee)

@@ -48,10 +48,10 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     val (claim, displayDeclaration) = request
     (for {
       email                                                        <- claim.claimantInformation.contactInformation.emailAddress.toRight(
-                                                                        CdsError("claimant email address is mandatory")
+                                                                        CdsError("Email address is missing")
                                                                       )
       claimantName                                                 <- claim.claimantInformation.contactInformation.contactPerson.toRight(
-                                                                        CdsError("claimant contact name is mandatory")
+                                                                        CdsError("Claimant name is missing")
                                                                       )
       claimantEmail                                                 = Email(email)
       claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum

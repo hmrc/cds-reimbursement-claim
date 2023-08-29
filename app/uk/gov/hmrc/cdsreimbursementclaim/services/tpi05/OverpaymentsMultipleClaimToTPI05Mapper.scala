@@ -47,7 +47,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper
 
     (for {
       email            <- contactInfo.emailAddress.toRight(CdsError("Email address is missing"))
-      claimantName     <- contactInfo.contactPerson.toRight(CdsError("Email address is missing"))
+      claimantName     <- contactInfo.contactPerson.toRight(CdsError("Claimant name is missing"))
       claimantEmail     = Email(email)
       consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
     } yield TPI05

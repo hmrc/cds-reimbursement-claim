@@ -47,9 +47,9 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
 
     (for {
       email            <- claim.claimantInformation.contactInformation.emailAddress
-                            .toRight(CdsError("claimant email address is mandatory"))
+                            .toRight(CdsError("Email address is missing"))
       claimantName     <- claim.claimantInformation.contactInformation.contactPerson
-                            .toRight(CdsError("claimant contact name is mandatory"))
+                            .toRight(CdsError("Claimant name is missing"))
       claimantEmail     = Email(email)
       consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
     } yield TPI05

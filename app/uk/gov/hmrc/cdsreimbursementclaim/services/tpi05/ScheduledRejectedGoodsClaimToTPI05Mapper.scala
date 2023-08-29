@@ -38,10 +38,10 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
     // todo CDSR-1795 TPI05 creation and validation - factor out common code
     (for {
       email            <- claim.claimantInformation.contactInformation.emailAddress.toRight(
-                            CdsError("claimant email address is mandatory")
+                            CdsError("Email address is missing")
                           )
       claimantName     <- claim.claimantInformation.contactInformation.contactPerson.toRight(
-                            CdsError("claimant contact name is mandatory")
+                            CdsError("Claimant name is missing")
                           )
       claimantEmail     = Email(email)
       consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
