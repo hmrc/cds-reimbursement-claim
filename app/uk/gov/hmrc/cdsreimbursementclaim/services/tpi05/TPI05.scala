@@ -110,6 +110,16 @@ object TPI05 {
         )
       )
 
+    def withClaimant(claimant: Claimant, payeeIndicator: Claimant): Builder =
+      copy(
+        validatedRequest.map(
+          _.copy(
+            claimant = Some(claimant),
+            payeeIndicator = Some(payeeIndicator)
+          )
+        )
+      )
+
     def withEORIDetails(eoriDetails: EoriDetails): Builder =
       copy(validatedRequest.map(_.copy(EORIDetails = Some(eoriDetails))))
 

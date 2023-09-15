@@ -26,7 +26,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, SingleOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, PayeeType, SingleOverpaymentsClaim, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
@@ -75,7 +75,7 @@ class OverpaymentsSingleClaimMappingSpec
             Symbol("claimDate")(ISOLocalDate.now.some),
             Symbol("claimType")(ClaimType.C285.some),
             Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
-            Symbol("payeeIndicator")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
+            Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
             Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
             Symbol("claimAmountTotal")(claim.reimbursementClaims.values.sum.roundToTwoDecimalPlaces.toString.some),
             Symbol("reimbursementMethod")(

@@ -67,7 +67,7 @@ class OverpaymentsSingleClaimToTPI05Mapper
         claimantName = contactPerson
       )
       .forClaimOfType(Some(C285))
-      .withClaimant(Claimant.basedOn(claim.claimantType))
+      .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
       .withClaimedAmount(claim.reimbursementClaims.values.sum)
       .withReimbursementMethod(claim.reimbursementMethod)
       .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Individual, claim.reimbursementMethod))
@@ -85,7 +85,9 @@ class OverpaymentsSingleClaimToTPI05Mapper
       .withEORIDetails(getEoriDetails(consigneeDetails, claim))
       .withMrnDetails(getMrnDetails(claim, declaration) :: Nil)
       .withMaybeDuplicateMrnDetails(
-        duplicateDeclaration.map(d => getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId)), false))
+        duplicateDeclaration.map(d =>
+          getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId)), includeAccountDetails = false)
+        )
       )).flatMap(_.verify)
   }
 
