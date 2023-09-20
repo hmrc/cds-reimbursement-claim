@@ -126,6 +126,7 @@ object OverpaymentsClaimGen {
       evidences                <- Gen.nonEmptyListOf(genEvidences)
       whetherInNorthernIreland <- Gen.oneOf(true, false)
       additionalDetails        <- genRandomString
+      payeeType                <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
     } yield (
       SingleOverpaymentsClaim(
         movementReferenceNumber = mrn,
@@ -138,7 +139,8 @@ object OverpaymentsClaimGen {
         reimbursementClaims = claims._2,
         reimbursementMethod = reimbursementMethod,
         bankAccountDetails = bankAccountDetails,
-        supportingEvidences = evidences
+        supportingEvidences = evidences,
+        payeeType = payeeType
       ),
       declaration,
       duplicateDeclaration

@@ -27,6 +27,7 @@ final case class SingleOverpaymentsClaim(
   movementReferenceNumber: MRN,
   duplicateMovementReferenceNumber: Option[MRN],
   claimantType: ClaimantType,
+  payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
   whetherNorthernIreland: Boolean,
