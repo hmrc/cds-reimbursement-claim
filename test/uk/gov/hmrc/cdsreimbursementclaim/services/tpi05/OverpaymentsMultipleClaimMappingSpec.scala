@@ -27,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, PayeeType, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
@@ -72,7 +72,7 @@ class OverpaymentsMultipleClaimMappingSpec
               Symbol("claimDate")(ISOLocalDate.now.some),
               Symbol("claimType")(ClaimType.C285.some),
               Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
-              Symbol("payeeIndicator")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
+              Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
               Symbol("declarationMode")(Some(DeclarationMode.AllDeclaration)),
               Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
               Symbol("reimbursementMethod")(
