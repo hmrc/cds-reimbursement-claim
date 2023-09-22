@@ -29,6 +29,7 @@ import scala.collection.immutable.Seq
 final case class MultipleOverpaymentsClaim(
   movementReferenceNumbers: List[MRN],
   claimantType: ClaimantType,
+  payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
   whetherNorthernIreland: Boolean,
@@ -65,6 +66,7 @@ object MultipleOverpaymentsClaim {
       (
         (JsPath \ "movementReferenceNumbers").read[List[MRN]](minLength[List[MRN]](2)) and
           (JsPath \ "claimantType").read[ClaimantType] and
+          (JsPath \ "payeeType").read[PayeeType] and
           (JsPath \ "claimantInformation").read[ClaimantInformation] and
           (JsPath \ "basisOfClaim").read[BasisOfClaim] and
           (JsPath \ "whetherNorthernIreland").read[Boolean] and
@@ -73,10 +75,11 @@ object MultipleOverpaymentsClaim {
           (JsPath \ "reimbursementMethod").read[ReimbursementMethodAnswer] and
           (JsPath \ "bankAccountDetails").readNullable[BankAccountDetails] and
           (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]]
-      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _)),
+      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _, _)),
       (
         (JsPath \ "movementReferenceNumbers").write[List[MRN]] and
           (JsPath \ "claimantType").write[ClaimantType] and
+          (JsPath \ "payeeType").write[PayeeType] and
           (JsPath \ "claimantInformation").write[ClaimantInformation] and
           (JsPath \ "basisOfClaim").write[BasisOfClaim] and
           (JsPath \ "whetherNorthernIreland").write[Boolean] and

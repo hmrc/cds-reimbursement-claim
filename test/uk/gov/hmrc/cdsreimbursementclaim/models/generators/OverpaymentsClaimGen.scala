@@ -151,6 +151,7 @@ object OverpaymentsClaimGen {
       numMrns                  <- Gen.choose(2, 10)
       mrns                     <- Gen.listOfN(numMrns, genMRN)
       claimantType             <- Gen.oneOf(ClaimantType.values)
+      payeeType                <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
       claimantInformation      <- genClaimantInformation
       basisOfClaim             <- genBasisOfClaim
       bankAccountDetails       <- Gen.option(genBankAccountDetails)
@@ -175,6 +176,7 @@ object OverpaymentsClaimGen {
       MultipleOverpaymentsClaim(
         movementReferenceNumbers = mrns,
         claimantType = claimantType,
+        payeeType = payeeType,
         claimantInformation = claimantInformation,
         basisOfClaim = basisOfClaim,
         whetherNorthernIreland = whetherInNorthernIreland,

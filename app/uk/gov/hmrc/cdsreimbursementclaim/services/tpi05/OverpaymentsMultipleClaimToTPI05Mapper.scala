@@ -57,7 +57,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper
         claimantName = claimantName
       )
       .forClaimOfType(Some(C285))
-      .withClaimant(Claimant.basedOn(claim.claimantType))
+      .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
       .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)
       .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Multiple, claim.reimbursementMethod))
