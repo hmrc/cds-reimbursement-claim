@@ -25,9 +25,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, ScheduledOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, PayeeType, ScheduledOverpaymentsClaim, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
@@ -66,8 +65,8 @@ class OverpaymentsScheduledClaimMappingSpec
               Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
               Symbol("claimDate")(ISOLocalDate.now.some),
               Symbol("claimType")(ClaimType.C285.some),
-              Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
-              Symbol("payeeIndicator")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
+              Symbol("claimant")(Some(if (claim.claimantType === ClaimantType.Consignee) Importer else Representative)),
+              Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
               Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
               Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
               Symbol("reimbursementMethod")(
@@ -82,7 +81,7 @@ class OverpaymentsScheduledClaimMappingSpec
               Symbol("goodsDetails")(
                 GoodsDetails(
                   descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
-                  isPrivateImporter = Some(if (claim.claimantType === Consignee) Yes else No)
+                  isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                 ).some
               ),
               Symbol("EORIDetails")(
