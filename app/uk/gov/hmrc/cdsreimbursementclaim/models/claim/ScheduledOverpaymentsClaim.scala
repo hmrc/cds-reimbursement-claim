@@ -28,6 +28,7 @@ import scala.collection.immutable
 final case class ScheduledOverpaymentsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
+  payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
   whetherNorthernIreland: Boolean,
