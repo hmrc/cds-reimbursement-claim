@@ -45,6 +45,13 @@ final case class MultipleRejectedGoodsClaim(
   supportingEvidences: Seq[EvidenceDocument]
 ) extends RejectedGoodsClaim {
 
+  // TODO: remove when implementing payeeType for multiple
+  val payeeType: PayeeType = claimantType match {
+    case ClaimantType.Consignee => PayeeType.Consignee
+    case ClaimantType.Declarant => PayeeType.Declarant
+    case ClaimantType.User      => PayeeType.Declarant
+  }
+
   override def leadMrn: MRN = movementReferenceNumbers.head
 
   override def totalReimbursementAmount: BigDecimal =

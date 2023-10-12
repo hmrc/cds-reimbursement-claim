@@ -27,6 +27,8 @@ trait RejectedGoodsClaim extends HasClaimantInformation {
 
   val claimantType: ClaimantType
 
+  val payeeType: PayeeType
+
   val claimantInformation: ClaimantInformation
 
   val basisOfClaim: BasisOfRejectedGoodsClaim

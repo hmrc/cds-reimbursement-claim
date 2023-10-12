@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, Claimant, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
@@ -70,7 +70,7 @@ class SingleRejectedGoodsClaimMappingSpec
           Symbol("claimDate")(ISOLocalDate.now.some),
           Symbol("claimType")(ClaimType.CE1179.some),
           Symbol("claimant")(claim.claimant.some),
-          Symbol("payeeIndicator")(claim.claimant.some),
+          Symbol("payeeIndicator")(claim.payeeIndicator.some),
           Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
           Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
           Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),

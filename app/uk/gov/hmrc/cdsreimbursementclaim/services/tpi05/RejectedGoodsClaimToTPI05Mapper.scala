@@ -59,7 +59,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
         claimantName = claimantName
       )
       .forClaimOfType(Some(CE1179))
-      .withClaimant(Claimant.basedOn(claim.claimantType))
+      .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
       .withClaimedAmount(claim.totalReimbursementAmount)
       .withReimbursementMethod(claim.reimbursementMethod)
       .withDisposalMethod(claim.methodOfDisposal)

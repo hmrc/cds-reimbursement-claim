@@ -19,7 +19,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 import cats.implicits.catsSyntaxEq
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.Subsidy
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, RejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, PayeeType, RejectedGoodsClaim}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
@@ -32,6 +32,9 @@ trait RejectedGoodsClaimSupport {
 
     def claimant: Claimant =
       if (claim.claimantType === ClaimantType.Consignee) Importer else Representative
+
+    def payeeIndicator: Claimant =
+      if (claim.payeeType === PayeeType.Consignee) Importer else Representative
 
     def claimedAmountAsString: String =
       claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString()
