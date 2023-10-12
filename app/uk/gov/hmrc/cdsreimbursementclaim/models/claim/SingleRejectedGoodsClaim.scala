@@ -32,6 +32,7 @@ import scala.collection.immutable
 final case class SingleRejectedGoodsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
+  payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfRejectedGoodsClaim,
   basisOfClaimSpecialCircumstances: Option[String],

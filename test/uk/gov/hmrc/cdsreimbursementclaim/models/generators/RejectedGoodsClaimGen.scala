@@ -137,6 +137,7 @@ object RejectedGoodsClaimGen {
     for {
       mrn                    <- genMRN
       claimantType           <- Gen.oneOf(ClaimantType.values)
+      payeeType              <- Gen.oneOf(PayeeType.values)
       claimantInformation    <- genClaimantInformation
       basisOfClaim           <- genBasisOfRejectedGoodsClaim
       specialCircumstances   <- Gen.option(genRandomString)
@@ -156,6 +157,7 @@ object RejectedGoodsClaimGen {
       SingleRejectedGoodsClaim(
         movementReferenceNumber = mrn,
         claimantType = claimantType,
+        payeeType = payeeType,
         claimantInformation = claimantInformation,
         basisOfClaim = basisOfClaim,
         basisOfClaimSpecialCircumstances = specialCircumstances,
