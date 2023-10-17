@@ -34,7 +34,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.PaymentMethodGen.genP
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.{genBasisOfRejectedGoodsClaim, genInspectionAddressType, genInspectionDate, genMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 object TPI05RequestGen {
 

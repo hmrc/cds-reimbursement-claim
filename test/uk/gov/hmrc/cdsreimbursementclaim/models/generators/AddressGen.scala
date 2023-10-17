@@ -20,6 +20,7 @@ import org.scalacheck.Gen
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, Postcode}
 
 import java.util.Locale
+import scala.collection.immutable.ArraySeq
 
 object AddressGen {
 
@@ -29,6 +30,6 @@ object AddressGen {
   } yield Postcode(s"${first.mkString("")} ${last.mkString("")}")
 
   lazy val genCountry: Gen[Country] = Gen
-    .oneOf(Locale.getISOCountries)
+    .oneOf(ArraySeq.unsafeWrapArray(Locale.getISOCountries))
     .map(Country(_))
 }

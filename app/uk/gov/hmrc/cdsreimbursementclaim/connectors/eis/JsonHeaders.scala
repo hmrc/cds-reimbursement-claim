@@ -18,21 +18,21 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
 
 import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
-import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.RFC7231DateTime
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
+import uk.gov.hmrc.cdsreimbursementclaim.utils.HeaderCarrierUtils._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.collection.immutable
 
 trait JsonHeaders {
 
-  def getExtraHeaders: immutable.Seq[(String, String)] =
+  def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
     Seq(
-      HeaderNames.DATE                   -> RFC7231DateTime.now,
-      CustomHeaderNames.X_CORRELATION_ID -> CorrelationId(),
-      HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
-      HeaderNames.CONTENT_TYPE           -> MimeTypes.JSON,
-      HeaderNames.ACCEPT                 -> MimeTypes.JSON
+      HeaderNames.DATE             -> RFC7231DateTime.now,
+      hc.getCorrelationIdHeader(),
+      HeaderNames.X_FORWARDED_HOST -> Platform.MDTP,
+      HeaderNames.CONTENT_TYPE     -> MimeTypes.JSON,
+      HeaderNames.ACCEPT           -> MimeTypes.JSON
     )
 
 }
