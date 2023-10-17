@@ -18,15 +18,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import cats.syntax.eq._
 import org.scalacheck.Gen
-import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.CdsDateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.ndrc.{EntryDetail, NDRCAmounts, NDRCCase, NDRCDetail, ProcedureDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty.{Goods, SCTYCase}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{GetSpecificCaseResponse, Reimbursement, ResponseCommon, ResponseDetail, ReturnParameter}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, SourceFaultDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{ErrorDetail, SourceFaultDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, EisErrorResponse, ErrorDetail, SourceFaultDetail}
 
 object Tpi02ReponseGen {
 

@@ -17,12 +17,11 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.Gen
-import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, SourceFaultDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{ErrorDetail, SourceFaultDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.CdsDateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01._
+import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, ErrorDetail, SourceFaultDetail}
 
 import scala.collection.immutable
 

@@ -24,7 +24,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, ReimbursementMethod, YesNo}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{BankDetail, BankDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 trait C285ClaimSupport {
 

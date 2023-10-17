@@ -50,7 +50,7 @@ class ExistingDeclarationConnectorSpec
     (mockConfig.baseUrl(_: String)).expects("declaration").returning(baseUrl)
 
   val connector: ExistingDeclarationConnector = new ExistingDeclarationConnector(mockHttp, mockConfig) {
-    override def getExtraHeaders: immutable.Seq[(String, String)] =
+    override def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
       Seq(
         HeaderNames.DATE                   -> "some-date",
         CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",

@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
+package uk.gov.hmrc.cdsreimbursementclaim.utils
 
-import play.api.http.HeaderNames
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
-import scala.collection.immutable
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 
-trait EisConnector {
+object HeaderCarrierUtils {
 
-  val config: ServicesConfig
+  implicit class HeaderCarrierOps(val hc: HeaderCarrier) extends AnyVal {
+    def getCorrelationIdHeader(): (String, String) =
+      (
+        CustomHeaderNames.X_CORRELATION_ID,
+        hc
+          .headers(Seq(CustomHeaderNames.X_CORRELATION_ID))
+          .headOption
+          .map(_._2)
+          .getOrElse(CorrelationId())
+      )
 
-  lazy val eisBearerToken: String = config.getString("eis.bearer-token")
-
-  def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)]
-
-  def getEISRequiredHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
-    getExtraHeaders ++ Seq(HeaderNames.AUTHORIZATION -> s"Bearer $eisBearerToken")
+  }
 
 }

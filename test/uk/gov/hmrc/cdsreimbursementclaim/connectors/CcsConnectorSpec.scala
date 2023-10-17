@@ -64,7 +64,7 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
     )
 
     val connector = new DefaultCcsConnector(mockHttp, new ServicesConfig(config)) {
-      override def getExtraHeaders: immutable.Seq[(String, String)] =
+      override def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
         Seq(
           HeaderNames.DATE                   -> "some-date",
           CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",
