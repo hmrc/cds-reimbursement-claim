@@ -330,7 +330,7 @@ class DefaultClaimService @Inject() (
           httpResponse.status === OK,
           httpResponse, {
             metrics.submitClaimErrorCounter.inc()
-            Error(s"call to submit claim came back with status ${httpResponse.status}")
+            Error(httpResponse)
           }
         )
       }

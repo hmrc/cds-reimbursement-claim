@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
+import play.api.Logger
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ContactAddress, ContactDetails, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ClaimantDetails
@@ -32,7 +33,25 @@ final case class ContactInformation(
   telephoneNumber: Option[String],
   faxNumber: Option[String],
   emailAddress: Option[String]
-)
+) {
+
+  def validateLength(name: String, valueOpt: Option[String], maxLengthInc: Int): Unit =
+    valueOpt.foreach(value =>
+      if (value.length() > maxLengthInc)
+        Logger(this.getClass).warn(
+          s"ContactInformation's property $name value is ${value.length()} long but only $maxLengthInc allowed: $value"
+        )
+    )
+
+  validateLength("addressLine1", addressLine1, 35)
+  validateLength("addressLine2", addressLine2, 35)
+  validateLength("addressLine3", addressLine3, 35)
+  validateLength("street", street, 70)
+  validateLength("city", city, 35)
+  validateLength("emailAddress", emailAddress, 241)
+  validateLength("postalCode", postalCode, 9)
+
+}
 
 object ContactInformation {
 

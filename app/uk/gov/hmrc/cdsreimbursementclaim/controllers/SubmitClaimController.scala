@@ -131,6 +131,6 @@ class SubmitClaimController @Inject() (
         }
         .valueOr { error =>
           logger.warn("Error submitting claim", error)
-          InternalServerError
+          error.asResult()
         }
 }
