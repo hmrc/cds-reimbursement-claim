@@ -16,9 +16,16 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
+import uk.gov.hmrc.http.HttpResponse
+import play.api.mvc.Results
+import play.api.mvc.Result
+import scala.annotation.nowarn
+
 sealed trait Error {
   type T
   val value: T
+
+  def asResult(): Result
 }
 
 object Error {
@@ -27,11 +34,28 @@ object Error {
     override type T = String
     override val value: T           = message
     override def toString(): String = message
+    override def asResult(): Result =
+      Results.InternalServerError(message)
   }
 
   def apply(throwable: Throwable): Error = new Error {
     override type T = Throwable
     override val value: T           = throwable
     override def toString(): String = throwable.getMessage()
+    override def asResult(): Result =
+      Results.InternalServerError(throwable.toString())
+  }
+
+  def apply(response: HttpResponse): Error = new Error {
+    override type T = HttpResponse
+    override val value: T           = response
+    override def toString(): String = response.body
+    @nowarn
+    override def asResult(): Result =
+      Results
+        .Status(response.status)(response.body)
+        .withHeaders(response.headers.toSeq.flatMap { case (key, values) =>
+          values.map(value => (key, value))
+        }: _*)
   }
 }
