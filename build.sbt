@@ -25,7 +25,9 @@ lazy val wartremoverSettings =
       Wart.PlatformDefault,
       Wart.Null,
       Wart.GlobalExecutionContext,
-      Wart.JavaNetURLConstructors
+      Wart.JavaNetURLConstructors,
+      Wart.SeqApply,
+      Wart.CaseClassPrivateApply
     ),
     WartRemover.autoImport.wartremoverExcluded += target.value,
     Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
@@ -66,7 +68,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.13.10")
+  .settings(scalaVersion := "2.13.12")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -82,7 +84,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
-    addCompilerPlugin(scalafixSemanticdb("4.7.7")),
+    addCompilerPlugin(scalafixSemanticdb("4.8.12")),
     scalacOptions ++= List(
       "-Xmigration",
       "-Yrangepos",
@@ -96,8 +98,6 @@ lazy val microservice = Project(appName, file("."))
     ),
     Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
   .settings(Test / resourceDirectory := baseDirectory.value / "/conf/resources")
   .settings(wartremoverSettings: _*)
   .settings(scoverageSettings: _*)
