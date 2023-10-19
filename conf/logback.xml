@@ -49,9 +49,9 @@
 
     <logger name="application" level="DEBUG"/>
 
-    <logger name="connector" level="TRACE">
-        <appender-ref ref="STDOUT"/>
-    </logger>
+    <logger name="connector" level="TRACE"/>
+
+    <logger name="OutboundRequest" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="FILE"/>
