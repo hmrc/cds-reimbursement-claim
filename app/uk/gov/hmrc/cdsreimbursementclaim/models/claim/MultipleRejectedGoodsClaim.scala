@@ -32,6 +32,7 @@ import scala.collection.immutable.Seq
 final case class MultipleRejectedGoodsClaim(
   movementReferenceNumbers: List[MRN],
   claimantType: ClaimantType,
+  payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfRejectedGoodsClaim,
   basisOfClaimSpecialCircumstances: Option[String],
@@ -44,14 +45,6 @@ final case class MultipleRejectedGoodsClaim(
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument]
 ) extends RejectedGoodsClaim {
-
-  // TODO: remove when implementing payeeType for multiple
-  val payeeType: PayeeType = claimantType match {
-    case ClaimantType.Consignee => PayeeType.Consignee
-    case ClaimantType.Declarant => PayeeType.Declarant
-    case ClaimantType.User      => PayeeType.Declarant
-  }
-
   override def leadMrn: MRN = movementReferenceNumbers.head
 
   override def totalReimbursementAmount: BigDecimal =
@@ -80,6 +73,7 @@ object MultipleRejectedGoodsClaim {
       (
         (JsPath \ "movementReferenceNumbers").read[List[MRN]](minLength[List[MRN]](2)) and
           (JsPath \ "claimantType").read[ClaimantType] and
+          (JsPath \ "payeeType").read[PayeeType] and
           (JsPath \ "claimantInformation").read[ClaimantInformation] and
           (JsPath \ "basisOfClaim").read[BasisOfRejectedGoodsClaim] and
           (JsPath \ "basisOfClaimSpecialCircumstances").readNullable[String] and
@@ -91,10 +85,11 @@ object MultipleRejectedGoodsClaim {
           (JsPath \ "reimbursementMethod").read[ReimbursementMethodAnswer] and
           (JsPath \ "bankAccountDetails").readNullable[BankAccountDetails] and
           (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]]
-      )(MultipleRejectedGoodsClaim(_, _, _, _, _, _, _, _, _, _, _, _, _)),
+      )(MultipleRejectedGoodsClaim(_, _, _, _, _, _, _, _, _, _, _, _, _, _)),
       (
         (JsPath \ "movementReferenceNumbers").write[List[MRN]] and
           (JsPath \ "claimantType").write[ClaimantType] and
+          (JsPath \ "payeeType").write[PayeeType] and
           (JsPath \ "claimantInformation").write[ClaimantInformation] and
           (JsPath \ "basisOfClaim").write[BasisOfRejectedGoodsClaim] and
           (JsPath \ "basisOfClaimSpecialCircumstances").writeNullable[String] and

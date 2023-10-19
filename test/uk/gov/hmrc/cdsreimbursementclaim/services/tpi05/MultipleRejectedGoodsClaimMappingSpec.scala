@@ -79,7 +79,7 @@ class MultipleRejectedGoodsClaimMappingSpec
             Symbol("claimDate")(ISOLocalDate.now.some),
             Symbol("claimType")(ClaimType.CE1179.some),
             Symbol("claimant")(claim.claimant.some),
-            Symbol("payeeIndicator")(claim.claimant.some),
+            Symbol("payeeIndicator")(claim.payeeIndicator.some),
             Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
             Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
             Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
