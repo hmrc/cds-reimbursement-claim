@@ -25,34 +25,41 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, PayeeType, ScheduledOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, PayeeType, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsScheduledClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
-class OverpaymentsScheduledClaimMappingSpec
+class OverpaymentsMultipleClaimMappingV2Spec
     extends AnyWordSpec
+    with OverpaymentsClaimSupport
     with ScalaCheckDrivenPropertyChecks
     with Matchers
     with OptionValues
     with TypeCheckedTripleEquals {
 
-  val mapper = new OverpaymentsScheduledClaimToTPI05Mapper(false)
+  val mapper = new OverpaymentsMultipleClaimToTPI05Mapper(true)
 
-  "The OverpaymentsScheduled claim mapper" should {
+  "The OverpaymentsMultiple claim mapper" should {
 
-    "map a valid claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim) {
-      scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration) =>
-        val tpi05Request = mapper map scheduledOverpaymentsData
+    "map a valid claim to TPI05 request" in forAll {
+      multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]) =>
+        val claim        = multipleOverpaymentsData._1
+        val declarations = multipleOverpaymentsData._2
+        val tpi05Request = mapper.map(multipleOverpaymentsData)
 
-        val (claim, displayDeclaration) = scheduledOverpaymentsData
+        val claimsOverMrns = claim.reimbursementClaims.flatMap { case (mrn, taxesClaimed) =>
+          declarations
+            .filter(_.displayResponseDetail.declarationId === mrn.value)
+            .map(declaration => mrn -> ((taxesClaimed, declaration)))
+        }
 
         inside(tpi05Request) {
           case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details: RequestDetail))) =>
@@ -66,103 +73,32 @@ class OverpaymentsScheduledClaimMappingSpec
               Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
               Symbol("claimDate")(ISOLocalDate.now.some),
               Symbol("claimType")(ClaimType.C285.some),
-              Symbol("claimant")(Some(if (claim.claimantType === ClaimantType.Consignee) Importer else Representative)),
+              Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
               Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
-              Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
+              Symbol("declarationMode")(Some(DeclarationMode.AllDeclaration)),
               Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
-              Symbol("reimbursementMethod")(
-                Some(
-                  if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
-                  else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
-                  else ReimbursementMethod.Deferment
-                )
-              ),
+              Symbol("reimbursementMethod")(None),
               Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
               Symbol("caseType")(Some(CaseType.Bulk)),
               Symbol("goodsDetails")(
                 GoodsDetails(
                   descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
-                  isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
-                ).some
-              ),
-              Symbol("EORIDetails")(
-                EoriDetails(
-                  agentEORIDetails = EORIInformation(
-                    EORINumber = claim.claimantInformation.eori,
-                    CDSFullName = claim.claimantInformation.fullName,
-                    CDSEstablishmentAddress = Address(
-                      contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
-                      addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
-                      addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-                      addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-                      street = claim.claimantInformation.establishmentAddress.street,
-                      city = claim.claimantInformation.establishmentAddress.city,
-                      countryCode =
-                        claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
-                      postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-                      telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
-                      emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
-                    ),
-                    contactInformation = claim.claimantInformation.contactInformation.some
-                  ),
-                  importerEORIDetails = {
-                    val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
-                    val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
-
-                    EORIInformation(
-                      EORINumber = maybeConsigneeDetails.map(_.EORI).value,
-                      CDSFullName = maybeConsigneeDetails.map(_.legalName).value,
-                      CDSEstablishmentAddress = Address(
-                        contactPerson = None,
-                        addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
-                        addressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2),
-                        addressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-                        street = Street.fromLines(
-                          maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
-                          maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
-                        ),
-                        city = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
-                        countryCode = maybeConsigneeDetails
-                          .map(_.establishmentAddress.countryCode)
-                          .getOrElse(Country.uk.code),
-                        postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
-                        telephoneNumber = maybeContactDetails.flatMap(_.telephone),
-                        emailAddress = maybeContactDetails.flatMap(_.emailAddress)
-                      ),
-                      contactInformation = ContactInformation(
-                        contactPerson = maybeContactDetails.flatMap(_.contactName),
-                        addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
-                        addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
-                        addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
-                        street = Street.fromLines(
-                          maybeContactDetails.flatMap(_.addressLine1),
-                          maybeContactDetails.flatMap(_.addressLine2)
-                        ),
-                        city = maybeContactDetails.flatMap(_.addressLine3),
-                        countryCode = maybeContactDetails.flatMap(_.countryCode),
-                        postalCode = maybeContactDetails.flatMap(_.postalCode),
-                        telephoneNumber = maybeContactDetails.flatMap(_.telephone),
-                        faxNumber = None,
-                        emailAddress = maybeContactDetails.flatMap(_.emailAddress)
-                      ).some
-                    )
-                  }
+                  isPrivateImporter = Some(if (claim.claimantType === Consignee) Yes else No)
                 ).some
               ),
               Symbol("MRNDetails") {
-                val mrn = MRN(displayDeclaration.displayResponseDetail.declarationId)
-                Some(
+                claimsOverMrns.map { case (mrn, (claimedReimbursements, declaration)) =>
                   MrnDetail(
                     MRNNumber = mrn.some,
                     acceptanceDate = AcceptanceDate
-                      .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                      .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                       .flatMap(_.toTpi05DateString)
                       .toOption,
-                    declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
-                    mainDeclarationReference = (claim.movementReferenceNumber.value === mrn.value).some,
-                    procedureCode = displayDeclaration.displayResponseDetail.procedureCode.some,
+                    declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
+                    mainDeclarationReference = (mrn === claim.leadMrn).some,
+                    procedureCode = declaration.displayResponseDetail.procedureCode.some,
                     declarantDetails = {
-                      val declarantDetails = displayDeclaration.displayResponseDetail.declarantDetails
+                      val declarantDetails = declaration.displayResponseDetail.declarantDetails
                       val contactDetails   = declarantDetails.contactDetails.value
 
                       MRNInformation(
@@ -201,7 +137,7 @@ class OverpaymentsScheduledClaimMappingSpec
                       ).some
                     },
                     consigneeDetails = {
-                      val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails.value
+                      val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails.value
                       val contactInformation = consigneeDetails.contactDetails.value
 
                       MRNInformation(
@@ -239,7 +175,7 @@ class OverpaymentsScheduledClaimMappingSpec
                         )
                       ).some
                     },
-                    accountDetails = displayDeclaration.displayResponseDetail.accountDetails.map(
+                    accountDetails = declaration.displayResponseDetail.accountDetails.map(
                       _.map(accountDetail =>
                         AccountDetail(
                           accountType = accountDetail.accountType,
@@ -264,37 +200,39 @@ class OverpaymentsScheduledClaimMappingSpec
                         )
                       )
                     ),
-                    bankDetails = Option(claim.movementReferenceNumber.value === mrn.value)
-                      .filter(_ === true)
-                      .flatMap(_ =>
-                        claim.bankAccountDetails
-                          .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
-                          .orElse(
-                            displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
-                              BankDetails(
-                                bd.consigneeBankDetails.map(BankDetail.from),
-                                bd.declarantBankDetails.map(BankDetail.from)
+                    bankDetails = claim.firstNonEmptyBankDetails(declaration.displayResponseDetail.bankDetails),
+                    NDRCDetails = {
+                      val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
+
+                      claimedReimbursements
+                        .map { case (taxCode, claimedAmount) =>
+                          ndrcDetails
+                            .find(_.taxType === taxCode.value)
+                            .map(details =>
+                              NdrcDetails(
+                                paymentMethod = details.paymentMethod,
+                                paymentReference = details.paymentReference,
+                                CMAEligible = None,
+                                taxType = taxCode,
+                                amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
+                                claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
+                                Some(
+                                  if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                                  else if (claim.reimbursementMethod === BankAccountTransfer)
+                                    ReimbursementMethod.BankTransfer
+                                  else ReimbursementMethod.Deferment
+                                )
                               )
                             )
-                          )
-                      ),
-                    NDRCDetails = claim.getClaimedReimbursements.map { reimbursement =>
-                      NdrcDetails(
-                        paymentMethod = reimbursement.paymentMethod,
-                        paymentReference = reimbursement.paymentReference,
-                        CMAEligible = None,
-                        taxType = reimbursement.taxCode,
-                        amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
-                        claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some,
-                        None
-                      )
+                        }
+                        .toList
+                        .flatten(Option.option2Iterable)
                     }.some
-                  ) :: Nil
-                )
+                  )
+                }.some
               }
             )
         }
     }
-
   }
 }

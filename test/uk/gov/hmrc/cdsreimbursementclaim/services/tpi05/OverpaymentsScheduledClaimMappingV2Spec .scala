@@ -37,14 +37,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
-class OverpaymentsScheduledClaimMappingSpec
+class OverpaymentsScheduledClaimMappingV2Spec
     extends AnyWordSpec
     with ScalaCheckDrivenPropertyChecks
     with Matchers
     with OptionValues
     with TypeCheckedTripleEquals {
 
-  val mapper = new OverpaymentsScheduledClaimToTPI05Mapper(false)
+  val mapper = new OverpaymentsScheduledClaimToTPI05Mapper(true)
 
   "The OverpaymentsScheduled claim mapper" should {
 
@@ -70,13 +70,7 @@ class OverpaymentsScheduledClaimMappingSpec
               Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
               Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
               Symbol("claimAmountTotal")(claim.totalReimbursementAmount.roundToTwoDecimalPlaces.toString.some),
-              Symbol("reimbursementMethod")(
-                Some(
-                  if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
-                  else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
-                  else ReimbursementMethod.Deferment
-                )
-              ),
+              Symbol("reimbursementMethod")(None),
               Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
               Symbol("caseType")(Some(CaseType.Bulk)),
               Symbol("goodsDetails")(
@@ -286,7 +280,11 @@ class OverpaymentsScheduledClaimMappingSpec
                         taxType = reimbursement.taxCode,
                         amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
                         claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some,
-                        None
+                        Some(
+                          if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                          else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
+                          else ReimbursementMethod.Deferment
+                        )
                       )
                     }.some
                   ) :: Nil

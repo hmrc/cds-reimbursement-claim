@@ -20,9 +20,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 
 package object ccs {
 
-  implicit val c285ClaimToDec64FilesMapper: C285ClaimToDec64FilesMapper =
-    new C285ClaimToDec64FilesMapper
-
   implicit val singleOverpaymentsClaimToDec64FilesMapper: SingleOverpaymentsClaimToDec64FilesMapper =
     new SingleOverpaymentsClaimToDec64FilesMapper
 

@@ -49,6 +49,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
     with OptionValues
     with TypeCheckedTripleEquals {
 
+  val mapper = new ScheduledRejectedGoodsClaimToTPI05Mapper(false)
+
   "The Reject Goods claim mapper" should {
 
     "map a valid Scheduled claim to TPI05 request" in forAll {
@@ -56,7 +58,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
         val claim       = details._1
         val declaration = details._2
 
-        val tpi05Request = scheduledRejectedGoodsClaimToTPI05Mapper.map(details)
+        val tpi05Request = mapper.map(details)
 
         inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
           common.originatingSystem should be(MDTP)
@@ -278,7 +280,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
                       CMAEligible = None,
                       taxType = reimbursement.taxCode,
                       amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
-                      claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some
+                      claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some,
+                      None
                     )
                   }.some
                 )
@@ -315,7 +318,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
             )
           )
 
-          val tpi05Request = scheduledRejectedGoodsClaimToTPI05Mapper.map((claim, declarationWithInvalidNdrcDetails))
+          val tpi05Request =
+            mapper.map((claim, declarationWithInvalidNdrcDetails))
 
           tpi05Request.left.map(
             _.value should be(
@@ -341,7 +345,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
 
           val updatedDeclaration = ndrcLens.set(displayDeclaration)(None)
 
-          val tpi05Request = scheduledRejectedGoodsClaimToTPI05Mapper.map((updatedClaim, updatedDeclaration))
+          val tpi05Request = mapper.map((updatedClaim, updatedDeclaration))
 
           tpi05Request.left.map(
             _.value should be(

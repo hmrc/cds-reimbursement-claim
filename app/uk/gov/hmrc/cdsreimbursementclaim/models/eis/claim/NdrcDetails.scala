@@ -17,10 +17,12 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
 import cats.data.{Validated, ValidatedNel}
-import cats.implicits.{catsSyntaxEq, catsSyntaxTuple5Semigroupal}
+import cats.syntax.all._
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer
 
 final case class NdrcDetails(
   paymentMethod: String,
@@ -28,7 +30,8 @@ final case class NdrcDetails(
   CMAEligible: Option[String],
   taxType: TaxCode,
   amount: String,
-  claimAmount: Option[String]
+  claimAmount: Option[String],
+  reimbursementMethod: Option[ReimbursementMethod]
 )
 
 object NdrcDetails {
@@ -39,20 +42,23 @@ object NdrcDetails {
     paymentMethod: String,
     paymentReference: String,
     paidAmount: BigDecimal,
-    claimedAmount: BigDecimal
+    claimedAmount: BigDecimal,
+    reimbursementMethod: Option[ReimbursementMethodAnswer]
   ): ValidatedNel[Error, NdrcDetails] = (
     Validator.validatePaymentMethod(paymentMethod),
     Validator.validatePaymentReference(paymentReference),
     Validator.validateTaxCode(taxCode),
     Validator.validateAmount(paidAmount.toString()),
-    Validator.validateAmount(claimedAmount.toString())
+    Validator.validateAmount(claimedAmount.toString()),
+    Validator.validateReimbursementMethod(reimbursementMethod)
   ).mapN {
     (
       validatedPaymentMethod,
       validatedPaymentReference,
       validatedTaxCode,
       validatedPaidAmount,
-      validatedClaimedAmount
+      validatedClaimedAmount,
+      validatedReimbursementMethod
     ) =>
       NdrcDetails(
         validatedPaymentMethod,
@@ -60,7 +66,8 @@ object NdrcDetails {
         None,
         validatedTaxCode,
         validatedPaidAmount,
-        Some(validatedClaimedAmount)
+        Some(validatedClaimedAmount),
+        validatedReimbursementMethod
       )
   }
 
@@ -80,6 +87,13 @@ object NdrcDetails {
         Error(s"The payment method is expected to be 3 characters long: $paymentMethod")
       )
 
+    def validateReimbursementMethod(
+      reimbursementMethod: Option[ReimbursementMethodAnswer]
+    ): ValidatedNel[Error, Option[ReimbursementMethod]] =
+      Validated.valid(
+        reimbursementMethod.map(ReimbursementMethod.from(_))
+      )
+
     def validatePaymentReference(paymentReference: String): ValidatedNel[Error, String] =
       Validated.condNel(
         paymentReference.nonEmpty && paymentReference.length <= 18,
@@ -89,6 +103,7 @@ object NdrcDetails {
 
     def validateTaxCode(taxCode: TaxCode): ValidatedNel[Error, TaxCode] =
       Validated.condNel(taxCode.value.length === 3, taxCode, Error(s"Tax type size is less than 3: ${taxCode.value}"))
+
   }
 
   implicit val format: OFormat[NdrcDetails] = Json.format[NdrcDetails]

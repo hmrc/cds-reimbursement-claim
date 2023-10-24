@@ -30,7 +30,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
-class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
+class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursementMethodInNDRCDetails: Boolean)
     extends ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])]
     with GetEoriDetails[Claim] {
 
@@ -61,7 +61,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
       .forClaimOfType(Some(CE1179))
       .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
       .withClaimedAmount(claim.totalReimbursementAmount)
-      .withReimbursementMethod(claim.reimbursementMethod)
+      .withReimbursementMethod(claim.reimbursementMethod, !putReimbursementMethodInNDRCDetails)
       .withDisposalMethod(claim.methodOfDisposal)
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(getGoodsDetails(claim))
@@ -119,7 +119,8 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim]
                   foundNdrcDetails.paymentMethod,
                   foundNdrcDetails.paymentReference,
                   BigDecimal(foundNdrcDetails.amount),
-                  claimedAmount.roundToTwoDecimalPlaces
+                  claimedAmount.roundToTwoDecimalPlaces,
+                  if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
                 )
               }
           }.toList

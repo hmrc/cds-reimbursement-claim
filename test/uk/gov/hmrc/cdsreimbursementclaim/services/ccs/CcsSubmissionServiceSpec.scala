@@ -36,12 +36,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
-import uk.gov.hmrc.cdsreimbursementclaim.utils.toUUIDString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HeaderNames
 import uk.gov.hmrc.http.HttpResponse
@@ -221,51 +219,6 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
     }
 
     "a ccs submission request is made" must {
-
-      "enqueue the C285 claim request" in forAll {
-        (claimSubmitRequest: C285ClaimRequest, claimSubmitResponse: ClaimSubmitResponse) =>
-          whenever(claimSubmitRequest.claim.documents.nonEmpty) {
-            val documentLens          = lens[C285ClaimRequest].claim.documents
-            val evidence              = claimSubmitRequest.claim.documents.toList.flatten.head
-            val singleDocumentRequest = documentLens.set(claimSubmitRequest)(Option(List(evidence)))
-
-            val dec64payload = makeDec64XmlPayload(
-              correlationId = UUID.randomUUID().toString,
-              batchId = singleDocumentRequest.claim.id,
-              batchSize = singleDocumentRequest.claim.documents.size,
-              batchCount = singleDocumentRequest.claim.documents.size,
-              checksum = evidence.checksum,
-              fileSize = evidence.size,
-              caseReference = claimSubmitResponse.caseNumber,
-              eori = singleDocumentRequest.signedInUserDetails.eori.value,
-              declarationId = singleDocumentRequest.claim.movementReferenceNumber.value,
-              declarationType = singleDocumentRequest.claim.declarantTypeAnswer.toString,
-              applicationName = "NDRC",
-              documentType = evidence.documentType.toDec64DisplayString,
-              documentReceivedDate = evidence.uploadedOn.toCdsDateTime,
-              sourceLocation = evidence.downloadUrl,
-              sourceFileName = evidence.fileName,
-              sourceFileMimeType = evidence.fileMimeType,
-              destinationSystem = "CDFPay"
-            )
-
-            val workItem = WorkItem(
-              id = new ObjectId(),
-              receivedAt = Instant.now(),
-              updatedAt = Instant.now(),
-              availableAt = Instant.now(),
-              status = ToDo,
-              failureCount = 0,
-              item = CcsSubmissionRequest(payload = dec64payload, headers = getHeaders(hc))
-            )
-
-            mockCcsSubmissionRequest()(Right(workItem))
-
-            await(ccsSubmissionService.enqueue(singleDocumentRequest, claimSubmitResponse).value).isRight should be(
-              true
-            )
-          }
-      }
 
       "enqueue the Single Rejected Goods claim request" in forAll {
         (submitRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], submitResponse: ClaimSubmitResponse) =>

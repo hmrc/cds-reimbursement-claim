@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer
 
 sealed trait ReimbursementMethod extends Product with Serializable
 
@@ -48,4 +49,12 @@ object ReimbursementMethod extends EnumerationFormat[ReimbursementMethod] {
 
   lazy val values: Set[ReimbursementMethod] =
     Set(Deferment, BankTransfer, PayableOrder, GeneralGuarantee, IndividualGuarantee, Subsidy)
+
+  def from(answer: ReimbursementMethodAnswer): ReimbursementMethod =
+    answer match {
+      case ReimbursementMethodAnswer.Subsidy                => Subsidy
+      case ReimbursementMethodAnswer.CurrentMonthAdjustment => Deferment
+      case ReimbursementMethodAnswer.BankAccountTransfer    => BankTransfer
+    }
+
 }

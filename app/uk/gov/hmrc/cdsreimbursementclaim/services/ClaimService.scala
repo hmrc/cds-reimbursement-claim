@@ -30,7 +30,7 @@ import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{C285ClaimRequest, ClaimSubmitResponse, MultipleOverpaymentsClaimRequest, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, MultipleOverpaymentsClaimRequest, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimResponseEvent
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
@@ -53,15 +53,6 @@ import scala.util.Try
 
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
-
-  def submitC285Claim(
-    c285ClaimRequest: C285ClaimRequest
-  )(implicit
-    hc: HeaderCarrier,
-    request: Request[_],
-    tpi05Binder: ClaimToTPI05Mapper[C285ClaimRequest],
-    emailMapper: ClaimToEmailMapper[C285ClaimRequest]
-  ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitSingleOverpaymentsClaim(
     singleOverpaymentsClaim: SingleOverpaymentsClaimRequest
@@ -113,6 +104,7 @@ trait ClaimService {
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
     emailMapper: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
@@ -122,6 +114,7 @@ trait ClaimService {
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)],
     emailMapper: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
     claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse]
@@ -137,14 +130,6 @@ class DefaultClaimService @Inject() (
 )(implicit ec: ExecutionContext)
     extends ClaimService
     with Logging {
-
-  def submitC285Claim(c285ClaimRequest: C285ClaimRequest)(implicit
-    hc: HeaderCarrier,
-    request: Request[_],
-    tpi05Binder: ClaimToTPI05Mapper[C285ClaimRequest],
-    emailMapper: ClaimToEmailMapper[C285ClaimRequest]
-  ): EitherT[Future, Error, ClaimSubmitResponse] =
-    proceed(c285ClaimRequest, c285ClaimRequest)
 
   def submitSingleOverpaymentsClaim(
     claimRequest: SingleOverpaymentsClaimRequest
@@ -244,6 +229,7 @@ class DefaultClaimService @Inject() (
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
     emailMapper: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
@@ -257,6 +243,7 @@ class DefaultClaimService @Inject() (
   )(implicit
     hc: HeaderCarrier,
     request: Request[_],
+    tpi05Binder: ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)],
     emailMapper: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
     claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
