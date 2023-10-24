@@ -29,27 +29,30 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.ClaimToTPI05Mappers
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.Configuration
 
 @Singleton()
 class SubmitClaimController @Inject() (
   authenticate: AuthenticateWithUserActions,
   claimService: ClaimService,
   ccsSubmissionService: CcsSubmissionService,
-  cc: ControllerComponents
+  cc: ControllerComponents,
+  config: Configuration
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  final val submitC285Claim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
-    withJsonBody[C285ClaimRequest] {
-      uploadDocumentsOnce {
-        claimService.submitC285Claim(_)
-      }
-    }
-  }
+  val putReimbursementMethodInNDRCDetails: Boolean =
+    config.underlying.getBoolean("features.putReimbursementMethodInNDRCDetails")
+
+  val tpi05MappersBundle: ClaimToTPI05Mappers.Bundle =
+    ClaimToTPI05Mappers(putReimbursementMethodInNDRCDetails)
+
+  import tpi05MappersBundle._
 
   final val submitSingleOverpaymentsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[SingleOverpaymentsClaimRequest] {

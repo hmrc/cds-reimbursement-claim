@@ -51,7 +51,8 @@ object TPI05RequestGen {
     CMAEligible = whetherCMAEligible,
     taxType = taxType,
     amount = paidAmount,
-    claimAmount = Some(claimedAmount)
+    claimAmount = Some(claimedAmount),
+    None
   )
 
   lazy val genBankDetails: Gen[BankDetails] = for {

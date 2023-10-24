@@ -25,24 +25,23 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, MultipleRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, ScheduledRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.AllDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => ResponseNdrcDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.AmountPaidWithRefund
 
-@SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
-class MultipleRejectedGoodsClaimMappingSpec
+class ScheduledRejectedGoodsClaimMappingV2Spec
     extends AnyWordSpec
     with RejectedGoodsClaimSupport
     with ScalaCheckDrivenPropertyChecks
@@ -50,21 +49,16 @@ class MultipleRejectedGoodsClaimMappingSpec
     with OptionValues
     with TypeCheckedTripleEquals {
 
-  val mapper = new RejectedGoodsClaimToTPI05Mapper[MultipleRejectedGoodsClaim](false)
+  val mapper = new ScheduledRejectedGoodsClaimToTPI05Mapper(true)
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Multiple claim to TPI05 request" in forAll {
-      details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]) =>
-        val (claim, declarations) = details
-        val leadDeclaration       = declarations.head
-        val tpi05Request          = mapper.map((claim, declarations))
+    "map a valid Scheduled claim to TPI05 request" in forAll {
+      details: (ScheduledRejectedGoodsClaim, DisplayDeclaration) =>
+        val claim       = details._1
+        val declaration = details._2
 
-        val claimsOverMrns = claim.reimbursementClaims.flatMap { case (mrn, taxesClaimed) =>
-          declarations
-            .filter(_.displayResponseDetail.declarationId === mrn.value)
-            .map(declaration => mrn -> ((taxesClaimed, declaration)))
-        }
+        val tpi05Request = mapper.map(details)
 
         inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
           common.originatingSystem should be(MDTP)
@@ -83,7 +77,7 @@ class MultipleRejectedGoodsClaimMappingSpec
             Symbol("claimant")(claim.claimant.some),
             Symbol("payeeIndicator")(claim.claimant.some),
             Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
-            Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
+            Symbol("reimbursementMethod")(None),
             Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
             Symbol("goodsDetails")(
               GoodsDetails(
@@ -121,7 +115,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 importerEORIDetails = {
-                  val maybeConsigneeDetails = leadDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                  val maybeConsigneeDetails = declaration.displayResponseDetail.effectiveConsigneeDetails
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
@@ -165,15 +159,15 @@ class MultipleRejectedGoodsClaimMappingSpec
               ).some
             ),
             Symbol("MRNDetails")(
-              claimsOverMrns.map { case (mrn, (claimedReimbursements, declaration)) =>
+              List(
                 MrnDetail(
-                  MRNNumber = mrn.some,
+                  MRNNumber = claim.movementReferenceNumber.some,
                   acceptanceDate = AcceptanceDate
                     .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                     .flatMap(_.toTpi05DateString)
                     .toOption,
                   declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
-                  mainDeclarationReference = (mrn === claim.leadMrn).some,
+                  mainDeclarationReference = true.some,
                   procedureCode = declaration.displayResponseDetail.procedureCode.some,
                   declarantDetails = {
                     val declarantDetails = declaration.displayResponseDetail.declarantDetails
@@ -279,63 +273,53 @@ class MultipleRejectedGoodsClaimMappingSpec
                     )
                   ),
                   bankDetails = claim.firstNonEmptyBankDetails(declaration.displayResponseDetail.bankDetails),
-                  NDRCDetails = {
-                    val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
-
-                    claimedReimbursements
-                      .map { case (taxCode, claimedAmount) =>
-                        ndrcDetails
-                          .find(_.taxType === taxCode.value)
-                          .map(details =>
-                            NdrcDetails(
-                              paymentMethod = details.paymentMethod,
-                              paymentReference = details.paymentReference,
-                              CMAEligible = None,
-                              taxType = taxCode,
-                              amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
-                              claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
-                              None
-                            )
-                          )
-                      }
-                      .toList
-                      .flatten(Option.option2Iterable)
+                  NDRCDetails = claim.getClaimedReimbursements.map { reimbursement =>
+                    NdrcDetails(
+                      paymentMethod = reimbursement.paymentMethod,
+                      paymentReference = reimbursement.paymentReference,
+                      CMAEligible = None,
+                      taxType = reimbursement.taxCode,
+                      amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
+                      claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some,
+                      claim.tpi05ReimbursementMethod.some
+                    )
                   }.some
                 )
-              }.some
+              ).some
             ),
             Symbol("caseType")(Bulk.some),
-            Symbol("declarationMode")(AllDeclaration.some)
+            Symbol("declarationMode")(ParentDeclaration.some)
           )
         }
     }
 
     "fail with the error" when {
-      val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-      val reimbursementClaimsLens = lens[MultipleRejectedGoodsClaim].reimbursementClaims
 
-      "mapping claim having incorrect NDRC details" in forAll {
-        (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]), random: UUID, amount: BigDecimal) =>
-          val (claim, declarations)             = details
-          val value                             = random.toString
-          val declarationWithInvalidNdrcDetails = declarations.map { declaration =>
-            val ndrcDetails = declaration.displayResponseDetail.ndrcDetails
-            ndrcLens.set(declaration)(
-              ndrcDetails.map(
-                _.map(detail =>
-                  ResponseNdrcDetails(
-                    paymentMethod = value,
-                    paymentReference = value,
-                    cmaEligible = None,
-                    taxType = detail.taxType,
-                    amount = amount.toString()
-                  )
+      "mapping claim having incorrect NDRC details" in {
+        val ndrcDetailsLens = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+
+        forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)) =>
+          val value       = random.toString
+          val claim       = details._1
+          val declaration = details._2
+          val ndrcDetails = declaration.displayResponseDetail.ndrcDetails
+
+          val declarationWithInvalidNdrcDetails = ndrcDetailsLens.set(declaration)(
+            ndrcDetails.map(
+              _.map(detail =>
+                uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
+                  paymentMethod = value,
+                  paymentReference = value,
+                  cmaEligible = None,
+                  taxType = detail.taxType,
+                  amount = amount.toString()
                 )
               )
             )
-          }
+          )
 
-          val tpi05Request = mapper.map((claim, declarationWithInvalidNdrcDetails))
+          val tpi05Request =
+            mapper.map((claim, declarationWithInvalidNdrcDetails))
 
           tpi05Request.left.map(
             _.value should be(
@@ -344,25 +328,31 @@ class MultipleRejectedGoodsClaimMappingSpec
                 s"Bad amount format: ${amount.toString()}"
             )
           )
+        }
       }
 
-      "cannot find NDRC details for claimed reimbursement" in forAll {
-        (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]), taxCode: TaxCode) =>
-          val (rejectedGoodsClaim, declarations) = details
-          val reimbursement                      = Map(rejectedGoodsClaim.leadMrn -> Map(taxCode -> BigDecimal(7)))
+      "cannot find NDRC details for claimed reimbursement" in {
+        val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+        val reimbursementClaimsLens = lens[ScheduledRejectedGoodsClaim].reimbursementClaims
 
-          val updatedClaim        = reimbursementClaimsLens.set(rejectedGoodsClaim)(reimbursement)
-          val updatedDeclarations = declarations.map { declaration =>
-            ndrcLens.set(declaration)(None)
-          }
+        forAll { (details: (ScheduledRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
+          val rejectedGoodsClaim = details._1
+          val displayDeclaration = details._2
 
-          val tpi05Request = mapper.map((updatedClaim, updatedDeclarations))
+          val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithRefund(BigDecimal(8), BigDecimal(7))))
+
+          val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
+
+          val updatedDeclaration = ndrcLens.set(displayDeclaration)(None)
+
+          val tpi05Request = mapper.map((updatedClaim, updatedDeclaration))
 
           tpi05Request.left.map(
             _.value should be(
               s"Failed to build MRN detail - Cannot find NDRC details for tax code: $taxCode"
             )
           )
+        }
       }
     }
   }

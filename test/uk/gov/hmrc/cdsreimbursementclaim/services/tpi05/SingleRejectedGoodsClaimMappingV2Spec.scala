@@ -41,7 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
 
-class SingleRejectedGoodsClaimMappingSpec
+class SingleRejectedGoodsClaimMappingV2Spec
     extends AnyWordSpec
     with RejectedGoodsClaimSupport
     with ScalaCheckDrivenPropertyChecks
@@ -49,7 +49,7 @@ class SingleRejectedGoodsClaimMappingSpec
     with OptionValues
     with TypeCheckedTripleEquals {
 
-  val mapper = new RejectedGoodsClaimToTPI05Mapper[SingleRejectedGoodsClaim](false)
+  val mapper = new RejectedGoodsClaimToTPI05Mapper[SingleRejectedGoodsClaim](true)
 
   "The Reject Goods claim mapper" should {
 
@@ -74,7 +74,7 @@ class SingleRejectedGoodsClaimMappingSpec
           Symbol("claimant")(claim.claimant.some),
           Symbol("payeeIndicator")(claim.payeeIndicator.some),
           Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
-          Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
+          Symbol("reimbursementMethod")(None),
           Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
           Symbol("goodsDetails")(
             GoodsDetails(
@@ -284,7 +284,7 @@ class SingleRejectedGoodsClaimMappingSpec
                           taxType = taxCode,
                           amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
                           claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
-                          None
+                          claim.tpi05ReimbursementMethod.some
                         )
                       )
                       .value

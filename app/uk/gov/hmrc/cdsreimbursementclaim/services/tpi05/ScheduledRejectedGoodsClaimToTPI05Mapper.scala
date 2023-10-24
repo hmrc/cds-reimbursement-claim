@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-class ScheduledRejectedGoodsClaimToTPI05Mapper
+class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
     extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)]
     with GetEoriDetails[ScheduledRejectedGoodsClaim] {
 
@@ -54,7 +54,7 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
       .forClaimOfType(Some(CE1179))
       .withClaimant(Claimant.basedOn(claim.claimantType))
       .withClaimedAmount(claim.totalReimbursementAmount)
-      .withReimbursementMethod(claim.reimbursementMethod)
+      .withReimbursementMethod(claim.reimbursementMethod, !putReimbursementMethodInNDRCDetails)
       .withDisposalMethod(claim.methodOfDisposal)
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(getGoodsDetails(claim))
@@ -101,7 +101,8 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper
             reimbursement.paymentMethod,
             reimbursement.paymentReference,
             reimbursement.paidAmount.roundToTwoDecimalPlaces,
-            reimbursement.claimAmount.roundToTwoDecimalPlaces
+            reimbursement.claimAmount.roundToTwoDecimalPlaces,
+            if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
           )
         )
       )

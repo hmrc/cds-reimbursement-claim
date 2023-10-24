@@ -45,13 +45,15 @@ class OverpaymentsMultipleClaimMappingSpec
     with OptionValues
     with TypeCheckedTripleEquals {
 
+  val mapper = new OverpaymentsMultipleClaimToTPI05Mapper(false)
+
   "The OverpaymentsMultiple claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll {
       multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]) =>
         val claim        = multipleOverpaymentsData._1
         val declarations = multipleOverpaymentsData._2
-        val tpi05Request = overpaymentsMultipleClaimToTPI05Mapper.map(multipleOverpaymentsData)
+        val tpi05Request = mapper.map(multipleOverpaymentsData)
 
         val claimsOverMrns = claim.reimbursementClaims.flatMap { case (mrn, taxesClaimed) =>
           declarations
@@ -219,7 +221,8 @@ class OverpaymentsMultipleClaimMappingSpec
                                 CMAEligible = None,
                                 taxType = taxCode,
                                 amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
-                                claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some
+                                claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
+                                None
                               )
                             )
                         }

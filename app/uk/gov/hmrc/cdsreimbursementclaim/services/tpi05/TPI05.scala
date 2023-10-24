@@ -18,9 +18,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.data.Validated
 import cats.data.Validated.Valid
-import cats.implicits.{catsSyntaxEq, toTraverseOps}
+import cats.implicits.toTraverseOps
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{CurrentMonthAdjustment, Subsidy}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
@@ -87,15 +86,18 @@ object TPI05 {
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(
         validatedRequest.map(
-          _.copy(reimbursementMethod =
-            Some(
-              if (reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
-              else if (reimbursementMethod === CurrentMonthAdjustment) ReimbursementMethod.Deferment
-              else ReimbursementMethod.BankTransfer
-            )
-          )
+          _.copy(reimbursementMethod = Some(ReimbursementMethod.from(reimbursementMethod)))
         )
       )
+
+    def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer, enabled: Boolean): Builder =
+      if (enabled) {
+        copy(
+          validatedRequest.map(
+            _.copy(reimbursementMethod = Some(ReimbursementMethod.from(reimbursementMethod)))
+          )
+        )
+      } else this
 
     def withBasisOfClaim(basisOfClaim: String): Builder =
       copy(validatedRequest.map(_.copy(basisOfClaim = Some(basisOfClaim))))

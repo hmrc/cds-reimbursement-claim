@@ -38,7 +38,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
@@ -84,9 +83,6 @@ class ClaimServiceSpec
 
   implicit val request: Request[_] = FakeRequest()
 
-  implicit val c285ClaimMapper: ClaimToTPI05Mapper[C285ClaimRequest] =
-    mock[ClaimToTPI05Mapper[C285ClaimRequest]]
-
   implicit val overpaymentsSingleClaimMapper: OverpaymentsSingleClaimToTPI05Mapper =
     mock[OverpaymentsSingleClaimToTPI05Mapper]
 
@@ -103,9 +99,6 @@ class ClaimServiceSpec
   implicit val multipleRejectedGoodsClaimMapper
     : ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
     mock[ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])]]
-
-  implicit val c285ClaimEmailMapperMock: ClaimToEmailMapper[C285ClaimRequest] =
-    mock[ClaimToEmailMapper[C285ClaimRequest]]
 
   implicit val overpaymentsSingleClaimEmailMapperMock: OverpaymentsSingleClaimToEmailMapper =
     mock[OverpaymentsSingleClaimToEmailMapper]
@@ -224,49 +217,6 @@ class ClaimServiceSpec
   "Claim Service" when {
 
     "handling submission of claims" should {
-
-      "successfully submit a C285 claim" in forAll {
-        (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
-          val responseJsonBody = Json.parse(
-            """
-            |{
-            |    "postNewClaimsResponse": {
-            |        "responseCommon": {
-            |            "status": "OK",
-            |            "processingDate": "2021-01-20T12:07540Z",
-            |            "CDFPayService": "NDRC",
-            |            "CDFPayCaseNumber": "4374422408"
-            |        }
-            |    }
-            |}
-            |""".stripMargin
-          )
-
-          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
-          val emailRequest        = EmailRequest(
-            Email(c285ClaimRequest.claim.contactInformation.emailAddress.value),
-            c285ClaimRequest.claim.contactInformation.contactPerson.value,
-            c285ClaimRequest.claim.totalReimbursementAmount
-          )
-
-          inSequence {
-            mockClaimMapping(c285ClaimRequest, eisRequest)
-            mockAuditSubmitClaimEvent(eisRequest)
-            mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
-            )
-            mockAuditSubmitClaimResponseEvent(
-              httpStatus = 200,
-              responseBody = Some(responseJsonBody),
-              submitClaimRequest = c285ClaimRequest,
-              eisSubmitClaimRequest = eisRequest
-            )
-            mockClaimEmailRequestMapping(c285ClaimRequest, emailRequest)
-            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
-          }
-
-          await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
-      }
 
       "successfully submit a Single Overpayments claim" in forAll(genOverpaymentsSingleClaim, genC285EisRequest) {
         (
@@ -541,49 +491,6 @@ class ClaimServiceSpec
           ) shouldBe Right(submitClaimResponse)
       }
 
-      "successfully submit a C285 claim even though sending of the confirmation email was not successful" in forAll {
-        (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
-          val responseJsonBody = Json.parse(
-            """
-            |{
-            |    "postNewClaimsResponse": {
-            |        "responseCommon": {
-            |            "status": "OK",
-            |            "processingDate": "2021-01-20T12:07540Z",
-            |            "CDFPayService": "NDRC",
-            |            "CDFPayCaseNumber": "4374422408"
-            |        }
-            |    }
-            |}
-            |""".stripMargin
-          )
-
-          val submitClaimResponse = ClaimSubmitResponse(caseNumber = "4374422408")
-          val emailRequest        = EmailRequest(
-            Email(c285ClaimRequest.claim.contactInformation.emailAddress.value),
-            c285ClaimRequest.claim.contactInformation.contactPerson.value,
-            c285ClaimRequest.claim.totalReimbursementAmount
-          )
-
-          inSequence {
-            mockClaimMapping(c285ClaimRequest, eisRequest)
-            mockAuditSubmitClaimEvent(eisRequest)
-            mockSubmitClaim(eisRequest)(
-              Right(HttpResponse(200, responseJsonBody, Map.empty[String, immutable.Seq[String]]))
-            )
-            mockAuditSubmitClaimResponseEvent(
-              200,
-              Some(responseJsonBody),
-              c285ClaimRequest,
-              eisRequest
-            )
-            mockClaimEmailRequestMapping(c285ClaimRequest, emailRequest)
-            mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left(Error("some error")))
-          }
-
-          await(claimService.submitC285Claim(c285ClaimRequest).value) shouldBe Right(submitClaimResponse)
-      }
-
       "successfully submit a Single Rejected Goods claim even though sending of the confirmation email was not successful" in forAll {
         (
           ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
@@ -634,46 +541,6 @@ class ClaimServiceSpec
 
       "return an error" when {
 
-        "the response payload contains an error" in forAll {
-          (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
-            val errorResponseJsonBody = Json.parse(
-              """
-              |{
-              |    "postNewClaimsResponse": {
-              |        "responseCommon": {
-              |            "status": "OK",
-              |            "processingDate": "0000-00-00T00:00:00Z",
-              |            "correlationId": "1682aaa9-d212-46ba-852e-43c2d01faf21",
-              |            "errorMessage": "Invalid Claim Type",
-              |            "returnParameters": [
-              |                {
-              |                    "paramName": "POSITION",
-              |                    "paramValue": "FAIL"
-              |                }
-              |            ]
-              |        }
-              |    }
-              |}
-              |""".stripMargin
-            )
-
-            inSequence {
-              mockClaimMapping(c285ClaimRequest, eisRequest)
-              mockAuditSubmitClaimEvent(eisRequest)
-              mockSubmitClaim(eisRequest)(
-                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, immutable.Seq[String]]))
-              )
-              mockAuditSubmitClaimResponseEvent(
-                200,
-                Some(errorResponseJsonBody),
-                c285ClaimRequest,
-                eisRequest
-              )
-            }
-
-            await(claimService.submitC285Claim(c285ClaimRequest).value).isLeft shouldBe true
-        }
-
         "a http response other than 200 OK was received" in forAll {
           (
             ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
@@ -717,38 +584,6 @@ class ClaimServiceSpec
             await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value).isLeft shouldBe true
         }
 
-        "no case number is returned in the response" in forAll {
-          (c285ClaimRequest: C285ClaimRequest, eisRequest: EisSubmitClaimRequest) =>
-            val errorResponseJsonBody = Json.parse(
-              """
-                |{
-                |    "postNewClaimsResponse": {
-                |        "responseCommon": {
-                |            "status": "OK",
-                |            "processingDate": "2021-01-20T12:07540Z",
-                |            "CDFPayService": "NDRC"
-                |        }
-                |    }
-                |}
-                |""".stripMargin
-            )
-
-            inSequence {
-              mockClaimMapping(c285ClaimRequest, eisRequest)
-              mockAuditSubmitClaimEvent(eisRequest)
-              mockSubmitClaim(eisRequest)(
-                Right(HttpResponse(200, errorResponseJsonBody, Map.empty[String, immutable.Seq[String]]))
-              )
-              mockAuditSubmitClaimResponseEvent(
-                200,
-                Some(errorResponseJsonBody),
-                c285ClaimRequest,
-                eisRequest
-              )
-            }
-
-            await(claimService.submitC285Claim(c285ClaimRequest).value).isLeft shouldBe true
-        }
       }
     }
   }

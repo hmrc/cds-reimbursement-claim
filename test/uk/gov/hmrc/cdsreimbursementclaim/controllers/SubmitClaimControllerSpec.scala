@@ -27,7 +27,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUserRe
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.C285ClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Dec64UploadRequestGen.arbitraryDec64UploadRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -45,6 +44,7 @@ import uk.gov.hmrc.mongo.workitem.WorkItem
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import play.api.Configuration
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyChecks {
@@ -70,23 +70,9 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
     authenticate = Fake.login(Fake.user, LocalDateTime.of(2020, 1, 1, 15, 47, 20)),
     mockClaimService,
     mockCcsSubmissionService,
-    Helpers.stubControllerComponents()
+    Helpers.stubControllerComponents(),
+    Configuration("features.putReimbursementMethodInNDRCDetails" -> true)
   )
-
-  private def mockC285ClaimSubmission(request: C285ClaimRequest)(
-    response: Either[Error, ClaimSubmitResponse]
-  ) =
-    (
-      mockClaimService
-        .submitC285Claim(_: C285ClaimRequest)(
-          _: HeaderCarrier,
-          _: Request[_],
-          _: ClaimToTPI05Mapper[C285ClaimRequest],
-          _: ClaimToEmailMapper[C285ClaimRequest]
-        )
-      )
-      .expects(request, *, *, *, *)
-      .returning(EitherT.fromEither[Future](response))
 
   private def mockSingleOverpaymentsClaimSubmission(request: SingleOverpaymentsClaimRequest)(
     response: Either[Error, ClaimSubmitResponse]
@@ -175,11 +161,12 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitScheduledRejectedGoodsClaim(_: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
           _: HeaderCarrier,
           _: Request[_],
+          _: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
           _: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
           _: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
         )
       )
-      .expects(request, *, *, *, *)
+      .expects(request, *, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockSecurityClaimSubmission(
@@ -192,11 +179,12 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitSecuritiesClaim(_: SecuritiesClaimRequest)(
           _: HeaderCarrier,
           _: Request[_],
+          _: ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)],
           _: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
           _: Format[SecuritiesClaimRequest]
         )
       )
-      .expects(request, *, *, *, *)
+      .expects(request, *, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   private def mockCcsRequestEnqueue[A](
@@ -217,17 +205,6 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
   "The controller" should {
 
     "succeed returning claim reference number" when {
-
-      "handling C285 claim request" in forAll { (request: C285ClaimRequest, response: ClaimSubmitResponse) =>
-        inSequence {
-          mockC285ClaimSubmission(request)(Right(response))
-          mockCcsRequestEnqueue(request, response)
-        }
-
-        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(request)))
-        status(result)        shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(response)
-      }
 
       "handling Overpayments single claim request" in forAll {
         (request: SingleOverpaymentsClaimRequest, response: ClaimSubmitResponse) =>
@@ -329,15 +306,6 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
     }
 
     "fail" when {
-
-      "submission of the C285 claim failed" in forAll { request: C285ClaimRequest =>
-        inSequence {
-          mockC285ClaimSubmission(request)(Left(Error("boom!")))
-        }
-
-        val result = controller.submitC285Claim()(fakeRequestWithJsonBody(Json.toJson(request)))
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
 
       "submission of the single overpayments claim failed" in forAll { request: SingleOverpaymentsClaimRequest =>
         inSequence {

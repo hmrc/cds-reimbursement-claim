@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
-class OverpaymentsMultipleClaimToTPI05Mapper
+class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
     extends ClaimToTPI05Mapper[(MultipleOverpaymentsClaim, List[DisplayDeclaration])]
     with GetEoriDetails[MultipleOverpaymentsClaim] {
 
@@ -59,7 +59,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper
       .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
       .withClaimedAmount(claim.totalReimbursementAmount)
-      .withReimbursementMethod(claim.reimbursementMethod)
+      .withReimbursementMethod(claim.reimbursementMethod, !putReimbursementMethodInNDRCDetails)
       .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Multiple, claim.reimbursementMethod))
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Multiple))
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
@@ -109,7 +109,8 @@ class OverpaymentsMultipleClaimToTPI05Mapper
                   paymentMethod = foundNdrcDetails.paymentMethod,
                   paymentReference = foundNdrcDetails.paymentReference,
                   BigDecimal(foundNdrcDetails.amount),
-                  claimedAmount.roundToTwoDecimalPlaces
+                  claimedAmount.roundToTwoDecimalPlaces,
+                  if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
                 )
               }
           }.toList

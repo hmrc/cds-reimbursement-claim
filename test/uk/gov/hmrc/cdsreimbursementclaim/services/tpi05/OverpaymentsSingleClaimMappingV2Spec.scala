@@ -40,14 +40,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
-class OverpaymentsSingleClaimMappingSpec
+class OverpaymentsSingleClaimMappingV2Spec
     extends AnyWordSpec
     with ScalaCheckDrivenPropertyChecks
     with Matchers
     with OptionValues
     with TypeCheckedTripleEquals {
 
-  val mapper = new OverpaymentsSingleClaimToTPI05Mapper(false)
+  val mapper = new OverpaymentsSingleClaimToTPI05Mapper(true)
 
   "The OverpaymentsSingle claim mapper" should {
 
@@ -79,13 +79,7 @@ class OverpaymentsSingleClaimMappingSpec
             Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
             Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
             Symbol("claimAmountTotal")(claim.reimbursementClaims.values.sum.roundToTwoDecimalPlaces.toString.some),
-            Symbol("reimbursementMethod")(
-              Some(
-                if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
-                else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
-                else ReimbursementMethod.Deferment
-              )
-            ),
+            Symbol("reimbursementMethod")(None),
             Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
             Symbol("caseType")(Some(if (claim.reimbursementMethod === CurrentMonthAdjustment) CMA else Individual)),
             Symbol("goodsDetails")(
@@ -294,7 +288,11 @@ class OverpaymentsSingleClaimMappingSpec
                       taxType = taxCode,
                       amount = nrdcDetailsMap.get(taxCode.value).value.amount,
                       claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
-                      None
+                      Some(
+                        if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                        else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
+                        else ReimbursementMethod.Deferment
+                      )
                     )
                   }.some
                 ) :: Nil
@@ -409,7 +407,11 @@ class OverpaymentsSingleClaimMappingSpec
                         taxType = taxCode,
                         amount = nrdcDetailsMap.get(taxCode.value).value.amount,
                         claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
-                        None
+                        Some(
+                          if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                          else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
+                          else ReimbursementMethod.Deferment
+                        )
                       )
                     }.some
                   )

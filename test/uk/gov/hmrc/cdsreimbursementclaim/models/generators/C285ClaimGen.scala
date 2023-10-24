@@ -16,17 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import cats.data.NonEmptyList
-import org.scalacheck.magnolia.{Typeclass, gen}
+import org.scalacheck.magnolia.{Typeclass}
 import org.scalacheck.{Arbitrary, Gen}
-import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ClaimedReimbursementGen.genClaimedReimbursement
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.{genEmail, genUkPhoneNumber}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.genMRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import java.net.URL
 
@@ -121,63 +117,4 @@ object C285ClaimGen {
       documentType = documentType
     )
 
-  lazy val genC285Claim: Gen[C285Claim] = for {
-    id                          <- genUUID
-    typeOfClaim                 <- Gen.oneOf(TypeOfClaimAnswer.values)
-    mrn                         <- genMRN
-    duplicateMrn                <- Gen.option(genMRN)
-    declarantType               <- Gen.oneOf(DeclarantTypeAnswer.values)
-    detailsRegisteredWithCds    <- genDetailsRegisteredWithCdsAnswer
-    contactDetails              <- genContactDetails
-    contactAddress              <- genContactAddress
-    eori                        <- genEori
-    displayDeclaration          <- genDisplayDeclaration
-    duplicateDisplayDeclaration <- Gen.option(genDisplayDeclaration)
-    basisOfClaim                <- genBasisOfClaim
-    reimbursementMethod         <- Gen.oneOf(ReimbursementMethodAnswer.values)
-    bankAccountDetails          <- Gen.option(genBankAccountDetails)
-    documents                   <- Gen.option(genEvidences.sample.toList)
-    additionalDetails           <- genRandomString
-    claimedReimbursement        <- genClaimedReimbursement
-    associated                  <- Gen
-                                     .option(genMRN)
-                                     .flatMap(mrn =>
-                                       if (mrn.isDefined)
-                                         genClaimedReimbursement.map(reimbursement => (mrn, Some(reimbursement)))
-                                       else Gen.const((mrn, None))
-                                     )
-  } yield C285Claim(
-    id = id,
-    typeOfClaim = typeOfClaim,
-    movementReferenceNumber = mrn,
-    duplicateMovementReferenceNumberAnswer = duplicateMrn,
-    declarantTypeAnswer = declarantType,
-    detailsRegisteredWithCdsAnswer = detailsRegisteredWithCds,
-    mrnContactDetailsAnswer = Some(contactDetails),
-    mrnContactAddressAnswer = Some(contactAddress),
-    basisOfClaimAnswer = basisOfClaim,
-    bankAccountDetailsAnswer = bankAccountDetails,
-    documents = documents,
-    additionalDetailsAnswer = AdditionalDetailsAnswer(additionalDetails),
-    displayDeclaration = Some(displayDeclaration),
-    duplicateDisplayDeclaration = duplicateDisplayDeclaration,
-    importerEoriNumber = Some(ImporterEoriNumberAnswer(eori)),
-    declarantEoriNumber = Some(DeclarantEoriNumberAnswer(eori)),
-    claimedReimbursementsAnswer = NonEmptyList.of(claimedReimbursement),
-    reimbursementMethodAnswer = reimbursementMethod,
-    associatedMRNsAnswer = associated._1.map(mrn => NonEmptyList.of(mrn)),
-    associatedMRNsClaimsAnswer = associated._2.map(reimbursement => NonEmptyList.one(NonEmptyList.one(reimbursement)))
-  )
-
-  implicit lazy val arbitraryC285Claim: Typeclass[C285Claim] =
-    Arbitrary(genC285Claim)
-
-  implicit lazy val arbitrarySignedInUserDetails: Typeclass[SignedInUserDetails] = Arbitrary(for {
-    email <- genEmail
-    eori  <- genEori
-    name  <- genRandomString
-  } yield SignedInUserDetails(Some(email), eori, email, ContactName(name)))
-
-  implicit lazy val arbitraryC285ClaimRequest: Typeclass[C285ClaimRequest] =
-    gen[C285ClaimRequest]
 }

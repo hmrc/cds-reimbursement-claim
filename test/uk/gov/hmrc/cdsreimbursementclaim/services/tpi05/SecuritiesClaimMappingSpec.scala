@@ -40,6 +40,8 @@ class SecuritiesClaimMappingSpec
     with OptionValues
     with TypeCheckedTripleEquals {
 
+  val mapper = new SecuritiesClaimToTPI05Mapper()
+
   def isValid(
     claim: SecuritiesClaim,
     declaration: DisplayDeclaration,
@@ -124,7 +126,7 @@ class SecuritiesClaimMappingSpec
     "map a valid Securities claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
       details: (SecuritiesClaim, DisplayDeclaration) =>
         val (claim, declaration) = details
-        val tpi05Request         = securitiesClaimToTPI05Mapper.map((claim, declaration))
+        val tpi05Request         = mapper.map((claim, declaration))
         isValid(claim, declaration, tpi05Request)
     }
 
@@ -132,7 +134,7 @@ class SecuritiesClaimMappingSpec
       genTempAdmissionSecuritiesClaimAndDeclaration
     ) { details: (SecuritiesClaim, DisplayDeclaration) =>
       val (claim, declaration) = details
-      val tpi05Request         = securitiesClaimToTPI05Mapper.map((claim, declaration))
+      val tpi05Request         = mapper.map((claim, declaration))
       isValid(claim, declaration, tpi05Request)
       tpi05Request.map { case EisSubmitClaimRequest(PostNewClaimsRequest(_, detail)) =>
         detail.methodOfDisposals.isDefined                                                           should ===(true)
@@ -158,7 +160,7 @@ class SecuritiesClaimMappingSpec
             )
         )
 
-      val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
+      val tpi05Request = mapper.map((updatedClaim, declaration))
 
       tpi05Request.left.map(_.value should be("Email address is missing"))
 
@@ -177,7 +179,7 @@ class SecuritiesClaimMappingSpec
             )
         )
 
-      val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
+      val tpi05Request = mapper.map((updatedClaim, declaration))
 
       tpi05Request.left.map(_.value should be("Claimant name is missing"))
 
@@ -196,7 +198,7 @@ class SecuritiesClaimMappingSpec
             )
         )
 
-      val tpi05Request = securitiesClaimToTPI05Mapper.map((updatedClaim, declaration))
+      val tpi05Request = mapper.map((updatedClaim, declaration))
 
       tpi05Request.left.map(_.value should be("Claimant Address could not be parsed: country code is mandatory"))
 

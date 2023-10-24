@@ -35,7 +35,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
-class OverpaymentsSingleClaimToTPI05Mapper
+class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
     extends ClaimToTPI05Mapper[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])]
     with GetEoriDetails[SingleOverpaymentsClaim] {
 
@@ -69,7 +69,7 @@ class OverpaymentsSingleClaimToTPI05Mapper
       .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
       .withClaimedAmount(claim.reimbursementClaims.values.sum)
-      .withReimbursementMethod(claim.reimbursementMethod)
+      .withReimbursementMethod(claim.reimbursementMethod, !putReimbursementMethodInNDRCDetails)
       .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Individual, claim.reimbursementMethod))
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Individual))
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
@@ -121,7 +121,8 @@ class OverpaymentsSingleClaimToTPI05Mapper
           ndrcDetails.paymentMethod,
           ndrcDetails.paymentReference,
           BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
-          reclaimAmount.roundToTwoDecimalPlaces
+          reclaimAmount.roundToTwoDecimalPlaces,
+          if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
         )
       )
 

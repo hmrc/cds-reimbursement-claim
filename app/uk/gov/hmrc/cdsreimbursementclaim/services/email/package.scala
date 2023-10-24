@@ -19,8 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleRejectedGoodsClaim, SingleRejectedGoodsClaim}
 
 package object email {
-  implicit val c285ClaimToEmailMapper: C285ClaimToEmailMapper =
-    new C285ClaimToEmailMapper
 
   implicit val overpaymentsSingleClaimToEmailMapper: OverpaymentsSingleClaimToEmailMapper =
     new OverpaymentsSingleClaimToEmailMapper
