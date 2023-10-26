@@ -33,6 +33,7 @@ import scala.collection.immutable
 final case class ScheduledRejectedGoodsClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
+  payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfRejectedGoodsClaim,
   basisOfClaimSpecialCircumstances: Option[String],
@@ -46,13 +47,6 @@ final case class ScheduledRejectedGoodsClaim(
   supportingEvidences: immutable.Seq[EvidenceDocument],
   scheduledDocument: EvidenceDocument
 ) extends RejectedGoodsClaim {
-
-  // TODO: remove when implementing payeeType for multiple
-  val payeeType: PayeeType = claimantType match {
-    case ClaimantType.Consignee => PayeeType.Consignee
-    case ClaimantType.Declarant => PayeeType.Declarant
-    case ClaimantType.User      => PayeeType.Declarant
-  }
 
   override def totalReimbursementAmount: BigDecimal =
     reimbursementClaims.values.map(_.values.map(_.refundAmount).sum).sum
