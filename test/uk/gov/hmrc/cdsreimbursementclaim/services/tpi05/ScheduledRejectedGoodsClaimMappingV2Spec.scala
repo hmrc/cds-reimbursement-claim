@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AmountPaidWithRefund, Country, PayeeType, ScheduledRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AmountPaidWithRefund, ClaimantType, Country, PayeeType, ScheduledRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
@@ -74,7 +74,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
             Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
             Symbol("claimDate")(ISOLocalDate.now.some),
             Symbol("claimType")(ClaimType.CE1179.some),
-            Symbol("claimant")(claim.claimant.some),
+            Symbol("claimant")(Some(if (claim.claimantType === ClaimantType.Consignee) Importer else Representative)),
             Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
             Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
             Symbol("reimbursementMethod")(None),
