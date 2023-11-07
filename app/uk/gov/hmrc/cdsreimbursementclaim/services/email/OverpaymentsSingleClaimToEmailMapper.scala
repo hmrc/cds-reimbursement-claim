@@ -34,7 +34,7 @@ class OverpaymentsSingleClaimToEmailMapper
       contactName <- overpaymentsClaim.claimantInformation.contactInformation.contactPerson.toRight(
                        CdsError("no contact name provided with claim")
                      )
-      claimAmount  = overpaymentsClaim.reimbursementClaims.values.sum
+      claimAmount  = overpaymentsClaim.reimbursements.map(_.amount).sum
     } yield EmailRequest(
       Email(email),
       contactName,

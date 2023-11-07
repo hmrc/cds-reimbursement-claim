@@ -136,7 +136,9 @@ object OverpaymentsClaimGen {
         basisOfClaim = basisOfClaim,
         whetherNorthernIreland = whetherInNorthernIreland,
         additionalDetails = additionalDetails,
-        reimbursementClaims = claims._2,
+        reimbursements = claims._2.toSeq.map { case (taxCode, amount) =>
+          Reimbursement(taxCode, amount, reimbursementMethod)
+        },
         reimbursementMethod = reimbursementMethod,
         bankAccountDetails = bankAccountDetails,
         supportingEvidences = evidences,
