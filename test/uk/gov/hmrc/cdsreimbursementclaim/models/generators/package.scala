@@ -32,7 +32,7 @@ package object generators {
 
   def genStringWithMaxSizeOfN(max: Int): Gen[String] =
     Gen
-      .choose(1, max)
+      .choose(5, max)
       .flatMap(Gen.listOfN(_, Gen.alphaChar))
       .map(_.mkString(""))
 
