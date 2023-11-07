@@ -68,7 +68,7 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
       )
       .forClaimOfType(Some(C285))
       .withClaimant(Claimant.basedOn(claim.claimantType), Claimant.basedOn(claim.payeeType))
-      .withClaimedAmount(claim.reimbursementClaims.values.sum)
+      .withClaimedAmount(claim.reimbursements.map(_.amount).sum)
       .withReimbursementMethod(claim.reimbursementMethod, !putReimbursementMethodInNDRCDetails)
       .withCaseType(CaseType.basedOn(TypeOfClaimAnswer.Individual, claim.reimbursementMethod))
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Individual))
@@ -114,15 +114,15 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
       )
       .withNdrcDetails(
         for {
-          (taxCode, reclaimAmount) <- claim.reimbursementClaims.toList
-          ndrcDetails              <- nrdcDetails.filter(_.taxType === taxCode.value)
+          reimbursement <- claim.reimbursements.toList
+          ndrcDetails   <- nrdcDetails.filter(_.taxType === reimbursement.taxCode.value)
         } yield NdrcDetails.buildChecking(
-          taxCode,
+          reimbursement.taxCode,
           ndrcDetails.paymentMethod,
           ndrcDetails.paymentReference,
           BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
-          reclaimAmount.roundToTwoDecimalPlaces,
-          if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
+          reimbursement.amount.roundToTwoDecimalPlaces,
+          if (putReimbursementMethodInNDRCDetails) Some(reimbursement.reimbursementMethod) else None
         )
       )
 

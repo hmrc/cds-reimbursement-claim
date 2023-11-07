@@ -39,6 +39,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclarati
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsSingleClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Reimbursement
 
 class OverpaymentsSingleClaimMappingSpec
     extends AnyWordSpec
@@ -78,7 +79,7 @@ class OverpaymentsSingleClaimMappingSpec
             Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
             Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
             Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
-            Symbol("claimAmountTotal")(claim.reimbursementClaims.values.sum.roundToTwoDecimalPlaces.toString.some),
+            Symbol("claimAmountTotal")(claim.reimbursements.map(_.amount).sum.roundToTwoDecimalPlaces.toString.some),
             Symbol("reimbursementMethod")(
               Some(
                 if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
@@ -286,7 +287,7 @@ class OverpaymentsSingleClaimMappingSpec
                           )
                         )
                     ),
-                  NDRCDetails = claim.reimbursementClaims.toList.map { case (taxCode, reclaimAmount) =>
+                  NDRCDetails = claim.reimbursements.toList.map { case Reimbursement(taxCode, reclaimAmount, _) =>
                     NdrcDetails(
                       paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
                       paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
@@ -401,7 +402,7 @@ class OverpaymentsSingleClaimMappingSpec
                           )
                         )
                       ),
-                    NDRCDetails = claim.reimbursementClaims.toList.map { case (taxCode, reclaimAmount) =>
+                    NDRCDetails = claim.reimbursements.toList.map { case Reimbursement(taxCode, reclaimAmount, _) =>
                       NdrcDetails(
                         paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
                         paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,

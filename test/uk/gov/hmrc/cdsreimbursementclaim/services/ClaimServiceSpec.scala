@@ -243,7 +243,7 @@ class ClaimServiceSpec
           val emailRequest        = EmailRequest(
             Email(claim.claimantInformation.contactInformation.emailAddress.value),
             claim.claimantInformation.contactInformation.contactPerson.value,
-            claim.reimbursementClaims.values.sum
+            claim.reimbursements.map(_.amount).sum
           )
 
           inAnyOrder {

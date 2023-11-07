@@ -39,6 +39,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclarati
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsSingleClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Reimbursement
 
 class OverpaymentsSingleClaimMappingV2Spec
     extends AnyWordSpec
@@ -78,7 +79,7 @@ class OverpaymentsSingleClaimMappingV2Spec
             Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
             Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
             Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
-            Symbol("claimAmountTotal")(claim.reimbursementClaims.values.sum.roundToTwoDecimalPlaces.toString.some),
+            Symbol("claimAmountTotal")(claim.reimbursements.map(_.amount).sum.roundToTwoDecimalPlaces.toString.some),
             Symbol("reimbursementMethod")(None),
             Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
             Symbol("caseType")(Some(if (claim.reimbursementMethod === CurrentMonthAdjustment) CMA else Individual)),
@@ -280,21 +281,22 @@ class OverpaymentsSingleClaimMappingV2Spec
                           )
                         )
                     ),
-                  NDRCDetails = claim.reimbursementClaims.toList.map { case (taxCode, reclaimAmount) =>
-                    NdrcDetails(
-                      paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
-                      paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
-                      CMAEligible = None,
-                      taxType = taxCode,
-                      amount = nrdcDetailsMap.get(taxCode.value).value.amount,
-                      claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
-                      Some(
-                        if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
-                        else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
-                        else ReimbursementMethod.Deferment
+                  NDRCDetails =
+                    claim.reimbursements.toList.map { case Reimbursement(taxCode, reclaimAmount, reimbursementMethod) =>
+                      NdrcDetails(
+                        paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
+                        paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
+                        CMAEligible = None,
+                        taxType = taxCode,
+                        amount = nrdcDetailsMap.get(taxCode.value).value.amount,
+                        claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
+                        Some(
+                          if (reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                          else if (reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
+                          else ReimbursementMethod.Deferment
+                        )
                       )
-                    )
-                  }.some
+                    }.some
                 ) :: Nil
               )
             },
@@ -399,20 +401,21 @@ class OverpaymentsSingleClaimMappingV2Spec
                           )
                         )
                       ),
-                    NDRCDetails = claim.reimbursementClaims.toList.map { case (taxCode, reclaimAmount) =>
-                      NdrcDetails(
-                        paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
-                        paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
-                        CMAEligible = None,
-                        taxType = taxCode,
-                        amount = nrdcDetailsMap.get(taxCode.value).value.amount,
-                        claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
-                        Some(
-                          if (claim.reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
-                          else if (claim.reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
-                          else ReimbursementMethod.Deferment
+                    NDRCDetails = claim.reimbursements.toList.map {
+                      case Reimbursement(taxCode, reclaimAmount, reimbursementMethod) =>
+                        NdrcDetails(
+                          paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
+                          paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
+                          CMAEligible = None,
+                          taxType = taxCode,
+                          amount = nrdcDetailsMap.get(taxCode.value).value.amount,
+                          claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
+                          Some(
+                            if (reimbursementMethod === Subsidy) ReimbursementMethod.Subsidy
+                            else if (reimbursementMethod === BankAccountTransfer) ReimbursementMethod.BankTransfer
+                            else ReimbursementMethod.Deferment
+                          )
                         )
-                      )
                     }.some
                   )
                 )
