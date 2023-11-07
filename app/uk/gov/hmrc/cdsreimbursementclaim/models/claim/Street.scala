@@ -20,9 +20,23 @@ object Street {
 
   def fromLines(line1: Option[String], line2: Option[String]): Option[String] =
     (line1, line2) match {
-      case (Some(s1), Some(s2)) => Some(s"$s1 $s2")
-      case (Some(s1), None)     => Some(s1)
-      case (None, Some(s2))     => Some(s2)
-      case _                    => Some("")
+      case (Some(s1), Some(s2)) if s1.trim().endsWith(s2.trim)   => Some(s1)
+      case (Some(s1), Some(s2)) if s2.trim().startsWith(s1.trim) => Some(s2)
+      case (Some(s1), Some(s2))                                  => Some(s"$s1 $s2")
+      case (Some(s1), None)                                      => Some(s1)
+      case (None, Some(s2))                                      => Some(s2)
+      case _                                                     => Some("")
     }
+
+  def line1: (Option[String], Option[String]) => Option[String] = {
+    case (Some(s1), Some(s2)) if s1.trim().endsWith(s2.trim) =>
+      Some(s1.replace(s2, "").trim())
+    case (s1, _)                                             => s1
+  }
+
+  def line2: (Option[String], Option[String]) => Option[String] = {
+    case (Some(s1), Some(s2)) if s2.trim().startsWith(s1.trim) =>
+      Some(s2.replace(s1, "").trim())
+    case (_, s2)                                               => s2
+  }
 }

@@ -81,8 +81,14 @@ object MrnDetail {
                 legalName = declarantDetails.legalName,
                 establishmentAddress = Address(
                   contactPerson = None,
-                  addressLine1 = Some(declarantDetails.establishmentAddress.addressLine1),
-                  addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+                  addressLine1 = Street.line1(
+                    Some(declarantDetails.establishmentAddress.addressLine1),
+                    declarantDetails.establishmentAddress.addressLine2
+                  ),
+                  addressLine2 = Street.line2(
+                    Some(declarantDetails.establishmentAddress.addressLine1),
+                    declarantDetails.establishmentAddress.addressLine2
+                  ),
                   addressLine3 = declarantDetails.establishmentAddress.addressLine3,
                   street = Street.fromLines(
                     Option(declarantDetails.establishmentAddress.addressLine1),
@@ -97,8 +103,8 @@ object MrnDetail {
                 contactDetails = declarantDetails.contactDetails.map(contactDetails =>
                   ContactInformation(
                     contactPerson = contactDetails.contactName,
-                    addressLine1 = contactDetails.addressLine1,
-                    addressLine2 = contactDetails.addressLine2,
+                    addressLine1 = Street.line1(contactDetails.addressLine1, contactDetails.addressLine2),
+                    addressLine2 = Street.line2(contactDetails.addressLine1, contactDetails.addressLine2),
                     addressLine3 = contactDetails.addressLine3,
                     street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
                     city = contactDetails.addressLine3,
@@ -128,8 +134,14 @@ object MrnDetail {
                     legalName = consigneeDetails.legalName,
                     establishmentAddress = Address(
                       contactPerson = None,
-                      addressLine1 = Some(consigneeDetails.establishmentAddress.addressLine1),
-                      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+                      addressLine1 = Street.line1(
+                        Some(consigneeDetails.establishmentAddress.addressLine1),
+                        consigneeDetails.establishmentAddress.addressLine2
+                      ),
+                      addressLine2 = Street.line2(
+                        Some(consigneeDetails.establishmentAddress.addressLine1),
+                        consigneeDetails.establishmentAddress.addressLine2
+                      ),
                       addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
                       street = Street.fromLines(
                         Option(consigneeDetails.establishmentAddress.addressLine1),
@@ -144,8 +156,8 @@ object MrnDetail {
                     contactDetails = consigneeDetails.contactDetails.map(contactInformation =>
                       ContactInformation(
                         contactPerson = contactInformation.contactName,
-                        addressLine1 = contactInformation.addressLine1,
-                        addressLine2 = contactInformation.addressLine2,
+                        addressLine1 = Street.line1(contactInformation.addressLine1, contactInformation.addressLine2),
+                        addressLine2 = Street.line2(contactInformation.addressLine1, contactInformation.addressLine2),
                         addressLine3 = contactInformation.addressLine3,
                         street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
                         city = contactInformation.addressLine3,

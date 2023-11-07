@@ -263,8 +263,8 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     claimantDetails.contactDetails.map(contactDetails =>
       new ContactInformation(
         contactPerson = contactDetails.contactName,
-        addressLine1 = contactDetails.addressLine1,
-        addressLine2 = contactDetails.addressLine2,
+        addressLine1 = Street.line1(contactDetails.addressLine1, contactDetails.addressLine2),
+        addressLine2 = Street.line2(contactDetails.addressLine1, contactDetails.addressLine2),
         addressLine3 = contactDetails.addressLine3,
         street = Street.fromLines(
           contactDetails.addressLine1,

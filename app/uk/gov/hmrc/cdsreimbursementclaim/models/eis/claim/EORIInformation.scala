@@ -52,8 +52,8 @@ object EORIInformation {
       CDSFullName = cdsFullName,
       CDSEstablishmentAddress = Address(
         contactPerson = None,
-        addressLine1 = maybeEstablishmentAddressLine1,
-        addressLine2 = maybeEstablishmentAddressLine2,
+        addressLine1 = Street.line1(maybeEstablishmentAddressLine1, maybeEstablishmentAddressLine2),
+        addressLine2 = Street.line2(maybeEstablishmentAddressLine1, maybeEstablishmentAddressLine2),
         addressLine3 = maybeEstablishmentAddressLine3,
         street = Street.fromLines(maybeEstablishmentAddressLine1, maybeEstablishmentAddressLine2),
         city = maybeEstablishmentAddressLine3,
@@ -71,8 +71,8 @@ object EORIInformation {
 
         ContactInformation(
           contactPerson = contactDetails.contactName,
-          addressLine1 = maybeAddress1,
-          addressLine2 = maybeAddress2,
+          addressLine1 = Street.line1(maybeAddress1, maybeAddress2),
+          addressLine2 = Street.line2(maybeAddress1, maybeAddress2),
           addressLine3 = maybeAddress3,
           street = Street.fromLines(maybeAddress1, maybeAddress2),
           city = maybeAddress3,
@@ -101,8 +101,8 @@ object EORIInformation {
       CDSFullName = consigneeDetails.legalName,
       CDSEstablishmentAddress = Address(
         contactPerson = None,
-        addressLine1 = Some(establishmentAddressLine1),
-        addressLine2 = maybeEstablishmentAddressLine2,
+        addressLine1 = Street.line1(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+        addressLine2 = Street.line2(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
         addressLine3 = maybeEstablishmentAddressLine3,
         street = Street.fromLines(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
         city = maybeEstablishmentAddressLine3,
@@ -118,8 +118,8 @@ object EORIInformation {
 
         ContactInformation(
           contactPerson = contactDetails.contactName,
-          addressLine1 = maybeAddress1,
-          addressLine2 = maybeAddress2,
+          addressLine1 = Street.line1(maybeAddress1, maybeAddress2),
+          addressLine2 = Street.line2(maybeAddress1, maybeAddress2),
           addressLine3 = maybeAddress3,
           street = Street.fromLines(maybeAddress1, maybeAddress2),
           city = maybeAddress3,
@@ -147,8 +147,8 @@ object EORIInformation {
       CDSFullName = declarantDetails.legalName,
       CDSEstablishmentAddress = Address(
         contactPerson = declarantDetails.contactDetails.flatMap(_.contactName),
-        addressLine1 = declarantDetails.contactDetails.flatMap(_.addressLine1),
-        addressLine2 = declarantDetails.contactDetails.flatMap(_.addressLine2),
+        addressLine1 = declarantDetails.contactDetails.flatMap(x => Street.line1(x.addressLine1, x.addressLine2)),
+        addressLine2 = declarantDetails.contactDetails.flatMap(x => Street.line2(x.addressLine1, x.addressLine2)),
         addressLine3 = declarantDetails.contactDetails.flatMap(_.addressLine3),
         street = Street.fromLines(
           declarantDetails.contactDetails.flatMap(_.addressLine1),
