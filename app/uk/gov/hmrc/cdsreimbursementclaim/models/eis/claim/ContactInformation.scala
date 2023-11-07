@@ -58,8 +58,8 @@ object ContactInformation {
   def apply(contactDetails: ContactDetails, contactAddress: ContactAddress): ContactInformation =
     new ContactInformation(
       contactPerson = Option(contactDetails.fullName),
-      addressLine1 = Option(contactAddress.line1),
-      addressLine2 = contactAddress.line2,
+      addressLine1 = Street.line1(Option(contactAddress.line1), contactAddress.line2),
+      addressLine2 = Street.line2(Option(contactAddress.line1), contactAddress.line2),
       addressLine3 = contactAddress.line3,
       street = Street.fromLines(Option(contactAddress.line1), contactAddress.line2),
       city = Option(contactAddress.line4),
@@ -76,8 +76,8 @@ object ContactInformation {
 
     new ContactInformation(
       contactPerson = claimantDetails.map(_.legalName),
-      addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
-      addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
+      addressLine1 = maybeContactDetails.flatMap(x => Street.line1(x.addressLine1, x.addressLine2)),
+      addressLine2 = maybeContactDetails.flatMap(x => Street.line2(x.addressLine1, x.addressLine2)),
       addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
       street = Street.fromLines(
         maybeContactDetails.flatMap(_.addressLine1),
