@@ -20,8 +20,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.Consign
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EoriDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EORIInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.Address
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Country
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.HasClaimantInformation
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, HasClaimantInformation, Street}
 
 trait GetEoriDetails[Claim <: HasClaimantInformation] {
 
@@ -36,8 +35,14 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
         CDSFullName = claim.claimantInformation.fullName,
         CDSEstablishmentAddress = Address(
           contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
-          addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
-          addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
+          addressLine1 = Street.line1(
+            claim.claimantInformation.establishmentAddress.addressLine1,
+            claim.claimantInformation.establishmentAddress.addressLine2
+          ),
+          addressLine2 = Street.line2(
+            claim.claimantInformation.establishmentAddress.addressLine1,
+            claim.claimantInformation.establishmentAddress.addressLine2
+          ),
           addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
           street = claim.claimantInformation.establishmentAddress.street,
           city = claim.claimantInformation.establishmentAddress.city,
@@ -46,7 +51,7 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
           telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
           emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
         ),
-        contactInformation = Some(claim.claimantInformation.contactInformation)
+        contactInformation = Some(claim.claimantInformation.contactInformation.withoutDuplicateAddressLines)
       )
     )
 }
