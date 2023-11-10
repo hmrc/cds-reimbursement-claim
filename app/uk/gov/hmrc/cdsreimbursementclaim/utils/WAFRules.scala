@@ -18,17 +18,5 @@ package uk.gov.hmrc.cdsreimbursementclaim.utils
 
 object WAFRules {
 
-  def asSafeText(text: String): String =
-    text
-      .replaceAll("£", "GBP ")
-      .replaceAll("\\$", " USD")
-      .replaceAll("€", " EUR")
-      .replaceAll("¥", " CNY")
-      .replaceAll("₹", " INR")
-      .replaceAll("%", " per cent")
-      .replaceAll("‰", " per mille")
-      .map(c => if (isAllowedCharacter(c)) c else ' ')
-
-  def isAllowedCharacter(c: Char): Boolean =
-    Character.isLetterOrDigit(c) || Character.isSpaceChar(c) || c == '.' || c == '-'
+  def asSafeText(text: String): String = text
 }
