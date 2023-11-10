@@ -30,6 +30,7 @@ final case class SecuritiesClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
   claimantInformation: ClaimantInformation,
+  payeeType: PayeeType,
   reasonForSecurity: ReasonForSecurity,
   securitiesReclaims: Map[String, Map[TaxCode, BigDecimal]],
   bankAccountDetails: Option[BankAccountDetails],

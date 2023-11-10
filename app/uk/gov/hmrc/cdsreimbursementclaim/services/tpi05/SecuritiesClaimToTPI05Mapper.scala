@@ -27,11 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.ProcedureCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ExportMRN
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementParty
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInMultipleShipments
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
@@ -138,11 +134,14 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         accountDetails = accountDetails,
         securityDetails = securityDetails
       )
-      .withReimbursementParty(claim.claimantType match {
-        case ClaimantType.Consignee => ReimbursementParty.Consignee
-        case ClaimantType.Declarant => ReimbursementParty.Declarant
-        case ClaimantType.User      => ReimbursementParty.Declarant
-      })
+      .withReimbursementParty(
+        claim.claimantType match {
+          case ClaimantType.Consignee => ReimbursementParty.Consignee
+          case ClaimantType.Declarant => ReimbursementParty.Declarant
+          case ClaimantType.User      => ReimbursementParty.Declarant
+        },
+        Claimant.basedOn(claim.payeeType)
+      )
       .withSecurityPaymentDetails(
         reimbursementMethod = reimbursementMethod,
         useExistingPaymentMethod = useExistingPaymentDetails,
