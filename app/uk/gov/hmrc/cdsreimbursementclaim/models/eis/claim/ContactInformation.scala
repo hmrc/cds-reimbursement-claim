@@ -51,6 +51,11 @@ final case class ContactInformation(
   validateLength("emailAddress", emailAddress, 241)
   validateLength("postalCode", postalCode, 9)
 
+  def withoutDuplicateAddressLines: ContactInformation =
+    this.copy(
+      addressLine1 = Street.line1(addressLine1, addressLine2),
+      addressLine2 = Street.line2(addressLine1, addressLine2)
+    )
 }
 
 object ContactInformation {
