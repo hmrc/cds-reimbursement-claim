@@ -23,14 +23,14 @@ class WAFRulesSpec extends AnyWordSpec with Matchers {
 
   "WAFRules" should {
     "convert text to safe WAF-accepted version" in {
-      WAFRules.asSafeText("Hel-lo!")                            shouldBe "Hel-lo "
+      WAFRules.asSafeText("Hel-lo!")                            shouldBe "Hel-lo!"
       WAFRules.asSafeText(
         "Applying 5% duty was wrong on our side."
-      )                                                         shouldBe "Applying 5 per cent duty was wrong on our side."
+      )                                                         shouldBe "Applying 5% duty was wrong on our side."
       WAFRules.asSafeText(
         "My guess about the duty rate was wrong (Sorry for that!)."
-      )                                                         shouldBe "My guess about the duty rate was wrong  Sorry for that  ."
-      WAFRules.asSafeText("The original price was £500 (687$)") shouldBe "The original price was GBP 500  687 USD "
+      )                                                         shouldBe "My guess about the duty rate was wrong (Sorry for that!)."
+      WAFRules.asSafeText("The original price was £500 (687$)") shouldBe "The original price was £500 (687$)"
     }
   }
 
