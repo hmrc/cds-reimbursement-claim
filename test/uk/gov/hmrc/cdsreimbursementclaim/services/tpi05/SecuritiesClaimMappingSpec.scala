@@ -26,7 +26,7 @@ import play.api.i18n.Lang.logger
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CustomDeclarationType
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, PostNewClaimsRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -56,6 +56,7 @@ class SecuritiesClaimMappingSpec
         common.originatingSystem     should ===(MDTP)
         detail.customDeclarationType should ===(CustomDeclarationType.MRN.some)
         detail.claimType             should ===(None)
+        detail.payeeIndicator        should ===(Some(Claimant.basedOn(claim.payeeType)))
         detail.claimantEORI          should ===(claim.claimantInformation.eori)
         detail.claimantEmailAddress  should ===(
           claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value

@@ -21,9 +21,10 @@ import cats.data.Validated.Valid
 import cats.implicits.toTraverseOps
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, ReimbursementMethodAnswer, SecurityDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, PayeeType, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIndicator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BtaSource}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -236,8 +237,12 @@ object TPI05 {
         )
       )
 
-    def withReimbursementParty(reimbursementParty: ReimbursementParty): Builder =
-      copy(validatedRequest.map(x => x.copy(reimbursementParty = Some(reimbursementParty))))
+    def withReimbursementParty(reimbursementParty: ReimbursementParty, payeeIndicator: Claimant): Builder =
+      copy(
+        validatedRequest.map(
+          _.copy(reimbursementParty = Some(reimbursementParty), payeeIndicator = Some(payeeIndicator))
+        )
+      )
 
     def withClaimantAddress(claimantAddress: Address): Builder =
       copy(validatedRequest.map(_.copy(claimantAddress = Some(claimantAddress))))

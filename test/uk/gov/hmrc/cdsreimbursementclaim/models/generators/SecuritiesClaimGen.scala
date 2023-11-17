@@ -102,6 +102,7 @@ object SecuritiesClaimGen {
     securitiesReclaims  <- genSecuritiesReclaims
     bankAccountDetails  <- Gen.option(genBankAccountDetails)
     documents           <- Gen.listOf(genEvidences)
+    payeeType           <- Gen.oneOf[PayeeType](PayeeType.values)
 
     temporaryAdmissionMethodOfDisposal <-
       if (ReasonForSecurity.temporaryAdmissions.contains(reasonForSecurity))
@@ -125,6 +126,7 @@ object SecuritiesClaimGen {
       claimantType = claimType,
       claimantInformation = claimantInformation,
       reasonForSecurity = reasonForSecurity,
+      payeeType = payeeType,
       securitiesReclaims = securitiesReclaims,
       bankAccountDetails = bankAccountDetails,
       supportingEvidences = documents,
