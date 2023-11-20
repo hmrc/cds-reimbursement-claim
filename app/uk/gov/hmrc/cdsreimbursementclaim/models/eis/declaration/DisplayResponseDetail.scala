@@ -37,9 +37,9 @@ final case class DisplayResponseDetail(
   securityDetails: Option[List[SecurityDetails]] = None
 ) {
 
-  val effectiveConsigneeDetails: Option[ConsigneeDetails] =
-    consigneeDetails.orElse {
-      Some(ConsigneeDetails.from(declarantDetails))
+  val effectiveConsigneeDetails: ConsigneeDetails =
+    consigneeDetails.getOrElse {
+      ConsigneeDetails.from(declarantDetails)
     }
 
 }

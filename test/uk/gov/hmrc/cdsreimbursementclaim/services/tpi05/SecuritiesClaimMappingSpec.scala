@@ -64,7 +64,7 @@ class SecuritiesClaimMappingSpec
         detail.claimantName          should ===(Some(claim.claimantInformation.contactInformation.contactPerson.value))
         detail.MRNDetails.toList.flatten
           .map(_.consigneeDetails.flatMap(_.contactDetails))
-          .zip(declaration.displayResponseDetail.effectiveConsigneeDetails.flatMap(_.contactDetails) :: Nil)
+          .zip(declaration.displayResponseDetail.effectiveConsigneeDetails.contactDetails :: Nil)
           .foreach { case (Some(eisContactDetails), Some(acc14ContactDetails)) =>
             eisContactDetails.addressLine1    should ===(acc14ContactDetails.addressLine1)
             eisContactDetails.addressLine2    should ===(acc14ContactDetails.addressLine2)

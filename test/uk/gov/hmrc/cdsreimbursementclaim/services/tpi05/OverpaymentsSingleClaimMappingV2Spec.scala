@@ -24,7 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, PayeeType, SingleOverpaymentsClaim, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
@@ -52,7 +52,7 @@ class OverpaymentsSingleClaimMappingV2Spec
 
   "The OverpaymentsSingle claim mapper" should {
 
-    "map a valid claim to TPI05 request" in forAll(genOverpaymentsSingleClaim) {
+    "map a valid claim to TPI05 request" in forAll(genOverpaymentsSingleClaim(ClaimantType.Declarant)) {
       singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]) =>
         val tpi05Request = mapper map singleOverpaymentsData
 
@@ -76,7 +76,7 @@ class OverpaymentsSingleClaimMappingV2Spec
             Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
             Symbol("claimDate")(ISOLocalDate.now.some),
             Symbol("claimType")(ClaimType.C285.some),
-            Symbol("claimant")(Some(if (claim.claimantType === Consignee) Importer else Representative)),
+            Symbol("claimant")(Some(if (claim.claimantType === ClaimantType.Consignee) Importer else Representative)),
             Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
             Symbol("declarationMode")(Some(DeclarationMode.ParentDeclaration)),
             Symbol("claimAmountTotal")(claim.reimbursements.map(_.amount).sum.roundToTwoDecimalPlaces.toString.some),
@@ -86,7 +86,7 @@ class OverpaymentsSingleClaimMappingV2Spec
             Symbol("goodsDetails")(
               GoodsDetails(
                 descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
-                isPrivateImporter = Some(if (claim.claimantType === Consignee) Yes else No)
+                isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
               ).some
             ),
             Symbol("EORIDetails")(
@@ -109,7 +109,7 @@ class OverpaymentsSingleClaimMappingV2Spec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 importerEORIDetails = {
-                  val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                  val maybeConsigneeDetails = Some(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
@@ -204,7 +204,7 @@ class OverpaymentsSingleClaimMappingV2Spec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails.value
+                    val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(
@@ -353,7 +353,7 @@ class OverpaymentsSingleClaimMappingV2Spec
                       ).some
                     },
                     consigneeDetails = {
-                      val consigneeDetails   = details.effectiveConsigneeDetails.value
+                      val consigneeDetails   = details.effectiveConsigneeDetails
                       val contactInformation = consigneeDetails.contactDetails.value
 
                       MRNInformation(

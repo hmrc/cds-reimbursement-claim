@@ -31,20 +31,17 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetai
     with GetEoriDetails[ScheduledRejectedGoodsClaim] {
 
   def map(details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
-    val claim                 = details._1
-    val declaration           = details._2.displayResponseDetail
-    val maybeConsigneeDetails = declaration.effectiveConsigneeDetails
-
+    val claim       = details._1
+    val declaration = details._2
     // todo CDSR-1795 TPI05 creation and validation - factor out common code
     (for {
-      email            <- claim.claimantInformation.contactInformation.emailAddress.toRight(
-                            CdsError("Email address is missing")
-                          )
-      claimantName     <- claim.claimantInformation.contactInformation.contactPerson.toRight(
-                            CdsError("Claimant name is missing")
-                          )
-      claimantEmail     = Email(email)
-      consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
+      email        <- claim.claimantInformation.contactInformation.emailAddress.toRight(
+                        CdsError("Email address is missing")
+                      )
+      claimantName <- claim.claimantInformation.contactInformation.contactPerson.toRight(
+                        CdsError("Claimant name is missing")
+                      )
+      claimantEmail = Email(email)
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -58,8 +55,8 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetai
       .withDisposalMethod(claim.methodOfDisposal)
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(getGoodsDetails(claim))
-      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
-      .withMrnDetails(getMrnDetails(claim, declaration))
+      .withEORIDetails(getEoriDetails(claim, declaration))
+      .withMrnDetails(getMrnDetails(claim, declaration.displayResponseDetail))
       .withDeclarationMode(claim.declarationMode)
       .withCaseType(claim.caseType)).flatMap(_.verify)
   }
@@ -91,7 +88,7 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetai
       .withWhetherMainDeclarationReference(true)
       .withProcedureCode(declaration.procedureCode)
       .withDeclarantDetails(declaration.declarantDetails)
-      .withConsigneeDetails(declaration.effectiveConsigneeDetails)
+      .withConsigneeDetails(Some(declaration.effectiveConsigneeDetails))
       .withAccountDetails(declaration.accountDetails)
       .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
       .withNdrcDetails(

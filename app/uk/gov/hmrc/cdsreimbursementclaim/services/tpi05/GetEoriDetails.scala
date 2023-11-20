@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, HasClaimantInformation, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EoriDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EORIInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.Address
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, HasClaimantInformation, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 
 trait GetEoriDetails[Claim <: HasClaimantInformation] {
 
   final def getEoriDetails(
-    consigneeDetails: ConsigneeDetails,
-    claim: Claim
-  ): EoriDetails =
-    EoriDetails(
-      importerEORIDetails = EORIInformation.forConsignee(consigneeDetails),
-      agentEORIDetails = EORIInformation(
+    claim: Claim,
+    declaration: DisplayDeclaration
+  ): EoriDetails = {
+
+    val claimantEoriInformation =
+      EORIInformation(
         EORINumber = claim.claimantInformation.eori,
         CDSFullName = claim.claimantInformation.fullName,
         CDSEstablishmentAddress = Address(
@@ -53,5 +53,20 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
         ),
         contactInformation = Some(claim.claimantInformation.contactInformation.withoutDuplicateAddressLines)
       )
-    )
+
+    claim.claimantType match {
+      case ClaimantType.Consignee =>
+        EoriDetails(
+          importerEORIDetails = claimantEoriInformation,
+          agentEORIDetails = EORIInformation.forDeclarant(declaration.displayResponseDetail.declarantDetails)
+        )
+
+      case ClaimantType.Declarant | ClaimantType.User =>
+        EoriDetails(
+          importerEORIDetails =
+            EORIInformation.forConsignee(declaration.displayResponseDetail.effectiveConsigneeDetails),
+          agentEORIDetails = claimantEoriInformation
+        )
+    }
+  }
 }

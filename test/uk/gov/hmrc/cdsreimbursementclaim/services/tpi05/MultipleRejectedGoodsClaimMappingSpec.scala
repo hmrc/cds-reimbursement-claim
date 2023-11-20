@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, MultipleRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, MultipleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
@@ -54,7 +54,7 @@ class MultipleRejectedGoodsClaimMappingSpec
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Multiple claim to TPI05 request" in forAll {
+    "map a valid Multiple claim to TPI05 request" in forAll(genMultipleRejectedGoodsClaim(ClaimantType.Declarant)) {
       details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]) =>
         val (claim, declarations) = details
         val leadDeclaration       = declarations.head
@@ -121,7 +121,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 importerEORIDetails = {
-                  val maybeConsigneeDetails = leadDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                  val maybeConsigneeDetails = Some(leadDeclaration.displayResponseDetail.effectiveConsigneeDetails)
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
@@ -215,7 +215,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails.value
+                    val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(

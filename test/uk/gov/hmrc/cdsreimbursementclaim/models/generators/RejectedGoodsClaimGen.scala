@@ -133,10 +133,15 @@ object RejectedGoodsClaimGen {
       documentType = documentType
     )
 
-  lazy val genSingleRejectedGoodsClaim: Gen[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+  lazy val genSingleRejectedGoodsClaimAllTypes: Gen[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+    for {
+      claimantType <- Gen.oneOf(ClaimantType.values)
+      claim        <- genSingleRejectedGoodsClaim(claimantType)
+    } yield claim
+
+  def genSingleRejectedGoodsClaim(claimantType: ClaimantType): Gen[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
     for {
       mrn                    <- genMRN
-      claimantType           <- Gen.oneOf(ClaimantType.values)
       payeeType              <- Gen.oneOf(PayeeType.values)
       claimantInformation    <- genClaimantInformation
       basisOfClaim           <- genBasisOfRejectedGoodsClaim
@@ -189,11 +194,18 @@ object RejectedGoodsClaimGen {
       claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
-  lazy val genMultipleRejectedGoodsClaim: Gen[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+  lazy val genMultipleRejectedGoodsClaimAllTypes: Gen[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+    for {
+      claimantType <- Gen.oneOf(ClaimantType.values)
+      claim        <- genMultipleRejectedGoodsClaim(claimantType)
+    } yield claim
+
+  def genMultipleRejectedGoodsClaim(
+    claimantType: ClaimantType
+  ): Gen[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
     for {
       numMrns                <- Gen.choose(2, 10)
       mrns                   <- Gen.listOfN(numMrns, genMRN)
-      claimantType           <- Gen.oneOf(ClaimantType.values)
       payeeType              <- Gen.oneOf(PayeeType.values)
       claimantInformation    <- genClaimantInformation
       basisOfClaim           <- genBasisOfRejectedGoodsClaim
@@ -237,10 +249,15 @@ object RejectedGoodsClaimGen {
       declarations
     )
 
-  lazy val genScheduledRejectedGoodsClaim: Gen[ScheduledRejectedGoodsClaim] =
+  lazy val genScheduledRejectedGoodsClaimAllTypes: Gen[ScheduledRejectedGoodsClaim] =
+    for {
+      claimantType <- Gen.oneOf(ClaimantType.values)
+      claim        <- genScheduledRejectedGoodsClaim(claimantType)
+    } yield claim
+
+  def genScheduledRejectedGoodsClaim(claimantType: ClaimantType): Gen[ScheduledRejectedGoodsClaim] =
     for {
       mrn                    <- genMRN
-      claimantType           <- Gen.oneOf(ClaimantType.values)
       payeeType              <- Gen.oneOf[PayeeType](PayeeType.values)
       claimantInformation    <- genClaimantInformation
       basisOfClaim           <- genBasisOfRejectedGoodsClaim
@@ -278,23 +295,20 @@ object RejectedGoodsClaimGen {
   ): Typeclass[RejectedGoodsClaimRequest[Claim]] =
     gen[RejectedGoodsClaimRequest[Claim]]
 
-  implicit lazy val arbitrarySingleClaimDetails: Typeclass[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
-    Arbitrary(genSingleRejectedGoodsClaim)
-
   implicit lazy val arbitrarySingleRejectedGoodsClaim: Typeclass[SingleRejectedGoodsClaim] =
     Arbitrary(
       for {
-        (claim, _) <- genSingleRejectedGoodsClaim
+        (claim, _) <- genSingleRejectedGoodsClaimAllTypes
       } yield claim
     )
 
   implicit lazy val arbitraryMultipleClaimDetails: Typeclass[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
-    Arbitrary(genMultipleRejectedGoodsClaim)
+    Arbitrary(genMultipleRejectedGoodsClaimAllTypes)
 
   implicit lazy val arbitraryMultipleRejectedGoodsClaim: Typeclass[MultipleRejectedGoodsClaim] =
     Arbitrary(
       for {
-        (claim, _) <- genMultipleRejectedGoodsClaim
+        (claim, _) <- genMultipleRejectedGoodsClaimAllTypes
       } yield claim
     )
 
@@ -302,10 +316,10 @@ object RejectedGoodsClaimGen {
     Arbitrary(
       for {
         declaration <- genDisplayDeclaration
-        claim       <- genScheduledRejectedGoodsClaim
+        claim       <- genScheduledRejectedGoodsClaimAllTypes
       } yield (claim, declaration)
     )
 
   implicit lazy val arbitraryScheduledRejectedGoodsClaim: Typeclass[ScheduledRejectedGoodsClaim] =
-    Arbitrary(genScheduledRejectedGoodsClaim)
+    Arbitrary(genScheduledRejectedGoodsClaimAllTypes)
 }

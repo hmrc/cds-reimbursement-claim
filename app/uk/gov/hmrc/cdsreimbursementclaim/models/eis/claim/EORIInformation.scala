@@ -163,5 +163,52 @@ object EORIInformation {
       contactInformation = contactInformation
     )
 
+  def forDeclarant(declarantDetails: DeclarantDetails): EORIInformation = {
+    val maybeContactDetails: Option[ContactDetails] = declarantDetails.contactDetails
+
+    val maybeTelephone    = maybeContactDetails.flatMap(_.telephone)
+    val maybeEmailAddress = maybeContactDetails.flatMap(_.emailAddress)
+
+    val establishmentAddressLine1      = declarantDetails.establishmentAddress.addressLine1
+    val maybeEstablishmentAddressLine2 = declarantDetails.establishmentAddress.addressLine2
+    val maybeEstablishmentAddressLine3 = declarantDetails.establishmentAddress.addressLine3
+
+    EORIInformation(
+      EORINumber = declarantDetails.EORI,
+      CDSFullName = declarantDetails.legalName,
+      CDSEstablishmentAddress = Address(
+        contactPerson = None,
+        addressLine1 = Street.line1(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+        addressLine2 = Street.line2(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+        addressLine3 = maybeEstablishmentAddressLine3,
+        street = Street.fromLines(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+        city = maybeEstablishmentAddressLine3,
+        countryCode = declarantDetails.establishmentAddress.countryCode,
+        postalCode = declarantDetails.establishmentAddress.postalCode,
+        telephoneNumber = maybeTelephone,
+        emailAddress = maybeEmailAddress
+      ),
+      contactInformation = declarantDetails.contactDetails.map { contactDetails =>
+        val maybeAddress1 = contactDetails.addressLine1
+        val maybeAddress2 = contactDetails.addressLine2
+        val maybeAddress3 = contactDetails.addressLine3
+
+        ContactInformation(
+          contactPerson = contactDetails.contactName,
+          addressLine1 = Street.line1(maybeAddress1, maybeAddress2),
+          addressLine2 = Street.line2(maybeAddress1, maybeAddress2),
+          addressLine3 = maybeAddress3,
+          street = Street.fromLines(maybeAddress1, maybeAddress2),
+          city = maybeAddress3,
+          countryCode = contactDetails.countryCode,
+          postalCode = contactDetails.postalCode,
+          telephoneNumber = maybeTelephone,
+          faxNumber = None,
+          emailAddress = maybeEmailAddress
+        )
+      }
+    )
+  }
+
   implicit val format: OFormat[EORIInformation] = Json.format[EORIInformation]
 }

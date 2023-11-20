@@ -22,7 +22,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -34,24 +33,24 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursem
     extends ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])]
     with GetEoriDetails[Claim] {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
+  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable", "org.wartremover.warts.Throw"))
   override def map(
     details: (Claim, List[DisplayDeclaration])
   ): Either[CdsError, EisSubmitClaimRequest] = {
-    val claim                                           = details._1
-    val declarations                                    = details._2
+    val claim        = details._1
+    val declarations = details._2
       .map(declaration => MRN(declaration.displayResponseDetail.declarationId) -> declaration.displayResponseDetail)
       .toMap
-    val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      details._2.headOption.flatMap(_.displayResponseDetail.effectiveConsigneeDetails)
+
+    val headDeclaration =
+      details._2.headOption.getOrElse(throw new Exception("Missing head declaration"))
 
     (for {
-      email            <- claim.claimantInformation.contactInformation.emailAddress
-                            .toRight(CdsError("Email address is missing"))
-      claimantName     <- claim.claimantInformation.contactInformation.contactPerson
-                            .toRight(CdsError("Claimant name is missing"))
-      claimantEmail     = Email(email)
-      consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
+      email        <- claim.claimantInformation.contactInformation.emailAddress
+                        .toRight(CdsError("Email address is missing"))
+      claimantName <- claim.claimantInformation.contactInformation.contactPerson
+                        .toRight(CdsError("Claimant name is missing"))
+      claimantEmail = Email(email)
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -65,7 +64,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursem
       .withDisposalMethod(claim.methodOfDisposal)
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(getGoodsDetails(claim))
-      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
+      .withEORIDetails(getEoriDetails(claim, headDeclaration))
       .withMrnDetails(getMrnDetails(claim, declarations))
       .withDeclarationMode(claim.declarationMode)
       .withCaseType(claim.caseType)).flatMap(_.verify)
@@ -103,7 +102,7 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursem
         .withWhetherMainDeclarationReference(mrn === claim.leadMrn)
         .withProcedureCode(declaration.procedureCode)
         .withDeclarantDetails(declaration.declarantDetails)
-        .withConsigneeDetails(declaration.effectiveConsigneeDetails)
+        .withConsigneeDetails(Some(declaration.effectiveConsigneeDetails))
         .withAccountDetails(declaration.accountDetails)
         .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
         .withNdrcDetails {
