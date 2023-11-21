@@ -25,8 +25,6 @@ import scala.collection.immutable
 
 trait RejectedGoodsClaim extends HasClaimantInformation {
 
-  val claimantType: ClaimantType
-
   val payeeType: PayeeType
 
   val claimantInformation: ClaimantInformation

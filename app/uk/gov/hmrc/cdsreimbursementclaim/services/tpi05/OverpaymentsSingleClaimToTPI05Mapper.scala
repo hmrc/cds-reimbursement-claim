@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails, ConsigneeDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
@@ -44,22 +44,13 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
     details: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])
   ): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, declaration, duplicateDeclaration) = details
-    val contactInfo                                = claim.claimantInformation.contactInformation
 
-    val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      declaration.displayResponseDetail.effectiveConsigneeDetails
+    val contactInfo =
+      claim.claimantInformation.contactInformation
 
     (for {
-      claimantEmail    <- contactInfo.emailAddress.toRight(
-                            CdsError("Email address is missing")
-                          )
-      contactPerson    <- contactInfo.contactPerson.toRight(
-                            CdsError("Claimant name is missing")
-                          )
-      importerEori     <- maybeConsigneeDetails
-                            .map(EORIInformation.forConsignee)
-                            .toRight(CdsError("Could not deduce consignee EORI information"))
-      consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
+      claimantEmail <- contactInfo.emailAddress.toRight(CdsError("Email address is missing"))
+      contactPerson <- contactInfo.contactPerson.toRight(CdsError("Claimant name is missing"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -82,7 +73,7 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
           })
         )
       )
-      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
+      .withEORIDetails(getEoriDetails(claim, declaration))
       .withMrnDetails(getMrnDetails(claim, declaration) :: Nil)
       .withMaybeDuplicateMrnDetails(
         duplicateDeclaration.map(d =>
@@ -106,7 +97,7 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
       .withWhetherMainDeclarationReference(true)
       .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
       .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      .withConsigneeDetails(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
+      .withConsigneeDetails(Some(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails))
       .withAccountDetails(if (includeAccountDetails) displayDeclaration.displayResponseDetail.accountDetails else None)
       .withFirstNonEmptyBankDetails(
         displayDeclaration.displayResponseDetail.bankDetails,

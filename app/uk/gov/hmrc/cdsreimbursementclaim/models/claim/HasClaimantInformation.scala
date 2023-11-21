@@ -17,5 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 trait HasClaimantInformation {
+
+  def claimantType: ClaimantType
   def claimantInformation: ClaimantInformation
 }

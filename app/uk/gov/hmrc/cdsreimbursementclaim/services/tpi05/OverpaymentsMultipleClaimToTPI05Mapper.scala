@@ -32,7 +32,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails
     extends ClaimToTPI05Mapper[(MultipleOverpaymentsClaim, List[DisplayDeclaration])]
     with GetEoriDetails[MultipleOverpaymentsClaim] {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
+  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable", "org.wartremover.warts.Throw"))
   override def map(
     details: (MultipleOverpaymentsClaim, List[DisplayDeclaration])
   ): Either[CdsError, EisSubmitClaimRequest] = {
@@ -43,7 +43,9 @@ class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails
 
     val contactInfo                                     = claim.claimantInformation.contactInformation
     val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      details._2.headOption.flatMap(_.displayResponseDetail.effectiveConsigneeDetails)
+      details._2.headOption.map(_.displayResponseDetail.effectiveConsigneeDetails)
+
+    val headDeclaration = details._2.headOption.getOrElse(throw new Exception("Missing head declaration"))
 
     (for {
       email            <- contactInfo.emailAddress.toRight(CdsError("Email address is missing"))
@@ -72,7 +74,9 @@ class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails
           })
         )
       )
-      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
+      .withEORIDetails(
+        getEoriDetails(claim, headDeclaration)
+      )
       .withMrnDetails(getMrnDetails(claim, declarations))).flatMap(_.verify)
   }
 
@@ -93,7 +97,7 @@ class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails
         .withWhetherMainDeclarationReference(claim.leadMrn === mrn)
         .withProcedureCode(declaration.procedureCode)
         .withDeclarantDetails(declaration.declarantDetails)
-        .withConsigneeDetails(declaration.effectiveConsigneeDetails)
+        .withConsigneeDetails(Some(declaration.effectiveConsigneeDetails))
         .withAccountDetails(declaration.accountDetails)
         .withFirstNonEmptyBankDetails(declaration.bankDetails, claim.bankAccountDetails)
         .withNdrcDetails {

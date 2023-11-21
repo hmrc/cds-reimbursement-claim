@@ -24,33 +24,21 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclarat
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
 
 class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
     extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, DisplayDeclaration)]
     with GetEoriDetails[ScheduledOverpaymentsClaim] {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
+  @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable", "org.wartremover.warts.Throw"))
   override def map(
     details: (ScheduledOverpaymentsClaim, DisplayDeclaration)
   ): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, declaration) = details
     val contactInfo          = claim.claimantInformation.contactInformation
 
-    val maybeConsigneeDetails: Option[ConsigneeDetails] =
-      declaration.displayResponseDetail.effectiveConsigneeDetails
-
     (for {
-      claimantEmail    <- contactInfo.emailAddress.toRight(
-                            CdsError("Email address is missing")
-                          )
-      contactPerson    <- contactInfo.contactPerson.toRight(
-                            CdsError("Claimant name is missing")
-                          )
-      importerEori     <- maybeConsigneeDetails
-                            .map(EORIInformation.forConsignee)
-                            .toRight(CdsError("Could not deduce consignee EORI information"))
-      consigneeDetails <- maybeConsigneeDetails.toRight(CdsError("consignee EORINumber and CDSFullName are mandatory"))
+      claimantEmail <- contactInfo.emailAddress.toRight(CdsError("Email address is missing"))
+      contactPerson <- contactInfo.contactPerson.toRight(CdsError("Claimant name is missing"))
     } yield TPI05
       .request(
         claimantEORI = claim.claimantInformation.eori,
@@ -73,7 +61,7 @@ class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetail
           })
         )
       )
-      .withEORIDetails(getEoriDetails(consigneeDetails, claim))
+      .withEORIDetails(getEoriDetails(claim, declaration))
       .withMrnDetails(getMrnDetails(claim, declaration.displayResponseDetail))).flatMap(_.verify)
   }
 
@@ -90,7 +78,7 @@ class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetail
       .withWhetherMainDeclarationReference(true)
       .withProcedureCode(displayResponseDetail.procedureCode)
       .withDeclarantDetails(displayResponseDetail.declarantDetails)
-      .withConsigneeDetails(displayResponseDetail.effectiveConsigneeDetails)
+      .withConsigneeDetails(Some(displayResponseDetail.effectiveConsigneeDetails))
       .withAccountDetails(displayResponseDetail.accountDetails)
       .withFirstNonEmptyBankDetails(displayResponseDetail.bankDetails, claim.bankAccountDetails)
       .withNdrcDetails(

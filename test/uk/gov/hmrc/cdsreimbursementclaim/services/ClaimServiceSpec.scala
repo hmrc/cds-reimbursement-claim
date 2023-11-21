@@ -218,7 +218,10 @@ class ClaimServiceSpec
 
     "handling submission of claims" should {
 
-      "successfully submit a Single Overpayments claim" in forAll(genOverpaymentsSingleClaim, genC285EisRequest) {
+      "successfully submit a Single Overpayments claim" in forAll(
+        genOverpaymentsSingleClaimAllTypes,
+        genC285EisRequest
+      ) {
         (
           singleOverpaymentsClaimData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]),
           eisRequest: EisSubmitClaimRequest
@@ -274,7 +277,10 @@ class ClaimServiceSpec
           ) shouldBe Right(submitClaimResponse)
       }
 
-      "successfully submit a Scheduled Overpayments claim" in forAll(genOverpaymentsScheduledClaim, genC285EisRequest) {
+      "successfully submit a Scheduled Overpayments claim" in forAll(
+        genOverpaymentsScheduledClaimAllTypes,
+        genC285EisRequest
+      ) {
         (
           scheduledOverpaymentsClaimData: (ScheduledOverpaymentsClaim, DisplayDeclaration),
           eisRequest: EisSubmitClaimRequest

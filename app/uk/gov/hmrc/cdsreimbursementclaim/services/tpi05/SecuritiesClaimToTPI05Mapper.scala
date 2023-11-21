@@ -52,9 +52,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
       claimantEmail                                                 = Email(email)
       claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
       declarantDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      consigneeDetails                                              = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
-                                                                        .map(mrnInfoFromClaimantDetails)
-                                                                        .getOrElse(declarantDetails)
+      consigneeDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
       securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
       acceptanceDate                                               <- AcceptanceDate

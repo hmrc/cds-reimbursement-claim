@@ -48,7 +48,7 @@ class OverpaymentsScheduledClaimMappingSpec
 
   "The OverpaymentsScheduled claim mapper" should {
 
-    "map a valid claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim) {
+    "map a valid claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim(ClaimantType.Declarant)) {
       scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration) =>
         val tpi05Request = mapper map scheduledOverpaymentsData
 
@@ -106,7 +106,7 @@ class OverpaymentsScheduledClaimMappingSpec
                     contactInformation = claim.claimantInformation.contactInformation.some
                   ),
                   importerEORIDetails = {
-                    val maybeConsigneeDetails = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                    val maybeConsigneeDetails = Some(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
                     val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                     EORIInformation(
@@ -201,7 +201,7 @@ class OverpaymentsScheduledClaimMappingSpec
                       ).some
                     },
                     consigneeDetails = {
-                      val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails.value
+                      val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
                       val contactInformation = consigneeDetails.contactDetails.value
 
                       MRNInformation(

@@ -107,10 +107,18 @@ object OverpaymentsClaimGen {
       documentType = documentType
     )
 
-  lazy val genOverpaymentsSingleClaim: Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+  val genOverpaymentsSingleClaimAllTypes
+    : Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+    for {
+      claimantType <- Gen.oneOf(ClaimantType.values)
+      claim        <- genOverpaymentsSingleClaim(claimantType)
+    } yield claim
+
+  def genOverpaymentsSingleClaim(
+    claimantType: ClaimantType
+  ): Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
     for {
       mrn                      <- genMRN
-      claimantType             <- Gen.oneOf(ClaimantType.values)
       claimantInformation      <- genClaimantInformation
       basisOfClaim             <- genBasisOfClaim
       bankAccountDetails       <- Gen.option(genBankAccountDetails)
@@ -191,10 +199,15 @@ object OverpaymentsClaimGen {
       declarations
     )
 
-  lazy val genOverpaymentsScheduledClaim: Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+  val genOverpaymentsScheduledClaimAllTypes: Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+    for {
+      claimantType <- Gen.oneOf(ClaimantType.values)
+      claim        <- genOverpaymentsScheduledClaim(claimantType)
+    } yield claim
+
+  def genOverpaymentsScheduledClaim(claimantType: ClaimantType): Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
     for {
       mrn                      <- genMRN
-      claimantType             <- Gen.oneOf(ClaimantType.values)
       payeeType                <- Gen.oneOf[PayeeType](PayeeType.values)
       claimantInformation      <- genClaimantInformation
       basisOfClaim             <- genBasisOfClaim
@@ -244,22 +257,22 @@ object OverpaymentsClaimGen {
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
   implicit lazy val arbitrarySingleOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]       =
-    Arbitrary(genOverpaymentsSingleClaim.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
+    Arbitrary(genOverpaymentsSingleClaimAllTypes.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitraryMultipleOverpaymentsRequest: Typeclass[MultipleOverpaymentsClaimRequest]   =
     Arbitrary(genOverpaymentsMultipleClaim.map { case (claim, _) => MultipleOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitraryScheduledOverpaymentsRequest: Typeclass[ScheduledOverpaymentsClaimRequest] =
-    Arbitrary(genOverpaymentsScheduledClaim.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
+    Arbitrary(genOverpaymentsScheduledClaimAllTypes.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitrarySingleOverpaymentsClaimDetails
     : Typeclass[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])]              =
-    Arbitrary(genOverpaymentsSingleClaim)
+    Arbitrary(genOverpaymentsSingleClaimAllTypes)
 
   implicit lazy val arbitraryOverpaymentsSingleClaim: Typeclass[SingleOverpaymentsClaim] =
     Arbitrary(
       for {
-        (claim, _, _) <- genOverpaymentsSingleClaim
+        (claim, _, _) <- genOverpaymentsSingleClaimAllTypes
       } yield claim
     )
 
@@ -276,12 +289,12 @@ object OverpaymentsClaimGen {
 
   implicit lazy val arbitraryScheduledOverpaymentsClaimDetails
     : Typeclass[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
-    Arbitrary(genOverpaymentsScheduledClaim)
+    Arbitrary(genOverpaymentsScheduledClaimAllTypes)
 
   implicit lazy val arbitraryOverpaymentsScheduledClaim: Typeclass[ScheduledOverpaymentsClaim] =
     Arbitrary(
       for {
-        (claim, _) <- genOverpaymentsScheduledClaim
+        (claim, _) <- genOverpaymentsScheduledClaimAllTypes
       } yield claim
     )
 
