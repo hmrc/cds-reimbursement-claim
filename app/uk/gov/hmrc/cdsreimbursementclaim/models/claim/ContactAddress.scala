@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.Eq
-import julienrf.json.derived
 import play.api.libs.json.OFormat
+import play.api.libs.json.Json
 
 final case class ContactAddress(
   line1: String,
@@ -31,7 +31,7 @@ final case class ContactAddress(
 
 object ContactAddress {
 
-  implicit val format: OFormat[ContactAddress] = derived.oformat[ContactAddress]()
+  implicit val format: OFormat[ContactAddress] = Json.format[ContactAddress]
 
   implicit val eq: Eq[ContactAddress] = Eq.fromUniversalEquals
 }

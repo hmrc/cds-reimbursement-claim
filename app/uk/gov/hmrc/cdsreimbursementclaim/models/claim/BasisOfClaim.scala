@@ -16,85 +16,83 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed trait BasisOfClaim extends Product with Serializable {
+sealed trait BasisOfClaim {
   def toTPI05DisplayString: String
 }
 
-object BasisOfClaim {
+object BasisOfClaim extends EnumerationFormat[BasisOfClaim] {
 
-  final case object DuplicateEntry extends BasisOfClaim {
+  case object DuplicateEntry extends BasisOfClaim {
     def toTPI05DisplayString: String = "Duplicate Entry"
   }
 
-  final case object DutySuspension extends BasisOfClaim {
+  case object DutySuspension extends BasisOfClaim {
     def toTPI05DisplayString: String = "Duty Suspension"
   }
 
-  final case object EndUseRelief extends BasisOfClaim {
+  case object EndUseRelief extends BasisOfClaim {
     def toTPI05DisplayString: String = "End Use"
   }
 
-  final case object IncorrectCommodityCode extends BasisOfClaim {
+  case object IncorrectCommodityCode extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect Commodity Code"
   }
 
-  final case object IncorrectCpc extends BasisOfClaim {
+  case object IncorrectCpc extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect CPC"
   }
 
-  final case object IncorrectValue extends BasisOfClaim {
+  case object IncorrectValue extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect Value"
   }
 
-  final case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim {
+  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect EORI & Deferment Acc. Num."
   }
 
-  final case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim {
+  case object InwardProcessingReliefFromCustomsDuty extends BasisOfClaim {
     def toTPI05DisplayString: String = "IP"
   }
 
-  final case object Miscellaneous extends BasisOfClaim {
+  case object Miscellaneous extends BasisOfClaim {
     def toTPI05DisplayString: String = "Miscellaneous"
   }
 
-  final case object OutwardProcessingRelief extends BasisOfClaim {
+  case object OutwardProcessingRelief extends BasisOfClaim {
     def toTPI05DisplayString: String = "OPR"
   }
 
-  final case object PersonalEffects extends BasisOfClaim {
+  case object PersonalEffects extends BasisOfClaim {
     def toTPI05DisplayString: String = "Personal Effects"
   }
 
-  final case object Preference extends BasisOfClaim {
+  case object Preference extends BasisOfClaim {
     def toTPI05DisplayString: String = "Preference"
   }
 
-  final case object RGR extends BasisOfClaim {
+  case object RGR extends BasisOfClaim {
     def toTPI05DisplayString: String = "RGR"
   }
 
-  final case object ProofOfReturnRefundGiven extends BasisOfClaim {
+  case object ProofOfReturnRefundGiven extends BasisOfClaim {
     def toTPI05DisplayString: String = "Proof of Return/Refund Given"
   }
 
-  final case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim {
+  case object EvidenceThatGoodsHaveNotEnteredTheEU extends BasisOfClaim {
     def toTPI05DisplayString: String = "Evidence That Goods Have Not Entered The EU"
   }
 
-  final case object IncorrectExciseValue extends BasisOfClaim {
+  case object IncorrectExciseValue extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect Excise Value"
   }
 
-  final case object IncorrectAdditionalInformationCode extends BasisOfClaim {
+  case object IncorrectAdditionalInformationCode extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect Additional Information Code"
   }
 
-  lazy val values: Set[BasisOfClaim] = Set(
+  val values: Set[BasisOfClaim] = Set(
     DuplicateEntry,
     DutySuspension,
     EndUseRelief,
@@ -113,8 +111,4 @@ object BasisOfClaim {
     IncorrectExciseValue,
     IncorrectAdditionalInformationCode
   )
-
-  implicit val equality: Eq[BasisOfClaim] = Eq.fromUniversalEquals
-
-  implicit val format: OFormat[BasisOfClaim] = derived.oformat[BasisOfClaim]()
 }

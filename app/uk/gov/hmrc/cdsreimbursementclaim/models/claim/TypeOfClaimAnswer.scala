@@ -16,24 +16,15 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
-sealed trait TypeOfClaimAnswer extends Product with Serializable
+sealed trait TypeOfClaimAnswer
 
-object TypeOfClaimAnswer {
+object TypeOfClaimAnswer extends EnumerationFormat[TypeOfClaimAnswer] {
 
-  final case object Individual extends TypeOfClaimAnswer
-  final case object Multiple extends TypeOfClaimAnswer
-  final case object Scheduled extends TypeOfClaimAnswer
+  case object Individual extends TypeOfClaimAnswer
+  case object Multiple extends TypeOfClaimAnswer
+  case object Scheduled extends TypeOfClaimAnswer
 
-  lazy val values: Set[TypeOfClaimAnswer] =
-    Set(Individual, Multiple, Scheduled)
-
-  implicit val equality: Eq[TypeOfClaimAnswer] =
-    Eq.fromUniversalEquals[TypeOfClaimAnswer]
-
-  implicit val typeOfClaimAnswerFormat: OFormat[TypeOfClaimAnswer] =
-    derived.oformat[TypeOfClaimAnswer]()
+  val values: Set[TypeOfClaimAnswer] = Set(Individual, Multiple, Scheduled)
 }
