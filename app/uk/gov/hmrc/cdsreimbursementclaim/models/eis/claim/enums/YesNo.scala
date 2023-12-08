@@ -15,8 +15,6 @@
  */
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
-
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.DeclarantTypeAnswer
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait YesNo extends Product with Serializable
@@ -25,12 +23,6 @@ object YesNo extends EnumerationFormat[YesNo] {
 
   final case object No extends YesNo
   final case object Yes extends YesNo
-
-  def basedOn(declarantTypeAnswer: DeclarantTypeAnswer): YesNo =
-    declarantTypeAnswer match {
-      case DeclarantTypeAnswer.Importer => Yes
-      case _                            => No
-    }
 
   lazy val values: Set[YesNo] = Set(Yes, No)
 }

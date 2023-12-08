@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, DeclarantTypeAnswer, PayeeType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, PayeeType}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormat
 
 sealed trait Claimant extends Product with Serializable
@@ -27,13 +27,6 @@ object Claimant extends EnumerationFormat[Claimant] {
 
   final case object Importer extends Claimant
   final case object Representative extends Claimant
-
-  def basedOn(declarantType: DeclarantTypeAnswer): Claimant =
-    declarantType match {
-      case DeclarantTypeAnswer.Importer                            => Importer
-      case DeclarantTypeAnswer.AssociatedWithImporterCompany       => Representative
-      case DeclarantTypeAnswer.AssociatedWithRepresentativeCompany => Representative
-    }
 
   def basedOn(claimantType: ClaimantType): Claimant =
     claimantType match {

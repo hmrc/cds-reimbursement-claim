@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
-import julienrf.json.derived
 import play.api.libs.json.OFormat
+import play.api.libs.json.Json
 
 final case class EstablishmentAddress(
   addressLine1: String,
@@ -28,5 +28,5 @@ final case class EstablishmentAddress(
 )
 
 object EstablishmentAddress {
-  implicit val format: OFormat[EstablishmentAddress] = derived.oformat[EstablishmentAddress]()
+  implicit val format: OFormat[EstablishmentAddress] = Json.format[EstablishmentAddress]
 }
