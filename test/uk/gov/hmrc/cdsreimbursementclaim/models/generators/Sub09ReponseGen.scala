@@ -94,9 +94,9 @@ object Sub09ReponseGen {
            |      "XI_Subscription": {
            |        "XI_EORINo": "${eori.value}",
            |        "PBEAddress": {
-           |          "streetNumber1": "address line 1",
-           |          "streetNumber2": "address line 2",
-           |          "city": "city 1"
+           |          "pbeAddressLine1": "address line 1",
+           |          "pbeAddressLine2": "address line 2",
+           |          "pbeAddressLine3": "city 1"
            |        },
            |        "XI_VATNumber": "GB123456789",
            |        "EU_VATNumber": {

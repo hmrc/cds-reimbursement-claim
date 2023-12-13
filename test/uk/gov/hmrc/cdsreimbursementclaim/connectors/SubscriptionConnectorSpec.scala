@@ -60,7 +60,7 @@ class SubscriptionConnectorSpec
             val response = await(connector.getSubscription(eori))
             inside(response) {
               case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
-                details.XI_Subscription.get.XI_EORINo shouldBe "MY_OWN_EORI"
+                details.XI_Subscription.get.XI_EORINo shouldBe "XI00000000001"
               case _                                                                                =>
                 fail("expected some subscription but got none")
             }

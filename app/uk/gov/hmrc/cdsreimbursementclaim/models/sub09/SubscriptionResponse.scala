@@ -87,11 +87,11 @@ final case class XiSubscription(
 )
 
 final case class PbeAddress(
-  streetNumber1: String,
-  streetNumber2: Option[String],
-  city: Option[String],
-  postalCode: Option[String],
-  countryCode: Option[String]
+  pbeAddressLine1: String,
+  pbeAddressLine2: Option[String],
+  pbeAddressLine3: Option[String],
+  pbeAddressLine4: Option[String],
+  pbePostCode: Option[String]
 )
 
 final case class EUVATNumber(countryCode: Option[String], VATId: Option[String])
