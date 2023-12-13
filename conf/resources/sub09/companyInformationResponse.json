@@ -1,61 +1,54 @@
 {
-  "subscriptionDisplayResponse": {
-    "responseCommon": {
-      "status": "OK",
-      "statusText": "Optional status text from ETMP",
-      "processingDate": "2016-08-17T19:33:47Z",
-      "returnParameters": [
-        {
-          "paramName": "POSITION",
-          "paramValue": "LINK"
-        }
-      ]
-    },
-    "responseDetail": {
-      "EORINo": "MY_OWN_EORI",
-      "EORIStartDate": "1999-01-01",
-      "EORIEndDate": "2020-01-01",
-      "CDSFullName": "Tony Stark",
-      "CDSEstablishmentAddress": {
-        "streetAndNumber": "86 Mysore Road",
-        "city": "London",
-        "postalCode": "SW11 5RZ",
-        "countryCode": "GB"
-      },
-      "typeOfLegalEntity": "0001",
-      "contactInformation": {
-        "personOfContact": "Pepper Pott",
-        "streetAndNumber": "2nd floor, Alexander House",
-        "city": "Southend-on-sea",
-        "postalCode": "SS99 1AA",
-        "countryCode": "GB",
-        "telephoneNumber": "01702215001",
-        "faxNumber": "01702215002",
-        "emailAddress": "someemail@mail.com"
-      },
-      "thirdCountryUniqueIdentificationNumber": [
-        "321",
-        "222"
-      ],
-      "consentToDisclosureOfPersonalData": "1",
-      "shortName": "Robinson",
-      "dateOfEstablishment": "1963-04-01",
-      "typeOfPerson": "1",
-      "principalEconomicActivity": "2000",
-      "ETMP_Master_Indicator": true,
-      "XI_Subscription": {
-        "XI_EORINo": "MY_OWN_EORI",
-        "PBEAddress": {
-          "streetNumber1": "address line 1",
-          "streetNumber2": "address line 2",
-          "city": "city 1"
+    "subscriptionDisplayResponse": {
+        "responseCommon": {
+            "status": "OK",
+            "statusText": "Processed Successfully",
+            "processingDate": "2021-01-01T00:00:00Z",
+            "returnParameters": [
+                {
+                    "paramName": "ETMPFORMBUNDLENUMBER",
+                    "paramValue": "090000000000"
+                }
+            ]
         },
-        "XI_VATNumber": "GB123456789",
-        "EU_VATNumber": {
-          "countryCode": "GB",
-          "VATId": "123456891012"
+        "responseDetail": {
+            "EORINo": "GB000000000001",
+            "EORIStartDate": "2009-01-01",
+            "CDSFullName": "FOO BAR LIMITED",
+            "CDSEstablishmentAddress": {
+                "streetAndNumber": "123 WEST CIRCULAR ROAD",
+                "city": "LEEDS",
+                "postalCode": "LS9 7TF",
+                "countryCode": "GB"
+            },
+            "establishmentInTheCustomsTerritoryOfTheUnion": "0",
+            "contactInformation": {
+                "personOfContact": "FOO BAR LIMITED",
+                "sepCorrAddrIndicator": false,
+                "streetAndNumber": "255 NORTHCIRCULAR ROAD LEEDS",
+                "city": "LEEDS",
+                "postalCode": "LS9 7TF",
+                "countryCode": "GB",
+                "emailAddress": "foo.bar@mail.com",
+                "emailVerificationTimestamp": "2021-01-01T00:00:00Z"
+            },
+            "consentToDisclosureOfPersonalData": "0",
+            "shortName": "FOO BAR LIMITED",
+            "dateOfEstablishment": "1998-01-01",
+            "typeOfPerson": "2",
+            "ETMP_Master_Indicator": true,
+            "XI_Subscription": {
+                "XI_EORINo": "XI00000000001",
+                "PBEAddress": {
+                    "pbeAddressLine1": "FOO BAR BELFAST",
+                    "pbeAddressLine2": "303 Airport RD",
+                    "pbeAddressLine3": "Belfast",
+                    "pbePostCode": "BT3 9EJ"
+                },
+                "establishmentInTheCustomsTerritoryOfTheUnion": "1",
+                "XI_VATNumber": "XI00000000",
+                "XI_ConsentToDisclose": "0"
+            }
         }
-      }
     }
-  }
 }

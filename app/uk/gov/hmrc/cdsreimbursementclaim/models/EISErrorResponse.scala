@@ -82,16 +82,32 @@ object EisErrorResponse {
           Try(
             response.json
               .asOpt[R]
-              .toRight(
+              .toRight {
                 response.json
                   .asOpt[JsObject]
-                  .flatMap(_.+("status" -> JsNumber(response.status)).asOpt[EisErrorResponse])
-                  .getOrElse(EisErrorResponse(response.status, None, Some(response.body)))
-              )
+                  .flatMap(_.+("status" -> JsNumber(response.status)).asOpt[EisErrorResponse]) match {
+                  case Some(EisErrorResponse(_, None, None)) =>
+                    if (response.body.trim().startsWith("{"))
+                      Try(response.json.as[R]).fold(
+                        e => EisErrorResponse(response.status, None, Some(e.getMessage())),
+                        _ => EisErrorResponse(response.status, None, Some(response.body))
+                      )
+                    else
+                      EisErrorResponse(response.status, None, Some(response.body))
+
+                  case Some(errorResponse) =>
+                    errorResponse
+                  case None                =>
+                    EisErrorResponse(response.status, None, Some(response.body))
+                }
+              }
           ).toEither.fold(
             {
               case e: JsonParseException =>
-                Left(EisErrorResponse(response.status, None, Some(response.body)))
+                if (response.body.trim().startsWith("{"))
+                  Left(EisErrorResponse(response.status, None, Some(e.getMessage())))
+                else
+                  Left(EisErrorResponse(response.status, None, Some(response.body)))
 
               case e =>
                 Left(
