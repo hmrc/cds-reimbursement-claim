@@ -118,23 +118,22 @@ object OverpaymentsClaimGen {
     claimantType: ClaimantType
   ): Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
     for {
-      mrn                      <- genMRN
-      claimantInformation      <- genClaimantInformation
-      basisOfClaim             <- genBasisOfClaim
-      bankAccountDetails       <- Gen.option(genBankAccountDetails)
-      reimbursementMethod      <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      declaration              <- genDisplayDeclaration.map { generatedDeclaration =>
-                                    val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                    DisplayDeclaration(drd)
-                                  }
-      duplicateMrn             <- Gen.option(genMRN).map(_.filter(_ => basisOfClaim === DuplicateEntry))
-      duplicateDeclaration      =
+      mrn                 <- genMRN
+      claimantInformation <- genClaimantInformation
+      basisOfClaim        <- genBasisOfClaim
+      bankAccountDetails  <- Gen.option(genBankAccountDetails)
+      reimbursementMethod <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      declaration         <- genDisplayDeclaration.map { generatedDeclaration =>
+                               val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
+                               DisplayDeclaration(drd)
+                             }
+      duplicateMrn        <- Gen.option(genMRN).map(_.filter(_ => basisOfClaim === DuplicateEntry))
+      duplicateDeclaration =
         duplicateMrn.map(dup => DisplayDeclaration(declaration.displayResponseDetail.copy(declarationId = dup.value)))
-      claims                   <- genClaimsFromDisplayDeclaration(declaration)
-      evidences                <- Gen.nonEmptyListOf(genEvidences)
-      whetherInNorthernIreland <- Gen.oneOf(true, false)
-      additionalDetails        <- genRandomString
-      payeeType                <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
+      claims              <- genClaimsFromDisplayDeclaration(declaration)
+      evidences           <- Gen.nonEmptyListOf(genEvidences)
+      additionalDetails   <- genRandomString
+      payeeType           <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
     } yield (
       SingleOverpaymentsClaim(
         movementReferenceNumber = mrn,
@@ -142,7 +141,6 @@ object OverpaymentsClaimGen {
         claimantType = claimantType,
         claimantInformation = claimantInformation,
         basisOfClaim = basisOfClaim,
-        whetherNorthernIreland = whetherInNorthernIreland,
         additionalDetails = additionalDetails,
         reimbursements = claims._2.toSeq.map { case (taxCode, amount) =>
           Reimbursement(taxCode, amount, reimbursementMethod)
@@ -158,30 +156,29 @@ object OverpaymentsClaimGen {
 
   lazy val genOverpaymentsMultipleClaim: Gen[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
     for {
-      numMrns                  <- Gen.choose(2, 10)
-      mrns                     <- Gen.listOfN(numMrns, genMRN)
-      claimantType             <- Gen.oneOf(ClaimantType.values)
-      payeeType                <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
-      claimantInformation      <- genClaimantInformation
-      basisOfClaim             <- genBasisOfClaim
-      bankAccountDetails       <- Gen.option(genBankAccountDetails)
-      reimbursementMethod      <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      numEvidences             <- Gen.choose(2, 5)
-      evidences                <- Gen.listOfN(numEvidences, genEvidences)
-      declarations             <- Gen
-                                    .sequence(
-                                      mrns.map(mrn =>
-                                        genDisplayDeclaration.map { generatedDeclaration =>
-                                          val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                          DisplayDeclaration(drd)
-                                        }
-                                      )
-                                    )
-                                    .map(_.asScala.toList)
-                                    .suchThat(_.nonEmpty)
-      claims                   <- Gen.sequence(declarations.map(declaration => genClaimsFromDisplayDeclaration(declaration)))
-      whetherInNorthernIreland <- Gen.oneOf(true, false)
-      additionalDetails        <- genRandomString
+      numMrns             <- Gen.choose(2, 10)
+      mrns                <- Gen.listOfN(numMrns, genMRN)
+      claimantType        <- Gen.oneOf(ClaimantType.values)
+      payeeType           <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
+      claimantInformation <- genClaimantInformation
+      basisOfClaim        <- genBasisOfClaim
+      bankAccountDetails  <- Gen.option(genBankAccountDetails)
+      reimbursementMethod <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      numEvidences        <- Gen.choose(2, 5)
+      evidences           <- Gen.listOfN(numEvidences, genEvidences)
+      declarations        <- Gen
+                               .sequence(
+                                 mrns.map(mrn =>
+                                   genDisplayDeclaration.map { generatedDeclaration =>
+                                     val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
+                                     DisplayDeclaration(drd)
+                                   }
+                                 )
+                               )
+                               .map(_.asScala.toList)
+                               .suchThat(_.nonEmpty)
+      claims              <- Gen.sequence(declarations.map(declaration => genClaimsFromDisplayDeclaration(declaration)))
+      additionalDetails   <- genRandomString
     } yield (
       MultipleOverpaymentsClaim(
         movementReferenceNumbers = mrns,
@@ -189,7 +186,6 @@ object OverpaymentsClaimGen {
         payeeType = payeeType,
         claimantInformation = claimantInformation,
         basisOfClaim = basisOfClaim,
-        whetherNorthernIreland = whetherInNorthernIreland,
         additionalDetails = additionalDetails,
         reimbursementClaims = claims.asScala.toMap,
         reimbursementMethod = reimbursementMethod,
@@ -207,21 +203,20 @@ object OverpaymentsClaimGen {
 
   def genOverpaymentsScheduledClaim(claimantType: ClaimantType): Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
     for {
-      mrn                      <- genMRN
-      payeeType                <- Gen.oneOf[PayeeType](PayeeType.values)
-      claimantInformation      <- genClaimantInformation
-      basisOfClaim             <- genBasisOfClaim
-      bankAccountDetails       <- Gen.option(genBankAccountDetails)
-      reimbursementMethod      <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      declaration              <- genDisplayDeclaration.map { generatedDeclaration =>
-                                    val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                    DisplayDeclaration(drd)
-                                  }
-      claims                   <- genScheduledOverpaymentClaims
-      evidences                <- Gen.nonEmptyListOf(genEvidences)
-      scheduledDocument        <- genEvidences
-      whetherInNorthernIreland <- Gen.oneOf(true, false)
-      additionalDetails        <- genRandomString
+      mrn                 <- genMRN
+      payeeType           <- Gen.oneOf[PayeeType](PayeeType.values)
+      claimantInformation <- genClaimantInformation
+      basisOfClaim        <- genBasisOfClaim
+      bankAccountDetails  <- Gen.option(genBankAccountDetails)
+      reimbursementMethod <- Gen.oneOf(ReimbursementMethodAnswer.values)
+      declaration         <- genDisplayDeclaration.map { generatedDeclaration =>
+                               val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
+                               DisplayDeclaration(drd)
+                             }
+      claims              <- genScheduledOverpaymentClaims
+      evidences           <- Gen.nonEmptyListOf(genEvidences)
+      scheduledDocument   <- genEvidences
+      additionalDetails   <- genRandomString
     } yield (
       ScheduledOverpaymentsClaim(
         movementReferenceNumber = mrn,
@@ -229,7 +224,6 @@ object OverpaymentsClaimGen {
         payeeType = payeeType,
         claimantInformation = claimantInformation,
         basisOfClaim = basisOfClaim,
-        whetherNorthernIreland = whetherInNorthernIreland,
         additionalDetails = additionalDetails,
         reimbursementClaims = claims,
         reimbursementMethod = reimbursementMethod,

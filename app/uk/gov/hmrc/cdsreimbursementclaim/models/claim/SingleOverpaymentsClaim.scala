@@ -28,7 +28,6 @@ final case class SingleOverpaymentsClaim(
   payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
-  whetherNorthernIreland: Boolean,
   additionalDetails: String,
   reimbursements: Seq[Reimbursement],
   reimbursementMethod: ReimbursementMethodAnswer,

@@ -31,7 +31,6 @@ final case class ScheduledOverpaymentsClaim(
   payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
-  whetherNorthernIreland: Boolean,
   additionalDetails: String,
   reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithCorrect]],
   reimbursementMethod: ReimbursementMethodAnswer,

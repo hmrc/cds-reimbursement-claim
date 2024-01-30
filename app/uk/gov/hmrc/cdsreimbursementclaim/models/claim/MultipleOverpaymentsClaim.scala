@@ -32,7 +32,6 @@ final case class MultipleOverpaymentsClaim(
   payeeType: PayeeType,
   claimantInformation: ClaimantInformation,
   basisOfClaim: BasisOfClaim,
-  whetherNorthernIreland: Boolean,
   additionalDetails: String,
   reimbursementClaims: Map[MRN, Map[TaxCode, BigDecimal]],
   reimbursementMethod: ReimbursementMethodAnswer,
@@ -69,20 +68,18 @@ object MultipleOverpaymentsClaim {
           (JsPath \ "payeeType").read[PayeeType] and
           (JsPath \ "claimantInformation").read[ClaimantInformation] and
           (JsPath \ "basisOfClaim").read[BasisOfClaim] and
-          (JsPath \ "whetherNorthernIreland").read[Boolean] and
           (JsPath \ "additionalDetails").read[String] and
           (JsPath \ "reimbursementClaims").read[Map[MRN, Map[TaxCode, BigDecimal]]] and
           (JsPath \ "reimbursementMethod").read[ReimbursementMethodAnswer] and
           (JsPath \ "bankAccountDetails").readNullable[BankAccountDetails] and
           (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]]
-      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _, _)),
+      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _)),
       (
         (JsPath \ "movementReferenceNumbers").write[List[MRN]] and
           (JsPath \ "claimantType").write[ClaimantType] and
           (JsPath \ "payeeType").write[PayeeType] and
           (JsPath \ "claimantInformation").write[ClaimantInformation] and
           (JsPath \ "basisOfClaim").write[BasisOfClaim] and
-          (JsPath \ "whetherNorthernIreland").write[Boolean] and
           (JsPath \ "additionalDetails").write[String] and
           (JsPath \ "reimbursementClaims").write[Map[MRN, Map[TaxCode, BigDecimal]]] and
           (JsPath \ "reimbursementMethod").write[ReimbursementMethodAnswer] and
