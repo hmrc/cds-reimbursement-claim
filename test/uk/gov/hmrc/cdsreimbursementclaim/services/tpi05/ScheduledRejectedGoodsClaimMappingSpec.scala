@@ -41,6 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.AmountPaidWithCorrect
 
 class ScheduledRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
@@ -339,7 +340,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
           val rejectedGoodsClaim = details._1
           val displayDeclaration = details._2
 
-          val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithRefund(BigDecimal(8), BigDecimal(7))))
+          val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithCorrect(BigDecimal(8), BigDecimal(1))))
 
           val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
 

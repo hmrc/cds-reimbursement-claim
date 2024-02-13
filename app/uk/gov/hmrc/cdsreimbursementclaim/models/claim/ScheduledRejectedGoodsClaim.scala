@@ -41,7 +41,7 @@ final case class ScheduledRejectedGoodsClaim(
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
   inspectionAddress: InspectionAddress,
-  reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithRefund]],
+  reimbursementClaims: Map[String, Map[TaxCode, AmountPaidWithCorrect]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: immutable.Seq[EvidenceDocument],
@@ -53,7 +53,7 @@ final case class ScheduledRejectedGoodsClaim(
 
   override def leadMrn: MRN = movementReferenceNumber
 
-  lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithRefund] =
+  lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithCorrect] =
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
@@ -79,16 +79,16 @@ final case class ScheduledRejectedGoodsClaim(
 
 object ScheduledRejectedGoodsClaim {
 
-  implicit val semigroup: Semigroup[Map[TaxCode, AmountPaidWithRefund]] =
-    (x: Map[TaxCode, AmountPaidWithRefund], y: Map[TaxCode, AmountPaidWithRefund]) =>
+  implicit val semigroup: Semigroup[Map[TaxCode, AmountPaidWithCorrect]] =
+    (x: Map[TaxCode, AmountPaidWithCorrect], y: Map[TaxCode, AmountPaidWithCorrect]) =>
       (x.toSeq ++ y.toSeq)
         .groupBy(_._1)
         .view
-        .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithRefund.empty))
+        .mapValues(_.map(_._2).reduceOption(_ |+| _).getOrElse(AmountPaidWithCorrect.empty))
         .toMap
 
-  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithRefund]] =
-    MapFormat[TaxCode, AmountPaidWithRefund]
+  implicit val reimbursementClaimsFormat: Format[Map[TaxCode, AmountPaidWithCorrect]] =
+    MapFormat[TaxCode, AmountPaidWithCorrect]
 
   implicit val format: Format[ScheduledRejectedGoodsClaim] =
     Json.format[ScheduledRejectedGoodsClaim]
