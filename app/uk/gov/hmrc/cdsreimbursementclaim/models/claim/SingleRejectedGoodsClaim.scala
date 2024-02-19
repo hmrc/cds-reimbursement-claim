@@ -40,19 +40,19 @@ final case class SingleRejectedGoodsClaim(
   detailsOfRejectedGoods: String,
   inspectionDate: LocalDate,
   inspectionAddress: InspectionAddress,
-  reimbursementClaims: Map[TaxCode, BigDecimal],
+  reimbursements: Seq[Reimbursement],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: immutable.Seq[EvidenceDocument]
 ) extends RejectedGoodsClaim {
 
   override def totalReimbursementAmount: BigDecimal =
-    reimbursementClaims.values.sum
+    reimbursements.map(_.amount).sum
 
   override def leadMrn: MRN = movementReferenceNumber
 
   override def getClaimsOverMrns: List[(MRN, Map[TaxCode, BigDecimal])] =
-    (movementReferenceNumber, reimbursementClaims) :: Nil
+    (movementReferenceNumber, reimbursements.map(r => (r.taxCode, r.amount)).toMap) :: Nil
 
   override def caseType: CaseType = if (reimbursementMethod === CurrentMonthAdjustment) CMA else Individual
 

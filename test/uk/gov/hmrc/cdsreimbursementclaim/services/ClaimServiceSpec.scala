@@ -418,7 +418,7 @@ class ClaimServiceSpec
           val emailRequest        = EmailRequest(
             Email(ce1779ClaimRequest.claim.claimantInformation.contactInformation.emailAddress.value),
             ce1779ClaimRequest.claim.claimantInformation.contactInformation.contactPerson.value,
-            ce1779ClaimRequest.claim.reimbursementClaims.values.sum
+            ce1779ClaimRequest.claim.reimbursements.map(_.amount).sum
           )
 
           inSequence {
@@ -522,7 +522,7 @@ class ClaimServiceSpec
           val emailRequest        = EmailRequest(
             Email(ce1779ClaimRequest.claim.claimantInformation.contactInformation.emailAddress.value),
             ce1779ClaimRequest.claim.claimantInformation.contactInformation.contactPerson.value,
-            ce1779ClaimRequest.claim.reimbursementClaims.values.sum
+            ce1779ClaimRequest.claim.reimbursements.map(_.amount).sum
           )
 
           inSequence {

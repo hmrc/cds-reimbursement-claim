@@ -27,7 +27,7 @@ import shapeless.lens
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, SingleRejectedGoodsClaim, Street, TaxCode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, Reimbursement, ReimbursementMethodAnswer, SingleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
@@ -35,9 +35,9 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 
 import java.util.UUID
 
@@ -274,7 +274,7 @@ class SingleRejectedGoodsClaimMappingSpec
                   NDRCDetails = {
                     val ndrcDetails = declaration.displayResponseDetail.ndrcDetails.toList.flatten
 
-                    claim.reimbursementClaims.map { case (taxCode, claimedAmount) =>
+                    claim.reimbursements.map { case Reimbursement(taxCode, claimedAmount, _) =>
                       ndrcDetails
                         .find(_.taxType === taxCode.value)
                         .map(details =>
@@ -340,14 +340,14 @@ class SingleRejectedGoodsClaimMappingSpec
 
       "cannot find NDRC details for claimed reimbursement" in {
         val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-        val reimbursementClaimsLens = lens[SingleRejectedGoodsClaim].reimbursementClaims
+        val reimbursementClaimsLens = lens[SingleRejectedGoodsClaim].reimbursements
 
         forAll(genSingleRejectedGoodsClaimAllTypes, TaxCodesGen.genTaxCode) {
           (details: (SingleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
             val rejectedGoodsClaim = details._1
             val displayDeclaration = details._2
 
-            val claims = Map(taxCode -> BigDecimal(7))
+            val claims = Seq(Reimbursement(taxCode, BigDecimal(7), ReimbursementMethodAnswer.BankAccountTransfer))
 
             val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
 
