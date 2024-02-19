@@ -170,7 +170,9 @@ object RejectedGoodsClaimGen {
         detailsOfRejectedGoods = detailsOfRejectedGoods,
         inspectionDate = inspectionDate,
         inspectionAddress = inspectionAddress,
-        reimbursementClaims = claims._2,
+        reimbursements = claims._2.toSeq.map { case (taxCode, amount) =>
+          Reimbursement(taxCode, amount, reimbursementMethod)
+        },
         reimbursementMethod = reimbursementMethod,
         bankAccountDetails = bankAccountDetails,
         supportingEvidences = evidences
