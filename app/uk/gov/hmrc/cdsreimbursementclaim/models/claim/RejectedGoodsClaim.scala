@@ -21,7 +21,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAcc
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.time.LocalDate
-import scala.collection.immutable
 
 trait RejectedGoodsClaim extends HasClaimantInformation {
 
@@ -45,7 +44,7 @@ trait RejectedGoodsClaim extends HasClaimantInformation {
 
   val bankAccountDetails: Option[BankAccountDetails]
 
-  val supportingEvidences: immutable.Seq[EvidenceDocument]
+  val supportingEvidences: Seq[EvidenceDocument]
 
   def leadMrn: MRN
 
@@ -57,5 +56,5 @@ trait RejectedGoodsClaim extends HasClaimantInformation {
 
   def caseType: CaseType
 
-  def documents: immutable.Seq[EvidenceDocument]
+  def documents: Seq[EvidenceDocument]
 }

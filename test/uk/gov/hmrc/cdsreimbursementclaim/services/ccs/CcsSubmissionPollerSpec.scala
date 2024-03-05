@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.testkit.{TestKit, TestProbe}
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.testkit.{TestKit, TestProbe}
 import cats.data.EitherT
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory

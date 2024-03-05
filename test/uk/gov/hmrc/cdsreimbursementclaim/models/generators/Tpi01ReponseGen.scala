@@ -23,8 +23,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.CorrelationId
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01._
 import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, ErrorDetail, SourceFaultDetail}
 
-import scala.collection.immutable
-
 object Tpi01ReponseGen {
 
   val letterChars: Set[Char] = Set('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K')
@@ -192,7 +190,7 @@ object Tpi01ReponseGen {
       Some(declarantReferenceNumber.value)
     )
 
-  def totalOf(cases: immutable.Seq[CaseDetails]): String =
+  def totalOf(cases: Seq[CaseDetails]): String =
     cases.map(_.total).sum.toString
 
   def genCdfPayCase(includeNdrcCases: Boolean, includeSctyCases: Boolean): Gen[CDFPayCase] =

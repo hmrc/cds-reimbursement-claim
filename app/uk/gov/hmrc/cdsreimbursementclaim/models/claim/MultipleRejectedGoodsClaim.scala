@@ -26,7 +26,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 import java.time.LocalDate
 import play.api.libs.json.Reads.minLength
-import scala.collection.immutable.Seq
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 final case class MultipleRejectedGoodsClaim(

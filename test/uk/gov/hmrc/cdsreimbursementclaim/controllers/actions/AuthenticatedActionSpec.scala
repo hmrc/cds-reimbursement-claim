@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.controllers.actions
 
-import akka.stream.testkit.NoMaterializer
-import akka.util.Timeout
+import org.apache.pekko.stream.testkit.NoMaterializer
+import org.apache.pekko.util.Timeout
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec

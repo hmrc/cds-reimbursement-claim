@@ -32,8 +32,6 @@ import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 import scala.concurrent.Future
 import org.bson.types.ObjectId
 
-import scala.collection.immutable
-
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
 
@@ -110,7 +108,7 @@ class DefaultCcsSubmissionService @Inject() (
 
 object DefaultCcsSubmissionService {
 
-  def getHeaders(headerCarrier: HeaderCarrier): immutable.Seq[(String, String)] =
+  def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
     List(
       headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
       headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),

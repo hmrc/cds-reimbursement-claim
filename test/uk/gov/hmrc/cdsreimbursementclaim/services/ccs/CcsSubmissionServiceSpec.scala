@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.util.Timeout
 import cats.data.EitherT
 import cats.syntax.all._
 import org.bson.types.ObjectId
@@ -51,7 +51,7 @@ import uk.gov.hmrc.mongo.workitem._
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import scala.collection.immutable
+
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
@@ -68,7 +68,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
     PropertyCheckConfiguration(minSuccessful = 1)
 
-  def getHeaders(headerCarrier: HeaderCarrier): immutable.Seq[(String, String)] =
+  def getHeaders(headerCarrier: HeaderCarrier): Seq[(String, String)] =
     List(
       headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
       headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),

@@ -19,15 +19,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.scty
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
 import play.api.libs.json.{Json, OFormat}
 
-import scala.collection.immutable
-
 final case class SCTYCase(
   CDFPayCaseNumber: String,
   declarationID: Option[String],
   reasonForSecurity: String,
   procedureCode: String,
   caseStatus: String,
-  goods: Option[immutable.Seq[Goods]],
+  goods: Option[Seq[Goods]],
   declarantEORI: String,
   importerEORI: Option[String],
   claimantEORI: Option[String],
@@ -39,7 +37,7 @@ final case class SCTYCase(
   claimantName: Option[String],
   claimantEmailAddress: Option[String],
   closedDate: Option[String],
-  reimbursement: Option[immutable.Seq[Reimbursement]]
+  reimbursement: Option[Seq[Reimbursement]]
 )
 
 object SCTYCase {

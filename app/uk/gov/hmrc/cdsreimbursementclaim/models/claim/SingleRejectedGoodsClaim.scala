@@ -25,9 +25,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Decla
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
-
 import java.time.LocalDate
-import scala.collection.immutable
 
 final case class SingleRejectedGoodsClaim(
   movementReferenceNumber: MRN,
@@ -43,7 +41,7 @@ final case class SingleRejectedGoodsClaim(
   reimbursements: Seq[Reimbursement],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: immutable.Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument]
 ) extends RejectedGoodsClaim {
 
   override def totalReimbursementAmount: BigDecimal =
@@ -58,7 +56,7 @@ final case class SingleRejectedGoodsClaim(
 
   override def declarationMode: DeclarationMode = ParentDeclaration
 
-  override def documents: immutable.Seq[EvidenceDocument] = supportingEvidences
+  override def documents: Seq[EvidenceDocument] = supportingEvidences
 }
 
 object SingleRejectedGoodsClaim {

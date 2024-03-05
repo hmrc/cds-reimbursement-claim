@@ -18,13 +18,14 @@ package uk.gov.hmrc.cdsreimbursementclaim.metrics
 
 import com.codahale.metrics.{Counter, Timer}
 import com.google.inject.{Inject, Singleton}
+import com.codahale.metrics.MetricRegistry
 
 @Singleton
-class Metrics @Inject() (metrics: com.kenshoo.play.metrics.Metrics) {
+class Metrics @Inject() (metricRegistry: MetricRegistry) {
 
-  protected def timer(name: String): Timer = metrics.defaultRegistry.timer(s"backend.$name")
+  protected def timer(name: String): Timer = metricRegistry.timer(s"backend.$name")
 
-  protected def counter(name: String): Counter = metrics.defaultRegistry.counter(s"backend.$name")
+  protected def counter(name: String): Counter = metricRegistry.counter(s"backend.$name")
 
   val submitClaimTimer: Timer = timer("submit-claim.time")
 

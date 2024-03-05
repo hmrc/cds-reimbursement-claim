@@ -33,7 +33,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ExistingClaimGen._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ExistingDeclarationConnectorSpec
@@ -50,7 +49,7 @@ class ExistingDeclarationConnectorSpec
     (mockConfig.baseUrl(_: String)).expects("declaration").returning(baseUrl)
 
   val connector: ExistingDeclarationConnector = new ExistingDeclarationConnector(mockHttp, mockConfig) {
-    override def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
+    override def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
       Seq(
         HeaderNames.DATE                   -> "some-date",
         CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",

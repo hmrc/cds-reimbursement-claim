@@ -24,8 +24,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAcc
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
 
-import scala.collection.immutable
-
 final case class SecuritiesClaim(
   movementReferenceNumber: MRN,
   claimantType: ClaimantType,
@@ -34,7 +32,7 @@ final case class SecuritiesClaim(
   reasonForSecurity: ReasonForSecurity,
   securitiesReclaims: Map[String, Map[TaxCode, BigDecimal]],
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: immutable.Seq[EvidenceDocument],
+  supportingEvidences: Seq[EvidenceDocument],
   temporaryAdmissionMethodOfDisposal: Option[TemporaryAdmissionMethodOfDisposal],
   exportMovementReferenceNumber: Option[MRN]
 )

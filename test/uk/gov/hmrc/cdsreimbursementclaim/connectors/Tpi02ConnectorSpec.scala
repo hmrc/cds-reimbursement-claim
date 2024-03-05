@@ -37,7 +37,6 @@ import com.eclipsesource.schema.SchemaType
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.cdsreimbursementclaim.utils.SchemaValidation
 
-import scala.collection.immutable
 import uk.gov.hmrc.http.HeaderCarrier
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
@@ -208,7 +207,7 @@ trait WithTpi02Connector {
     )
 
     val connector: Tpi02Connector = new Tpi02Connector(httpClient, new ServicesConfig(config)) {
-      override def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
+      override def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
         Seq(
           HeaderNames.DATE                   -> "some-date",
           CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",

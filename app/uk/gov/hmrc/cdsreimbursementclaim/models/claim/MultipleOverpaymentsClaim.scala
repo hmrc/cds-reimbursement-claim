@@ -23,7 +23,6 @@ import play.api.libs.json.{Format, JsPath, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.MapFormat
-import scala.collection.immutable.Seq
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 final case class MultipleOverpaymentsClaim(

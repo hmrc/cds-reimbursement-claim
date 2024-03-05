@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
-import scala.collection.immutable
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -58,14 +58,14 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
   private val getSubscriptionUrl: String =
     s"${config.baseUrl("subscription")}/subscriptions/subscriptiondisplay/v1"
 
-  private def getQueryParameters(eori: Eori): immutable.Seq[(String, String)] =
+  private def getQueryParameters(eori: Eori): Seq[(String, String)] =
     Seq("EORI" -> eori.value, "acknowledgementReference" -> acknowledgementReference, "regime" -> "CDS")
 
   override def getSubscription(
     eori: Eori
   )(implicit hc: HeaderCarrier): Future[Either[String, Option[SubscriptionResponse]]] = {
-    val url: String                                      = getSubscriptionUrl
-    val queryParameters: immutable.Seq[(String, String)] = getQueryParameters(eori)
+    val url: String                            = getSubscriptionUrl
+    val queryParameters: Seq[(String, String)] = getQueryParameters(eori)
     http
       .GET[Either[EisErrorResponse, SubscriptionResponse]](url, queryParameters, getEISRequiredHeaders)
       .flatMap {

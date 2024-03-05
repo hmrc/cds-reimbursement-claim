@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors.eis
 import play.api.http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.collection.immutable
 import uk.gov.hmrc.http.HeaderCarrier
 
 trait EisConnector {
@@ -28,9 +27,9 @@ trait EisConnector {
 
   lazy val eisBearerToken: String = config.getString("eis.bearer-token")
 
-  def getExtraHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)]
+  def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)]
 
-  def getEISRequiredHeaders(implicit hc: HeaderCarrier): immutable.Seq[(String, String)] =
+  def getEISRequiredHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
     getExtraHeaders ++ Seq(HeaderNames.AUTHORIZATION -> s"Bearer $eisBearerToken")
 
 }
