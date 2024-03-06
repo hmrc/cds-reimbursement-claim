@@ -21,9 +21,7 @@ import ru.tinkoff.phobos.encoding.ElementEncoder
 import ru.tinkoff.phobos.syntax.xmlns
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Namespaces.mdg
 
-import scala.collection.immutable
-
-final case class PropertiesType(@xmlns(mdg) property: immutable.Seq[PropertyType] = Nil)
+final case class PropertiesType(@xmlns(mdg) property: Seq[PropertyType] = Nil)
 
 object PropertiesType {
   implicit val propertiesTypeEnc: ElementEncoder[PropertiesType] = deriveElementEncoder[PropertiesType]

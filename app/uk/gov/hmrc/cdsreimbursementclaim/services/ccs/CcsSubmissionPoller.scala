@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
-import akka.actor.{ActorSystem, Cancellable}
+import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import cats.data.EitherT
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}

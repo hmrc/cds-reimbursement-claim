@@ -16,6 +16,4 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.ccs
 
-import scala.collection.immutable
-
-final case class CcsSubmissionPayload(dec64Body: String, headers: immutable.Seq[(String, String)])
+final case class CcsSubmissionPayload(dec64Body: String, headers: Seq[(String, String)])

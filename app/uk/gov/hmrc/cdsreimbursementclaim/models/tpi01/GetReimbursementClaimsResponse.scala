@@ -19,8 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 import cats.syntax.eq._
 import play.api.libs.json._
 
-import scala.collection.immutable
-
 final case class GetReimbursementClaimsResponse(
   responseCommon: ResponseCommon,
   responseDetail: Option[ResponseDetail]
@@ -58,9 +56,9 @@ object ResponseDetail {
 
 final case class CDFPayCase(
   NDRCCaseTotal: Option[String],
-  NDRCCases: Option[immutable.Seq[NDRCCaseDetails]],
+  NDRCCases: Option[Seq[NDRCCaseDetails]],
   SCTYCaseTotal: Option[String],
-  SCTYCases: Option[immutable.Seq[SCTYCaseDetails]]
+  SCTYCases: Option[Seq[SCTYCaseDetails]]
 )
 
 object CDFPayCase {

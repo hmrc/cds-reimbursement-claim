@@ -22,8 +22,6 @@ import play.api.libs.json.Format
 import play.api.mvc.PathBindable
 import play.api.mvc.QueryStringBindable
 
-import scala.collection.immutable
-
 /** Provides capabilities to the set of case objects of a sealed trait T:
   * - JOSN serialization
   * - cats Eq (equality)
@@ -82,7 +80,7 @@ trait EnumerationFormat[T] {
 
     override def bind(
       key: String,
-      params: Map[String, immutable.Seq[String]]
+      params: Map[String, Seq[String]]
     ): Option[Either[String, T]] =
       QueryStringBindable.bindableString
         .bind(key, params)

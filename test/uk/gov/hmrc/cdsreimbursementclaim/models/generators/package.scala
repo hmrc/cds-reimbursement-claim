@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models
 
-import akka.http.scaladsl.model.DateTime
-import akka.util.ByteString
+import org.apache.pekko.http.scaladsl.model.DateTime
+import org.apache.pekko.util.ByteString
 import org.scalacheck.magnolia.Typeclass
 import org.scalacheck.{Arbitrary, Gen}
 import org.bson.types.ObjectId

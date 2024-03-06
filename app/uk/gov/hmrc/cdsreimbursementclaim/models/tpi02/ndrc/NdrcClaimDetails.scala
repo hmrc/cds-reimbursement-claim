@@ -20,8 +20,6 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
 
-import scala.collection.immutable
-
 final case class NdrcClaimDetails(
   CDFPayCaseNumber: String,
   declarationID: Option[String],
@@ -40,8 +38,8 @@ final case class NdrcClaimDetails(
   claimantName: Option[String],
   claimantEmailAddress: Option[String],
   closedDate: Option[String],
-  reimbursements: Option[immutable.Seq[Reimbursement]],
-  MRNDetails: Option[immutable.Seq[ProcedureDetail]]
+  reimbursements: Option[Seq[Reimbursement]],
+  MRNDetails: Option[Seq[ProcedureDetail]]
 )
 
 object NdrcClaimDetails {

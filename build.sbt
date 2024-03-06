@@ -66,9 +66,9 @@ lazy val microservice = Project(appName, file("."))
   )
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.13.12")
+  .settings(scalaVersion := "2.13.13")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -84,7 +84,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
-    addCompilerPlugin(scalafixSemanticdb("4.8.12")),
+    addCompilerPlugin(scalafixSemanticdb("4.8.15")),
     scalacOptions ++= List(
       "-Xmigration",
       "-Yrangepos",
@@ -94,7 +94,8 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused-imports&site=prod:iv",
       "-Wconf:cat=unused-imports&site=upscan:iv",
       "-Wconf:cat=unused-imports&site=testOnlyDoNotUseInAppConf:iv",
-      "-Wconf:cat=unused-privates&site=testOnlyDoNotUseInAppConf.Routes.defaultPrefix:iv"
+      "-Wconf:cat=unused-privates&site=testOnlyDoNotUseInAppConf.Routes.defaultPrefix:iv",
+      s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s,src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s"
     ),
     Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )

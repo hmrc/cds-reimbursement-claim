@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.metrics
 
-import com.codahale.metrics.{Counter, Timer}
-import com.kenshoo.play.metrics.{Metrics => PlayMetrics}
+import com.codahale.metrics.{Counter, MetricRegistry, Timer}
 import org.scalamock.scalatest.MockFactory
 
 object MockMetrics extends MockFactory {
 
-  val metrics: Metrics = new Metrics(stub[PlayMetrics]) {
+  val metrics: Metrics = new Metrics(new MetricRegistry) {
     override def timer(name: String): Timer     = new Timer()
     override def counter(name: String): Counter = new Counter()
   }

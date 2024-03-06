@@ -51,7 +51,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -105,7 +104,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
                   HttpResponse(
                     200,
                     Json.toJson(declarationResponse).toString(),
-                    Map.empty[String, immutable.Seq[String]]
+                    Map.empty[String, Seq[String]]
                   )
                 )
               )
@@ -129,7 +128,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
                   HttpResponse(
                     200,
                     Json.toJson(declarationResponse).toString(),
-                    Map.empty[String, immutable.Seq[String]]
+                    Map.empty[String, Seq[String]]
                   )
                 )
               )
@@ -144,7 +143,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         "an corrupt/invalid acc14 payload is received" in forAll { mrn: MRN =>
           inSequence {
             mockDeclarationConnector(
-              Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, immutable.Seq[String]]))
+              Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
             )
           }
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
@@ -153,7 +152,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         "a http status response other than 200 OK is received" in forAll { mrn: MRN =>
           inSequence {
             mockDeclarationConnector(
-              Right(HttpResponse(400, "some error", Map.empty[String, immutable.Seq[String]]))
+              Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
             )
           }
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
@@ -173,7 +172,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
       "UnexpectedError: an corrupt/invalid acc14 payload is received" in forAll { mrn: MRN =>
         inSequence {
           mockDeclarationConnector(
-            Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, immutable.Seq[String]]))
+            Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
           )
         }
         await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
@@ -184,7 +183,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
       "UnexpectedError: a http status response other than 200 OK is received" in forAll { mrn: MRN =>
         inSequence {
           mockDeclarationConnector(
-            Right(HttpResponse(400, "some error", Map.empty[String, immutable.Seq[String]]))
+            Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
           )
         }
         await(declarationService.getDeclarationWithErrorCodes(mrn).value) shouldBe Left(
@@ -209,7 +208,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
               HttpResponse(
                 400,
                 Json.toJson(declarationErrorResponse).toString(),
-                Map.empty[String, immutable.Seq[String]]
+                Map.empty[String, Seq[String]]
               )
             )
           )
@@ -227,7 +226,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
               HttpResponse(
                 400,
                 Json.toJson(declarationErrorResponse).toString(),
-                Map.empty[String, immutable.Seq[String]]
+                Map.empty[String, Seq[String]]
               )
             )
           )

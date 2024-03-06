@@ -25,8 +25,6 @@ import play.api.libs.json.JsNumber
 import scala.util.Try
 import com.fasterxml.jackson.core.JsonParseException
 
-import scala.collection.immutable
-
 final case class EisErrorResponse(
   status: Int,
   errorDetail: Option[ErrorDetail],
@@ -59,7 +57,7 @@ object ErrorDetail {
   implicit val format: OFormat[ErrorDetail] = Json.format[ErrorDetail]
 }
 
-final case class SourceFaultDetail(detail: immutable.Seq[String])
+final case class SourceFaultDetail(detail: Seq[String])
 
 object SourceFaultDetail {
   implicit val format: OFormat[SourceFaultDetail] = Json.format[SourceFaultDetail]
