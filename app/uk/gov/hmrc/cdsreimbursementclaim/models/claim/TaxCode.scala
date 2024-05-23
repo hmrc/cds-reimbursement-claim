@@ -26,6 +26,8 @@ sealed abstract class TaxCode(val value: String) extends Product with Serializab
 
 object TaxCode {
 
+  final case class UnsupportedTaxCode(taxCode: String) extends TaxCode(taxCode)
+
   case object A00 extends TaxCode("A00")
   case object A20 extends TaxCode("A20")
   case object A30 extends TaxCode("A30")
@@ -188,7 +190,7 @@ object TaxCode {
     stringToTaxCodeMap.get(taxCode)
 
   def getOrFail(taxCode: String): TaxCode =
-    stringToTaxCodeMap(taxCode)
+    stringToTaxCodeMap.getOrElse(taxCode, UnsupportedTaxCode(taxCode))
 
   implicit val equality: Eq[TaxCode] = Eq.fromUniversalEquals[TaxCode]
 
