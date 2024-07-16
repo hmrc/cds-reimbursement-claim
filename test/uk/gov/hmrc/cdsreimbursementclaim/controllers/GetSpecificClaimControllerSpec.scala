@@ -134,7 +134,7 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
           }
 
           val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
-          status(result)        shouldBe SERVICE_UNAVAILABLE
+          status(result)        shouldBe INTERNAL_SERVER_ERROR
           contentAsJson(result) shouldBe Json.toJson(response.errorDetail)
         }
       }
