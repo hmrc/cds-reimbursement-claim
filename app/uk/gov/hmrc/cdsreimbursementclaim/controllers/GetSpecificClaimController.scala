@@ -60,14 +60,14 @@ class GetSpecificClaimController @Inject() (
             if (status < 499)
               BadRequest(Json.toJson(errorDetails))
             else
-              ServiceUnavailable(Json.toJson(errorDetails))
+              InternalServerError(Json.toJson(errorDetails))
 
           case Left(error @ EisErrorResponse(status, None, _)) =>
             logger.error(error.getErrorDescriptionWithPrefix("A call to TPI02 API"))
             if (status < 499)
               BadRequest
             else
-              ServiceUnavailable
+              InternalServerError
         }
         .recover {
           case ex if ex.getMessage.contains("JSON validation") =>
