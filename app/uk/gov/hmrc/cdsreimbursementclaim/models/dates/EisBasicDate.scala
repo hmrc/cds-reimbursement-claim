@@ -17,23 +17,25 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.dates
 
 import play.api.libs.json.{JsError, JsResult, JsString, JsSuccess, JsValue, Reads, Writes}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate.eisStringFormat
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate._
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 
 final case class EisBasicDate(value: LocalDate) extends AnyVal {
-  def toTpi05DateString: String = eisStringFormat.format(value)
+  def toTpi05DateString: String = eisStringFormat1.format(value)
 }
 
 object EisBasicDate {
-  private val eisStringFormat: DateTimeFormatter = DateTimeFormatter.BASIC_ISO_DATE
+
+  private val eisStringFormat1: DateTimeFormatter = DateTimeFormatter.BASIC_ISO_DATE
+  private val eisStringFormat2: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
   def parse(value: String): Try[EisBasicDate] =
-    parse(value, eisStringFormat)
+    parse(value, eisStringFormat1).orElse(parse(value, eisStringFormat2))
 
-  private def parse(value: String, format: DateTimeFormatter) =
+  private def parse(value: String, format: DateTimeFormatter): Try[EisBasicDate] =
     Try(LocalDate.parse(value, format))
       .map(EisBasicDate(_))
 
