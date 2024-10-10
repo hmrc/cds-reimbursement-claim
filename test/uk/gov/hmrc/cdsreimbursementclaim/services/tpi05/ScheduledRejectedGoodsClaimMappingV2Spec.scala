@@ -70,6 +70,8 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
 
         details should have(
           Symbol("CDFPayService")(NDRC),
+          Symbol("newEORI")(None),
+          Symbol("newDAN")(None),
           Symbol("dateReceived")(ISOLocalDate.now.some),
           Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
           Symbol("claimDate")(ISOLocalDate.now.some),

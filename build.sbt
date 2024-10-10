@@ -3,46 +3,10 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
 val appName = "cds-reimbursement-claim"
 
-ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml"        % VersionScheme.Always
-ThisBuild / scalafixDependencies += "com.github.liancheng"       %% "organize-imports" % "0.6.0"
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
-addCommandAlias("fix", "all compile:scalafix test:scalafix")
-
-lazy val wartremoverSettings =
-  Seq(
-    Compile / compile / wartremoverErrors ++= Warts.allBut(
-      Wart.DefaultArguments,
-      Wart.ImplicitConversion,
-      Wart.ImplicitParameter,
-      Wart.Nothing,
-      Wart.Overloading,
-      Wart.ToString,
-      Wart.Any,
-      Wart.Equals,
-      Wart.StringPlusAny,
-      Wart.PlatformDefault,
-      Wart.Null,
-      Wart.GlobalExecutionContext,
-      Wart.JavaNetURLConstructors,
-      Wart.SeqApply,
-      Wart.CaseClassPrivateApply
-    ),
-    WartRemover.autoImport.wartremoverExcluded += target.value,
-    Compile / compile / WartRemover.autoImport.wartremoverExcluded ++=
-      (Compile / routes).value ++
-        (baseDirectory.value ** "*.sc").get ++
-        Seq(sourceManaged.value / "main" / "sbt-buildinfo" / "BuildInfo.scala"),
-    Test / compile / wartremoverErrors --= Seq(
-      Wart.NonUnitStatements,
-      Wart.Null,
-      Wart.PublicInference,
-      Wart.Any,
-      Wart.OptionPartial,
-      Wart.TripleQuestionMark
-    )
-  )
 
 lazy val scoverageSettings =
   Seq(
@@ -68,7 +32,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.13.13")
+  .settings(scalaVersion := "2.13.15")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -84,7 +48,6 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
-    addCompilerPlugin(scalafixSemanticdb("4.8.15")),
     scalacOptions ++= List(
       "-Xmigration",
       "-Yrangepos",
@@ -100,8 +63,6 @@ lazy val microservice = Project(appName, file("."))
     Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )
   .settings(Test / resourceDirectory := baseDirectory.value / "/conf/resources")
-  .settings(wartremoverSettings: _*)
   .settings(scoverageSettings: _*)
   .settings(PlayKeys.playDefaultPort := 7501)
   .settings(scalafmtOnCompile := true)
-  .settings(Compile / scalacOptions -= "utf8")

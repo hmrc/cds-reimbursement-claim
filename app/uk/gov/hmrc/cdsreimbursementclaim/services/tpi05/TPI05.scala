@@ -31,6 +31,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, Eori}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.EORI
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.NewEoriAndDan
 
 object TPI05 {
 
@@ -246,6 +248,13 @@ object TPI05 {
 
     def withClaimantAddress(claimantAddress: Address): Builder =
       copy(validatedRequest.map(_.copy(claimantAddress = Some(claimantAddress))))
+
+    def withMaybeNewEORIAndDAN(newEoriAndDan: Option[NewEoriAndDan]): Builder =
+      newEoriAndDan match {
+        case None                           => this
+        case Some(NewEoriAndDan(eori, dan)) =>
+          copy(validatedRequest.map(_.copy(newEORI = Some(eori), newDAN = Some(dan))))
+      }
 
     def verify: Either[CdsError, EisSubmitClaimRequest] =
       validatedRequest.toEither.map { requestDetail =>

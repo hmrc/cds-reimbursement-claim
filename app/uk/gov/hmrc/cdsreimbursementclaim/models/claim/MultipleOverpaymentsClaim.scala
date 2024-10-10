@@ -35,7 +35,8 @@ final case class MultipleOverpaymentsClaim(
   reimbursementClaims: Map[MRN, Map[TaxCode, BigDecimal]],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument],
+  newEoriAndDan: Option[NewEoriAndDan]
 ) extends OverpaymentsClaim {
 
   def leadMrn: MRN = movementReferenceNumbers.head
@@ -71,8 +72,9 @@ object MultipleOverpaymentsClaim {
           (JsPath \ "reimbursementClaims").read[Map[MRN, Map[TaxCode, BigDecimal]]] and
           (JsPath \ "reimbursementMethod").read[ReimbursementMethodAnswer] and
           (JsPath \ "bankAccountDetails").readNullable[BankAccountDetails] and
-          (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]]
-      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _)),
+          (JsPath \ "supportingEvidences").read[Seq[EvidenceDocument]] and
+          (JsPath \ "newEoriAndDan").readNullable[NewEoriAndDan]
+      )(MultipleOverpaymentsClaim(_, _, _, _, _, _, _, _, _, _, _)),
       (
         (JsPath \ "movementReferenceNumbers").write[List[MRN]] and
           (JsPath \ "claimantType").write[ClaimantType] and
@@ -83,7 +85,8 @@ object MultipleOverpaymentsClaim {
           (JsPath \ "reimbursementClaims").write[Map[MRN, Map[TaxCode, BigDecimal]]] and
           (JsPath \ "reimbursementMethod").write[ReimbursementMethodAnswer] and
           (JsPath \ "bankAccountDetails").writeNullable[BankAccountDetails] and
-          (JsPath \ "supportingEvidences").write[Seq[EvidenceDocument]]
+          (JsPath \ "supportingEvidences").write[Seq[EvidenceDocument]] and
+          (JsPath \ "newEoriAndDan").writeNullable[NewEoriAndDan]
       )(unlift(MultipleOverpaymentsClaim.unapply))
     )
 }

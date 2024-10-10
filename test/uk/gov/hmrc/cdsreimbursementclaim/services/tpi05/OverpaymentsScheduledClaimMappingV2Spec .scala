@@ -62,6 +62,8 @@ class OverpaymentsScheduledClaimMappingV2Spec
 
             details should have(
               Symbol("CDFPayService")(NDRC),
+              Symbol("newEORI")(claim.newEoriAndDan.map(_.eori)),
+              Symbol("newDAN")(claim.newEoriAndDan.map(_.dan)),
               Symbol("dateReceived")(ISOLocalDate.now.some),
               Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
               Symbol("claimDate")(ISOLocalDate.now.some),
@@ -74,10 +76,20 @@ class OverpaymentsScheduledClaimMappingV2Spec
               Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
               Symbol("caseType")(Some(CaseType.Bulk)),
               Symbol("goodsDetails")(
-                GoodsDetails(
-                  descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
-                  isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
-                ).some
+                claim.newEoriAndDan match {
+                  case None                =>
+                    GoodsDetails(
+                      descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
+                      isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
+                    ).some
+                  case Some(newEoriAndDan) =>
+                    GoodsDetails(
+                      descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
+                        .map(WAFRules.asSafeText)
+                        .map(_.take(500)),
+                      isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
+                    ).some
+                }
               ),
               Symbol("EORIDetails")(
                 EoriDetails(

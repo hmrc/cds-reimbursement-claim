@@ -32,7 +32,8 @@ final case class SingleOverpaymentsClaim(
   reimbursements: Seq[Reimbursement],
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument],
+  newEoriAndDan: Option[NewEoriAndDan]
 ) extends OverpaymentsClaim {
 
   override def bankAccountDetailsAnswer: Option[BankAccountDetails] = bankAccountDetails
