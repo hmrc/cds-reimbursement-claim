@@ -34,7 +34,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full)
   )
-  .settings(scalaVersion := "2.13.14")
+  .settings(scalaVersion := "2.13.15")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
