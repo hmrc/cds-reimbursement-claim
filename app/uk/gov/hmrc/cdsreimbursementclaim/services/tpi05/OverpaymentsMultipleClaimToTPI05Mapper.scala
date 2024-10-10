@@ -66,18 +66,13 @@ class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Multiple))
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(
-        GoodsDetails(
-          descOfGoods = Some(claim.additionalDetails),
-          isPrivateImporter = Some(claim.claimantType match {
-            case ClaimantType.Consignee => YesNo.Yes
-            case _                      => YesNo.No
-          })
-        )
+        GoodsDetails.from(claim.additionalDetails, claim.newEoriAndDan, claim.claimantType)
       )
       .withEORIDetails(
         getEoriDetails(claim, headDeclaration)
       )
-      .withMrnDetails(getMrnDetails(claim, declarations))).flatMap(_.verify)
+      .withMrnDetails(getMrnDetails(claim, declarations))
+      .withMaybeNewEORIAndDAN(claim.newEoriAndDan)).flatMap(_.verify)
   }
 
   private def getMrnDetails(

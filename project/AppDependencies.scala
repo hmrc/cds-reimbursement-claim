@@ -26,7 +26,7 @@ object AppDependencies {
     "com.github.chocpanda"       %% "scalacheck-magnolia"        % "0.6.0"          % Test,
     "com.vladsch.flexmark"        % "flexmark-all"               % "0.64.0"         % Test,
     "org.pegdown"                 % "pegdown"                    % "1.6.0"          % Test,
-    "org.apache.pekko"           %% "pekko-testkit"              % "1.0.2"          % Test,
+    "org.apache.pekko"           %% "pekko-testkit"              % "1.0.3"          % Test,
     "org.scala-lang.modules"     %% "scala-xml"                  % "2.2.0"          % Test,
     "com.github.arturopala"      %% "play-json-schema-validator" % "1.0.0"          % Test
   )

@@ -19,6 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 import play.api.libs.json.{Json, OWrites, Reads}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.WAFRules
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.NewEoriAndDan
 
 final case class GoodsDetails private (
   descOfGoods: Option[String],
@@ -33,6 +35,18 @@ final case class GoodsDetails private (
 
 object GoodsDetails {
 
+  final def from(additionalDetails: String, newEoriAndDan: Option[NewEoriAndDan], claimantType: ClaimantType) =
+    apply(
+      descOfGoods = newEoriAndDan match {
+        case None                => Some(additionalDetails)
+        case Some(newEoriAndDan) => Some(newEoriAndDan.asAdditionalDetailsText + additionalDetails)
+      },
+      isPrivateImporter = Some(claimantType match {
+        case ClaimantType.Consignee => YesNo.Yes
+        case _                      => YesNo.No
+      })
+    )
+
   final def apply(
     descOfGoods: Option[String],
     isPrivateImporter: Option[YesNo] = None,
@@ -44,13 +58,13 @@ object GoodsDetails {
     dateOfInspection: Option[String] = None
   ): GoodsDetails =
     new GoodsDetails(
-      descOfGoods.map(WAFRules.asSafeText),
+      descOfGoods.map(s => WAFRules.asSafeText(s).take(500)),
       isPrivateImporter,
       placeOfImport,
       groundsForRepaymentApplication,
       atTheImporterOrDeclarantAddress,
       inspectionAddress,
-      anySpecialCircumstances.map(WAFRules.asSafeText),
+      anySpecialCircumstances.map(s => WAFRules.asSafeText(s).take(500)),
       dateOfInspection
     )
 

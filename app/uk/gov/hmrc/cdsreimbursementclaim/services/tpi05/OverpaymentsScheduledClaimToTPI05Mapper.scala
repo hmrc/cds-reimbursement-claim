@@ -53,16 +53,11 @@ class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetail
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Scheduled))
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(
-        GoodsDetails(
-          descOfGoods = Some(claim.additionalDetails),
-          isPrivateImporter = Some(claim.claimantType match {
-            case ClaimantType.Consignee => YesNo.Yes
-            case _                      => YesNo.No
-          })
-        )
+        GoodsDetails.from(claim.additionalDetails, claim.newEoriAndDan, claim.claimantType)
       )
       .withEORIDetails(getEoriDetails(claim, declaration))
-      .withMrnDetails(getMrnDetails(claim, declaration.displayResponseDetail))).flatMap(_.verify)
+      .withMrnDetails(getMrnDetails(claim, declaration.displayResponseDetail))
+      .withMaybeNewEORIAndDAN(claim.newEoriAndDan)).flatMap(_.verify)
   }
 
   private def getMrnDetails(

@@ -34,7 +34,8 @@ final case class ScheduledOverpaymentsClaim(
   reimbursementMethod: ReimbursementMethodAnswer,
   bankAccountDetails: Option[BankAccountDetails],
   scheduledDocument: EvidenceDocument,
-  supportingEvidences: Seq[EvidenceDocument]
+  supportingEvidences: Seq[EvidenceDocument],
+  newEoriAndDan: Option[NewEoriAndDan]
 ) extends OverpaymentsClaim {
   lazy val combinedReimbursementClaims: Map[TaxCode, AmountPaidWithCorrect] =
     reimbursementClaims.values.reduceOption((x, y) => x |+| y).getOrElse(Map.empty)

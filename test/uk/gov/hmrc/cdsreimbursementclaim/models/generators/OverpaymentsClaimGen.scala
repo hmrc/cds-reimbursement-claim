@@ -32,6 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 import java.net.URL
 import scala.jdk.CollectionConverters.CollectionHasAsScala
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object OverpaymentsClaimGen {
@@ -134,6 +135,7 @@ object OverpaymentsClaimGen {
       evidences           <- Gen.nonEmptyListOf(genEvidences)
       additionalDetails   <- genRandomString
       payeeType           <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
+      newEoriAndDan       <- Gen.oneOf(None, Some(NewEoriAndDan(Eori("foo-eori"), "foo-dan")))
     } yield (
       SingleOverpaymentsClaim(
         movementReferenceNumber = mrn,
@@ -148,7 +150,8 @@ object OverpaymentsClaimGen {
         reimbursementMethod = reimbursementMethod,
         bankAccountDetails = bankAccountDetails,
         supportingEvidences = evidences,
-        payeeType = payeeType
+        payeeType = payeeType,
+        newEoriAndDan = newEoriAndDan
       ),
       declaration,
       duplicateDeclaration
@@ -179,6 +182,7 @@ object OverpaymentsClaimGen {
                                .suchThat(_.nonEmpty)
       claims              <- Gen.sequence(declarations.map(declaration => genClaimsFromDisplayDeclaration(declaration)))
       additionalDetails   <- genRandomString
+      newEoriAndDan       <- Gen.oneOf(None, Some(NewEoriAndDan(Eori("foo-eori"), "foo-dan")))
     } yield (
       MultipleOverpaymentsClaim(
         movementReferenceNumbers = mrns,
@@ -190,7 +194,8 @@ object OverpaymentsClaimGen {
         reimbursementClaims = claims.asScala.toMap,
         reimbursementMethod = reimbursementMethod,
         bankAccountDetails = bankAccountDetails,
-        supportingEvidences = evidences
+        supportingEvidences = evidences,
+        newEoriAndDan = newEoriAndDan
       ),
       declarations
     )
@@ -217,6 +222,7 @@ object OverpaymentsClaimGen {
       evidences           <- Gen.nonEmptyListOf(genEvidences)
       scheduledDocument   <- genEvidences
       additionalDetails   <- genRandomString
+      newEoriAndDan       <- Gen.oneOf(None, Some(NewEoriAndDan(Eori("foo-eori"), "foo-dan")))
     } yield (
       ScheduledOverpaymentsClaim(
         movementReferenceNumber = mrn,
@@ -229,7 +235,8 @@ object OverpaymentsClaimGen {
         reimbursementMethod = reimbursementMethod,
         bankAccountDetails = bankAccountDetails,
         supportingEvidences = evidences,
-        scheduledDocument = scheduledDocument
+        scheduledDocument = scheduledDocument,
+        newEoriAndDan = newEoriAndDan
       ),
       declaration
     )

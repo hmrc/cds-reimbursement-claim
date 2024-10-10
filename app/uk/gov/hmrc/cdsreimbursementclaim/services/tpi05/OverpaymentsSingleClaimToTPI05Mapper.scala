@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
+
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SingleOverpaymentsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TypeOfClaimAnswer
@@ -65,13 +66,7 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
       .withDeclarationMode(DeclarationMode.basedOn(TypeOfClaimAnswer.Individual))
       .withBasisOfClaim(claim.basisOfClaim.toTPI05DisplayString)
       .withGoodsDetails(
-        GoodsDetails(
-          descOfGoods = Some(claim.additionalDetails),
-          isPrivateImporter = Some(claim.claimantType match {
-            case ClaimantType.Consignee => YesNo.Yes
-            case _                      => YesNo.No
-          })
-        )
+        GoodsDetails.from(claim.additionalDetails, claim.newEoriAndDan, claim.claimantType)
       )
       .withEORIDetails(getEoriDetails(claim, declaration))
       .withMrnDetails(getMrnDetails(claim, declaration) :: Nil)
@@ -79,7 +74,8 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
         duplicateDeclaration.map(d =>
           getMrnDetails(claim, d, Some(MRN(d.displayResponseDetail.declarationId)), includeAccountDetails = false)
         )
-      )).flatMap(_.verify)
+      )
+      .withMaybeNewEORIAndDAN(claim.newEoriAndDan)).flatMap(_.verify)
   }
 
   private def getMrnDetails(
