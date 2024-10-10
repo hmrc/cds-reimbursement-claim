@@ -3,12 +3,10 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
 val appName = "cds-reimbursement-claim"
 
-ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml"        % VersionScheme.Always
-ThisBuild / scalafixDependencies += "com.github.liancheng"       %% "organize-imports" % "0.6.0"
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
-addCommandAlias("fix", "all compile:scalafix test:scalafix")
 
 lazy val scoverageSettings =
   Seq(
@@ -50,7 +48,6 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
-    addCompilerPlugin(scalafixSemanticdb("4.8.15")),
     scalacOptions ++= List(
       "-Xmigration",
       "-Yrangepos",
