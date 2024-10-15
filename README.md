@@ -32,6 +32,7 @@ Access to this service requires:
 | GET    | /claims/underpayments                    | Get existing underpayments claims given the EORI      |
 | GET    | /claims/:cdfPayService/:cdfPayCaseNumber | Get claim details by case number                      |
 | GET    | /eori/xi                                 | Get XI EORI connected with the current user's GB EORI |
+| GET    | /eori                                    | Get details of the EORI connected with the currently authorised user |
 | POST   | /claims/overpayments-single              | Submit a single overpayment claim                     |
 | POST   | /claims/overpayments-multiple            | Submit a multiple overpayment claim                   |
 | POST   | /claims/overpayments-scheduled           | Submit a scheduled overpayment claim                  |
