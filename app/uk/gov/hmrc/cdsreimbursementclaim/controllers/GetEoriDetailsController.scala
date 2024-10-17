@@ -37,7 +37,46 @@ class GetEoriDetailsController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  final val getEoriDetails: Action[AnyContent] =
+  final def getEoriDetails(eori: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      connector
+        .getSubscription(eori)
+        .map {
+          case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
+            details.EORINo match {
+              case Some(subscriptionEori) =>
+                Results.Ok(
+                  Json.obj(
+                    "eoriGB"      -> JsString(subscriptionEori.value),
+                    "eoriXI"      -> (details.XI_Subscription match {
+                      case Some(s) => JsString(s.XI_EORINo)
+                      case None    => JsNull
+                    }),
+                    "fullName"    -> details.CDSFullName,
+                    "eoriEndDate" -> (details.EORIEndDate match {
+                      case Some(date) => JsString(date)
+                      case None       => JsNull
+                    })
+                  )
+                )
+              case None                   =>
+                Results.NoContent
+            }
+
+          case Left(error) =>
+            logger.error(error)
+            Results.InternalServerError(error)
+
+          case _ =>
+            Results.NoContent
+        }
+        .recover { case NonFatal(error) =>
+          logger.error(s"getEoriDetails($eori) failed: ${error.getClass}: ${error.getMessage}")
+          Results.NoContent
+        }
+    }
+
+  final val getCurrentUserEoriDetails: Action[AnyContent] =
     authorised.async({ case (r, eori) =>
       implicit val request: Request[AnyContent] = r
       connector
@@ -66,13 +105,13 @@ class GetEoriDetailsController @Inject() (
 
           case Left(error) =>
             logger.error(error)
-            Results.NoContent
+            Results.InternalServerError(error)
 
           case _ =>
             Results.NoContent
         }
         .recover { case NonFatal(error) =>
-          logger.error(s"getXiEori failed: ${error.getClass}: ${error.getMessage}")
+          logger.error(s"getCurrentUserEoriDetails failed: ${error.getClass}: ${error.getMessage}")
           Results.NoContent
         }
     }: AuthorisedActions.Input[AnyContent] => Future[Result])

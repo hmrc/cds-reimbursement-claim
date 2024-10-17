@@ -23,4 +23,5 @@ POST        /claims/securities                       uk.gov.hmrc.cdsreimbursemen
 POST        /claims/files                            uk.gov.hmrc.cdsreimbursementclaim.controllers.SubmitClaimController.submitFiles() 
 
 GET         /eori/xi                                 uk.gov.hmrc.cdsreimbursementclaim.controllers.GetXiEoriController.getXiEori
-GET         /eori                                    uk.gov.hmrc.cdsreimbursementclaim.controllers.GetEoriDetailsController.getEoriDetails
+GET         /eori/:eori                              uk.gov.hmrc.cdsreimbursementclaim.controllers.GetEoriDetailsController.getEoriDetails(eori: String)
+GET         /eori                                    uk.gov.hmrc.cdsreimbursementclaim.controllers.GetEoriDetailsController.getCurrentUserEoriDetails

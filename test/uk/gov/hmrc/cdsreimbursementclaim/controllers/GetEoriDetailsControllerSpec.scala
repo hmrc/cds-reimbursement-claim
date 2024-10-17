@@ -69,14 +69,14 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
       .returning(Future.failed(new Exception(errorMessage)))
 
   "The GetEoriDetailsController" should {
-    "succeed" when {
+    "getCurrentUserEoriDetails succeed" when {
       "handling non-empty response with XI EORI" in {
         forAll(Sub09ReponseGen.genSubscriptionWithXiEori) { case (response, eoriGB, eoriXI) =>
           inSequence {
             mockGetClaimsResponse(testEori)(Some(response))
           }
 
-          val result = controller.getEoriDetails(FakeRequest())
+          val result = controller.getCurrentUserEoriDetails(FakeRequest())
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(
             Json.obj(
@@ -95,7 +95,7 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
             mockGetClaimsResponse(testEori)(Some(response))
           }
 
-          val result = controller.getEoriDetails(FakeRequest())
+          val result = controller.getCurrentUserEoriDetails(FakeRequest())
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.toJson(
             Json.obj(
@@ -114,20 +114,71 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
             mockGetClaimsResponse(testEori)(None)
           }
 
-          val result = controller.getEoriDetails(FakeRequest())
+          val result = controller.getCurrentUserEoriDetails(FakeRequest())
           status(result) shouldBe NO_CONTENT
         }
       }
     }
 
-    "fail" when {
+    "getCurrentUserEoriDetails fail" when {
       "handling error response with status 500" in {
         inSequence {
           mockFailedResponse(testEori)("Sample error message")
         }
 
-        val result = controller.getEoriDetails(FakeRequest())
+        val result = controller.getCurrentUserEoriDetails(FakeRequest())
         status(result) shouldBe NO_CONTENT
+      }
+    }
+
+    "getEoriDetails succeed" when {
+      "handling non-empty response with XI EORI" in {
+        forAll(Sub09ReponseGen.genSubscriptionWithXiEori) { case (response, eoriGB, eoriXI) =>
+          inSequence {
+            mockGetClaimsResponse(testEori)(Some(response))
+          }
+
+          val result = controller.getEoriDetails(testEori.value)(FakeRequest())
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(
+            Json.obj(
+              "eoriGB"      -> JsString(eoriGB.value),
+              "eoriXI"      -> JsString(eoriXI.value),
+              "fullName"    -> JsString("Tony Stark"),
+              "eoriEndDate" -> JsString("2020-01-01")
+            )
+          )
+        }
+      }
+
+      "handling non-empty response without XI EORI" in {
+        forAll(Sub09ReponseGen.genSubscriptionWithoutXiEori) { case (response, eoriGB) =>
+          inSequence {
+            mockGetClaimsResponse(testEori)(Some(response))
+          }
+
+          val result = controller.getEoriDetails(testEori.value)(FakeRequest())
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(
+            Json.obj(
+              "eoriGB"      -> JsString(eoriGB.value),
+              "eoriXI"      -> JsNull,
+              "fullName"    -> JsString("Tony Stark"),
+              "eoriEndDate" -> JsString("2020-01-01")
+            )
+          )
+        }
+      }
+
+      "handling empty response" in {
+        forAll(Sub09ReponseGen.genSubscriptionWithoutXiEori) { case (response, eoriGB) =>
+          inSequence {
+            mockGetClaimsResponse(testEori)(None)
+          }
+
+          val result = controller.getCurrentUserEoriDetails(FakeRequest())
+          status(result) shouldBe NO_CONTENT
+        }
       }
     }
   }
