@@ -48,7 +48,7 @@ object BasisOfClaim extends EnumerationFormat[BasisOfClaim] {
     def toTPI05DisplayString: String = "Incorrect Value"
   }
 
-  case object IncorrectEoriAndDefermentAccountNumber extends BasisOfClaim {
+  case object IncorrectEoriAndDan extends BasisOfClaim {
     def toTPI05DisplayString: String = "Incorrect EORI & Deferment Acc. Num."
   }
 
@@ -99,7 +99,7 @@ object BasisOfClaim extends EnumerationFormat[BasisOfClaim] {
     IncorrectCommodityCode,
     IncorrectCpc,
     IncorrectValue,
-    IncorrectEoriAndDefermentAccountNumber,
+    IncorrectEoriAndDan,
     InwardProcessingReliefFromCustomsDuty,
     Miscellaneous,
     OutwardProcessingRelief,
