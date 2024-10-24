@@ -85,16 +85,16 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                           Left(CdsError("disposal method missing"))
                                                                         case (Some(disposalMethod), None)              =>
                                                                           Right(Some(TemporaryAdmissionMethodOfDisposalDetail(disposalMethod.eisCode, None)))
-                                                                        case (Some(disposalMethod), Some(exportMRN))   =>
+                                                                        case (Some(disposalMethod), Some(exportMRNs))  =>
                                                                           Right(
                                                                             Some(
                                                                               TemporaryAdmissionMethodOfDisposalDetail(
                                                                                 disposalMethod.eisCode,
-                                                                                Some(List(ExportMRN(exportMRN)))
+                                                                                Some(exportMRNs.map(exportMRN => ExportMRN(exportMRN)).toList)
                                                                               )
                                                                             )
                                                                           )
-                                                                        case (None, None)                              => Right(None)
+                                                                        case _                                         => Right(None)
                                                                       }
       selectedSecurityDeposits                                      =
         securityDeposits.filter(deposit => claim.securitiesReclaims.exists(_._1 === deposit.securityDepositId))

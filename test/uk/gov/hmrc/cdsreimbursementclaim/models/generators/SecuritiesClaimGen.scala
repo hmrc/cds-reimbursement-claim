@@ -116,7 +116,7 @@ object SecuritiesClaimGen {
         temporaryAdmissionMethodOfDisposal.exists(
           TemporaryAdmissionMethodOfDisposal.requiresMrn(_)
         )
-      ) genMRN.map(Some.apply)
+      ) genMRN.map(mrn => Some(List(mrn)))
       else
         Gen.const(None)
 
@@ -144,7 +144,12 @@ object SecuritiesClaimGen {
     name  <- genRandomString
   } yield SignedInUserDetails(Some(email), eori, email, ContactName(name)))
 
-  implicit lazy val genSecuritiesClaimAndDeclaration =
+  implicit lazy val genSecuritiesClaimAndDeclaration: org.scalacheck.Gen[
+    (
+      uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim,
+      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+    )
+  ] =
     for {
 
       displayDeclaration <- genDisplayDeclarationWithSecurities
@@ -166,16 +171,26 @@ object SecuritiesClaimGen {
                             )
     } yield (securitiesClaim, displayDeclaration)
 
-  implicit lazy val arbitrarySecuritiesClaimAndDeclaration =
+  implicit lazy val arbitrarySecuritiesClaimAndDeclaration: org.scalacheck.Arbitrary[
+    (
+      uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim,
+      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+    )
+  ] =
     Arbitrary(genSecuritiesClaimAndDeclaration)
 
-  implicit lazy val genTempAdmissionSecuritiesClaimAndDeclaration =
+  implicit lazy val genTempAdmissionSecuritiesClaimAndDeclaration: org.scalacheck.Gen[
+    (
+      uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim,
+      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+    )
+  ] =
     for {
       reasonForSecurity                     <- Gen.oneOf(ReasonForSecurity.temporaryAdmissions)
       methodOfDisposal                      <- Gen.some(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values))
       exportMrn                             <- methodOfDisposal
                                                  .filter(TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(_))
-                                                 .as(Gen.some(genMRN))
+                                                 .as(Gen.some(Gen.listOfN(1, genMRN)))
                                                  .getOrElse(Gen.const(None))
       (securitiesClaim, displayDeclaration) <- genSecuritiesClaimAndDeclaration.map {
                                                  case (securitiesClaim, displayDeclaration) =>

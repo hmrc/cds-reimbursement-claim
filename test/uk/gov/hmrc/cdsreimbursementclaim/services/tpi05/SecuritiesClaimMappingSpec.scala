@@ -143,7 +143,7 @@ class SecuritiesClaimMappingSpec
           claim.temporaryAdmissionMethodOfDisposal.map(_.eisCode)
         )
         detail.methodOfDisposals.flatMap(_.headOption.flatMap(_.exportMRNs.map(_.map(_.MRNNumber)))) should ===(
-          claim.exportMovementReferenceNumber.map(List(_))
+          claim.exportMovementReferenceNumber
         )
       }
     }
