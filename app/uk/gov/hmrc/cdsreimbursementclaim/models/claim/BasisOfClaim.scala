@@ -92,6 +92,10 @@ object BasisOfClaim extends EnumerationFormat[BasisOfClaim] {
     def toTPI05DisplayString: String = "Incorrect Additional Information Code"
   }
 
+  case object Quota extends BasisOfClaim {
+    def toTPI05DisplayString: String = "Quota"
+  }
+
   val values: Set[BasisOfClaim] = Set(
     DuplicateEntry,
     DutySuspension,
@@ -109,6 +113,7 @@ object BasisOfClaim extends EnumerationFormat[BasisOfClaim] {
     ProofOfReturnRefundGiven,
     EvidenceThatGoodsHaveNotEnteredTheEU,
     IncorrectExciseValue,
-    IncorrectAdditionalInformationCode
+    IncorrectAdditionalInformationCode,
+    Quota
   )
 }
