@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 
+import java.time.LocalDate
+
 trait ClaimItem {
   val CDFPayCaseNumber: String
   val declarationID: Option[String]
+  def submissionDate: LocalDate
 }

@@ -20,6 +20,9 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CaseStatus
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimItem, ClaimTransformer, NDRCCaseDetails, ResponseDetail}
 
+import java.time.LocalDate
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ClaimsResponse.{earliestDate, startDateFormat}
+
 /** Model of an NDRC type of claim data returned from /claims endpoint */
 final case class NdrcClaimItem(
   CDFPayCaseNumber: String,
@@ -36,7 +39,10 @@ final case class NdrcClaimItem(
   totalExciseClaimAmount: Option[String],
   declarantReferenceNumber: Option[String],
   basisOfClaim: Option[String]
-) extends ClaimItem
+) extends ClaimItem {
+  override def submissionDate: LocalDate =
+    if (claimStartDate.trim.isEmpty) earliestDate else LocalDate.parse(claimStartDate, startDateFormat)
+}
 
 object NdrcClaimItem extends ClaimTransformer[NDRCCaseDetails, NdrcClaimItem] {
   implicit val format: OFormat[NdrcClaimItem]                     = Json.format[NdrcClaimItem]
