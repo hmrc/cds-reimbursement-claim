@@ -39,8 +39,10 @@ final case class SctyClaimItem(
   totalVATClaimAmount: Option[String],
   declarantReferenceNumber: Option[String]
 ) extends ClaimItem {
-  override def submissionDate: LocalDate =
-    LocalDate.parse(claimStartDate.getOrElse(earliestDate.format(startDateFormat)), startDateFormat)
+  override def submissionDate: LocalDate = claimStartDate match {
+    case None       => earliestDate
+    case Some(date) => LocalDate.parse(date, startDateFormat)
+  }
 }
 
 object SctyClaimItem extends ClaimTransformer[SCTYCaseDetails, SctyClaimItem] {
