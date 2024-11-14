@@ -20,23 +20,37 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import java.time.LocalDate
+
 class ClaimTransformerSpec extends AnyWordSpec with Matchers with MockFactory {
 
   object Transformer extends ClaimTransformer[CaseDetails, SampleClass] {
     override def fromTpi01Response(caseDetails: CaseDetails): SampleClass = mock[SampleClass]
   }
-  case class SampleClass(id: Int, name: String, CDFPayCaseNumber: String, declarationID: Option[String])
-      extends ClaimItem
+  case class SampleClass(
+    id: Int,
+    name: String,
+    CDFPayCaseNumber: String,
+    declarationID: Option[String],
+    submissionDate: LocalDate
+  ) extends ClaimItem
 
   "ClaimTransformer" should {
     "removeDuplicates" in {
       val list =
-        Seq(SampleClass(1, "Bob", "", None), SampleClass(1, "Bob", "", None), SampleClass(2, "Charlie", "", None))
+        Seq(
+          SampleClass(1, "Bob", "", None, LocalDate.now()),
+          SampleClass(1, "Bob", "", None, LocalDate.now()),
+          SampleClass(2, "Charlie", "", None, LocalDate.now())
+        )
 
       val uniqueList: Seq[SampleClass] = Transformer.removeDuplicates(list, item => item.name)
 
       uniqueList.length shouldBe 2
-      uniqueList          should contain.only(SampleClass(1, "Bob", "", None), SampleClass(2, "Charlie", "", None))
+      uniqueList          should contain.only(
+        SampleClass(1, "Bob", "", None, LocalDate.now()),
+        SampleClass(2, "Charlie", "", None, LocalDate.now())
+      )
     }
   }
 

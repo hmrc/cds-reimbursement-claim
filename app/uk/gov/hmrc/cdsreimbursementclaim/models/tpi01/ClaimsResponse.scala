@@ -20,6 +20,9 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.ndrc.NdrcClaimItem
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.scty.SctyClaimItem
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[NdrcClaimItem]) {
   def ++(other: ClaimsResponse): ClaimsResponse =
     ClaimsResponse(this.sctyClaims ++ other.sctyClaims, this.ndrcClaims ++ other.ndrcClaims)
@@ -27,7 +30,18 @@ final case class ClaimsResponse(sctyClaims: Seq[SctyClaimItem], ndrcClaims: Seq[
 
 object ClaimsResponse {
   implicit val format: OFormat[ClaimsResponse] = Json.format[ClaimsResponse]
+  val startDateFormat: DateTimeFormatter       = DateTimeFormatter.ofPattern("yyyyMMdd")
+  val earliestDate                             = LocalDate.of(1900, 1, 1)
 
-  def fromTpi01Response(responseDetail: ResponseDetail): ClaimsResponse =
-    ClaimsResponse(SctyClaimItem.convert(responseDetail), NdrcClaimItem.convert(responseDetail))
+  def fromTpi01Response(
+    responseDetail: ResponseDetail
+  ): ClaimsResponse =
+    ClaimsResponse(
+      sortClaimItems(SctyClaimItem.convert(responseDetail)),
+      sortClaimItems(NdrcClaimItem.convert(responseDetail))
+    )
+
+  private def sortClaimItems[T <: ClaimItem](claims: Seq[T]): Seq[T] =
+    claims.sortWith((x, y) => x.submissionDate.isAfter(y.submissionDate))
+
 }
