@@ -146,6 +146,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         bankDetails = bankDetails
       )
       .withTemporaryAdmissionMethodOfDisposal(methodOfDisposalDetail)
+      .withAdditionalDetails(claim.additionalDetails)
       .withClaimantAddress(claimantAddress)).flatMap(_.verify)
   }
 

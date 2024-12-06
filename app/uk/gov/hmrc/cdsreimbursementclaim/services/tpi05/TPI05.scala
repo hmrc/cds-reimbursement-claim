@@ -158,6 +158,11 @@ object TPI05 {
     def withGoodsDetails(goodsDetails: GoodsDetails): Builder =
       copy(validatedRequest.map(_.copy(goodsDetails = Some(goodsDetails))))
 
+    def withAdditionalDetails(additionalDetails: Option[String]): Builder =
+      additionalDetails
+        .map(a => copy(validatedRequest.map(_.copy(goodsDetails = Some(GoodsDetails(descOfGoods = Some(a)))))))
+        .getOrElse(this)
+
     def withSecurityInfo(
       dateClaimReceived: Option[EisBasicDate],
       reasonForSecurity: ReasonForSecurity,
