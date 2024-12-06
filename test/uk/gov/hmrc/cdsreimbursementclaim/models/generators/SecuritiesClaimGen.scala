@@ -103,6 +103,7 @@ object SecuritiesClaimGen {
     bankAccountDetails  <- Gen.option(genBankAccountDetails)
     documents           <- Gen.listOf(genEvidences)
     payeeType           <- Gen.oneOf[PayeeType](PayeeType.values)
+    additionalDetails   <- Gen.option(Gen.asciiPrintableStr)
 
     temporaryAdmissionMethodOfDisposal <-
       if (ReasonForSecurity.temporaryAdmissions.contains(reasonForSecurity))
@@ -131,7 +132,8 @@ object SecuritiesClaimGen {
       bankAccountDetails = bankAccountDetails,
       supportingEvidences = documents,
       exportMovementReferenceNumber = exportMovementReferenceNumber,
-      temporaryAdmissionMethodOfDisposal = temporaryAdmissionMethodOfDisposal
+      temporaryAdmissionMethodOfDisposal = temporaryAdmissionMethodOfDisposal,
+      additionalDetails = additionalDetails
     )
   )
 

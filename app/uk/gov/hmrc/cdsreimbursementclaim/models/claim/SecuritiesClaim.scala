@@ -34,7 +34,8 @@ final case class SecuritiesClaim(
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument],
   temporaryAdmissionMethodOfDisposal: Option[TemporaryAdmissionMethodOfDisposal],
-  exportMovementReferenceNumber: Option[Seq[MRN]]
+  exportMovementReferenceNumber: Option[Seq[MRN]],
+  additionalDetails: Option[String]
 )
 
 object SecuritiesClaim {

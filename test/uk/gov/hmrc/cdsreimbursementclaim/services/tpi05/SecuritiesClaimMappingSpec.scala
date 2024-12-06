@@ -27,7 +27,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, PostNewClaimsRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails, PostNewClaimsRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen._
@@ -121,6 +121,9 @@ class SecuritiesClaimMappingSpec
           address.telephoneNumber   shouldBe contactInformation.telephoneNumber
           address.emailAddress      shouldBe contactInformation.emailAddress
         }
+        detail should have(
+          Symbol("goodsDetails")(claim.additionalDetails.map(a => GoodsDetails(descOfGoods = Some(a))))
+        )
     }
 
   "The Securities claim mapper" should {
