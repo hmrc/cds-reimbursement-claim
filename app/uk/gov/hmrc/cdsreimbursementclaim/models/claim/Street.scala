@@ -22,7 +22,9 @@ object Street {
     (line1, line2) match {
       case (Some(s1), Some(s2)) if s1.trim().endsWith(s2.trim)   => Some(s1)
       case (Some(s1), Some(s2)) if s2.trim().startsWith(s1.trim) => Some(s2)
-      case (Some(s1), Some(s2))                                  => Some(s"$s1 $s2")
+      case (Some(s1), Some(s2))                                  =>
+        if (s1.length() + s2.length() <= 69) Some(s"$s1 $s2")
+        else Some(s"$s1$s2".take(70))
       case (Some(s1), None)                                      => Some(s1)
       case (None, Some(s2))                                      => Some(s2)
       case _                                                     => Some("")

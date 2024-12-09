@@ -38,6 +38,25 @@ class StreetSpec extends AnyWordSpec with Matchers {
           streetResult shouldBe Some(s"${line1.value} ${line2.value}")
         }
       }
+
+      "line1 plus line2 is 70 characters" in {
+        List(
+          (Some("Suite 1A, Floor 1, Statham House La"), Some("ncastrian Office Centre Talbot Road")),
+          (
+            Some("Suite 1A, Floor 1, Statham House Lancastrian"),
+            Some(" Office Centre Talbot Road")
+          ),
+          (Some("Suite 1A, "), Some("Floor 1, Statham House Lancastrian Office Centre Talbot Road"))
+        ).foreach { case (line1, line2) =>
+          val streetResult = Street.fromLines(line1, line2)
+          val line1Result  = Street.line1(line1, line2)
+          val line2Result  = Street.line2(line1, line2)
+
+          line1Result  shouldBe line1
+          line2Result  shouldBe line2
+          streetResult shouldBe Some(s"${line1.value}${line2.value}")
+        }
+      }
     }
 
     "not concatenate address" when {
