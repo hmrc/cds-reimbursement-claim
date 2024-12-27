@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxTuple2Semigroupal
+import com.codahale.metrics.{Counter, MetricRegistry, Timer}
 import org.scalamock.handlers._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
@@ -29,11 +30,11 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
-import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
+import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
@@ -69,13 +70,18 @@ class ClaimServiceSpec
 
   val auditServiceMock: AuditService = mock[AuditService]
 
+  val metrics: Metrics = new Metrics(new MetricRegistry) {
+    override def timer(name: String): Timer     = new Timer()
+    override def counter(name: String): Counter = new Counter()
+  }
+
   val claimService =
     new DefaultClaimService(
       claimConnectorMock,
       declarationServiceMock,
       emailServiceMock,
       auditServiceMock,
-      MockMetrics.metrics
+      metrics
     )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

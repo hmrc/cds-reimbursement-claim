@@ -17,8 +17,7 @@ lazy val scoverageSettings =
     ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageMinimumBranchTotal := 73,
     ScoverageKeys.coverageFailOnMinimum := false,
-    ScoverageKeys.coverageHighlighting := true,
-    ThisBuild / Test / test / coverageEnabled := true
+    ScoverageKeys.coverageHighlighting := true
   )
 
 lazy val microservice = Project(appName, file("."))

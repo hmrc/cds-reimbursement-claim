@@ -18,6 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
 import cats.instances.future._
+import com.codahale.metrics.{Counter, MetricRegistry, Timer}
 import org.scalamock.handlers.{CallHandler3, CallHandler6}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -27,7 +28,7 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.EmailConnector
-import uk.gov.hmrc.cdsreimbursementclaim.metrics.MockMetrics
+import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.ClaimConfirmationEmailSentEvent
@@ -48,7 +49,12 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockEmailConnector: EmailConnector = mock[EmailConnector]
 
-  val service = new DefaultEmailService(mockEmailConnector, mockAuditService, MockMetrics.metrics)
+  val metrics: Metrics = new Metrics(new MetricRegistry) {
+    override def timer(name: String): Timer     = new Timer()
+    override def counter(name: String): Counter = new Counter()
+  }
+
+  val service = new DefaultEmailService(mockEmailConnector, mockAuditService, metrics)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
