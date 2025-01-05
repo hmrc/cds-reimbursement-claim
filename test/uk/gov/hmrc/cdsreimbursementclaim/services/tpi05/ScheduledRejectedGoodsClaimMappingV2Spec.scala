@@ -299,8 +299,15 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-
+        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
         forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)) =>
           val value       = random.toString
           val claim       = details._1
@@ -336,9 +343,24 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
       }
 
       "cannot find NDRC details for claimed reimbursement" in {
-        val reimbursementClaimsLens = Lens[ScheduledRejectedGoodsClaim].reimbursementClaims
-        val ndrcLens                = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+        val reimbursementClaimsLens =
+          new Lens[ScheduledRejectedGoodsClaim, Map[String, Map[TaxCode, AmountPaidWithCorrect]]] {
+            override def set(
+              root: ScheduledRejectedGoodsClaim,
+              value: Map[String, Map[TaxCode, AmountPaidWithCorrect]]
+            ): ScheduledRejectedGoodsClaim =
+              root.copy(reimbursementClaims = value)
+          }
 
+        val ndrcLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
         forAll { (details: (ScheduledRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
           val rejectedGoodsClaim = details._1
           val displayDeclaration = details._2

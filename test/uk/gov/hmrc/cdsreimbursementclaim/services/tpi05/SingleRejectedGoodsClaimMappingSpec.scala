@@ -306,7 +306,15 @@ class SingleRejectedGoodsClaimMappingSpec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
 
         forAll(genUUID, genBigDecimal, genSingleRejectedGoodsClaimAllTypes) {
           (random: UUID, amount: BigDecimal, details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
@@ -343,8 +351,24 @@ class SingleRejectedGoodsClaimMappingSpec
       }
 
       "cannot find NDRC details for claimed reimbursement" in {
-        val ndrcLens                = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-        val reimbursementClaimsLens = Lens[SingleRejectedGoodsClaim].reimbursements
+        val reimbursementsLens =
+          new Lens[SingleRejectedGoodsClaim, Seq[Reimbursement]] {
+            override def set(
+              root: SingleRejectedGoodsClaim,
+              value: Seq[Reimbursement]
+            ): SingleRejectedGoodsClaim =
+              root.copy(reimbursements = value)
+          }
+
+        val ndrcLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
 
         forAll(genSingleRejectedGoodsClaimAllTypes, TaxCodesGen.genTaxCode) {
           (details: (SingleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
@@ -353,7 +377,7 @@ class SingleRejectedGoodsClaimMappingSpec
 
             val claims = Seq(Reimbursement(taxCode, BigDecimal(7), ReimbursementMethodAnswer.BankAccountTransfer))
 
-            val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim, claims)
+            val updatedClaim = reimbursementsLens.set(rejectedGoodsClaim, claims)
 
             val updatedDeclaration = ndrcLens.set(displayDeclaration, None)
 

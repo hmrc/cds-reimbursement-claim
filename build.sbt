@@ -28,7 +28,7 @@ lazy val microservice = Project(appName, file("."))
     SbtDistributablesPlugin
   )
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(scalaVersion := "3.6.2")
+  .settings(scalaVersion := "3.3.4")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -45,19 +45,8 @@ lazy val microservice = Project(appName, file("."))
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
     scalacOptions ++= List(
-      "-experimental",
-      // "-Xmigration",
-      // "-Yrangepos",
-      // "-Xlint:-byname-implicit",
       "-language:postfixOps",
-      // "-Wconf:msg=unused-imports&site=<empty>:iv",
-      // "-Wconf:msg=unused-imports&site=prod:iv",
-      // "-Wconf:msg=unused-imports&site=upscan:iv",
-      // "-Wconf:msg=unused-imports&site=testOnlyDoNotUseInAppConf:iv",
-      // "-Wconf:msg=unused-privates&site=testOnlyDoNotUseInAppConf.Routes.defaultPrefix:iv",
       s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s,src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s"
-      // "-rewrite",
-      // "-source:3.4-migration"
     ),
     Test / scalacOptions --= Seq("-Ywarn-value-discard")
   )

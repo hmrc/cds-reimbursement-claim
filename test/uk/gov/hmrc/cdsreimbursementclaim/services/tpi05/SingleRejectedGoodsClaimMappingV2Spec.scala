@@ -305,8 +305,15 @@ class SingleRejectedGoodsClaimMappingV2Spec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-
+        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
         forAll(genUUID, genBigDecimal, genSingleRejectedGoodsClaimAllTypes) {
           (random: UUID, amount: BigDecimal, details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
             val value       = random.toString
@@ -342,8 +349,24 @@ class SingleRejectedGoodsClaimMappingV2Spec
       }
 
       "cannot find NDRC details for claimed reimbursement" in {
-        val ndrcLens           = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-        val reimbursementsLens = Lens[SingleRejectedGoodsClaim].reimbursements
+        val reimbursementsLens =
+          new Lens[SingleRejectedGoodsClaim, Seq[Reimbursement]] {
+            override def set(
+              root: SingleRejectedGoodsClaim,
+              value: Seq[Reimbursement]
+            ): SingleRejectedGoodsClaim =
+              root.copy(reimbursements = value)
+          }
+
+        val ndrcLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
 
         forAll(genSingleRejectedGoodsClaimAllTypes, TaxCodesGen.genTaxCode) {
           (details: (SingleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>

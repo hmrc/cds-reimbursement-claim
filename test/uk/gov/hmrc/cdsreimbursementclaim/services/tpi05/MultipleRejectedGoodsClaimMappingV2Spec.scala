@@ -41,6 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Lens
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 class MultipleRejectedGoodsClaimMappingV2Spec
@@ -314,8 +315,18 @@ class MultipleRejectedGoodsClaimMappingV2Spec
     }
 
     "fail with the error" when {
-      val reimbursementClaimsLens = Lens[MultipleRejectedGoodsClaim].reimbursementClaims
-      val ndrcLens                = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+      val reimbursementClaimsLens = new Lens[MultipleRejectedGoodsClaim, Map[MRN, Map[TaxCode, BigDecimal]]] {
+        override def set(
+          root: MultipleRejectedGoodsClaim,
+          value: Map[MRN, Map[TaxCode, BigDecimal]]
+        ): MultipleRejectedGoodsClaim =
+          root.copy(reimbursementClaims = value)
+      }
+
+      val ndrcLens = new Lens[DisplayDeclaration, Option[List[ResponseNdrcDetails]]] {
+        override def set(root: DisplayDeclaration, value: Option[List[ResponseNdrcDetails]]): DisplayDeclaration =
+          root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+      }
 
       "mapping claim having incorrect NDRC details" in forAll {
         (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]), random: UUID, amount: BigDecimal) =>
