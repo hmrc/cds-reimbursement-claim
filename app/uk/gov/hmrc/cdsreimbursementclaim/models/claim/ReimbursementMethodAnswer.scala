@@ -22,9 +22,9 @@ sealed trait ReimbursementMethodAnswer
 
 object ReimbursementMethodAnswer extends EnumerationFormat[ReimbursementMethodAnswer] {
 
-  final case object CurrentMonthAdjustment extends ReimbursementMethodAnswer
-  final case object BankAccountTransfer extends ReimbursementMethodAnswer
-  final case object Subsidy extends ReimbursementMethodAnswer
+  case object CurrentMonthAdjustment extends ReimbursementMethodAnswer
+  case object BankAccountTransfer extends ReimbursementMethodAnswer
+  case object Subsidy extends ReimbursementMethodAnswer
 
-  val values: Set[ReimbursementMethodAnswer] = Set(BankAccountTransfer, CurrentMonthAdjustment, Subsidy)
+  lazy val values: Set[ReimbursementMethodAnswer] = Set(BankAccountTransfer, CurrentMonthAdjustment, Subsidy)
 }

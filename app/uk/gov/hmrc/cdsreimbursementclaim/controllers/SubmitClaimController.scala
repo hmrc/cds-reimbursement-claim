@@ -35,6 +35,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.Configuration
 
+import uk.gov.hmrc.cdsreimbursementclaim.services.email.given
+import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.given
+
 @Singleton()
 class SubmitClaimController @Inject() (
   authenticate: AuthenticateWithUserActions,

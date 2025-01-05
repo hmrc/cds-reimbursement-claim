@@ -22,9 +22,9 @@ sealed trait ClaimantType
 
 object ClaimantType extends EnumerationFormat[ClaimantType] {
 
-  final case object Consignee extends ClaimantType
-  final case object Declarant extends ClaimantType
-  final case object User extends ClaimantType
+  case object Consignee extends ClaimantType
+  case object Declarant extends ClaimantType
+  case object User extends ClaimantType
 
-  override val values: Set[ClaimantType] = Set(Consignee, Declarant, User)
+  override lazy val values: Set[ClaimantType] = Set(Consignee, Declarant, User)
 }

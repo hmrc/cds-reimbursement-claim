@@ -42,7 +42,7 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
   case object ProvisionalDuty extends ReasonForSecurity("PDD", "Provisional Duty")
   case object Quota extends ReasonForSecurity("CRQ", "Quota")
 
-  override val values: Set[ReasonForSecurity] =
+  override lazy val values: Set[ReasonForSecurity] =
     Set(
       AccountSales,
       CommunitySystemsOfDutyRelief,

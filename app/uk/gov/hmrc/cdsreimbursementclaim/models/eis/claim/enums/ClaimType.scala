@@ -22,11 +22,11 @@ sealed trait ClaimType extends Product with Serializable
 
 object ClaimType extends EnumerationFormat[ClaimType] {
 
-  final case object C285 extends ClaimType {
+  case object C285 extends ClaimType {
     override def toString: String = "C285"
   }
 
-  final case object CE1179 extends ClaimType {
+  case object CE1179 extends ClaimType {
     override def toString: String = "C&E1179"
   }
 

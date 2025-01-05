@@ -19,7 +19,6 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.http.HttpResponse
 import play.api.mvc.Results
 import play.api.mvc.Result
-import scala.annotation.nowarn
 
 sealed trait Error {
   type T
@@ -50,12 +49,11 @@ object Error {
     override type T = HttpResponse
     override val value: T           = response
     override def toString(): String = response.body
-    @nowarn
     override def asResult(): Result =
       Results
         .Status(response.status)(response.body)
         .withHeaders(response.headers.toSeq.flatMap { case (key, values) =>
           values.map(value => (key, value))
-        }: _*)
+        }*)
   }
 }

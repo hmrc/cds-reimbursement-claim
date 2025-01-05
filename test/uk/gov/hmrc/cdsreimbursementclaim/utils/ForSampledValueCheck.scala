@@ -22,7 +22,7 @@ import org.scalatest.compatible.Assertion
 import org.scalatest.matchers.should.Matchers
 
 trait ForSampledValueCheck {
-  self: Matchers with ScalaCheckPropertyChecks =>
+  self: Matchers & ScalaCheckPropertyChecks =>
 
   final def forSampledValue[A](gen: Gen[A])(block: A => Assertion) = {
     val value: A =

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
@@ -323,18 +322,18 @@ object TPI05RequestGen {
     detail <- genC285ClaimRequestDetail
   } yield EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))
 
-  implicit lazy val arbitraryRequestCommon: Typeclass[RequestCommon] =
+  implicit lazy val arbitraryRequestCommon: Arbitrary[RequestCommon] =
     Arbitrary(genRequestCommon)
 
-  implicit lazy val arbitraryRequestDetail: Typeclass[RequestDetail] =
+  implicit lazy val arbitraryRequestDetail: Arbitrary[RequestDetail] =
     Arbitrary(Gen.oneOf(genC285ClaimRequestDetail, genRejectedGoodsClaimRequestDetail))
 
-  implicit lazy val arbitraryEisSubmitClaimRequest: Typeclass[EisSubmitClaimRequest] =
-    gen[EisSubmitClaimRequest]
+  implicit lazy val arbitraryEisSubmitClaimRequest: Arbitrary[EisSubmitClaimRequest] =
+    GeneratorUtils.gen[EisSubmitClaimRequest]
 
-  implicit lazy val arbitraryEisSubmitClaimResponse: Typeclass[EisSubmitClaimResponse] =
-    gen[EisSubmitClaimResponse]
+  // implicit lazy val arbitraryEisSubmitClaimResponse: Arbitrary[EisSubmitClaimResponse] =
+  //   GeneratorUtils.gen[EisSubmitClaimResponse]
 
-  implicit lazy val arbitraryClaimSubmitResponse: Typeclass[ClaimSubmitResponse] =
-    gen[ClaimSubmitResponse]
+  implicit lazy val arbitraryClaimSubmitResponse: Arbitrary[ClaimSubmitResponse] =
+    GeneratorUtils.gen[ClaimSubmitResponse]
 }

@@ -24,9 +24,9 @@ sealed trait CaseType extends Product with Serializable
 
 object CaseType extends EnumerationFormat[CaseType] {
 
-  final case object Individual extends CaseType
-  final case object Bulk extends CaseType
-  final case object CMA extends CaseType
+  case object Individual extends CaseType
+  case object Bulk extends CaseType
+  case object CMA extends CaseType
 
   lazy val values: Set[CaseType] = Set(Individual, Bulk, CMA)
 

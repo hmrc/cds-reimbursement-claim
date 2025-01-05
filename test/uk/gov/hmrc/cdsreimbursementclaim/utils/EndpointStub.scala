@@ -49,7 +49,7 @@ trait EndpointStub {
   final def givenEndpointStub[A](
     routes: PartialFunction[RequestHeader, Result]
   )(
-    validateRequest: Request[AnyContent] => Unit = request => ()
+    validateRequest: Request[AnyContent] => Unit = _ => ()
   )(block: Port => HttpClient => A)(implicit provider: ServerProvider): A = {
 
     val config: ServerConfig = ServerConfig(port = Some(0), mode = Mode.Test)
@@ -76,24 +76,26 @@ trait EndpointStub {
 
     val server = provider.createServer(config, application)
 
-    try WsTestClient.withClient { wsClient =>
-      val httpClient =
-        new DefaultHttpClient(
-          config.configuration,
-          new HttpAuditing {
-            val appName                                 = "test"
-            val auditConnector                          = new AuditConnector {
-              override def auditingConfig: AuditingConfig       = AuditingConfig.fromConfig(config.configuration)
-              override def auditChannel: AuditChannel           = ???
-              override def datastreamMetrics: DatastreamMetrics = ???
-            }
-            override def auditDisabledForPattern: Regex = ".+".r
-          },
-          wsClient,
-          application.actorSystem
-        )
-      block(new Port(server.httpPort.orElse(server.httpsPort).get))(httpClient)
-    } finally server.stop()
+    try
+      WsTestClient.withClient { wsClient =>
+        val httpClient =
+          new DefaultHttpClient(
+            config.configuration,
+            new HttpAuditing {
+              val appName                                 = "test"
+              val auditConnector                          = new AuditConnector {
+                override def auditingConfig: AuditingConfig       = AuditingConfig.fromConfig(config.configuration)
+                override def auditChannel: AuditChannel           = ???
+                override def datastreamMetrics: DatastreamMetrics = ???
+              }
+              override def auditDisabledForPattern: Regex = ".+".r
+            },
+            wsClient,
+            application.actorSystem
+          )
+        block(new Port(server.httpPort.orElse(server.httpsPort).get))(httpClient)
+      }
+    finally server.stop()
   }
 
 }

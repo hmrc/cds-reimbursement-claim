@@ -23,7 +23,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import shapeless.lens
+
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
@@ -40,6 +40,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Lens
 
 class SingleRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
@@ -54,7 +55,7 @@ class SingleRejectedGoodsClaimMappingSpec
   "The Reject Goods claim mapper" should {
 
     "map a valid Single claim to TPI05 request" in forAll(genSingleRejectedGoodsClaim(ClaimantType.Declarant)) {
-      details: (SingleRejectedGoodsClaim, DisplayDeclaration) =>
+      (details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map((claim, List(declaration)))
 
@@ -305,7 +306,7 @@ class SingleRejectedGoodsClaimMappingSpec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+        val ndrcDetailsLens = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
 
         forAll(genUUID, genBigDecimal, genSingleRejectedGoodsClaimAllTypes) {
           (random: UUID, amount: BigDecimal, details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
@@ -314,7 +315,8 @@ class SingleRejectedGoodsClaimMappingSpec
             val declaration = details._2
             val ndrcDetails = declaration.displayResponseDetail.ndrcDetails
 
-            val declarationWithInvalidNdrcDetails = ndrcDetailsLens.set(declaration)(
+            val declarationWithInvalidNdrcDetails = ndrcDetailsLens.set(
+              declaration,
               ndrcDetails.map(
                 _.map(detail =>
                   uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
@@ -341,8 +343,8 @@ class SingleRejectedGoodsClaimMappingSpec
       }
 
       "cannot find NDRC details for claimed reimbursement" in {
-        val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-        val reimbursementClaimsLens = lens[SingleRejectedGoodsClaim].reimbursements
+        val ndrcLens                = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+        val reimbursementClaimsLens = Lens[SingleRejectedGoodsClaim].reimbursements
 
         forAll(genSingleRejectedGoodsClaimAllTypes, TaxCodesGen.genTaxCode) {
           (details: (SingleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
@@ -351,9 +353,9 @@ class SingleRejectedGoodsClaimMappingSpec
 
             val claims = Seq(Reimbursement(taxCode, BigDecimal(7), ReimbursementMethodAnswer.BankAccountTransfer))
 
-            val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
+            val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim, claims)
 
-            val updatedDeclaration = ndrcLens.set(displayDeclaration)(None)
+            val updatedDeclaration = ndrcLens.set(displayDeclaration, None)
 
             val tpi05Request = mapper.map((updatedClaim, List(updatedDeclaration)))
 

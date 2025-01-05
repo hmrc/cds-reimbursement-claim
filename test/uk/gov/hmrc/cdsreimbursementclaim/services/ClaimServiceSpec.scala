@@ -86,7 +86,7 @@ class ClaimServiceSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  implicit val request: Request[_] = FakeRequest()
+  implicit val request: Request[?] = FakeRequest()
 
   implicit val overpaymentsSingleClaimMapper: OverpaymentsSingleClaimToTPI05Mapper =
     mock[OverpaymentsSingleClaimToTPI05Mapper]
@@ -156,12 +156,12 @@ class ClaimServiceSpec
 
   def mockAuditSubmitClaimEvent(
     eisSubmitClaimRequest: EisSubmitClaimRequest
-  ): CallHandler6[String, SubmitClaimEvent, String, HeaderCarrier, Writes[SubmitClaimEvent], Request[_], Unit] =
+  ): CallHandler6[String, SubmitClaimEvent, String, HeaderCarrier, Writes[SubmitClaimEvent], Request[?], Unit] =
     (auditServiceMock
       .sendEvent(_: String, _: SubmitClaimEvent, _: String)(
         _: HeaderCarrier,
         _: Writes[SubmitClaimEvent],
-        _: Request[_]
+        _: Request[?]
       ))
       .expects(
         "SubmitClaim",
@@ -181,9 +181,9 @@ class ClaimServiceSpec
     submitClaimResponse: ClaimSubmitResponse
   )(
     response: Either[Error, Unit]
-  ): CallHandler4[EmailRequest, ClaimSubmitResponse, HeaderCarrier, Request[_], EitherT[Future, models.Error, Unit]] =
+  ): CallHandler4[EmailRequest, ClaimSubmitResponse, HeaderCarrier, Request[?], EitherT[Future, models.Error, Unit]] =
     (emailServiceMock
-      .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[_]))
+      .sendClaimConfirmationEmail(_: EmailRequest, _: ClaimSubmitResponse)(_: HeaderCarrier, _: Request[?]))
       .expects(
         emailRequest,
         submitClaimResponse,
@@ -202,7 +202,7 @@ class ClaimServiceSpec
       .sendEvent(_: String, _: SubmitClaimResponseEvent[A], _: String)(
         _: HeaderCarrier,
         _: Writes[SubmitClaimResponseEvent[A]],
-        _: Request[_]
+        _: Request[?]
       ))
       .expects(
         "SubmitClaimResponse",

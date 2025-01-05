@@ -26,5 +26,5 @@ object TypeOfClaimAnswer extends EnumerationFormat[TypeOfClaimAnswer] {
   case object Multiple extends TypeOfClaimAnswer
   case object Scheduled extends TypeOfClaimAnswer
 
-  val values: Set[TypeOfClaimAnswer] = Set(Individual, Multiple, Scheduled)
+  lazy val values: Set[TypeOfClaimAnswer] = Set(Individual, Multiple, Scheduled)
 }

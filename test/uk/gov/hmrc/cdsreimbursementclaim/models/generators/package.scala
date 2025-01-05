@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.models
 
 import org.apache.pekko.http.scaladsl.model.DateTime
 import org.apache.pekko.util.ByteString
-import org.scalacheck.magnolia.Typeclass
+
 import org.scalacheck.{Arbitrary, Gen}
 import org.bson.types.ObjectId
 
@@ -52,10 +52,10 @@ package object generators {
 
   lazy val genBoolean: Gen[Boolean] = Gen.oneOf(true, false)
 
-  implicit lazy val arbitraryBoolean: Typeclass[Boolean] =
+  implicit lazy val arbitraryBoolean: Arbitrary[Boolean] =
     Arbitrary(genBoolean)
 
-  implicit lazy val arbitraryString: Typeclass[String] = Arbitrary(
+  implicit lazy val arbitraryString: Arbitrary[String] = Arbitrary(
     Gen.nonEmptyListOf(Gen.alphaUpperChar).map(_.mkString(""))
   )
 

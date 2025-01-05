@@ -52,7 +52,7 @@ object TemporaryAdmissionMethodOfDisposal extends EnumerationFormat[TemporaryAdm
   }
   case object Other extends TemporaryAdmissionMethodOfDisposal { val eisCode: String = "Other" }
 
-  override val values: Set[TemporaryAdmissionMethodOfDisposal] =
+  override lazy val values: Set[TemporaryAdmissionMethodOfDisposal] =
     Set(
       ExportedInSingleShipment,
       ExportedInMultipleShipments,

@@ -21,7 +21,6 @@ import cats.data.EitherT
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.libs.json.Json
 import play.api.test.{FakeRequest, Helpers}
-import play.api.test.Helpers.{contentAsJson, status}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._

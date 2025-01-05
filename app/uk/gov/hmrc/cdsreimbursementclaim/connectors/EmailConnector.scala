@@ -29,6 +29,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
+import java.net.URL
 
 @ImplementedBy(classOf[DefaultEmailConnector])
 trait EmailConnector {
@@ -48,7 +49,7 @@ class DefaultEmailConnector @Inject() (
   ec: ExecutionContext
 ) extends EmailConnector {
 
-  val sendEmailUrl: String = s"${servicesConfig.baseUrl("email")}/hmrc/email"
+  val sendEmailUrl: URL = URL(s"${servicesConfig.baseUrl("email")}/hmrc/email")
 
   val claimSubmittedTemplateId: String = servicesConfig.getString("email.claim-submitted.template-id")
 

@@ -25,8 +25,8 @@ object Claimant extends EnumerationFormat[Claimant] {
 
   type PayeeIndicator = Claimant
 
-  final case object Importer extends Claimant
-  final case object Representative extends Claimant
+  case object Importer extends Claimant
+  case object Representative extends Claimant
 
   def basedOn(claimantType: ClaimantType): Claimant =
     claimantType match {

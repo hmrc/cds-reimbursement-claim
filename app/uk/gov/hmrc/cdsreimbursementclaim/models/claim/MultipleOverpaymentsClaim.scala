@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
 import cats.implicits.catsSyntaxSemigroup
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.Reads.minLength
 import play.api.libs.json.{Format, JsPath, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.BankAccountDetails
@@ -87,7 +87,7 @@ object MultipleOverpaymentsClaim {
           (JsPath \ "bankAccountDetails").writeNullable[BankAccountDetails] and
           (JsPath \ "supportingEvidences").write[Seq[EvidenceDocument]] and
           (JsPath \ "newEoriAndDan").writeNullable[NewEoriAndDan]
-      )(unlift(MultipleOverpaymentsClaim.unapply))
+      )(Tuple.fromProductTyped(_))
     )
 }
 

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.magnolia.{Typeclass, gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.PhoneNumber
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ContactDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
@@ -35,13 +34,13 @@ object ContactDetailsGen {
       dotCom  = ".com"
     } yield Email(Seq(name, at, domain, dotCom).mkString)
 
-  implicit lazy val arbitraryEmail: Typeclass[Email] =
+  implicit lazy val arbitraryEmail: Arbitrary[Email] =
     Arbitrary(genEmail)
 
   lazy val genUkPhoneNumber: Gen[PhoneNumber] =
     Gen.listOfN(10, Gen.numChar).map(numbers => PhoneNumber(numbers.foldLeft("0")((s, ch) => s"$s$ch")))
 
-  implicit lazy val arbitraryUkPhoneNumber: Typeclass[PhoneNumber] =
+  implicit lazy val arbitraryUkPhoneNumber: Arbitrary[PhoneNumber] =
     Arbitrary(genUkPhoneNumber)
 
   lazy val genContactDetails: Gen[ContactDetails] =
@@ -74,6 +73,6 @@ object ContactDetailsGen {
       emailAddress
     )
 
-  implicit lazy val arbitraryContactDetails: Typeclass[ContactDetails] =
-    gen[ContactDetails]
+  implicit lazy val arbitraryContactDetails: Arbitrary[ContactDetails] =
+    GeneratorUtils.gen[ContactDetails]
 }

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, JsPath, Reads, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
@@ -38,7 +38,7 @@ object BankDetails {
     (JsPath \ "accountHolderName").write[AccountName] and
       (JsPath \ "sortCode").write[SortCode] and
       (JsPath \ "accountNumber").write[AccountNumber]
-  )(unlift(BankAccountDetails.unapply))
+  )(Tuple.fromProductTyped(_))
 
   implicit val maskedBankDetailsFormat: Format[BankDetails] =
     Format(
@@ -49,6 +49,6 @@ object BankDetails {
       (
         (JsPath \ "consigneeBankDetails").writeNullable[BankAccountDetails](bankAccountDetailsWrites) and
           (JsPath \ "declarantBankDetails").writeNullable[BankAccountDetails](bankAccountDetailsWrites)
-      )(unlift(BankDetails.unapply))
+      )(Tuple.fromProductTyped(_))
     )
 }

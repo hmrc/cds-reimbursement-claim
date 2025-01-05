@@ -53,8 +53,8 @@ class OverpaymentsSingleClaimMappingV2Spec
   "The OverpaymentsSingle claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll(genOverpaymentsSingleClaim(ClaimantType.Declarant)) {
-      singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]) =>
-        val tpi05Request = mapper map singleOverpaymentsData
+      (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
+        val tpi05Request = mapper `map` singleOverpaymentsData
 
         val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
 

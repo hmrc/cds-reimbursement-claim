@@ -58,7 +58,7 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  implicit val request: Request[_] = FakeRequest()
+  implicit val request: Request[?] = FakeRequest()
 
   def mockSendClaimConfirmationEmail(submitClaimResponse: ClaimSubmitResponse, emailRequest: EmailRequest)(
     result: Either[Error, HttpResponse]
@@ -73,13 +73,13 @@ class EmailServiceSpec extends AnyWordSpec with Matchers with MockFactory {
     submitClaimResponse: ClaimSubmitResponse
   ): CallHandler6[String, ClaimConfirmationEmailSentEvent, String, HeaderCarrier, Writes[
     ClaimConfirmationEmailSentEvent
-  ], Request[_], Unit] =
+  ], Request[?], Unit] =
     (
       mockAuditService
         .sendEvent(_: String, _: ClaimConfirmationEmailSentEvent, _: String)(
           _: HeaderCarrier,
           _: Writes[ClaimConfirmationEmailSentEvent],
-          _: Request[_]
+          _: Request[?]
         )
       )
       .expects(

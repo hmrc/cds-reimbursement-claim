@@ -22,8 +22,8 @@ sealed trait CDFPayService
 
 object CDFPayService extends EnumerationFormat[CDFPayService] {
 
-  final case object NDRC extends CDFPayService
-  final case object SCTY extends CDFPayService
+  case object NDRC extends CDFPayService
+  case object SCTY extends CDFPayService
 
   lazy val values: Set[CDFPayService] = Set(NDRC, SCTY)
 }

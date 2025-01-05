@@ -24,30 +24,30 @@ sealed trait MethodOfDisposal extends Product with Serializable {
 
 object MethodOfDisposal extends EnumerationFormat[MethodOfDisposal] {
 
-  final case object Export extends MethodOfDisposal {
+  case object Export extends MethodOfDisposal {
     def toTPI05DisplayString: String = "Export"
   }
 
-  final case object PostalExport extends MethodOfDisposal {
+  case object PostalExport extends MethodOfDisposal {
     def toTPI05DisplayString: String = "Postal Export"
   }
 
-  final case object DonationToCharity extends MethodOfDisposal {
+  case object DonationToCharity extends MethodOfDisposal {
     def toTPI05DisplayString: String = "Donation to Charity"
   }
 
-  final case object PlacedInCustomsWarehouse extends MethodOfDisposal {
+  case object PlacedInCustomsWarehouse extends MethodOfDisposal {
     def toTPI05DisplayString: String = "Placed in Custom Warehouse"
   }
 
-  final case object ExportInBaggage extends MethodOfDisposal {
+  case object ExportInBaggage extends MethodOfDisposal {
     def toTPI05DisplayString: String = "Export in Baggage"
   }
 
-  final case object Destruction extends MethodOfDisposal {
+  case object Destruction extends MethodOfDisposal {
     def toTPI05DisplayString: String = "Destruction"
   }
 
-  override val values: Set[MethodOfDisposal] =
+  override lazy val values: Set[MethodOfDisposal] =
     Set(Export, PostalExport, DonationToCharity, PlacedInCustomsWarehouse, ExportInBaggage, Destruction)
 }

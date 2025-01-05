@@ -76,7 +76,7 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
               Future.successful(
                 Left(
                   s"A call to SUB09 API failed with business error ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.status} ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.statusText
-                    .getOrElse("")}"
+                      .getOrElse("")}"
                 )
               )
           }

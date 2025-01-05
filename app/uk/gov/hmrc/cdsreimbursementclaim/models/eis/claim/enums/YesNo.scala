@@ -21,8 +21,8 @@ sealed trait YesNo extends Product with Serializable
 
 object YesNo extends EnumerationFormat[YesNo] {
 
-  final case object No extends YesNo
-  final case object Yes extends YesNo
+  case object No extends YesNo
+  case object Yes extends YesNo
 
   lazy val values: Set[YesNo] = Set(Yes, No)
 }

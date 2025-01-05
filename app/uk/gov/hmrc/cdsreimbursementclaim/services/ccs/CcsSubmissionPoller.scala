@@ -70,9 +70,7 @@ class CcsSubmissionPoller @Inject() (
     s"CCS File Submission poller: $stateIndicator:  work-item-id: ${workItem.id}, work-item-failure-count: ${workItem.failureCount}, " +
       s"work-item-status: ${workItem.status}, work-item-updatedAt : ${workItem.updatedAt}"
 
-  def run(): Runnable = () => {
-    poller()
-  }
+  def run(): Runnable = () => poller()
 
   def poller(): Unit = {
     val result: EitherT[Future, Error, Unit] = ccsSubmissionService.dequeue.semiflatMap {

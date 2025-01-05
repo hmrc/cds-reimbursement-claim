@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia._
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.EitherValues._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
@@ -246,7 +245,7 @@ object Acc14DeclarationGen {
   def genDisplayDeclarationWithSecurityReason(
     reasonForSecurity: Option[String],
     maybeMrn: Option[MRN]
-  ): Gen[DisplayDeclaration]                                                                              = for {
+  ): Gen[DisplayDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -309,51 +308,51 @@ object Acc14DeclarationGen {
       securityDetails = None
     )
 
-  implicit lazy val arbitraryTaxDetails: Typeclass[TaxDetails] =
+  implicit lazy val arbitraryTaxDetails: Arbitrary[TaxDetails] =
     Arbitrary(genTaxDetails)
 
-  implicit lazy val arbitraryNdrcDetails: Typeclass[NdrcDetails] =
+  implicit lazy val arbitraryNdrcDetails: Arbitrary[NdrcDetails] =
     Arbitrary(genNdrcDetails)
 
-  implicit lazy val arbitraryAccountDetails: Typeclass[AccountDetails] =
+  implicit lazy val arbitraryAccountDetails: Arbitrary[AccountDetails] =
     Arbitrary(genAccountDetails)
 
-  implicit lazy val arbitraryDeclarantDetails: Typeclass[DeclarantDetails] =
+  implicit lazy val arbitraryDeclarantDetails: Arbitrary[DeclarantDetails] =
     Arbitrary(genDeclarantDetails)
 
-  implicit lazy val arbitraryConsigneeDetails: Typeclass[ConsigneeDetails] =
+  implicit lazy val arbitraryConsigneeDetails: Arbitrary[ConsigneeDetails] =
     Arbitrary(genConsigneeDetails)
 
-  implicit lazy val arbitrarySecurityDetails: Typeclass[SecurityDetails] =
+  implicit lazy val arbitrarySecurityDetails: Arbitrary[SecurityDetails] =
     Arbitrary(genSecurityDetails)
 
-  implicit lazy val arbitraryDisplayDeclaration: Typeclass[DisplayDeclaration] =
+  implicit lazy val arbitraryDisplayDeclaration: Arbitrary[DisplayDeclaration] =
     Arbitrary(genDisplayDeclaration)
 
-  implicit lazy val arbitraryResponseDetail: Typeclass[ResponseDetail] =
+  implicit lazy val arbitraryResponseDetail: Arbitrary[ResponseDetail] =
     Arbitrary(genResponseDetail)
 
-  implicit lazy val arbitraryRequestCommon: Typeclass[RequestCommon] =
+  implicit lazy val arbitraryRequestCommon: Arbitrary[RequestCommon] =
     Arbitrary(genRequestCommon)
 
-  implicit lazy val arbitraryRequestDetail: Typeclass[RequestDetail] =
+  implicit lazy val arbitraryRequestDetail: Arbitrary[RequestDetail] =
     Arbitrary(genRequestDetail)
 
-  implicit lazy val arbitraryOverpaymentDeclarationDisplayRequest: Typeclass[OverpaymentDeclarationDisplayRequest] =
-    gen[OverpaymentDeclarationDisplayRequest]
+  implicit lazy val arbitraryOverpaymentDeclarationDisplayRequest: Arbitrary[OverpaymentDeclarationDisplayRequest] =
+    GeneratorUtils.gen[OverpaymentDeclarationDisplayRequest]
 
-  implicit lazy val arbitraryDeclarationRequest: Typeclass[DeclarationRequest] =
-    gen[DeclarationRequest]
+  implicit lazy val arbitraryDeclarationRequest: Arbitrary[DeclarationRequest] =
+    GeneratorUtils.gen[DeclarationRequest]
 
-  implicit lazy val arbitraryResponseCommon: Typeclass[ResponseCommon] =
+  implicit lazy val arbitraryResponseCommon: Arbitrary[ResponseCommon] =
     Arbitrary(genResponseCommon)
 
-  implicit lazy val arbitraryOverpaymentDeclarationDisplayResponse: Typeclass[OverpaymentDeclarationDisplayResponse] =
-    gen[OverpaymentDeclarationDisplayResponse]
+  implicit lazy val arbitraryOverpaymentDeclarationDisplayResponse: Arbitrary[OverpaymentDeclarationDisplayResponse] =
+    GeneratorUtils.gen[OverpaymentDeclarationDisplayResponse]
 
-  implicit lazy val arbitraryDeclarationInfoResponse: Typeclass[DeclarationResponse] =
-    gen[DeclarationResponse]
+  implicit lazy val arbitraryDeclarationInfoResponse: Arbitrary[DeclarationResponse] =
+    GeneratorUtils.gen[DeclarationResponse]
 
-  implicit lazy val arbitraryAcceptanceDate: Typeclass[AcceptanceDate] =
+  implicit lazy val arbitraryAcceptanceDate: Arbitrary[AcceptanceDate] =
     Arbitrary(genAcceptanceDate)
 }

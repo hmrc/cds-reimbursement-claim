@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-final case class AdditionalDetailsAnswer(value: String) extends AnyVal
+final case class AdditionalDetailsAnswer(value: String)
 
 object AdditionalDetailsAnswer {
-  implicit val format: OFormat[AdditionalDetailsAnswer] = Json.format[AdditionalDetailsAnswer]
+  implicit val format: Format[AdditionalDetailsAnswer] = Json.format[AdditionalDetailsAnswer]
 }

@@ -76,7 +76,7 @@ class DeclarationController @Inject() (
             if (!hasCorrectRfs) {
               logger.error(
                 s"[strange] declaration for ${mrn.value} have returned with security reason [${acc14SecurityReason
-                  .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
+                    .getOrElse("<none>")}] but the query was for [${reasonForSecurity.acc14Code}], returning none to the caller"
               )
               BadRequest(
                 Json.toJson(

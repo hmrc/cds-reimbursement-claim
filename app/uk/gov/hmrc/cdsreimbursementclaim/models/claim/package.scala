@@ -29,7 +29,7 @@ package object claim {
   object ClaimedReimbursementsAnswer {
 
     def apply(head: ClaimedReimbursement, tail: ClaimedReimbursement*): NonEmptyList[ClaimedReimbursement] =
-      NonEmptyList.of(head, tail: _*)
+      NonEmptyList.of(head, tail*)
 
     def apply(items: List[ClaimedReimbursement]): Option[NonEmptyList[ClaimedReimbursement]] =
       NonEmptyList.fromList(items)

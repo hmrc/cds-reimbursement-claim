@@ -23,8 +23,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.Reimbursement
 final case class NdrcClaimDetails(
   CDFPayCaseNumber: String,
   declarationID: Option[String],
-  claimType: String, //C285 or C&E1179
-  caseType: String, //if (C285) Individual, Bulk, CMA, C18 || if (C&E1179) Individual, Bulk, CMA
+  claimType: String, // C285 or C&E1179
+  caseType: String, // if (C285) Individual, Bulk, CMA, C18 || if (C&E1179) Individual, Bulk, CMA
   caseStatus: String,
   caseSubStatus: Option[String],
   descOfGoods: Option[String],

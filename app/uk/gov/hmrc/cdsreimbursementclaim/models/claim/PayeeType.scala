@@ -22,8 +22,8 @@ sealed trait PayeeType
 
 object PayeeType extends EnumerationFormat[PayeeType] {
 
-  final case object Consignee extends PayeeType
-  final case object Declarant extends PayeeType
+  case object Consignee extends PayeeType
+  case object Declarant extends PayeeType
 
-  override val values: Set[PayeeType] = Set(Consignee, Declarant)
+  override lazy val values: Set[PayeeType] = Set(Consignee, Declarant)
 }

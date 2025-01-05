@@ -23,11 +23,11 @@ sealed trait DeclarationMode extends Product with Serializable
 
 object DeclarationMode extends EnumerationFormat[DeclarationMode] {
 
-  final case object ParentDeclaration extends DeclarationMode {
+  case object ParentDeclaration extends DeclarationMode {
     override def toString: String = "Parent Declaration"
   }
 
-  final case object AllDeclaration extends DeclarationMode {
+  case object AllDeclaration extends DeclarationMode {
     override def toString: String = "All Declarations"
   }
 

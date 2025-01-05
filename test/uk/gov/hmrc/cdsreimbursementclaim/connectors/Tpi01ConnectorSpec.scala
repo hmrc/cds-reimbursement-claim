@@ -25,7 +25,7 @@ import play.api.mvc.{AnyContent, Result, Results}
 import play.api.routing.sird._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.SourceFaultDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01._

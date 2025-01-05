@@ -16,15 +16,25 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia._
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
 import uk.gov.hmrc.mongo.workitem.WorkItem
+import org.scalacheck.Arbitrary
+import uk.gov.hmrc.mongo.workitem.ProcessingStatus
+import org.scalacheck.Gen
 
 object CcsSubmissionGen {
 
-  implicit lazy val arbitraryCCSSubmissionPayload: Typeclass[CcsSubmissionPayload] = gen[CcsSubmissionPayload]
-  implicit lazy val arbitraryCCSSubmissionRequest: Typeclass[CcsSubmissionRequest] = gen[CcsSubmissionRequest]
-  implicit lazy val arbitraryWorkItem: Typeclass[WorkItem[CcsSubmissionRequest]]   = gen[WorkItem[CcsSubmissionRequest]]
+  implicit lazy val arbitraryCCSSubmissionPayload: Arbitrary[CcsSubmissionPayload] =
+    GeneratorUtils.gen[CcsSubmissionPayload]
+
+  implicit lazy val arbitraryCCSSubmissionRequest: Arbitrary[CcsSubmissionRequest] =
+    GeneratorUtils.gen[CcsSubmissionRequest]
+
+  implicit lazy val arbitraryProcessingStatus: Arbitrary[ProcessingStatus] =
+    Arbitrary(Gen.const(ProcessingStatus.InProgress))
+
+  implicit lazy val arbitraryWorkItem: Arbitrary[WorkItem[CcsSubmissionRequest]] =
+    GeneratorUtils.gen[WorkItem[CcsSubmissionRequest]]
 
 }

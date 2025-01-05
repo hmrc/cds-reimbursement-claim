@@ -22,8 +22,8 @@ sealed trait ReimbursementParty extends Product with Serializable
 
 object ReimbursementParty extends EnumerationFormat[ReimbursementParty] {
 
-  final case object Consignee extends ReimbursementParty
-  final case object Declarant extends ReimbursementParty
+  case object Consignee extends ReimbursementParty
+  case object Declarant extends ReimbursementParty
 
-  override val values: Set[ReimbursementParty] = Set(Consignee, Declarant)
+  override lazy val values: Set[ReimbursementParty] = Set(Consignee, Declarant)
 }

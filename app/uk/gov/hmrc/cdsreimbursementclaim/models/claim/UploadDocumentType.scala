@@ -136,7 +136,7 @@ object UploadDocumentType extends EnumerationFormat[UploadDocumentType] {
     override def toDec64DisplayString: String = "Other"
   }
 
-  val values: Set[UploadDocumentType] = Set(
+  lazy val values: Set[UploadDocumentType] = Set(
     AirWayBill,
     BillOfLading,
     CommercialInvoice,

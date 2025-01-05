@@ -29,7 +29,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.test.Helpers.await
-import shapeless.lens
+
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
@@ -73,13 +73,13 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
       headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
       headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),
       headerCarrier.forwarded.map(f => headerCarrier.names.xForwardedFor -> f.value),
-      Some(headerCarrier.names.xRequestChain                          -> headerCarrier.requestChain.value),
+      Some(headerCarrier.names.xRequestChain -> headerCarrier.requestChain.value),
       headerCarrier.authorization.map(auth => headerCarrier.names.authorisation -> auth.value),
-      headerCarrier.trueClientIp.map(HeaderNames.trueClientIp         -> _),
-      headerCarrier.trueClientPort.map(HeaderNames.trueClientPort     -> _),
-      headerCarrier.gaToken.map(HeaderNames.googleAnalyticTokenId     -> _),
-      headerCarrier.gaUserId.map(HeaderNames.googleAnalyticUserId     -> _),
-      headerCarrier.deviceID.map(HeaderNames.deviceID                 -> _),
+      headerCarrier.trueClientIp.map(HeaderNames.trueClientIp -> _),
+      headerCarrier.trueClientPort.map(HeaderNames.trueClientPort -> _),
+      headerCarrier.gaToken.map(HeaderNames.googleAnalyticTokenId -> _),
+      headerCarrier.gaUserId.map(HeaderNames.googleAnalyticUserId -> _),
+      headerCarrier.deviceID.map(HeaderNames.deviceID -> _),
       headerCarrier.akamaiReputation.map(HeaderNames.akamaiReputation -> _.value)
     ).flattenOption ++ headerCarrier.extraHeaders ++ headerCarrier.otherHeaders
 
@@ -212,7 +212,7 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
   "Ccs Submission Service" when {
 
     "the submission poller requests a work item" must {
-      "dequeue the next work item" in forAll { workItem: WorkItem[CcsSubmissionRequest] =>
+      "dequeue the next work item" in forAll { (workItem: WorkItem[CcsSubmissionRequest]) =>
         mockCcsSubmissionRequestGet()(Right(Some(workItem)))
         await(ccsSubmissionService.dequeue.value) shouldBe Right(Some(workItem))
       }
@@ -223,9 +223,9 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
       "enqueue the Single Rejected Goods claim request" in forAll {
         (submitRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], submitResponse: ClaimSubmitResponse) =>
           whenever(submitRequest.claim.supportingEvidences.nonEmpty) {
-            val documentLens          = lens[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]].claim.supportingEvidences
             val evidence              = submitRequest.claim.supportingEvidences.head
-            val singleDocumentRequest = documentLens.set(submitRequest)(evidence :: Nil)
+            val singleDocumentRequest =
+              submitRequest.copy(claim = submitRequest.claim.copy(supportingEvidences = evidence :: Nil))
 
             val dec64payload = makeDec64XmlPayload(
               correlationId = UUID.randomUUID().toString,
@@ -267,9 +267,9 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
     "enqueue the Multiple Rejected Goods claim request" in forAll {
       (submitRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim], submitResponse: ClaimSubmitResponse) =>
         whenever(submitRequest.claim.supportingEvidences.nonEmpty) {
-          val documentLens          = lens[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]].claim.supportingEvidences
           val evidence              = submitRequest.claim.supportingEvidences.head
-          val singleDocumentRequest = documentLens.set(submitRequest)(evidence :: Nil)
+          val singleDocumentRequest =
+            submitRequest.copy(claim = submitRequest.claim.copy(supportingEvidences = evidence :: Nil))
 
           val dec64payload = makeDec64XmlPayload(
             correlationId = UUID.randomUUID().toString,
@@ -308,16 +308,18 @@ class CcsSubmissionServiceSpec extends AnyWordSpec with Matchers with MockFactor
     }
 
     "the submission poller updates the processing status" must {
-      "return true to indicate that the status has been updated" in forAll { workItem: WorkItem[CcsSubmissionRequest] =>
-        mockSetProcessingStatus(workItem.id, Failed)(Right(true))
-        await(ccsSubmissionService.setProcessingStatus(workItem.id, Failed).value) shouldBe Right(true)
+      "return true to indicate that the status has been updated" in forAll {
+        (workItem: WorkItem[CcsSubmissionRequest]) =>
+          mockSetProcessingStatus(workItem.id, Failed)(Right(true))
+          await(ccsSubmissionService.setProcessingStatus(workItem.id, Failed).value) shouldBe Right(true)
       }
     }
 
     "the submission poller updates the complete status" must {
-      "return true to indicate that the status has been updated" in forAll { workItem: WorkItem[CcsSubmissionRequest] =>
-        mockSetResultStatus(workItem.id, PermanentlyFailed)(Right(true))
-        await(ccsSubmissionService.setResultStatus(workItem.id, PermanentlyFailed).value) shouldBe Right(true)
+      "return true to indicate that the status has been updated" in forAll {
+        (workItem: WorkItem[CcsSubmissionRequest]) =>
+          mockSetResultStatus(workItem.id, PermanentlyFailed)(Right(true))
+          await(ccsSubmissionService.setResultStatus(workItem.id, PermanentlyFailed).value) shouldBe Right(true)
       }
     }
 

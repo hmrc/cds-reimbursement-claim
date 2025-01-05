@@ -23,7 +23,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import shapeless.lens
+
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, MultipleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
@@ -40,6 +40,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDe
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Lens
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps", "org.wartremover.warts.IterableOps"))
 class MultipleRejectedGoodsClaimMappingSpec
@@ -55,7 +56,7 @@ class MultipleRejectedGoodsClaimMappingSpec
   "The Reject Goods claim mapper" should {
 
     "map a valid Multiple claim to TPI05 request" in forAll(genMultipleRejectedGoodsClaim(ClaimantType.Declarant)) {
-      details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]) =>
+      (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration])) =>
         val (claim, declarations) = details
         val leadDeclaration       = declarations.head
         val tpi05Request          = mapper.map((claim, declarations))
@@ -313,8 +314,8 @@ class MultipleRejectedGoodsClaimMappingSpec
     }
 
     "fail with the error" when {
-      val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-      val reimbursementClaimsLens = lens[MultipleRejectedGoodsClaim].reimbursementClaims
+      val reimbursementClaimsLens = Lens[MultipleRejectedGoodsClaim].reimbursementClaims
+      val ndrcLens                = Lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
 
       "mapping claim having incorrect NDRC details" in forAll {
         (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]), random: UUID, amount: BigDecimal) =>
@@ -322,7 +323,8 @@ class MultipleRejectedGoodsClaimMappingSpec
           val value                             = random.toString
           val declarationWithInvalidNdrcDetails = declarations.map { declaration =>
             val ndrcDetails = declaration.displayResponseDetail.ndrcDetails
-            ndrcLens.set(declaration)(
+            ndrcLens.set(
+              declaration,
               ndrcDetails.map(
                 _.map(detail =>
                   ResponseNdrcDetails(
@@ -353,9 +355,9 @@ class MultipleRejectedGoodsClaimMappingSpec
           val (rejectedGoodsClaim, declarations) = details
           val reimbursement                      = Map(rejectedGoodsClaim.leadMrn -> Map(taxCode -> BigDecimal(7)))
 
-          val updatedClaim        = reimbursementClaimsLens.set(rejectedGoodsClaim)(reimbursement)
+          val updatedClaim        = reimbursementClaimsLens.set(rejectedGoodsClaim, reimbursement)
           val updatedDeclarations = declarations.map { declaration =>
-            ndrcLens.set(declaration)(None)
+            ndrcLens.set(declaration, None)
           }
 
           val tpi05Request = mapper.map((updatedClaim, updatedDeclarations))
