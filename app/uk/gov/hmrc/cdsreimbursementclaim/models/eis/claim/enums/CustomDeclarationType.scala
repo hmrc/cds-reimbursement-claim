@@ -22,8 +22,8 @@ sealed trait CustomDeclarationType extends Product with Serializable
 
 object CustomDeclarationType extends EnumerationFormat[CustomDeclarationType] {
 
-  final case object MRN extends CustomDeclarationType
-  final case object Entry extends CustomDeclarationType
+  case object MRN extends CustomDeclarationType
+  case object Entry extends CustomDeclarationType
 
   lazy val values: Set[CustomDeclarationType] = Set(MRN, Entry)
 }

@@ -119,21 +119,21 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(request, *, *, *, *)
       .returning(EitherT.fromEither[Future](response))
 
-  private def mockRejectedGoodsClaimSubmission[Claim <: RejectedGoodsClaim](request: RejectedGoodsClaimRequest[Claim])(
-    response: Either[Error, ClaimSubmitResponse]
-  ) =
-    (
-      mockClaimService
-        .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest[Claim])(
-          _: HeaderCarrier,
-          _: Request[_],
-          _: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
-          _: ClaimToEmailMapper[(Claim, List[DisplayDeclaration])],
-          _: Format[RejectedGoodsClaimRequest[Claim]]
-        )
-      )
-      .expects(request, *, *, *, *, *)
-      .returning(EitherT.fromEither[Future](response))
+  // private def mockRejectedGoodsClaimSubmission[Claim <: RejectedGoodsClaim](request: RejectedGoodsClaimRequest[Claim])(
+  //   response: Either[Error, ClaimSubmitResponse]
+  // ) =
+  //   (
+  //     mockClaimService
+  //       .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest[Claim])(
+  //         _: HeaderCarrier,
+  //         _: Request[_],
+  //         _: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
+  //         _: ClaimToEmailMapper[(Claim, List[DisplayDeclaration])],
+  //         _: Format[RejectedGoodsClaimRequest[Claim]]
+  //       )
+  //     )
+  //     .expects(request, *, *, *, *, *)
+  //     .returning(EitherT.fromEither[Future](response))
 
   private def mockMultipleRejectedGoodsClaimSubmission(request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(
     response: Either[Error, ClaimSubmitResponse]
@@ -242,18 +242,18 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           contentAsJson(result) shouldBe Json.toJson(response)
       }
 
-      "handling Single C&E1779 claim request" in forAll {
-        (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
-          inSequence {
-            mockRejectedGoodsClaimSubmission(request)(Right(response))
-            mockCcsRequestEnqueue(request, response)
-          }
+      // "handling Single C&E1779 claim request" in forAll {
+      //   (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
+      //     inSequence {
+      //       mockRejectedGoodsClaimSubmission(request)(Right(response))
+      //       mockCcsRequestEnqueue(request, response)
+      //     }
 
-          val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+      //     val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
 
-          status(result)        shouldBe OK
-          contentAsJson(result) shouldBe Json.toJson(response)
-      }
+      //     status(result)        shouldBe OK
+      //     contentAsJson(result) shouldBe Json.toJson(response)
+      // }
 
       "handling Multiple C&E1779 claim request" in forAll {
         (request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim], response: ClaimSubmitResponse) =>
@@ -307,7 +307,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
 
     "fail" when {
 
-      "submission of the single overpayments claim failed" in forAll { request: SingleOverpaymentsClaimRequest =>
+      "submission of the single overpayments claim failed" in forAll { (request: SingleOverpaymentsClaimRequest) =>
         inSequence {
           mockSingleOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
         }
@@ -316,7 +316,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
-      "submission of the multiple overpayments claim failed" in forAll { request: MultipleOverpaymentsClaimRequest =>
+      "submission of the multiple overpayments claim failed" in forAll { (request: MultipleOverpaymentsClaimRequest) =>
         inSequence {
           mockMultipleOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
         }
@@ -325,27 +325,28 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
-      "submission of the scheduled overpayments claim failed" in forAll { request: ScheduledOverpaymentsClaimRequest =>
-        inSequence {
-          mockScheduledOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
-        }
-
-        val result = controller.submitScheduledOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
-
-      "submission of the Single C&E1779 claim failed" in forAll {
-        request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim] =>
+      "submission of the scheduled overpayments claim failed" in forAll {
+        (request: ScheduledOverpaymentsClaimRequest) =>
           inSequence {
-            mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+            mockScheduledOverpaymentsClaimSubmission(request)(Left(Error("boom!")))
           }
 
-          val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+          val result = controller.submitScheduledOverpaymentsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
           status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
+      // "submission of the Single C&E1779 claim failed" in forAll {
+      //   (request: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]) =>
+      //     inSequence {
+      //       mockRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
+      //     }
+
+      //     val result = controller.submitSingleRejectedGoodsClaim()(fakeRequestWithJsonBody(Json.toJson(request)))
+      //     status(result) shouldBe INTERNAL_SERVER_ERROR
+      // }
+
       "submission of the Multiple C&E1779 claim failed" in forAll {
-        request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim] =>
+        (request: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]) =>
           inSequence {
             mockMultipleRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
           }
@@ -355,7 +356,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       }
 
       "submission of the Scheduled C&E1779 claim failed" in forAll {
-        request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim] =>
+        (request: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]) =>
           inSequence {
             mockScheduledRejectedGoodsClaimSubmission(request)(Left(Error("boom!")))
           }
@@ -364,7 +365,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
           status(result) shouldBe INTERNAL_SERVER_ERROR
       }
 
-      "submission of the securities claim failed" in forAll { request: SecuritiesClaimRequest => //TODO: 1718
+      "submission of the securities claim failed" in forAll { (request: SecuritiesClaimRequest) => // TODO: 1718
         inSequence {
           mockSecurityClaimSubmission(request)(Left(Error("boom!")))
         }

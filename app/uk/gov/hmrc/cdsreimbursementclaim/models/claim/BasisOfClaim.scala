@@ -96,7 +96,7 @@ object BasisOfClaim extends EnumerationFormat[BasisOfClaim] {
     def toTPI05DisplayString: String = "Quota"
   }
 
-  val values: Set[BasisOfClaim] = Set(
+  lazy val values: Set[BasisOfClaim] = Set(
     DuplicateEntry,
     DutySuspension,
     EndUseRelief,

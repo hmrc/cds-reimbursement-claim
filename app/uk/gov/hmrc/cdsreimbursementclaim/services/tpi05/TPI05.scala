@@ -21,18 +21,16 @@ import cats.data.Validated.Valid
 import cats.implicits.toTraverseOps
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, PayeeType, ReimbursementMethodAnswer, SecurityDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MethodOfDisposal, NewEoriAndDan, ReimbursementMethodAnswer, SecurityDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate, ISO8601DateTime, ISOLocalDate}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIndicator
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{AccountDetails, BtaSource}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, Eori}
-import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, Error => CdsError}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, Error as CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
-import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.EORI
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.NewEoriAndDan
 
 object TPI05 {
 
@@ -56,7 +54,7 @@ object TPI05 {
     )
   )
 
-  final case class Builder private (validatedRequest: Validated[CdsError, RequestDetail]) extends AnyVal {
+  final case class Builder(validatedRequest: Validated[CdsError, RequestDetail]) {
 
     def forClaimOfType(claimType: Option[ClaimType]): Builder =
       copy(validatedRequest.map(_.copy(claimType = claimType)))

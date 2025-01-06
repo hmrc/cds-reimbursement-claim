@@ -22,8 +22,8 @@ import play.api.libs.json.{Json, OFormat}
 final case class NDRCDetail(
   CDFPayCaseNumber: String,
   declarationID: Option[String],
-  claimType: String, //C285 or C&E1179
-  caseType: String, //if (C285) Individual, Bulk, CMA, C18 || if (C&E1179) Individual, Bulk, CMA
+  claimType: String, // C285 or C&E1179
+  caseType: String, // if (C285) Individual, Bulk, CMA, C18 || if (C&E1179) Individual, Bulk, CMA
   caseStatus: String,
   descOfGoods: Option[String],
   descOfRejectedGoods: Option[String],

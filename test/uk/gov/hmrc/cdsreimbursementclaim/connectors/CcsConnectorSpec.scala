@@ -74,12 +74,12 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
     }
 
     val explicitHeaders = Seq(
-      ("Date"             -> "some-date"),
-      ("X-Correlation-ID" -> "some-correlation-id"),
-      ("X-Forwarded-Host" -> "MDTP"),
-      ("Content-Type"     -> "application/xml; charset=utf-8"),
-      ("Accept"           -> "application/xml"),
-      ("Authorization"    -> "Bearer test-token")
+      "Date"             -> "some-date",
+      "X-Correlation-ID" -> "some-correlation-id",
+      "X-Forwarded-Host" -> "MDTP",
+      "Content-Type"     -> "application/xml; charset=utf-8",
+      "Accept"           -> "application/xml",
+      "Authorization"    -> "Bearer test-token"
     )
 
     implicit val hc: HeaderCarrier = HeaderCarrier()

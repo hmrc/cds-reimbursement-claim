@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim
 
-import ai.x.play.json.Encoders.encoder
-import ai.x.play.json.Jsonx
 import play.api.libs.json._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.PayeeIndicator
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums._
@@ -58,5 +56,5 @@ final case class RequestDetail(
 
 object RequestDetail {
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  implicit lazy val jsonFormat: OFormat[RequestDetail] = Jsonx.formatCaseClass[RequestDetail]
+  implicit lazy val jsonFormat: OFormat[RequestDetail] = Json.format[RequestDetail]
 }

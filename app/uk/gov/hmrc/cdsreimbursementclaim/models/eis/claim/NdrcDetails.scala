@@ -71,7 +71,7 @@ object NdrcDetails {
       )
   }
 
-  final object Validator {
+  object Validator {
 
     def validateAmount(amount: String): ValidatedNel[Error, String] =
       Validated.condNel(

@@ -140,7 +140,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
 
       "return an error" when {
 
-        "an corrupt/invalid acc14 payload is received" in forAll { mrn: MRN =>
+        "an corrupt/invalid acc14 payload is received" in forAll { (mrn: MRN) =>
           inSequence {
             mockDeclarationConnector(
               Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
@@ -149,7 +149,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
         }
 
-        "a http status response other than 200 OK is received" in forAll { mrn: MRN =>
+        "a http status response other than 200 OK is received" in forAll { (mrn: MRN) =>
           inSequence {
             mockDeclarationConnector(
               Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
@@ -158,7 +158,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
         }
 
-        "an unsuccessful http response is received" in forAll { mrn: MRN =>
+        "an unsuccessful http response is received" in forAll { (mrn: MRN) =>
           inSequence {
             mockDeclarationConnector(Left(Error("http bad request")))
           }
@@ -169,7 +169,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
 
     "return an error for getDeclarationWithErrorCodes" when {
 
-      "UnexpectedError: an corrupt/invalid acc14 payload is received" in forAll { mrn: MRN =>
+      "UnexpectedError: an corrupt/invalid acc14 payload is received" in forAll { (mrn: MRN) =>
         inSequence {
           mockDeclarationConnector(
             Right(HttpResponse(200, "corrupt/bad payload", Map.empty[String, Seq[String]]))
@@ -180,7 +180,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         )
       }
 
-      "UnexpectedError: a http status response other than 200 OK is received" in forAll { mrn: MRN =>
+      "UnexpectedError: a http status response other than 200 OK is received" in forAll { (mrn: MRN) =>
         inSequence {
           mockDeclarationConnector(
             Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
@@ -191,7 +191,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         )
       }
 
-      "UnexpectedError: an unsuccessful http response is received" in forAll { mrn: MRN =>
+      "UnexpectedError: an unsuccessful http response is received" in forAll { (mrn: MRN) =>
         inSequence {
           mockDeclarationConnector(Left(Error("http bad request")))
         }
@@ -200,7 +200,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         )
       }
 
-      "InvalidReasonForSecurity" in forAll { mrn: MRN =>
+      "InvalidReasonForSecurity" in forAll { (mrn: MRN) =>
         val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator("072")
         inSequence {
           mockDeclarationConnector(
@@ -218,7 +218,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
         )
       }
 
-      "DeclarationNotFound" in forAll { mrn: MRN =>
+      "DeclarationNotFound" in forAll { (mrn: MRN) =>
         val declarationErrorResponse: DeclarationErrorResponse = declarationErrorResponseGenerator("086")
         inSequence {
           mockDeclarationConnector(

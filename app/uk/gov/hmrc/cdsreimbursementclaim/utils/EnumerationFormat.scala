@@ -23,15 +23,15 @@ import play.api.mvc.PathBindable
 import play.api.mvc.QueryStringBindable
 
 /** Provides capabilities to the set of case objects of a sealed trait T:
-  * - JOSN serialization
-  * - cats Eq (equality)
-  * - path binding
-  * - query string binding
+  *   - JOSN serialization
+  *   - cats Eq (equality)
+  *   - path binding
+  *   - query string binding
   */
 @SuppressWarnings(Array("org.wartremover.warts.Throw"))
 trait EnumerationFormat[T] {
 
-  val values: Set[T]
+  lazy val values: Set[T]
 
   private final lazy val valueMap: Map[String, T] =
     values.map(v => (v.toString, v)).toMap

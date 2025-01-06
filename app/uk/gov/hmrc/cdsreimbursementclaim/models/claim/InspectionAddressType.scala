@@ -24,18 +24,18 @@ sealed trait InspectionAddressType {
 
 object InspectionAddressType extends EnumerationFormat[InspectionAddressType] {
 
-  final case object Importer extends InspectionAddressType {
+  case object Importer extends InspectionAddressType {
     override def toTPI05DisplayString: String = "Importer"
   }
 
-  final case object Declarant extends InspectionAddressType {
+  case object Declarant extends InspectionAddressType {
     override def toTPI05DisplayString: String = "Declarant or Representative"
   }
 
-  final case object Other extends InspectionAddressType {
+  case object Other extends InspectionAddressType {
     override def toTPI05DisplayString: String = "Other"
   }
 
-  override val values: Set[InspectionAddressType] =
+  override lazy val values: Set[InspectionAddressType] =
     Set(Importer, Declarant, Other)
 }

@@ -23,7 +23,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import shapeless.lens
+
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AmountPaidWithCorrect, ClaimantType, Country, PayeeType, ScheduledRejectedGoodsClaim, Street, TaxCode}
@@ -41,6 +41,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen._
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
 
 import java.util.UUID
+import uk.gov.hmrc.cdsreimbursementclaim.utils.Lens
 
 class ScheduledRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
@@ -298,7 +299,15 @@ class ScheduledRejectedGoodsClaimMappingSpec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
+        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
 
         forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)) =>
           val value       = random.toString
@@ -306,7 +315,8 @@ class ScheduledRejectedGoodsClaimMappingSpec
           val declaration = details._2
           val ndrcDetails = declaration.displayResponseDetail.ndrcDetails
 
-          val declarationWithInvalidNdrcDetails = ndrcDetailsLens.set(declaration)(
+          val declarationWithInvalidNdrcDetails = ndrcDetailsLens.set(
+            declaration,
             ndrcDetails.map(
               _.map(detail =>
                 uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
@@ -334,8 +344,24 @@ class ScheduledRejectedGoodsClaimMappingSpec
       }
 
       "cannot find NDRC details for claimed reimbursement" in {
-        val ndrcLens                = lens[DisplayDeclaration].displayResponseDetail.ndrcDetails
-        val reimbursementClaimsLens = lens[ScheduledRejectedGoodsClaim].reimbursementClaims
+        val reimbursementClaimsLens =
+          new Lens[ScheduledRejectedGoodsClaim, Map[String, Map[TaxCode, AmountPaidWithCorrect]]] {
+            override def set(
+              root: ScheduledRejectedGoodsClaim,
+              value: Map[String, Map[TaxCode, AmountPaidWithCorrect]]
+            ): ScheduledRejectedGoodsClaim =
+              root.copy(reimbursementClaims = value)
+          }
+
+        val ndrcLens = new Lens[DisplayDeclaration, Option[
+          List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
+        ]] {
+          override def set(
+            root: DisplayDeclaration,
+            value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
+          ): DisplayDeclaration =
+            root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
+        }
 
         forAll { (details: (ScheduledRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
           val rejectedGoodsClaim = details._1
@@ -343,9 +369,9 @@ class ScheduledRejectedGoodsClaimMappingSpec
 
           val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithCorrect(BigDecimal(8), BigDecimal(1))))
 
-          val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim)(claims)
+          val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim, claims)
 
-          val updatedDeclaration = ndrcLens.set(displayDeclaration)(None)
+          val updatedDeclaration = ndrcLens.set(displayDeclaration, None)
 
           val tpi05Request = mapper.map((updatedClaim, updatedDeclaration))
 

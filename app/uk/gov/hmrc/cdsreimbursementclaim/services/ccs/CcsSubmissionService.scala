@@ -113,13 +113,13 @@ object DefaultCcsSubmissionService {
       headerCarrier.requestId.map(rid => headerCarrier.names.xRequestId -> rid.value),
       headerCarrier.sessionId.map(sid => headerCarrier.names.xSessionId -> sid.value),
       headerCarrier.forwarded.map(f => headerCarrier.names.xForwardedFor -> f.value),
-      Some(headerCarrier.names.xRequestChain                          -> headerCarrier.requestChain.value),
+      Some(headerCarrier.names.xRequestChain -> headerCarrier.requestChain.value),
       headerCarrier.authorization.map(auth => headerCarrier.names.authorisation -> auth.value),
-      headerCarrier.trueClientIp.map(HeaderNames.trueClientIp         -> _),
-      headerCarrier.trueClientPort.map(HeaderNames.trueClientPort     -> _),
-      headerCarrier.gaToken.map(HeaderNames.googleAnalyticTokenId     -> _),
-      headerCarrier.gaUserId.map(HeaderNames.googleAnalyticUserId     -> _),
-      headerCarrier.deviceID.map(HeaderNames.deviceID                 -> _),
+      headerCarrier.trueClientIp.map(HeaderNames.trueClientIp -> _),
+      headerCarrier.trueClientPort.map(HeaderNames.trueClientPort -> _),
+      headerCarrier.gaToken.map(HeaderNames.googleAnalyticTokenId -> _),
+      headerCarrier.gaUserId.map(HeaderNames.googleAnalyticUserId -> _),
+      headerCarrier.deviceID.map(HeaderNames.deviceID -> _),
       headerCarrier.akamaiReputation.map(HeaderNames.akamaiReputation -> _.value)
     ).flattenOption ++ headerCarrier.extraHeaders ++ headerCarrier.otherHeaders
 

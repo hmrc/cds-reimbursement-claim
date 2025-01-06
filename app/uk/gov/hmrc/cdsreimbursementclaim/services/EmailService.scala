@@ -39,7 +39,7 @@ trait EmailService {
   def sendClaimConfirmationEmail(
     emailRequest: EmailRequest,
     submitClaimResponse: ClaimSubmitResponse
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit]
+  )(implicit hc: HeaderCarrier, request: Request[?]): EitherT[Future, Error, Unit]
 
 }
 
@@ -52,7 +52,7 @@ class DefaultEmailService @Inject() (connector: EmailConnector, auditService: Au
   def sendClaimConfirmationEmail(
     emailRequest: EmailRequest,
     submitClaimResponse: ClaimSubmitResponse
-  )(implicit hc: HeaderCarrier, request: Request[_]): EitherT[Future, Error, Unit] = {
+  )(implicit hc: HeaderCarrier, request: Request[?]): EitherT[Future, Error, Unit] = {
     val timer = metrics.submitClaimConfirmationEmailTimer.time()
 
     connector
@@ -74,7 +74,7 @@ class DefaultEmailService @Inject() (connector: EmailConnector, auditService: Au
   private def auditClaimConfirmationEmailSent(
     emailRequest: EmailRequest,
     submitClaimResponse: ClaimSubmitResponse
-  )(implicit hc: HeaderCarrier, request: Request[_]): Unit =
+  )(implicit hc: HeaderCarrier, request: Request[?]): Unit =
     auditService.sendEvent(
       "ClaimConfirmationEmailSent",
       ClaimConfirmationEmailSentEvent(

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia.{Typeclass}
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
@@ -36,14 +35,14 @@ object C285ClaimGen {
     claims         <- Gen.listOfN(numberOfDuties, genClaimedReimbursement)
   } yield claims
 
-  implicit lazy val arbitraryClaims: Typeclass[List[ClaimedReimbursement]] = Arbitrary(genClaims)
+  implicit lazy val arbitraryClaims: Arbitrary[List[ClaimedReimbursement]] = Arbitrary(genClaims)
 
   lazy val genAssociatedMRNs: Gen[List[MRN]] = for {
     numberOfMRNs <- Gen.chooseNum(1, 4)
     mrns         <- Gen.listOfN(numberOfMRNs, genMRN)
   } yield mrns
 
-  implicit lazy val arbitraryAssociatedMRNs: Typeclass[List[MRN]] = Arbitrary(genAssociatedMRNs)
+  implicit lazy val arbitraryAssociatedMRNs: Arbitrary[List[MRN]] = Arbitrary(genAssociatedMRNs)
 
   lazy val genContactDetails: Gen[ContactDetails] =
     for {

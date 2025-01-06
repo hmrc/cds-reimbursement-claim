@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia.{Typeclass, gen}
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
@@ -294,27 +293,27 @@ object RejectedGoodsClaimGen {
 
   implicit def arbitraryRequest[Claim <: RejectedGoodsClaim](implicit
     arb: Arbitrary[Claim]
-  ): Typeclass[RejectedGoodsClaimRequest[Claim]] =
-    gen[RejectedGoodsClaimRequest[Claim]]
+  ): Arbitrary[RejectedGoodsClaimRequest[Claim]] =
+    GeneratorUtils.gen[RejectedGoodsClaimRequest[Claim]]
 
-  implicit lazy val arbitrarySingleRejectedGoodsClaim: Typeclass[SingleRejectedGoodsClaim] =
+  implicit lazy val arbitrarySingleRejectedGoodsClaim: Arbitrary[SingleRejectedGoodsClaim] =
     Arbitrary(
       for {
         (claim, _) <- genSingleRejectedGoodsClaimAllTypes
       } yield claim
     )
 
-  implicit lazy val arbitraryMultipleClaimDetails: Typeclass[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+  implicit lazy val arbitraryMultipleClaimDetails: Arbitrary[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
     Arbitrary(genMultipleRejectedGoodsClaimAllTypes)
 
-  implicit lazy val arbitraryMultipleRejectedGoodsClaim: Typeclass[MultipleRejectedGoodsClaim] =
+  implicit lazy val arbitraryMultipleRejectedGoodsClaim: Arbitrary[MultipleRejectedGoodsClaim] =
     Arbitrary(
       for {
         (claim, _) <- genMultipleRejectedGoodsClaimAllTypes
       } yield claim
     )
 
-  implicit lazy val arbitraryScheduledClaimDetails: Typeclass[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] =
+  implicit lazy val arbitraryScheduledClaimDetails: Arbitrary[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] =
     Arbitrary(
       for {
         declaration <- genDisplayDeclaration
@@ -322,6 +321,6 @@ object RejectedGoodsClaimGen {
       } yield (claim, declaration)
     )
 
-  implicit lazy val arbitraryScheduledRejectedGoodsClaim: Typeclass[ScheduledRejectedGoodsClaim] =
+  implicit lazy val arbitraryScheduledRejectedGoodsClaim: Arbitrary[ScheduledRejectedGoodsClaim] =
     Arbitrary(genScheduledRejectedGoodsClaimAllTypes)
 }

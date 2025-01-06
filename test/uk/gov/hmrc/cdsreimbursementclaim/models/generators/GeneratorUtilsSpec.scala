@@ -14,21 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums
+package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalacheck.Arbitrary
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
 
-class ReasonForSecuritySpec extends AnyWordSpec with Matchers with ScalaCheckPropertyChecks {
+class GeneratorUtilsSpec extends AnyWordSpec with Matchers with ScalaCheckPropertyChecks {
 
-  "Reason for Security validation" should {
-    "has Query String Bindable" in forAll { (reason: ReasonForSecurity) =>
-      val rfs = reason.toString
-      val key = "reasonForSecurity"
-      implicitly[QueryStringBindable[ReasonForSecurity]].bind(key, Map(key -> List(rfs))) shouldBe Some(Right(reason))
+  case class TestCase1(foo: TestCase2, bar: Int, zoo: String, opt: Option[Int] = Some(0))
+  case class TestCase2(faz: String, zaz: Int, opt2: Option[TestCase3] = None) {
+    def withFaz(faz2: String) = this.copy(faz = faz2)
+    def withZaz(zaz2: Int)    = this.copy(zaz = zaz2)
+  }
+  case class TestCase3(tas: Boolean)
+
+  given testCaseArb: Arbitrary[TestCase1] = GeneratorUtils.gen[TestCase1]
+
+  " GeneratorUtils" should {
+    "derive generator from the case class" in {
+      forAll(testCaseArb.arbitrary) { testCase =>
+        testCase
+      }
     }
   }
 }

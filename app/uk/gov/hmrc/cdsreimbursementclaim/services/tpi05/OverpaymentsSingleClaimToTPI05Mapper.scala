@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxEq
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SingleOverpaymentsClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
@@ -27,7 +26,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email

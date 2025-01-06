@@ -73,12 +73,12 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
   }
 
   val explicitHeaders = Seq(
-    ("Date"             -> "some-date"),
-    ("X-Correlation-ID" -> "some-correlation-id"),
-    ("X-Forwarded-Host" -> "MDTP"),
-    ("Content-Type"     -> "application/json"),
-    ("Accept"           -> "application/json"),
-    ("Authorization"    -> "Bearer test-token")
+    "Date"             -> "some-date",
+    "X-Correlation-ID" -> "some-correlation-id",
+    "X-Forwarded-Host" -> "MDTP",
+    "Content-Type"     -> "application/json",
+    "Accept"           -> "application/json",
+    "Authorization"    -> "Bearer test-token"
   )
 
   "Claim Connector" when {

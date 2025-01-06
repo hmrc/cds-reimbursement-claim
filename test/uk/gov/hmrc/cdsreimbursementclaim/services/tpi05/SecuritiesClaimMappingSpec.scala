@@ -128,7 +128,7 @@ class SecuritiesClaimMappingSpec
 
   "The Securities claim mapper" should {
     "map a valid Securities claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
-      details: (SecuritiesClaim, DisplayDeclaration) =>
+      (details: (SecuritiesClaim, DisplayDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map((claim, declaration))
         isValid(claim, declaration, tpi05Request)
@@ -136,7 +136,7 @@ class SecuritiesClaimMappingSpec
 
     "map a valid temporary admission Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
       val (claim, declaration) = details
       val tpi05Request         = mapper.map((claim, declaration))
       isValid(claim, declaration, tpi05Request)
@@ -153,7 +153,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid email in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -172,7 +172,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid contact person in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -191,7 +191,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid claimant address in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { details: (SecuritiesClaim, DisplayDeclaration) =>
+    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(

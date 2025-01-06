@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.magnolia.Typeclass
+
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BankDetails}
 
@@ -75,9 +75,9 @@ object BankAccountDetailsGen {
     )
   }
 
-  implicit lazy val arbitraryBankAccountDetails: Typeclass[BankAccountDetails] =
+  implicit lazy val arbitraryBankAccountDetails: Arbitrary[BankAccountDetails] =
     Arbitrary(genBankAccountDetails)
 
-  implicit lazy val arbitraryBankDetails: Typeclass[BankDetails] =
+  implicit lazy val arbitraryBankDetails: Arbitrary[BankDetails] =
     Arbitrary(genBankDetails)
 }

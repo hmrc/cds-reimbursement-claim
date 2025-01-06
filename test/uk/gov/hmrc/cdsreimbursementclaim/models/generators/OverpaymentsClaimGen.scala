@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import cats.implicits.catsSyntaxEq
-import org.scalacheck.magnolia.Typeclass
+
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaim.DuplicateEntry
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
@@ -257,20 +257,20 @@ object OverpaymentsClaimGen {
       claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
     } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
 
-  implicit lazy val arbitrarySingleOverpaymentsRequest: Typeclass[SingleOverpaymentsClaimRequest]       =
+  implicit lazy val arbitrarySingleOverpaymentsRequest: Arbitrary[SingleOverpaymentsClaimRequest] =
     Arbitrary(genOverpaymentsSingleClaimAllTypes.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
 
-  implicit lazy val arbitraryMultipleOverpaymentsRequest: Typeclass[MultipleOverpaymentsClaimRequest]   =
+  implicit lazy val arbitraryMultipleOverpaymentsRequest: Arbitrary[MultipleOverpaymentsClaimRequest] =
     Arbitrary(genOverpaymentsMultipleClaim.map { case (claim, _) => MultipleOverpaymentsClaimRequest(claim) })
 
-  implicit lazy val arbitraryScheduledOverpaymentsRequest: Typeclass[ScheduledOverpaymentsClaimRequest] =
+  implicit lazy val arbitraryScheduledOverpaymentsRequest: Arbitrary[ScheduledOverpaymentsClaimRequest] =
     Arbitrary(genOverpaymentsScheduledClaimAllTypes.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitrarySingleOverpaymentsClaimDetails
-    : Typeclass[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])]              =
+    : Arbitrary[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
     Arbitrary(genOverpaymentsSingleClaimAllTypes)
 
-  implicit lazy val arbitraryOverpaymentsSingleClaim: Typeclass[SingleOverpaymentsClaim] =
+  implicit lazy val arbitraryOverpaymentsSingleClaim: Arbitrary[SingleOverpaymentsClaim] =
     Arbitrary(
       for {
         (claim, _, _) <- genOverpaymentsSingleClaimAllTypes
@@ -278,10 +278,10 @@ object OverpaymentsClaimGen {
     )
 
   implicit lazy val arbitraryMultipleOverpaymentsClaimDetails
-    : Typeclass[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
+    : Arbitrary[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
     Arbitrary(genOverpaymentsMultipleClaim)
 
-  implicit lazy val arbitraryOverpaymentsMultipleClaim: Typeclass[MultipleOverpaymentsClaim] =
+  implicit lazy val arbitraryOverpaymentsMultipleClaim: Arbitrary[MultipleOverpaymentsClaim] =
     Arbitrary(
       for {
         (claim, _) <- genOverpaymentsMultipleClaim
@@ -289,10 +289,10 @@ object OverpaymentsClaimGen {
     )
 
   implicit lazy val arbitraryScheduledOverpaymentsClaimDetails
-    : Typeclass[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+    : Arbitrary[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
     Arbitrary(genOverpaymentsScheduledClaimAllTypes)
 
-  implicit lazy val arbitraryOverpaymentsScheduledClaim: Typeclass[ScheduledOverpaymentsClaim] =
+  implicit lazy val arbitraryOverpaymentsScheduledClaim: Arbitrary[ScheduledOverpaymentsClaim] =
     Arbitrary(
       for {
         (claim, _) <- genOverpaymentsScheduledClaimAllTypes

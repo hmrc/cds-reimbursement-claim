@@ -42,12 +42,15 @@ import scala.io.AnsiColor._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.client.HttpClientV2Impl
 
 class Module extends AbstractModule {
 
   @SuppressWarnings(Array("org.wartremover.warts.NonUnitStatements"))
   override def configure(): Unit = {
     bind(classOf[HttpClient]).to(classOf[DebuggingHttpClient])
+    bind(classOf[HttpClientV2]).to(classOf[DebuggingHttpClientV2])
     ()
   }
 }
@@ -55,13 +58,21 @@ class Module extends AbstractModule {
 @Singleton
 class DebuggingHttpClient @Inject() (
   config: Configuration,
-  override val httpAuditing: HttpAuditing,
+  val httpAuditing: HttpAuditing,
   override val wsClient: WSClient,
   override protected val actorSystem: ActorSystem
 ) extends DefaultHttpClient(config, httpAuditing, wsClient, actorSystem) {
 
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook, new DebuggingHook(config))
 }
+
+@Singleton
+class DebuggingHttpClientV2 @Inject() (
+  config: Configuration,
+  httpAuditing: HttpAuditing,
+  wsClient: WSClient,
+  actorSystem: ActorSystem
+) extends HttpClientV2Impl(wsClient, actorSystem, config, Seq(httpAuditing.AuditingHook, new DebuggingHook(config)))
 
 class DebuggingHook(config: Configuration) extends HttpHook {
 
@@ -84,11 +95,11 @@ class DebuggingHook(config: Configuration) extends HttpHook {
           Logger("OutboundRequest").debug(s"""$printRequest  
           |$YELLOW Response: $BOLD${response.status}$RESET
           |   ${response.headers.toSeq
-            .flatMap { case (k, vs) => vs.map(v => s"$BLUE$k: $MAGENTA$v$RESET") }
-            .mkString("\n   ")}
+                                              .flatMap { case (k, vs) => vs.map(v => s"$BLUE$k: $MAGENTA$v$RESET") }
+                                              .mkString("\n   ")}
           |      
           |$GREEN${Try(Json.prettyPrint(Json.parse(response.body.value)))
-            .getOrElse(response.body.value)}$RESET\n""".stripMargin)
+                                              .getOrElse(response.body.value)}$RESET\n""".stripMargin)
 
         case Failure(exception) =>
           Logger("OutboundRequest").debug(
@@ -105,19 +116,19 @@ class DebuggingHook(config: Configuration) extends HttpHook {
         |   ${request.headers.map { case (k, v) => s"$BLUE$k: $MAGENTA$v$RESET" }.mkString("\n   ")}
         |
         |${request.body
-        .map { case Data(value, _, _) =>
-          value match {
-            case FromMap(m) =>
-              m.toSeq
-                .flatMap { case (k, vs) => vs.map(v => (k, v)) }
-                .map { case (k, v) => s"$k = $v" }
-                .mkString("\n   ")
+          .map { case Data(value, _, _) =>
+            value match {
+              case FromMap(m) =>
+                m.toSeq
+                  .flatMap { case (k, vs) => vs.map(v => (k, v)) }
+                  .map { case (k, v) => s"$k = $v" }
+                  .mkString("\n   ")
 
-            case FromString(s) =>
-              s"$GREEN${Try(Json.prettyPrint(Json.parse(s))).getOrElse(s)}$RESET"
+              case FromString(s) =>
+                s"$GREEN${Try(Json.prettyPrint(Json.parse(s))).getOrElse(s)}$RESET"
+            }
           }
-        }
-        .getOrElse("")}""".stripMargin
+          .getOrElse("")}""".stripMargin
   }
 
 }

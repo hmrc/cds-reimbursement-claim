@@ -45,11 +45,11 @@ class EnumerationFormatSpec extends AnyWordSpec with Matchers {
       Foo.format.reads(JsString("Abc")) shouldBe JsSuccess(Foo.ABC)
       Foo.format.reads(JsString("ABc")) shouldBe JsSuccess(Foo.ABC)
 
-      Foo.format.reads(JsNull)          shouldBe a[JsError]
-      Foo.format.reads(Json.obj("A" -> JsBoolean(true))) shouldBe a[JsError]
+      Foo.format.reads(JsNull)                             shouldBe a[JsError]
+      Foo.format.reads(Json.obj("A" -> JsBoolean(true)))   shouldBe a[JsError]
       Foo.format.reads(Json.obj("value" -> JsString("A"))) shouldBe a[JsError]
-      Foo.format.reads(JsNumber(1))     shouldBe a[JsError]
-      Foo.format.reads(JsBoolean(true)) shouldBe a[JsError]
+      Foo.format.reads(JsNumber(1))                        shouldBe a[JsError]
+      Foo.format.reads(JsBoolean(true))                    shouldBe a[JsError]
     }
 
     "bind an enum from path parameter" in {
@@ -113,7 +113,7 @@ object EnumerationFormatSpec {
     case object C extends Foo // not included in the value list
     case object ABC extends Foo
 
-    override val values: Set[Foo] = Set(A, B, ABC)
+    override lazy val values: Set[Foo] = Set(A, B, ABC)
   }
 
 }

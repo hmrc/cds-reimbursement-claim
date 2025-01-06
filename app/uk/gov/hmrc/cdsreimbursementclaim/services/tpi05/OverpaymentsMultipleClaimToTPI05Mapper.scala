@@ -17,10 +17,10 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.{catsSyntaxEq, catsSyntaxOption}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, MultipleOverpaymentsClaim, TypeOfClaimAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, TypeOfClaimAnswer}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.ConsigneeDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email

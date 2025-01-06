@@ -51,7 +51,7 @@ class OverpaymentsMultipleClaimMappingV2Spec
   "The OverpaymentsMultiple claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll {
-      multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]) =>
+      (multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[DisplayDeclaration])) =>
         val claim        = multipleOverpaymentsData._1
         val declarations = multipleOverpaymentsData._2
         val tpi05Request = mapper.map(multipleOverpaymentsData)

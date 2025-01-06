@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import cats.implicits.toFunctorOps
-import org.scalacheck.magnolia.Typeclass
+
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ContactName
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
@@ -41,7 +41,7 @@ object SecuritiesClaimGen {
     claims         <- Gen.listOfN(numberOfDuties, genClaimedReimbursement)
   } yield claims
 
-  implicit lazy val arbitraryClaims: Typeclass[List[ClaimedReimbursement]] = Arbitrary(genClaims)
+  implicit lazy val arbitraryClaims: Arbitrary[List[ClaimedReimbursement]] = Arbitrary(genClaims)
 
   lazy val genUrl: Gen[URL] =
     for {
@@ -137,10 +137,10 @@ object SecuritiesClaimGen {
     )
   )
 
-  implicit lazy val arbitrarySecuritiesClaim: Typeclass[SecuritiesClaimRequest] =
+  implicit lazy val arbitrarySecuritiesClaim: Arbitrary[SecuritiesClaimRequest] =
     Arbitrary(genSecuritiesClaim)
 
-  implicit lazy val arbitrarySignedInUserDetails: Typeclass[SignedInUserDetails] = Arbitrary(for {
+  implicit lazy val arbitrarySignedInUserDetails: Arbitrary[SignedInUserDetails] = Arbitrary(for {
     email <- genEmail
     eori  <- genEori
     name  <- genRandomString
@@ -157,7 +157,7 @@ object SecuritiesClaimGen {
       displayDeclaration <- genDisplayDeclarationWithSecurities
       securityDetails     = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
       taxDetails          = securityDetails.map(x => (x.securityDepositId, x.taxDetails)).toMap
-      randomDivisor      <- Gen.choose(0.1, 1)
+      randomDivisor      <- Gen.choose(0.1, 1.0)
       reclaims            = taxDetails.view.mapValues(
                               _.map(x =>
                                 (

@@ -17,8 +17,7 @@ lazy val scoverageSettings =
     ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageMinimumBranchTotal := 73,
     ScoverageKeys.coverageFailOnMinimum := false,
-    ScoverageKeys.coverageHighlighting := true,
-    ThisBuild / Test / test / coverageEnabled := true
+    ScoverageKeys.coverageHighlighting := true
   )
 
 lazy val microservice = Project(appName, file("."))
@@ -29,10 +28,7 @@ lazy val microservice = Project(appName, file("."))
     SbtDistributablesPlugin
   )
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full)
-  )
-  .settings(scalaVersion := "2.13.15")
+  .settings(scalaVersion := "3.3.4")
   .settings(
     majorVersion := 1,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
@@ -49,15 +45,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(
     scalacOptions ++= List(
-      "-Xmigration",
-      "-Yrangepos",
-      "-Xlint:-byname-implicit",
       "-language:postfixOps",
-      "-Wconf:cat=unused-imports&site=<empty>:iv",
-      "-Wconf:cat=unused-imports&site=prod:iv",
-      "-Wconf:cat=unused-imports&site=upscan:iv",
-      "-Wconf:cat=unused-imports&site=testOnlyDoNotUseInAppConf:iv",
-      "-Wconf:cat=unused-privates&site=testOnlyDoNotUseInAppConf.Routes.defaultPrefix:iv",
       s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s,src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s"
     ),
     Test / scalacOptions --= Seq("-Ywarn-value-discard")

@@ -23,27 +23,27 @@ sealed trait ReimbursementMethod extends Product with Serializable
 
 object ReimbursementMethod extends EnumerationFormat[ReimbursementMethod] {
 
-  final case object Deferment extends ReimbursementMethod {
+  case object Deferment extends ReimbursementMethod {
     override def toString: String = "Deferment"
   }
 
-  final case object BankTransfer extends ReimbursementMethod {
+  case object BankTransfer extends ReimbursementMethod {
     override def toString: String = "Bank Transfer"
   }
 
-  final case object PayableOrder extends ReimbursementMethod {
+  case object PayableOrder extends ReimbursementMethod {
     override def toString: String = "Payable Order"
   }
 
-  final case object GeneralGuarantee extends ReimbursementMethod {
+  case object GeneralGuarantee extends ReimbursementMethod {
     override def toString: String = "General Guarantee"
   }
 
-  final case object IndividualGuarantee extends ReimbursementMethod {
+  case object IndividualGuarantee extends ReimbursementMethod {
     override def toString: String = "Individual Guarantee"
   }
 
-  final case object Subsidy extends ReimbursementMethod {
+  case object Subsidy extends ReimbursementMethod {
     override def toString: String = "Subsidy"
   }
 

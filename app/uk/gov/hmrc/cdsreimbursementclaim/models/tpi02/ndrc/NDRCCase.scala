@@ -26,8 +26,8 @@ final case class NDRCCase(
 
 object NDRCCase {
   implicit val reads: Reads[NDRCCase] =
-    (JsPath.read[NDRCDetail] and JsPath.read[NDRCAmounts])(NDRCCase.apply _)
+    (JsPath.read[NDRCDetail] and JsPath.read[NDRCAmounts])(NDRCCase.apply)
 
   implicit val writes: Writes[NDRCCase] =
-    (JsPath.write[NDRCDetail] and JsPath.write[NDRCAmounts])(unlift(NDRCCase.unapply))
+    (JsPath.write[NDRCDetail] and JsPath.write[NDRCAmounts])(Tuple.fromProductTyped(_))
 }

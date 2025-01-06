@@ -49,8 +49,8 @@ class OverpaymentsScheduledClaimMappingSpec
   "The OverpaymentsScheduled claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim(ClaimantType.Declarant)) {
-      scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration) =>
-        val tpi05Request = mapper map scheduledOverpaymentsData
+      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration)) =>
+        val tpi05Request = mapper `map` scheduledOverpaymentsData
 
         val (claim, displayDeclaration) = scheduledOverpaymentsData
 

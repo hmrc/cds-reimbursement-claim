@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, ScheduledOverpaymentsClaim, TypeOfClaimAnswer}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error as CdsError
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ScheduledOverpaymentsClaim, TypeOfClaimAnswer}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode, YesNo}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)

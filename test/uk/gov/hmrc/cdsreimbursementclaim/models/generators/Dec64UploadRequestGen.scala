@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
 import cats.syntax.eq._
-import org.scalacheck.magnolia.Typeclass
+
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
@@ -51,7 +51,7 @@ object Dec64UploadRequestGen {
       else None
   )
 
-  implicit lazy val arbitraryDec64UploadRequest: Typeclass[Dec64UploadRequest] =
+  implicit lazy val arbitraryDec64UploadRequest: Arbitrary[Dec64UploadRequest] =
     Arbitrary(genDec64UploadRequest)
 
   lazy val genUrl: Gen[URL] =

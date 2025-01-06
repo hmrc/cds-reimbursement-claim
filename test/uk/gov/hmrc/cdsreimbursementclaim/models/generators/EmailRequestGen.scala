@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 
-import org.scalacheck.magnolia._
+import org.scalacheck.Arbitrary
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ContactDetailsGen.arbitraryEmail
 
 object EmailRequestGen {
-  implicit lazy val emailRequestGen: Typeclass[EmailRequest] = gen[EmailRequest]
+  implicit lazy val emailRequestGen: Arbitrary[EmailRequest] = GeneratorUtils.gen[EmailRequest]
 }

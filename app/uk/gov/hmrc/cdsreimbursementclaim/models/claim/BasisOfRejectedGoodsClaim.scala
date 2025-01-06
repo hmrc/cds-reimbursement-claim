@@ -40,6 +40,6 @@ object BasisOfRejectedGoodsClaim extends EnumerationFormat[BasisOfRejectedGoodsC
     def toTPI05DisplayString: String = "Special Circumstances"
   }
 
-  override val values: Set[BasisOfRejectedGoodsClaim] =
+  override lazy val values: Set[BasisOfRejectedGoodsClaim] =
     Set(DamagedBeforeClearance, Defective, NotInAccordanceWithContract, SpecialCircumstances)
 }

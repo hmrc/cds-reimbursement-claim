@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.models.claim
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, JsPath}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, DeclarationMode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
@@ -100,6 +100,6 @@ object MultipleRejectedGoodsClaim {
           (JsPath \ "reimbursementMethod").write[ReimbursementMethodAnswer] and
           (JsPath \ "bankAccountDetails").writeNullable[BankAccountDetails] and
           (JsPath \ "supportingEvidences").write[Seq[EvidenceDocument]]
-      )(unlift(MultipleRejectedGoodsClaim.unapply))
+      )(Tuple.fromProductTyped(_))
     )
 }

@@ -186,7 +186,7 @@ object TaxCode {
   private val stringToTaxCodeMap: Map[String, TaxCode] =
     values.map(code => code.value -> code).toMap
 
-  def apply(taxCode: String): Option[TaxCode]          =
+  def apply(taxCode: String): Option[TaxCode] =
     stringToTaxCodeMap.get(taxCode)
 
   def getOrFail(taxCode: String): TaxCode =
