@@ -33,7 +33,7 @@ final case class SecuritiesClaim(
   securitiesReclaims: Map[String, Map[TaxCode, BigDecimal]],
   bankAccountDetails: Option[BankAccountDetails],
   supportingEvidences: Seq[EvidenceDocument],
-  temporaryAdmissionMethodOfDisposal: Option[TemporaryAdmissionMethodOfDisposal],
+  temporaryAdmissionMethodsOfDisposal: Option[List[TemporaryAdmissionMethodOfDisposal]],
   exportMovementReferenceNumber: Option[Seq[MRN]],
   additionalDetails: Option[String]
 )

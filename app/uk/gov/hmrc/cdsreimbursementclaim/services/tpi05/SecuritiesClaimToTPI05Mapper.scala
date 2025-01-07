@@ -65,17 +65,19 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                         .flatMap(EisBasicDate.parse(_).toOption)
       accountDetails                                                = displayDeclaration.displayResponseDetail.accountDetails
       securityDeposits                                              = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      methodOfDisposalDetail                                       <- (claim.temporaryAdmissionMethodOfDisposal, claim.exportMovementReferenceNumber) match {
-                                                                        case (Some(ExportedInSingleShipment), None)    =>
+      methodOfDisposals                                            <- (claim.temporaryAdmissionMethodsOfDisposal, claim.exportMovementReferenceNumber) match {
+                                                                        case (Some(methods), None) if methods.contains(ExportedInSingleShipment)    =>
                                                                           Left(
                                                                             CdsError("Export MRN must be provided when disposal method is single shipment")
                                                                           )
-                                                                        case (Some(ExportedInMultipleShipments), None) =>
+                                                                        case (Some(methods), None) if methods.contains(ExportedInMultipleShipments) =>
                                                                           Left(
                                                                             CdsError("Export MRN must be provided when disposal method is multiple shipments")
                                                                           )
-                                                                        case (Some(exportMethod), Some(_))
-                                                                            if !TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(exportMethod) =>
+                                                                        case (Some(exportMethods), Some(_))
+                                                                            if exportMethods
+                                                                              .filter(i => TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(i))
+                                                                              .isEmpty =>
                                                                           Left(CdsError("Unexpected export MRN supplied"))
                                                                         case (Some(_), _)
                                                                             if !ReasonForSecurity.temporaryAdmissions.contains(claim.reasonForSecurity) =>
@@ -83,18 +85,24 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                         case (None, _)
                                                                             if ReasonForSecurity.temporaryAdmissions.contains(claim.reasonForSecurity) =>
                                                                           Left(CdsError("disposal method missing"))
-                                                                        case (Some(disposalMethod), None)              =>
-                                                                          Right(Some(TemporaryAdmissionMethodOfDisposalDetail(disposalMethod.eisCode, None)))
-                                                                        case (Some(disposalMethod), Some(exportMRNs))  =>
+                                                                        case (Some(disposalMethods), None)                                          =>
                                                                           Right(
                                                                             Some(
-                                                                              TemporaryAdmissionMethodOfDisposalDetail(
-                                                                                disposalMethod.eisCode,
-                                                                                Some(exportMRNs.map(exportMRN => ExportMRN(exportMRN)).toList)
-                                                                              )
+                                                                              disposalMethods.map(x => TemporaryAdmissionMethodOfDisposalDetail(x.eisCode, None))
                                                                             )
                                                                           )
-                                                                        case _                                         => Right(None)
+                                                                        case (Some(disposalMethods), Some(exportMRNs))                              =>
+                                                                          Right(
+                                                                            Some(
+                                                                              disposalMethods.map { disposalMethod =>
+                                                                                TemporaryAdmissionMethodOfDisposalDetail(
+                                                                                  disposalMethod.eisCode,
+                                                                                  Some(exportMRNs.map(exportMRN => ExportMRN(exportMRN)).toList)
+                                                                                )
+                                                                              }
+                                                                            )
+                                                                          )
+                                                                        case _                                                                      => Right(None)
                                                                       }
       selectedSecurityDeposits                                      =
         securityDeposits.filter(deposit => claim.securitiesReclaims.exists(_._1 === deposit.securityDepositId))
@@ -145,7 +153,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         useExistingPaymentMethod = useExistingPaymentDetails,
         bankDetails = bankDetails
       )
-      .withTemporaryAdmissionMethodOfDisposal(methodOfDisposalDetail)
+      .withMethodOfDisposals(methodOfDisposals)
       .withAdditionalDetails(claim.additionalDetails)
       .withClaimantAddress(claimantAddress)).flatMap(_.verify)
   }
