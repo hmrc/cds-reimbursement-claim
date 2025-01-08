@@ -84,6 +84,11 @@ object TPI05 {
     ): Builder =
       copy(validatedRequest.map(_.copy(methodOfDisposals = temporaryAdmissionMethodOfDisposalDetail.map(List(_)))))
 
+    def withMethodOfDisposals(
+      methodOfDisposals: Option[List[TemporaryAdmissionMethodOfDisposalDetail]]
+    ): Builder =
+      copy(validatedRequest.map(_.copy(methodOfDisposals = methodOfDisposals)))
+
     def withReimbursementMethod(reimbursementMethod: ReimbursementMethodAnswer): Builder =
       copy(
         validatedRequest.map(

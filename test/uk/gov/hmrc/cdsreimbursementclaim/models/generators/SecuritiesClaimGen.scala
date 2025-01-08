@@ -105,18 +105,17 @@ object SecuritiesClaimGen {
     payeeType           <- Gen.oneOf[PayeeType](PayeeType.values)
     additionalDetails   <- Gen.option(Gen.asciiPrintableStr)
 
-    temporaryAdmissionMethodOfDisposal <-
+    temporaryAdmissionMethodsOfDisposal <-
       if (ReasonForSecurity.temporaryAdmissions.contains(reasonForSecurity))
-        Gen.some(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values))
+        Gen.some(Gen.listOf(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values)))
       else
         Gen.const(None)
 
     exportMovementReferenceNumber <-
       if (
         ReasonForSecurity.temporaryAdmissions(reasonForSecurity) &&
-        temporaryAdmissionMethodOfDisposal.exists(
-          TemporaryAdmissionMethodOfDisposal.requiresMrn(_)
-        )
+        temporaryAdmissionMethodsOfDisposal
+          .exists(mods => mods.exists(TemporaryAdmissionMethodOfDisposal.requiresMrn(_)))
       ) genMRN.map(mrn => Some(List(mrn)))
       else
         Gen.const(None)
@@ -132,7 +131,7 @@ object SecuritiesClaimGen {
       bankAccountDetails = bankAccountDetails,
       supportingEvidences = documents,
       exportMovementReferenceNumber = exportMovementReferenceNumber,
-      temporaryAdmissionMethodOfDisposal = temporaryAdmissionMethodOfDisposal,
+      temporaryAdmissionMethodsOfDisposal = temporaryAdmissionMethodsOfDisposal,
       additionalDetails = additionalDetails
     )
   )
@@ -189,9 +188,9 @@ object SecuritiesClaimGen {
   ] =
     for {
       reasonForSecurity                     <- Gen.oneOf(ReasonForSecurity.temporaryAdmissions)
-      methodOfDisposal                      <- Gen.some(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values))
-      exportMrn                             <- methodOfDisposal
-                                                 .filter(TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(_))
+      methodsOfDisposal                     <- Gen.some(Gen.listOf(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values)))
+      exportMrn                             <- methodsOfDisposal
+                                                 .filter(mods => mods.exists(TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(_)))
                                                  .as(Gen.some(Gen.listOfN(1, genMRN)))
                                                  .getOrElse(Gen.const(None))
       (securitiesClaim, displayDeclaration) <- genSecuritiesClaimAndDeclaration.map {
@@ -199,7 +198,7 @@ object SecuritiesClaimGen {
                                                    (
                                                      securitiesClaim.copy(
                                                        reasonForSecurity = reasonForSecurity,
-                                                       temporaryAdmissionMethodOfDisposal = methodOfDisposal,
+                                                       temporaryAdmissionMethodsOfDisposal = methodsOfDisposal,
                                                        exportMovementReferenceNumber = exportMrn
                                                      ),
                                                      displayDeclaration
