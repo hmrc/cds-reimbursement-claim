@@ -66,6 +66,14 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
       .expects(eori, claimsSelector, *)
       .returning(Future.successful(response))
 
+  def mockGetClaimsResponseThrowsException(eori: Eori, claimsSelector: ClaimsSelector)(errorMessage: String) =
+    (
+      mockGetClaimsService
+        .getClaims(_: Eori, _: ClaimsSelector)(_: HeaderCarrier)
+      )
+      .expects(eori, claimsSelector, *)
+      .returning(Future.failed(new Exception(errorMessage)))
+
   "The GetClaimsController" should {
     "succeed" when {
       "handling non-empty responseDetails (GB only)" in {
@@ -81,6 +89,35 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
               "claims" -> Json.toJson(
                 ClaimsResponse.fromTpi01Response(
                   response.responseDetail.getOrElse(fail("missing responseDetail field"))
+                )
+              )
+            )
+          )
+        }
+      }
+      "handling non-empty responseDetails (GB and XI) - Underpayments" in {
+        forAll(
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant,
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant
+        ) { (gbResponse, xiResponse) =>
+          inSequence {
+            mockGetClaimsResponse(testGbEori, ClaimsSelector.Underpayments)(Right(gbResponse))
+            (mockGetXiEoriService
+              .getXIEori(_: Eori)(_: HeaderCarrier))
+              .expects(testGbEori, *)
+              .returning(Future.successful(Some(testXiEori)))
+            mockGetClaimsResponse(testXiEori, ClaimsSelector.Underpayments)(Right(xiResponse))
+          }
+
+          val result = controller.getUnderpaymentsClaims(true)(FakeRequest())
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(
+            Json.obj(
+              "claims" -> Json.toJson(
+                ClaimsResponse.fromTpi01Response(
+                  gbResponse.responseDetail.getOrElse(fail("missing responseDetail field"))
+                ) ++ ClaimsResponse.fromTpi01Response(
+                  xiResponse.responseDetail.getOrElse(fail("missing responseDetail field"))
                 )
               )
             )
@@ -137,6 +174,31 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
             Json.obj(
               "claims" -> ClaimsResponse.fromTpi01Response(
                 xiResponse.responseDetail.getOrElse(fail("missing responseDetail field"))
+              )
+            )
+          )
+        }
+      }
+      "handling non empty GB responseDetails with empty XI response details" in {
+        forAll(
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant,
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseEmpty
+        ) { (gbResponse, xiResponse) =>
+          inSequence {
+            mockGetClaimsResponse(testGbEori, ClaimsSelector.Overpayments)(Right(gbResponse))
+            (mockGetXiEoriService
+              .getXIEori(_: Eori)(_: HeaderCarrier))
+              .expects(testGbEori, *)
+              .returning(Future.successful(Some(testXiEori)))
+            mockGetClaimsResponse(testXiEori, ClaimsSelector.Overpayments)(Right(xiResponse))
+          }
+
+          val result = controller.getOverpaymentsClaims(true)(FakeRequest())
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(
+            Json.obj(
+              "claims" -> ClaimsResponse.fromTpi01Response(
+                gbResponse.responseDetail.getOrElse(fail("missing responseDetail field"))
               )
             )
           )
@@ -232,6 +294,74 @@ class GetClaimsControllerSpec extends ControllerSpec with ScalaCheckPropertyChec
           val result = controller.getAllClaims(true)(FakeRequest())
           status(result)        shouldBe SERVICE_UNAVAILABLE
           contentAsJson(result) shouldBe Json.toJson(gbResponse.errorDetail)
+        }
+      }
+      "handling json validation error response (GB only)" in {
+        forSampledValue(
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant,
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseEmpty
+        ) { (gbResponse, xiResponse) =>
+          inSequence {
+            mockGetClaimsResponseThrowsException(testGbEori, ClaimsSelector.Overpayments)("JSON validation failure")
+          }
+          val result = controller.getOverpaymentsClaims(false)(FakeRequest())
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+      "handling json validation error response (GB and XI)" in {
+        forSampledValue(
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant,
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant
+        ) { (gbResponse, xiResponse) =>
+          inSequence {
+            mockGetClaimsResponseThrowsException(testGbEori, ClaimsSelector.Securities)("JSON validation failure")
+          }
+          val result = controller.getSecuritiesClaims(true)(FakeRequest())
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+      "handling non json validation error response (GB and XI)" in {
+        forSampledValue(
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant,
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant
+        ) { (gbResponse, xiResponse) =>
+          inSequence {
+            mockGetClaimsResponseThrowsException(testGbEori, ClaimsSelector.Ndrc)("some other failure")
+          }
+          val result = controller.getNdrcClaims(true)(FakeRequest())
+          status(result) shouldBe SERVICE_UNAVAILABLE
+        }
+      }
+      "handling non json validation error response (GB only)" in {
+        forSampledValue(
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant,
+          Tpi01ReponseGen.genGetReimbursementClaimsResponseVariant
+        ) { (gbResponse, xiResponse) =>
+          inSequence {
+            mockGetClaimsResponseThrowsException(testGbEori, ClaimsSelector.Ndrc)("some other failure")
+          }
+          val result = controller.getNdrcClaims(false)(FakeRequest())
+          status(result) shouldBe SERVICE_UNAVAILABLE
+        }
+      }
+      "handling error response with status 403 with no error detail" in {
+        forSampledValue(Tpi01ReponseGen.genErrorResponse(403)) { response =>
+          inSequence {
+            mockGetClaimsResponse(testGbEori, ClaimsSelector.Securities)(Left(response.copy(errorDetail = None)))
+          }
+
+          val result = controller.getSecuritiesClaims(false)(FakeRequest())
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+      "handling error response with status 500 with no error detail" in {
+        forSampledValue(Tpi01ReponseGen.genErrorResponse(500)) { response =>
+          inSequence {
+            mockGetClaimsResponse(testGbEori, ClaimsSelector.Underpayments)(Left(response.copy(errorDetail = None)))
+          }
+
+          val result = controller.getUnderpaymentsClaims(false)(FakeRequest())
+          status(result) shouldBe SERVICE_UNAVAILABLE
         }
       }
     }

@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.test.Helpers._
-import play.api.test._
+import play.api.test.Helpers.*
+import play.api.test.*
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.GetSpecificCaseResponse
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetSpecificClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.ForSampledValueCheck
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -63,13 +63,13 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
       .expects(cdfPayService, cdfPayCaseNumber, *)
       .returning(Future.successful(response))
 
-  def mockGetClaimsResponseThrowsException(cdfPayService: CDFPayService, cdfPayCaseNumber: String) =
+  def mockGetClaimsResponseThrowsException(caseNumber: String)(errorMessage: String) =
     (
       mockGetSpecificClaimService
         .getSpecificClaim(_: CDFPayService, _: String)(_: HeaderCarrier)
       )
-      .expects(cdfPayService, cdfPayCaseNumber, *)
-      .throws(new RuntimeException(""))
+      .expects(CDFPayService.NDRC, caseNumber, *)
+      .returning(Future.failed(new Exception(errorMessage)))
 
   "The GetSpecificClaimController" should {
     "succeed" when {
@@ -136,6 +136,46 @@ class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPrope
           val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
           status(result)        shouldBe INTERNAL_SERVER_ERROR
           contentAsJson(result) shouldBe Json.toJson(response.errorDetail)
+        }
+      }
+      "handling error response with status 403 with no error detail" in {
+        forSampledValue(Tpi02ReponseGen.genErrorResponse(403, false)) { response =>
+          inSequence {
+            mockGetClaimsResponse(CDFPayService.NDRC, "XYZ-999")(Left(response))
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+      "handling error response with status 500 with no error detail" in {
+        forSampledValue(Tpi02ReponseGen.genErrorResponse(500, false)) { response =>
+          inSequence {
+            mockGetClaimsResponse(CDFPayService.NDRC, "XYZ-999")(Left(response))
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
+      "handling a 500 response from getSpecificClaim - JSON validation" in {
+        forSampledValue(Tpi02ReponseGen.getGetSpecificCaseResponseScty) { response =>
+          inSequence {
+            mockGetClaimsResponseThrowsException("XYZ-999")("JSON validation failure")
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+      "handling a 500 response from getSpecificClaim" in {
+        forSampledValue(Tpi02ReponseGen.getGetSpecificCaseResponseScty) { response =>
+          inSequence {
+            mockGetClaimsResponseThrowsException("XYZ-999")("other exception")
+          }
+
+          val result = controller.getSpecificClaim(CDFPayService.NDRC, "XYZ-999")(FakeRequest())
+          status(result) shouldBe SERVICE_UNAVAILABLE
         }
       }
     }

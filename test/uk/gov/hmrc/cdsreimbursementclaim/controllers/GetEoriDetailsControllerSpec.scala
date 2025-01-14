@@ -60,6 +60,16 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
       .expects(eori, *)
       .returning(Future.successful(Right(response)))
 
+  def mockGetClaimsFailedResponse(eori: Eori)(
+    errorMessage: String
+  ) =
+    (
+      mockSubscriptionConnector
+        .getSubscription(_: Eori)(_: HeaderCarrier)
+      )
+      .expects(eori, *)
+      .returning(Future.successful(Left(errorMessage)))
+
   def mockFailedResponse(eori: Eori)(errorMessage: String) =
     (
       mockSubscriptionConnector
@@ -118,6 +128,18 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
           status(result) shouldBe NO_CONTENT
         }
       }
+
+      "handling response with no EORINo" in {
+        forAll(Sub09ReponseGen.genSubscriptionWithoutXiEori) { case (response, eoriGB) =>
+          val updatedResponse = updateEoriNoToNone(response)
+          inSequence {
+            mockGetClaimsResponse(testEori)(Some(updatedResponse))
+          }
+
+          val result = controller.getCurrentUserEoriDetails(FakeRequest())
+          status(result) shouldBe NO_CONTENT
+        }
+      }
     }
 
     "getCurrentUserEoriDetails fail" when {
@@ -128,6 +150,14 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
 
         val result = controller.getCurrentUserEoriDetails(FakeRequest())
         status(result) shouldBe NO_CONTENT
+      }
+      "handling failure response when getSubscription returns Left" in {
+        inSequence {
+          mockGetClaimsFailedResponse(testEori)("Sample error message")
+        }
+
+        val result = controller.getCurrentUserEoriDetails(FakeRequest())
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
 
@@ -169,6 +199,9 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
           )
         }
       }
+    }
+
+    "getEoriDetails fail" when {
 
       "handling empty response" in {
         forAll(Sub09ReponseGen.genSubscriptionWithoutXiEori) { case (response, eoriGB) =>
@@ -176,10 +209,47 @@ class GetEoriDetailsControllerSpec extends ControllerSpec with ScalaCheckPropert
             mockGetClaimsResponse(testEori)(None)
           }
 
-          val result = controller.getCurrentUserEoriDetails(FakeRequest())
+          val result = controller.getEoriDetails(testEori.value)(FakeRequest())
           status(result) shouldBe NO_CONTENT
         }
       }
+      "handling error response with status 500" in {
+        inSequence {
+          mockFailedResponse(testEori)("Sample error message")
+        }
+
+        val result = controller.getEoriDetails(testEori.value)(FakeRequest())
+        status(result) shouldBe NO_CONTENT
+      }
+
+      "handling response with no EORINo" in {
+        forAll(Sub09ReponseGen.genSubscriptionWithoutXiEori) { case (response, eoriGB) =>
+          val updatedResponse = updateEoriNoToNone(response)
+          inSequence {
+            mockGetClaimsResponse(testEori)(Some(updatedResponse))
+          }
+
+          val result = controller.getEoriDetails(testEori.value)(FakeRequest())
+          status(result) shouldBe NO_CONTENT
+        }
+      }
+      "handling failure response when getSubscription returns Left" in {
+        inSequence {
+          mockGetClaimsFailedResponse(testEori)("Sample error message")
+        }
+
+        val result = controller.getEoriDetails(testEori.value)(FakeRequest())
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
     }
   }
+
+  private def updateEoriNoToNone(response: SubscriptionResponse) =
+    response.copy(
+      subscriptionDisplayResponse = response.subscriptionDisplayResponse.copy(
+        responseDetail = response.subscriptionDisplayResponse.responseDetail match
+          case None     => None
+          case Some(rd) => Some(rd.copy(EORINo = None))
+      )
+    )
 }

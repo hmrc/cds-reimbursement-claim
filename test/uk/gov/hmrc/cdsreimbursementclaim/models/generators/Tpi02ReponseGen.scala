@@ -248,20 +248,22 @@ object Tpi02ReponseGen {
       responseCommon <- genResponseCommonError
     } yield GetSpecificCaseResponse(responseCommon, None)
 
-  def genErrorResponse(status: Int): Gen[EisErrorResponse] =
+  def genErrorResponse(status: Int, hasErrorDetail: Boolean = true): Gen[EisErrorResponse] =
     Gen.const(
       EisErrorResponse(
         status,
-        Some(
-          ErrorDetail(
-            timestamp = CdsDateTime.now,
-            correlationId = CorrelationId(),
-            errorCode = s"$status",
-            errorMessage = "Some error message",
-            source = "foo",
-            sourceFaultDetail = SourceFaultDetail(Seq("source fault detail"))
+        if (hasErrorDetail)
+          Some(
+            ErrorDetail(
+              timestamp = CdsDateTime.now,
+              correlationId = CorrelationId(),
+              errorCode = s"$status",
+              errorMessage = "Some error message",
+              source = "foo",
+              sourceFaultDetail = SourceFaultDetail(Seq("source fault detail"))
+            )
           )
-        )
+        else None
       )
     )
 
