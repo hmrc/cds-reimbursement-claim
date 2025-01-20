@@ -70,6 +70,20 @@ object TPI05 {
         )
       })
 
+    def withClaimedAmountOptional(claimedAmount: BigDecimal): Builder =
+      if claimedAmount == 0
+      then this
+      else
+        copy(validatedRequest.andThen { request =>
+          Validated.cond(
+            claimedAmount > 0,
+            request.copy(
+              claimAmountTotal = Some(claimedAmount.roundToTwoDecimalPlaces.toString())
+            ),
+            CdsError("Total reimbursement amount must be greater than zero")
+          )
+        })
+
     def withCaseType(caseType: CaseType): Builder =
       copy(validatedRequest.map(_.copy(caseType = Some(caseType))))
 
