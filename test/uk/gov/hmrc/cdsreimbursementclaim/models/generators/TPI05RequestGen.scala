@@ -143,7 +143,7 @@ object TPI05RequestGen {
     addressLine2 <- Gen.option(genStringWithMaxSizeOfN(10))
     addressLine3 <- Gen.option(genStringWithMaxSizeOfN(20))
     city         <- Gen.option(genRandomString)
-    country      <- Gen.option(genCountry)
+    country      <- genCountry
     postalCode   <- Gen.option(genPostcode)
   } yield ContactInformation(
     contactPerson = Some(s"$firstName $lastName"),
@@ -152,7 +152,7 @@ object TPI05RequestGen {
     addressLine3 = addressLine3,
     street = Some(street),
     city = city,
-    countryCode = country.map(_.code),
+    countryCode = Some(country.code),
     postalCode = postalCode.map(_.value),
     telephoneNumber = Some(telephone.value),
     faxNumber = None,

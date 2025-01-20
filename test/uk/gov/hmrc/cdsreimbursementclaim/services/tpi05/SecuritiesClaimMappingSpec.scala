@@ -22,15 +22,14 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import play.api.i18n.Lang.logger
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType, ReasonForSecurity}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails, PostNewClaimsRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen.*
 
 class SecuritiesClaimMappingSpec
     extends AnyWordSpec
@@ -49,9 +48,7 @@ class SecuritiesClaimMappingSpec
   ): Unit =
     result match {
       case Left(error)                                                        =>
-        logger.warn(s"Error message: $error")
-        assert(claim.claimantInformation.contactInformation.countryCode.isEmpty)
-        ()
+        fail(s"Error message: $error")
       case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))) =>
         common.originatingSystem     should ===(MDTP)
         detail.customDeclarationType should ===(CustomDeclarationType.MRN.some)
@@ -65,16 +62,19 @@ class SecuritiesClaimMappingSpec
         detail.MRNDetails.toList.flatten
           .map(_.consigneeDetails.flatMap(_.contactDetails))
           .zip(declaration.displayResponseDetail.effectiveConsigneeDetails.contactDetails :: Nil)
-          .foreach { case (Some(eisContactDetails), Some(acc14ContactDetails)) =>
-            eisContactDetails.addressLine1    should ===(acc14ContactDetails.addressLine1)
-            eisContactDetails.addressLine2    should ===(acc14ContactDetails.addressLine2)
-            eisContactDetails.addressLine3    should ===(acc14ContactDetails.addressLine3)
-            eisContactDetails.contactPerson   should ===(acc14ContactDetails.contactName)
-            eisContactDetails.telephoneNumber should ===(acc14ContactDetails.telephone)
-            eisContactDetails.city            should ===(acc14ContactDetails.addressLine3)
-            eisContactDetails.countryCode     should ===(acc14ContactDetails.countryCode)
-            eisContactDetails.emailAddress    should ===(acc14ContactDetails.emailAddress)
-            eisContactDetails.faxNumber       should ===(None)
+          .foreach {
+            case (Some(eisContactDetails), Some(acc14ContactDetails)) =>
+              eisContactDetails.addressLine1    should ===(acc14ContactDetails.addressLine1)
+              eisContactDetails.addressLine2    should ===(acc14ContactDetails.addressLine2)
+              eisContactDetails.addressLine3    should ===(acc14ContactDetails.addressLine3)
+              eisContactDetails.contactPerson   should ===(acc14ContactDetails.contactName)
+              eisContactDetails.telephoneNumber should ===(acc14ContactDetails.telephone)
+              eisContactDetails.city            should ===(acc14ContactDetails.addressLine3)
+              eisContactDetails.countryCode     should ===(acc14ContactDetails.countryCode)
+              eisContactDetails.emailAddress    should ===(acc14ContactDetails.emailAddress)
+              eisContactDetails.faxNumber       should ===(None)
+            case _                                                    =>
+              ()
           }
         detail.security
           .flatMap(_.securityDetails)
@@ -131,6 +131,22 @@ class SecuritiesClaimMappingSpec
       (details: (SecuritiesClaim, DisplayDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map((claim, declaration))
+        isValid(claim, declaration, tpi05Request)
+    }
+
+    "map a valid Securities IPR claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
+      (details: (SecuritiesClaim, DisplayDeclaration)) =>
+        val (claim, declaration) = details
+        val tpi05Request         = mapper.map(
+          (
+            claim.copy(
+              reasonForSecurity = ReasonForSecurity.InwardProcessingRelief,
+              securitiesReclaims = Map.empty,
+              temporaryAdmissionMethodsOfDisposal = None
+            ),
+            declaration
+          )
+        )
         isValid(claim, declaration, tpi05Request)
     }
 

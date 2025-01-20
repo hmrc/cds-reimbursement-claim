@@ -32,27 +32,17 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
-import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.libs.json.Json
 import play.api.test.Helpers.*
-import play.api.test.FakeRequest
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubscriptionConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.*
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Sub09ReponseGen
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{Eori, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.SubscriptionResponse
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
