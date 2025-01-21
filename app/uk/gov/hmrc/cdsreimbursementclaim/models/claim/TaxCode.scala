@@ -42,7 +42,55 @@ object TaxCode {
   case object A90 extends TaxCode("A90")
   case object A95 extends TaxCode("A95")
   case object B05 extends TaxCode("B05")
-
+  case object NI301 extends TaxCode("301")
+  case object NI311 extends TaxCode("311")
+  case object NI312 extends TaxCode("312")
+  case object NI313 extends TaxCode("313")
+  case object NI314 extends TaxCode("314")
+  case object NI315 extends TaxCode("315")
+  case object NI321 extends TaxCode("321")
+  case object NI322 extends TaxCode("322")
+  case object NI323 extends TaxCode("323")
+  case object NI324 extends TaxCode("324")
+  case object NI325 extends TaxCode("325")
+  case object NI331 extends TaxCode("331")
+  case object NI333 extends TaxCode("333")
+  case object NI334 extends TaxCode("334")
+  case object NI335 extends TaxCode("335")
+  case object NI341 extends TaxCode("341")
+  case object NI343 extends TaxCode("343")
+  case object NI344 extends TaxCode("344")
+  case object NI345 extends TaxCode("345")
+  case object NI351 extends TaxCode("351")
+  case object NI352 extends TaxCode("352")
+  case object NI353 extends TaxCode("353")
+  case object NI354 extends TaxCode("354")
+  case object NI355 extends TaxCode("355")
+  case object NI356 extends TaxCode("356")
+  case object NI357 extends TaxCode("357")
+  case object NI358 extends TaxCode("358")
+  case object NI359 extends TaxCode("359")
+  case object NI360 extends TaxCode("360")
+  case object NI361 extends TaxCode("361")
+  case object NI362 extends TaxCode("362")
+  case object NI363 extends TaxCode("363")
+  case object NI364 extends TaxCode("364")
+  case object NI365 extends TaxCode("365")
+  case object NI366 extends TaxCode("366")
+  case object NI367 extends TaxCode("367")
+  case object NI368 extends TaxCode("368")
+  case object NI369 extends TaxCode("369")
+  case object NI370 extends TaxCode("370")
+  case object NI371 extends TaxCode("371")
+  case object NI372 extends TaxCode("372")
+  case object NI373 extends TaxCode("373")
+  case object NI374 extends TaxCode("374")
+  case object NI375 extends TaxCode("375")
+  case object NI376 extends TaxCode("376")
+  case object NI377 extends TaxCode("377")
+  case object NI378 extends TaxCode("378")
+  case object NI379 extends TaxCode("379")
+  case object NI380 extends TaxCode("380")
   case object NI407 extends TaxCode("407")
   case object NI411 extends TaxCode("411")
   case object NI412 extends TaxCode("412")
@@ -180,7 +228,57 @@ object TaxCode {
     NI99A,
     NI99B,
     NI99C,
-    NI99D
+    NI99D,
+    NI301,
+    NI311,
+    NI312,
+    NI313,
+    NI314,
+    NI315,
+    NI321,
+    NI322,
+    NI323,
+    NI324,
+    NI325,
+    NI331,
+    NI333,
+    NI334,
+    NI335,
+    NI341,
+    NI343,
+    NI344,
+    NI345,
+    NI351,
+    NI352,
+    NI353,
+    NI353,
+    NI354,
+    NI355,
+    NI356,
+    NI357,
+    NI358,
+    NI359,
+    NI360,
+    NI361,
+    NI362,
+    NI363,
+    NI364,
+    NI365,
+    NI366,
+    NI367,
+    NI368,
+    NI369,
+    NI370,
+    NI371,
+    NI372,
+    NI373,
+    NI374,
+    NI375,
+    NI376,
+    NI377,
+    NI378,
+    NI379,
+    NI380
   )
 
   private val stringToTaxCodeMap: Map[String, TaxCode] =
