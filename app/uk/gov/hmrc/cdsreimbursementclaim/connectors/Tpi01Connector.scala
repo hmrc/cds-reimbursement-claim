@@ -16,20 +16,25 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, Eori}
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.{ClaimsSelector, GetPostClearanceCasesRequest, Request, RequestCommon, RequestDetail, Response}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import java.net.URL
+import play.api.libs.ws.JsonBodyWritables.*
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class Tpi01Connector @Inject() (
-  http: HttpClient,
+  http: HttpClientV2,
   val config: ServicesConfig
 )(implicit executionContext: ExecutionContext)
     extends EisConnector
@@ -57,7 +62,11 @@ class Tpi01Connector @Inject() (
       )
     )
 
-    http.POST[Request, Either[EisErrorResponse, Response]](getClaimsUrl, request, getEISRequiredHeaders)
+    http
+      .post(URL(getClaimsUrl))
+      .withBody(Json.toJson(request))
+      .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
+      .execute[Either[EisErrorResponse, Response]]
   }
 }
 

@@ -23,19 +23,19 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.http.{ContentTypes, HeaderNames, MimeTypes}
 import play.api.mvc.Codec
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
+class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpV2Support {
 
   "Ccs Connector" when {
 
@@ -73,15 +73,6 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
         )
     }
 
-    val explicitHeaders = Seq(
-      "Date"             -> "some-date",
-      "X-Correlation-ID" -> "some-correlation-id",
-      "X-Forwarded-Host" -> "MDTP",
-      "Content-Type"     -> "application/xml; charset=utf-8",
-      "Accept"           -> "application/xml",
-      "Authorization"    -> "Bearer test-token"
-    )
-
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     val backEndUrl = "http://localhost:7502/filetransfer/init/v1"
@@ -91,7 +82,7 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
       "do a post http call and get the DEC-64 API response" in {
         val request      = sample[CcsSubmissionPayload]
         val httpResponse = HttpResponse(204, "success response")
-        mockPostString(backEndUrl, request.headers ++ explicitHeaders, request.dec64Body)(Some(httpResponse))
+        mockHttpPostStringSuccess(backEndUrl, request.dec64Body, httpResponse)
         val response     = await(connector.submitToCcs(request).value)
         response shouldBe Right(httpResponse)
       }
@@ -100,7 +91,7 @@ class CcsConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
     "return an error" when {
       "the call fails" in {
         val request = sample[CcsSubmissionPayload]
-        mockPostString(backEndUrl, request.headers ++ explicitHeaders, request.dec64Body)(None)
+        mockHttpPostStringWithException(backEndUrl, request.dec64Body, new NotFoundException("not found"))
         await(connector.submitToCcs(request).value).isLeft shouldBe true
       }
     }

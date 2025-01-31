@@ -18,14 +18,18 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
-import play.api.libs.json.Writes
+import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import java.net.URL
+import play.api.libs.ws.JsonBodyWritables.*
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,7 +42,7 @@ trait DeclarationConnector {
 }
 
 @Singleton
-class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: ServicesConfig)(implicit
+class DefaultDeclarationConnector @Inject() (http: HttpClientV2, val config: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends DeclarationConnector
     with EisConnector
@@ -52,12 +56,10 @@ class DefaultDeclarationConnector @Inject() (http: HttpClient, val config: Servi
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[DeclarationRequest, HttpResponse](getDeclarationUrl, declarationRequest, getEISRequiredHeaders)(
-          implicitly[Writes[DeclarationRequest]],
-          HttpReads[HttpResponse],
-          hc,
-          ec
-        )
+        .post(URL(getDeclarationUrl))
+        .withBody(Json.toJson(declarationRequest))
+        .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

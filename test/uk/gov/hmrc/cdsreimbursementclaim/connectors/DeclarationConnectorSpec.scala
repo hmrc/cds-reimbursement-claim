@@ -22,19 +22,20 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.test.Helpers._
+import play.api.libs.json.Json
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
+class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpV2Support {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
@@ -89,7 +90,7 @@ class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
       "do a post http call and get the ACC14 API response" in {
         val httpResponse = HttpResponse(200, "acc-14 response payload")
-        mockPost(backEndUrl, explicitHeaders, *)(Some(httpResponse))
+        mockHttpPostSuccess[HttpResponse](backEndUrl, Json.toJson(request), httpResponse)
         val response     = await(connector.getDeclaration(request).value)
         response shouldBe Right(httpResponse)
       }
@@ -97,7 +98,7 @@ class DeclarationConnectorSpec extends AnyWordSpec with Matchers with MockFactor
 
     "return an error" when {
       "the call fails" in {
-        mockPost(backEndUrl, explicitHeaders, *)(None)
+        mockHttpPostWithException(backEndUrl, Json.toJson(request), new NotFoundException("not found"))
         val response = await(connector.getDeclaration(request).value)
         response.isLeft shouldBe true
       }

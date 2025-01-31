@@ -17,26 +17,32 @@
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
+import play.api.libs.json.Json
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{RequestCommon, TPI04Request}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.TPI04Request._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.TPI04Request.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, MRN}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import java.net.URL
+import play.api.libs.ws.JsonBodyWritables.*
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ExistingDeclarationConnector @Inject() (
-  http: HttpClient,
+  http: HttpClientV2,
   val config: ServicesConfig
 )(implicit ec: ExecutionContext)
     extends EisConnector
@@ -48,20 +54,29 @@ class ExistingDeclarationConnector @Inject() (
 
   def checkExistingDeclaration(
     mrn: MRN,
-    reasonForSecurity: ReasonForSecurity
+    reasonForSecurity: ReasonForSecurity,
+    receiptDate: String = ISO8601DateTime.now,
+    acknowledgementReference: String = CorrelationId.compact
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, ExistingClaim] = {
     val requestDetails = TPI04Request(
       RequestCommon(
         Platform.MDTP,
-        ISO8601DateTime.now,
-        CorrelationId.compact
+        receiptDate,
+        acknowledgementReference
       ),
       mrn,
       reasonForSecurity
     )
-    EitherT[Future, Error, ExistingClaim](
+    EitherT[
+      Future,
+      Error,
+      ExistingClaim
+    ](
       http
-        .POST[TPI04Request, ExistingClaim](url, requestDetails, getEISRequiredHeaders)
+        .post(URL(url))
+        .withBody(Json.toJson(requestDetails))
+        .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
+        .execute[ExistingClaim]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

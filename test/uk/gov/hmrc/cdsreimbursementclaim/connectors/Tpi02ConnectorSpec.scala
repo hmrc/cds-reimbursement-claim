@@ -21,13 +21,13 @@ import org.scalatest.compatible.Assertion
 import play.api.Configuration
 import play.api.http.{HeaderNames, MimeTypes, Port}
 import play.api.mvc.{Result, Results}
-import play.api.routing.sird._
+import play.api.routing.sird.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
 import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.SourceFaultDetail
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02._
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{TestDataFromFile, ValidateEisHeaders}
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -36,8 +36,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import com.eclipsesource.schema.SchemaType
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.cdsreimbursementclaim.utils.SchemaValidation
-
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with ValidateEisHeaders with SchemaValidation {
@@ -182,10 +182,11 @@ class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with Vali
 
 trait WithTpi02Connector {
 
-  def givenTpi02Connector(body: Tpi02Connector => Assertion): Port => HttpClient => Assertion = { port => httpClient =>
-    val config: Configuration = Configuration(
-      ConfigFactory.parseString(
-        s"""
+  def givenTpi02Connector(body: Tpi02Connector => Assertion): Port => HttpClientV2 => Assertion = {
+    port => httpClient =>
+      val config: Configuration = Configuration(
+        ConfigFactory.parseString(
+          s"""
         | self {
         |   url = host1.com
         |  },
@@ -203,21 +204,21 @@ trait WithTpi02Connector {
         |}
         |
         |""".stripMargin
-      )
-    )
-
-    val connector: Tpi02Connector = new Tpi02Connector(httpClient, new ServicesConfig(config)) {
-      override def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
-        Seq(
-          HeaderNames.DATE                   -> "some-date",
-          CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",
-          HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
-          HeaderNames.CONTENT_TYPE           -> MimeTypes.JSON,
-          HeaderNames.ACCEPT                 -> MimeTypes.JSON
         )
-    }
+      )
 
-    body(connector)
+      val connector: Tpi02Connector = new Tpi02Connector(httpClient, new ServicesConfig(config)) {
+        override def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
+          Seq(
+            HeaderNames.DATE                   -> "some-date",
+            CustomHeaderNames.X_CORRELATION_ID -> "some-correlation-id",
+            HeaderNames.X_FORWARDED_HOST       -> Platform.MDTP,
+            HeaderNames.CONTENT_TYPE           -> MimeTypes.JSON,
+            HeaderNames.ACCEPT                 -> MimeTypes.JSON
+          )
+      }
+
+      body(connector)
   }
 }
 

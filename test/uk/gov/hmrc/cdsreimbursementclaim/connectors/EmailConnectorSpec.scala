@@ -22,19 +22,19 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.EmailRequestGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.*
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
+class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpV2Support {
 
   val claimSubmittedTemplateId = "template-claim-submitted"
 
@@ -97,11 +97,12 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
           ).foreach { httpResponse =>
             withClue(s"For http response [${httpResponse.toString}]") {
 
-              mockPost(
-                s"http://host:123/hmrc/email",
-                Seq.empty,
-                expectedRequestBody
-              )(Some(httpResponse))
+              mockHttpPostSuccess[HttpResponse](
+                "http://host:123/hmrc/email",
+                expectedRequestBody,
+                httpResponse,
+                hasHeaders = false
+              )
 
               await(
                 connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
@@ -122,11 +123,12 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
           ).foreach { httpResponse =>
             withClue(s"For http response [${httpResponse.toString}]") {
 
-              mockPost(
-                s"http://host:123/hmrc/email",
-                Seq.empty,
-                expectedRequestBody
-              )(Some(httpResponse))
+              mockHttpPostSuccess[HttpResponse](
+                "http://host:123/hmrc/email",
+                expectedRequestBody,
+                httpResponse,
+                hasHeaders = false
+              )
 
               await(
                 connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
@@ -147,11 +149,12 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
           ).foreach { httpResponse =>
             withClue(s"For http response [${httpResponse.toString}]") {
 
-              mockPost(
-                s"http://host:123/hmrc/email",
-                Seq.empty,
-                expectedRequestBody
-              )(Some(httpResponse))
+              mockHttpPostSuccess[HttpResponse](
+                "http://host:123/hmrc/email",
+                expectedRequestBody,
+                httpResponse,
+                hasHeaders = false
+              )
 
               await(
                 connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value
@@ -181,11 +184,13 @@ class EmailConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
         )
 
         "the call fails" in {
-          mockPost(
-            s"http://host:123/hmrc/email",
-            Seq.empty,
-            expectedRequestBody
-          )(None)
+
+          mockHttpPostWithException(
+            "http://host:123/hmrc/email",
+            expectedRequestBody,
+            new NotFoundException("not found"),
+            hasHeaders = false
+          )
 
           await(
             connector.sendClaimSubmitConfirmationEmail(submitClaimResponse, emailRequest).value

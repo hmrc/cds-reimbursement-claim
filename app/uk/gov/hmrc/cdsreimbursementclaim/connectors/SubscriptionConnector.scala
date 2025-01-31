@@ -21,12 +21,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeade
 import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.SubscriptionResponse
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.net.URL
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -38,7 +39,7 @@ trait SubscriptionConnector {
 }
 
 @Singleton
-class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: ServicesConfig)(implicit
+class DefaultSubscriptionConnector @Inject() (http: HttpClientV2, val config: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends SubscriptionConnector
     with EisConnector
@@ -67,7 +68,9 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
     val url: String                            = getSubscriptionUrl
     val queryParameters: Seq[(String, String)] = getQueryParameters(eori)
     http
-      .GET[Either[EisErrorResponse, SubscriptionResponse]](url, queryParameters, getEISRequiredHeaders)
+      .get(URL(url))
+      .transform(_.addHttpHeaders(getEISRequiredHeaders: _*).addQueryStringParameters(queryParameters: _*))
+      .execute[Either[EisErrorResponse, SubscriptionResponse]]
       .flatMap {
         case Right(subscriptionResponse) =>
           subscriptionResponse.subscriptionDisplayResponse.responseDetail match {
@@ -80,8 +83,7 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClient, val config: Serv
                 )
               )
           }
-
-        case Left(errorResponse) =>
+        case Left(errorResponse)         =>
           if (errorResponse.status == 404)
             Future.successful(Right(None))
           else {
