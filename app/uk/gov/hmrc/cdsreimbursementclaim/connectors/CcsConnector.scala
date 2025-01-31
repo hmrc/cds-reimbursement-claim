@@ -22,12 +22,16 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, XmlHeader
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.CcsSubmissionPayload
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
+import play.api.libs.ws.writeableOf_String
 
 @ImplementedBy(classOf[DefaultCcsConnector])
 trait CcsConnector {
@@ -37,7 +41,7 @@ trait CcsConnector {
 }
 
 @Singleton
-class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfig)(implicit
+class DefaultCcsConnector @Inject() (http: HttpClientV2, val config: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends CcsConnector
     with EisConnector
@@ -51,15 +55,10 @@ class DefaultCcsConnector @Inject() (http: HttpClient, val config: ServicesConfi
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POSTString[HttpResponse](
-          ccsSubmissionUrl,
-          ccsSubmissionPayload.dec64Body,
-          ccsSubmissionPayload.headers ++ getEISRequiredHeaders
-        )(
-          HttpReads[HttpResponse],
-          hc,
-          ec
-        )
+        .post(URL(ccsSubmissionUrl))
+        .withBody(ccsSubmissionPayload.dec64Body)
+        .transform(_.addHttpHeaders(ccsSubmissionPayload.headers ++ getEISRequiredHeaders: _*))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

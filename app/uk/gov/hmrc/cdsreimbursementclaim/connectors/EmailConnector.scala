@@ -24,12 +24,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.http.AcceptLanguage
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 import java.net.URL
+import play.api.libs.ws.JsonBodyWritables.*
 
 @ImplementedBy(classOf[DefaultEmailConnector])
 trait EmailConnector {
@@ -43,7 +45,7 @@ trait EmailConnector {
 
 @Singleton
 class DefaultEmailConnector @Inject() (
-  http: HttpClient,
+  http: HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit
   ec: ExecutionContext
@@ -60,8 +62,8 @@ class DefaultEmailConnector @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] = EitherT {
     http
-      .POST[JsValue, HttpResponse](
-        sendEmailUrl,
+      .post(sendEmailUrl)
+      .withBody(
         Json.toJson(
           SendEmailRequest(
             List(emailRequest.email.value),
@@ -78,10 +80,9 @@ class DefaultEmailConnector @Inject() (
           )
         )
       )
+      .execute[HttpResponse]
       .map(Right(_))
-      .recover { case e =>
-        Left(Error(e))
-      }
+      .recover { case e => Left(Error(e)) }
   }
 }
 

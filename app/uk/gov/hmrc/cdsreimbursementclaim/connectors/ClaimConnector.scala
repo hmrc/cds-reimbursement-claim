@@ -22,10 +22,13 @@ import play.api.libs.json.{JsValue, Json, Writes}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.net.URL
+import play.api.libs.ws.JsonBodyWritables.*
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,7 +40,7 @@ trait ClaimConnector {
 }
 
 @Singleton
-class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesConfig)(implicit
+class DefaultClaimConnector @Inject() (http: HttpClientV2, val config: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends ClaimConnector
     with EisConnector
@@ -50,12 +53,10 @@ class DefaultClaimConnector @Inject() (http: HttpClient, val config: ServicesCon
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[JsValue, HttpResponse](submitClaimUrl, Json.toJson(submitClaimRequest), getEISRequiredHeaders)(
-          implicitly[Writes[JsValue]],
-          HttpReads[HttpResponse],
-          hc,
-          ec
-        )
+        .post(URL(submitClaimUrl))
+        .withBody(Json.toJson(submitClaimRequest))
+        .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

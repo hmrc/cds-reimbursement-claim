@@ -22,7 +22,7 @@ import play.api.inject.DefaultApplicationLifecycle
 import play.api.mvc.{RequestHeader, Result}
 import play.api.routing.Router
 import play.api.test.WsTestClient
-import play.api._
+import play.api.*
 import play.core.server.{ServerConfig, ServerProvider}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
@@ -33,6 +33,9 @@ import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import scala.util.matching.Regex
 import play.api.mvc.Request
 import play.api.mvc.AnyContent
+import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
+
+import scala.collection.immutable.Seq
 
 /** Provides method to stub an external endpoint with the expected result.
   */
@@ -50,7 +53,7 @@ trait EndpointStub {
     routes: PartialFunction[RequestHeader, Result]
   )(
     validateRequest: Request[AnyContent] => Unit = _ => ()
-  )(block: Port => HttpClient => A)(implicit provider: ServerProvider): A = {
+  )(block: Port => HttpClientV2 => A)(implicit provider: ServerProvider): A = {
 
     val config: ServerConfig = ServerConfig(port = Some(0), mode = Mode.Test)
 
@@ -76,22 +79,27 @@ trait EndpointStub {
 
     val server = provider.createServer(config, application)
 
+    val httpAuditing = new HttpAuditing {
+      val appName        = "test"
+      val auditConnector = new AuditConnector {
+        override def auditingConfig: AuditingConfig = AuditingConfig.fromConfig(config.configuration)
+
+        override def auditChannel: AuditChannel = ???
+
+        override def datastreamMetrics: DatastreamMetrics = ???
+      }
+
+      override def auditDisabledForPattern: Regex = ".+".r
+    }
+
     try
       WsTestClient.withClient { wsClient =>
         val httpClient =
-          new DefaultHttpClient(
-            config.configuration,
-            new HttpAuditing {
-              val appName                                 = "test"
-              val auditConnector                          = new AuditConnector {
-                override def auditingConfig: AuditingConfig       = AuditingConfig.fromConfig(config.configuration)
-                override def auditChannel: AuditChannel           = ???
-                override def datastreamMetrics: DatastreamMetrics = ???
-              }
-              override def auditDisabledForPattern: Regex = ".+".r
-            },
+          new HttpClientV2Impl(
             wsClient,
-            application.actorSystem
+            application.actorSystem,
+            config.configuration,
+            hooks = Seq.empty
           )
         block(new Port(server.httpPort.orElse(server.httpsPort).get))(httpClient)
       }

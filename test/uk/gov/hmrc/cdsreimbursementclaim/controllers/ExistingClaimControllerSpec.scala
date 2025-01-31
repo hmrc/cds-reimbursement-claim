@@ -52,8 +52,8 @@ class DuplicateClaimControllerSpec extends ControllerSpec with ScalaCheckPropert
           val response = ExistingClaim(existingClaim)
 
           (mockExistingDeclarationConnector
-            .checkExistingDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
-            .expects(mrn, reason, *)
+            .checkExistingDeclaration(_: MRN, _: ReasonForSecurity, _: String, _: String)(_: HeaderCarrier))
+            .expects(mrn, reason, *, *, *)
             .returning(EitherT.fromEither[Future](Right(response)))
 
           val result = controller.claimExists(mrn, reason)(FakeRequest())
@@ -64,8 +64,8 @@ class DuplicateClaimControllerSpec extends ControllerSpec with ScalaCheckPropert
 
       "return 500 when the TPI-04 call fails or is unsuccessful" in forAll { (mrn: MRN, reason: ReasonForSecurity) =>
         (mockExistingDeclarationConnector
-          .checkExistingDeclaration(_: MRN, _: ReasonForSecurity)(_: HeaderCarrier))
-          .expects(mrn, reason, *)
+          .checkExistingDeclaration(_: MRN, _: ReasonForSecurity, _: String, _: String)(_: HeaderCarrier))
+          .expects(mrn, reason, *, *, *)
           .returning(EitherT.fromEither[Future](Left(Error("error while getting declaration"))))
 
         val result = controller.claimExists(mrn, reason)(FakeRequest())

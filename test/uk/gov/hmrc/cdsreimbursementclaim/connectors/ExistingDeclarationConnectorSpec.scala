@@ -21,17 +21,20 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.test.Helpers._
+import play.api.libs.json.Json
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ExistingClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ExistingClaimGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{RequestCommon, TPI04Request}
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.{CorrelationId, MRN}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ExistingClaimGen.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -39,7 +42,7 @@ class ExistingDeclarationConnectorSpec
     extends AnyWordSpec
     with Matchers
     with MockFactory
-    with HttpSupport
+    with HttpV2Support
     with ScalaCheckPropertyChecks {
 
   private val mockConfig = mock[ServicesConfig]
@@ -59,8 +62,6 @@ class ExistingDeclarationConnectorSpec
       )
   }
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-
   val explicitHeaders = Seq(
     "Date"             -> "some-date",
     "X-Correlation-ID" -> "some-correlation-id",
@@ -71,9 +72,10 @@ class ExistingDeclarationConnectorSpec
   )
 
   "Existing Declaration Connector" should {
-    val backEndUrl = s"$baseUrl/tpi/getexistingclaim/v1"
+    val backEndUrl         = s"$baseUrl/tpi/getexistingclaim/v1"
+    val acknowledgementRef = CorrelationId.compact
+    val receiptDate        = ISO8601DateTime.now
 
-    (mockConfig.getString(_: String)).expects(*).returning("test-token")
     mockBaseUrl
 
     "return an existing claim from the downstream service" in forAll {
@@ -82,8 +84,19 @@ class ExistingDeclarationConnectorSpec
         reason: ReasonForSecurity,
         response: ExistingClaim
       ) =>
-        mockPostObject(backEndUrl, explicitHeaders, *)(Some(response))
-        val actual = await(connector.checkExistingDeclaration(mrn, reason).value)
+
+        val requestDetails = TPI04Request(
+          RequestCommon(
+            Platform.MDTP,
+            receiptDate,
+            acknowledgementRef
+          ),
+          mrn,
+          reason
+        )
+
+        mockHttpPostSuccess[ExistingClaim](backEndUrl, Json.toJson(requestDetails), response)
+        val actual         = await(connector.checkExistingDeclaration(mrn, reason, receiptDate, acknowledgementRef).value)
         actual shouldBe Right(response)
     }
   }

@@ -22,19 +22,20 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.test.Helpers._
+import play.api.libs.json.Json
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
-class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport {
+class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpV2Support {
 
   val eisBearerToken = "token"
 
@@ -91,12 +92,10 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
       "do a post http call and get the TPI-05 API response" in {
         val request      = sample[EisSubmitClaimRequest]
         val httpResponse = HttpResponse(200, "The Response")
-        mockPost(
-          backEndUrl,
-          explicitHeaders,
-          *
-        )(Some(httpResponse))
-        val response     = await(connector.submitClaim(request).value)
+
+        mockHttpPostSuccess[HttpResponse](backEndUrl, Json.toJson(request), httpResponse)
+
+        val response = await(connector.submitClaim(request).value)
         response shouldBe Right(httpResponse)
       }
     }
@@ -104,7 +103,7 @@ class ClaimConnectorSpec extends AnyWordSpec with Matchers with MockFactory with
     "return an error" when {
       "the call fails" in {
         val request = sample[EisSubmitClaimRequest]
-        mockPost(backEndUrl, explicitHeaders, *)(None)
+        mockHttpPostWithException(backEndUrl, Json.toJson(request), new NotFoundException("not found"))
         await(connector.submitClaim(request).value).isLeft shouldBe true
       }
     }
