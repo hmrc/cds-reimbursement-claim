@@ -30,7 +30,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-
 import play.api.libs.ws.writeableOf_String
 
 @ImplementedBy(classOf[DefaultCcsConnector])
@@ -57,7 +56,7 @@ class DefaultCcsConnector @Inject() (http: HttpClientV2, val config: ServicesCon
       http
         .post(URL(ccsSubmissionUrl))
         .withBody(ccsSubmissionPayload.dec64Body)
-        .transform(_.addHttpHeaders(ccsSubmissionPayload.headers ++ getEISRequiredHeaders: _*))
+        .setHeader(ccsSubmissionPayload.headers ++ getEISRequiredHeaders: _*)
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

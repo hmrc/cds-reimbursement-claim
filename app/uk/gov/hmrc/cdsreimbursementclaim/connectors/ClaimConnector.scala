@@ -55,7 +55,7 @@ class DefaultClaimConnector @Inject() (http: HttpClientV2, val config: ServicesC
       http
         .post(URL(submitClaimUrl))
         .withBody(Json.toJson(submitClaimRequest))
-        .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
+        .setHeader(getEISRequiredHeaders: _*)
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

@@ -64,7 +64,7 @@ class Tpi02Connector @Inject() (
     http
       .post(URL(getSpecificClaimUrl))
       .withBody(Json.toJson(request))
-      .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
+      .setHeader(getEISRequiredHeaders: _*)
       .execute[Either[EisErrorResponse, Response]]
   }
 }

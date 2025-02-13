@@ -41,28 +41,28 @@ trait HttpV2Support { this: MockFactory & Matchers =>
   def mockHttpPostSuccess[A](url: String, requestBody: JsValue, response: A, hasHeaders: Boolean = true) = {
     mockHttpPost(URL(url))
     mockRequestBuilderWithBody(requestBody)
-    if hasHeaders then mockRequestBuilderTransform()
+    if hasHeaders then mockRequestBuilderSetHeader()
     mockRequestBuilderExecuteWithoutException(response)
   }
 
   def mockHttpPostWithException(url: String, requestBody: JsValue, exception: Exception, hasHeaders: Boolean = true) = {
     mockHttpPost(URL(url))
     mockRequestBuilderWithBody(requestBody)
-    if hasHeaders then mockRequestBuilderTransform()
+    if hasHeaders then mockRequestBuilderSetHeader()
     mockRequestBuilderExecuteWithException(exception)
   }
 
   def mockHttpPostStringSuccess[A](url: String, requestBody: String, response: A) = {
     mockHttpPost(URL(url))
     mockRequestBuilderWithString(requestBody)
-    mockRequestBuilderTransform()
+    mockRequestBuilderSetHeader()
     mockRequestBuilderExecuteWithoutException(response)
   }
 
   def mockHttpPostStringWithException(url: String, requestBody: String, exception: Exception) = {
     mockHttpPost(URL(url))
     mockRequestBuilderWithString(requestBody)
-    mockRequestBuilderTransform()
+    mockRequestBuilderSetHeader()
     mockRequestBuilderExecuteWithException(exception)
   }
 
@@ -95,6 +95,12 @@ trait HttpV2Support { this: MockFactory & Matchers =>
       .execute(_: HttpReads[A], _: ExecutionContext))
       .expects(*, *)
       .returning(Future successful value)
+
+  private def mockRequestBuilderSetHeader() =
+    (mockRequestBuilder
+      .setHeader(_: _*))
+      .expects(*)
+      .returning(mockRequestBuilder)
 
   private def mockRequestBuilderTransform() =
     (mockRequestBuilder
