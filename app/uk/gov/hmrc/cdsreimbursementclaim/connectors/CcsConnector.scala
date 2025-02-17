@@ -55,8 +55,8 @@ class DefaultCcsConnector @Inject() (http: HttpClientV2, val config: ServicesCon
     EitherT[Future, Error, HttpResponse](
       http
         .post(URL(ccsSubmissionUrl))
-        .withBody(ccsSubmissionPayload.dec64Body)
         .setHeader(ccsSubmissionPayload.headers ++ getEISRequiredHeaders: _*)
+        .withBody(ccsSubmissionPayload.dec64Body)
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

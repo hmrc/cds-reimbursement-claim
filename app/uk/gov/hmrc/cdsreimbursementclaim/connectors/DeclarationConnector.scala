@@ -57,8 +57,8 @@ class DefaultDeclarationConnector @Inject() (http: HttpClientV2, val config: Ser
     EitherT[Future, Error, HttpResponse](
       http
         .post(URL(getDeclarationUrl))
-        .withBody(Json.toJson(declarationRequest))
         .setHeader(getEISRequiredHeaders: _*)
+        .withBody(Json.toJson(declarationRequest))
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
