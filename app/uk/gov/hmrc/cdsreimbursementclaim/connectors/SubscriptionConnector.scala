@@ -69,7 +69,8 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClientV2, val config: Se
     val queryParameters: Seq[(String, String)] = getQueryParameters(eori)
     http
       .get(URL(url))
-      .transform(_.addHttpHeaders(getEISRequiredHeaders: _*).addQueryStringParameters(queryParameters: _*))
+      .setHeader(getEISRequiredHeaders: _*)
+      .transform(_.addQueryStringParameters(queryParameters: _*))
       .execute[Either[EisErrorResponse, SubscriptionResponse]]
       .flatMap {
         case Right(subscriptionResponse) =>

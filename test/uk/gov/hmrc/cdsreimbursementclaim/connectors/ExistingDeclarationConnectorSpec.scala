@@ -46,10 +46,14 @@ class ExistingDeclarationConnectorSpec
     with ScalaCheckPropertyChecks {
 
   private val mockConfig = mock[ServicesConfig]
+  private val baseUrl    = "http://localhost:7502"
+  private val testToken  = "test token"
 
-  private val baseUrl     = "http://localhost:7502"
   private def mockBaseUrl =
     (mockConfig.baseUrl(_: String)).expects("declaration").returning(baseUrl)
+
+  private def mockGetString =
+    (mockConfig.getString(_: String)).expects("eis.bearer-token").returning(testToken)
 
   val connector: ExistingDeclarationConnector = new ExistingDeclarationConnector(mockHttp, mockConfig) {
     override def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
@@ -77,6 +81,7 @@ class ExistingDeclarationConnectorSpec
     val receiptDate        = ISO8601DateTime.now
 
     mockBaseUrl
+    mockGetString
 
     "return an existing claim from the downstream service" in forAll {
       (

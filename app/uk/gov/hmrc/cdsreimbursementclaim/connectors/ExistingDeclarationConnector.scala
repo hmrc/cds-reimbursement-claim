@@ -74,8 +74,8 @@ class ExistingDeclarationConnector @Inject() (
     ](
       http
         .post(URL(url))
+        .setHeader(getEISRequiredHeaders: _*)
         .withBody(Json.toJson(requestDetails))
-        .transform(_.addHttpHeaders(getEISRequiredHeaders: _*))
         .execute[ExistingClaim]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
