@@ -46,10 +46,14 @@ class ExistingDeclarationConnectorSpec
     with ScalaCheckPropertyChecks {
 
   private val mockConfig = mock[ServicesConfig]
+  private val baseUrl    = "http://localhost:7502"
+  private val testToken  = "test token"
 
-  private val baseUrl     = "http://localhost:7502"
   private def mockBaseUrl =
     (mockConfig.baseUrl(_: String)).expects("declaration").returning(baseUrl)
+
+  private def mockGetString =
+    (mockConfig.getString(_: String)).expects("eis.bearer-token").returning(testToken)
 
   val connector: ExistingDeclarationConnector = new ExistingDeclarationConnector(mockHttp, mockConfig) {
     override def getExtraHeaders(implicit hc: HeaderCarrier): Seq[(String, String)] =
@@ -71,33 +75,34 @@ class ExistingDeclarationConnectorSpec
     "Authorization"    -> "Bearer test-token"
   )
 
-//  "Existing Declaration Connector" should { //fixme will fix test before merge
-//    val backEndUrl         = s"$baseUrl/tpi/getexistingclaim/v1"
-//    val acknowledgementRef = CorrelationId.compact
-//    val receiptDate        = ISO8601DateTime.now
-//
-//    mockBaseUrl
-//
-//    "return an existing claim from the downstream service" in forAll {
-//      (
-//        mrn: MRN,
-//        reason: ReasonForSecurity,
-//        response: ExistingClaim
-//      ) =>
-//
-//        val requestDetails = TPI04Request(
-//          RequestCommon(
-//            Platform.MDTP,
-//            receiptDate,
-//            acknowledgementRef
-//          ),
-//          mrn,
-//          reason
-//        )
-//
-//        mockHttpPostSuccess[ExistingClaim](backEndUrl, Json.toJson(requestDetails), response)
-//        val actual         = await(connector.checkExistingDeclaration(mrn, reason, receiptDate, acknowledgementRef).value)
-//        actual shouldBe Right(response)
-//    }
-//  }
+  "Existing Declaration Connector" should {
+    val backEndUrl         = s"$baseUrl/tpi/getexistingclaim/v1"
+    val acknowledgementRef = CorrelationId.compact
+    val receiptDate        = ISO8601DateTime.now
+
+    mockBaseUrl
+    mockGetString
+
+    "return an existing claim from the downstream service" in forAll {
+      (
+        mrn: MRN,
+        reason: ReasonForSecurity,
+        response: ExistingClaim
+      ) =>
+
+        val requestDetails = TPI04Request(
+          RequestCommon(
+            Platform.MDTP,
+            receiptDate,
+            acknowledgementRef
+          ),
+          mrn,
+          reason
+        )
+
+        mockHttpPostSuccess[ExistingClaim](backEndUrl, Json.toJson(requestDetails), response)
+        val actual         = await(connector.checkExistingDeclaration(mrn, reason, receiptDate, acknowledgementRef).value)
+        actual shouldBe Right(response)
+    }
+  }
 }
