@@ -84,9 +84,10 @@ class DefaultDeclarationService @Inject() (
             declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
             maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
           } yield maybeDisplayDeclaration
+        } else if (response.status == Status.BAD_REQUEST) {
+          Right(None)
         } else {
-          logger.warn(s"could not get declaration: http status: ${response.status}")
-          Left(Error("call to get declaration failed"))
+          Left(Error(s"call to get declaration failed with http status: ${response.status}"))
         }
       }
   }

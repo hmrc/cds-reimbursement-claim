@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest

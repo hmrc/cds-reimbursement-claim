@@ -149,10 +149,19 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true
         }
 
-        "a http status response other than 200 OK is received" in forAll { (mrn: MRN) =>
+        "a http status response 400 BAD REQUEST is received" in forAll { (mrn: MRN) =>
           inSequence {
             mockDeclarationConnector(
               Right(HttpResponse(400, "some error", Map.empty[String, Seq[String]]))
+            )
+          }
+          await(declarationService.getDeclaration(mrn).value) shouldBe Right(None)
+        }
+
+        "a http status response other than 200 OK is received" in forAll { (mrn: MRN) =>
+          inSequence {
+            mockDeclarationConnector(
+              Right(HttpResponse(401, "some error", Map.empty[String, Seq[String]]))
             )
           }
           await(declarationService.getDeclaration(mrn).value).isLeft shouldBe true

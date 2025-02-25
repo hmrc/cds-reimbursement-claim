@@ -18,13 +18,13 @@ package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
 import cats.data.EitherT
 import com.google.inject.ImplementedBy
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.Json
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.eis.{EisConnector, JsonHeaders}
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 import uk.gov.hmrc.http.HttpReads.Implicits.*
-import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
