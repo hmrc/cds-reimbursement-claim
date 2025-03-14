@@ -27,16 +27,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Consignee
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{MultipleOverpaymentsClaim, PayeeType, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, MultipleOverpaymentsClaim, PayeeType, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsMultipleClaimMappingV2Spec
     extends AnyWordSpec
@@ -87,13 +86,13 @@ class OverpaymentsMultipleClaimMappingV2Spec
                 claim.newEoriAndDan match {
                   case None                =>
                     GoodsDetails(
-                      descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
+                      descOfGoods = claim.additionalDetails.some.map(_.take(500)),
                       isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                     ).some
                   case Some(newEoriAndDan) =>
                     GoodsDetails(
                       descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
-                        .map(WAFRules.asSafeText)
+                        .map(_.take(500))
                         .map(_.take(500)),
                       isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                     ).some

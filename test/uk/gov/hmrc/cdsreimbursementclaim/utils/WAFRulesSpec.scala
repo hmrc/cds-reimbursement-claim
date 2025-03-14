@@ -23,14 +23,20 @@ class WAFRulesSpec extends AnyWordSpec with Matchers {
 
   "WAFRules" should {
     "convert text to safe WAF-accepted version" in {
-      WAFRules.asSafeText("Hel-lo!")                            shouldBe "Hel-lo!"
+      WAFRules.asSafeText("?;[H]+,e*/(l)-\"l=o\"\\!<>")           shouldBe "?;[H]+,e*/(l)-’l=o’ "
       WAFRules.asSafeText(
-        "Applying 5% duty was wrong on our side."
-      )                                                         shouldBe "Applying 5% duty was wrong on our side."
+        "Applying 5% duty \nwas wrong;\ton our side."
+      )                                                           shouldBe "Applying 5 percent duty \nwas wrong;\ton our side."
       WAFRules.asSafeText(
         "My guess about the duty rate was wrong (Sorry for that!)."
-      )                                                         shouldBe "My guess about the duty rate was wrong (Sorry for that!)."
-      WAFRules.asSafeText("The original price was £500 (687$)") shouldBe "The original price was £500 (687$)"
+      )                                                           shouldBe "My guess about the duty rate was wrong (Sorry for that )."
+      WAFRules.asSafeText("The original [price] was £500 (687$)") shouldBe "The original [price] was £500 (687 dollar )"
+      WAFRules.asSafeText(
+        "VAT £103.60 has been charged in error as goods imported were personal items, left in the hotel (item ''Iphone ear pod'' left in the hotel and returned back to the UK.) Customer (Private individual) has provided original sales purchase receipt and commercial invoice also states ''lost Ipod'' was shipped to UK"
+      )                                                           shouldBe "VAT £103.60 has been charged in error as goods imported were personal items, left in the hotel (item ’Iphone ear pod’ left in the hotel and returned back to the UK.) Customer (Private individual) has provided original sales purchase receipt and commercial invoice also states ’lost Ipod’ was shipped to UK"
+      WAFRules.asSafeText(
+        "WRONG COMERCIAL INVOICE WAS USED ON ENTRY, WHICH LEAD TO VALUE BEING OVER DECALRED. INVOICE \"K2407\" $27405 USED INCORRECTLY CORRECT INVOICE \"CM-000-UK\" IS $20453 Value over declared by $6952 / £5625.96"
+      )                                                           shouldBe "WRONG COMERCIAL INVOICE WAS USED ON ENTRY, WHICH LEAD TO VALUE BEING OVER DECALRED. INVOICE ’K2407’ dollar 27405 USED INCORRECTLY CORRECT INVOICE ’CM-000-UK’ IS dollar 20453 Value over declared by dollar 6952 / £5625.96"
     }
   }
 

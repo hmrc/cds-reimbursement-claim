@@ -29,12 +29,11 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.arbitraryEori
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{SchemaValidation, TestDataFromFile, ValidateEisHeaders}
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.client.HttpClientV2
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class SubscriptionConnectorSpec

@@ -16,25 +16,19 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
-import cats.data.Validated.Invalid
-import cats.data.Validated.Valid
+import cats.data.Validated.{Invalid, Valid}
 import cats.implicits.catsSyntaxEq
-import cats.syntax.either._
+import cats.syntax.either.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.Error as CdsError
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.{DeclarantReferenceNumber, DeclarationId, ProcedureCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, SecurityDetail, Street, TaxCode, TaxReclaimDetail}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.DeclarantReferenceNumber
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.DeclarationId
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.securities.ProcedureCode
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.EisBasicDate
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, EisBasicDate}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInMultipleShipments
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, ClaimantDetails, ConsigneeDetails, DeclarantDetails, SecurityDetails, TaxDetails}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 import java.time.LocalDate
 

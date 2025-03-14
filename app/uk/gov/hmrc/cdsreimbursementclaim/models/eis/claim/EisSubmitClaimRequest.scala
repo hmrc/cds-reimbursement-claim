@@ -24,7 +24,16 @@ import scala.annotation.implicitNotFound
 
 final case class EisSubmitClaimRequest(
   postNewClaimsRequest: PostNewClaimsRequest
-)
+) {
+  def sanitizeFreeTextFields: EisSubmitClaimRequest =
+    copy(
+      postNewClaimsRequest = postNewClaimsRequest.copy(requestDetail =
+        postNewClaimsRequest.requestDetail.copy(goodsDetails =
+          postNewClaimsRequest.requestDetail.goodsDetails.map(_.sanitizeDescOfGoods())
+        )
+      )
+    )
+}
 
 object EisSubmitClaimRequest {
 

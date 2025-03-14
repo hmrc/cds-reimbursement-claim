@@ -25,17 +25,15 @@ import play.api.mvc.{AnyContent, Result, Results}
 import play.api.routing.sird.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.SourceFaultDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi01.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.{EisErrorResponse, SourceFaultDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{SchemaValidation, TestDataFromFile, ValidateEisHeaders}
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.client.HttpClientV2
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext", "org.wartremover.warts.AsInstanceOf"))
 class Tpi01ConnectorSpec extends ConnectorSpec with WithTpi01Connector with ValidateEisHeaders with SchemaValidation {

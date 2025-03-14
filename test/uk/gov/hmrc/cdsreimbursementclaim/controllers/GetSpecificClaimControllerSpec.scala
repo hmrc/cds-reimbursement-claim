@@ -17,22 +17,20 @@
 package uk.gov.hmrc.cdsreimbursementclaim.controllers
 
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.test.Helpers.*
+import play.api.libs.json.Json
 import play.api.test.*
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.Fake
-import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
-import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Tpi02ReponseGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.GetSpecificCaseResponse
+import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.{GetSpecificCaseResponse, SpecificClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, EisErrorResponse}
 import uk.gov.hmrc.cdsreimbursementclaim.services.GetSpecificClaimService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.ForSampledValueCheck
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Tpi02ReponseGen
-import play.api.libs.json.Json
-import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.SpecificClaimResponse
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class GetSpecificClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyChecks with ForSampledValueCheck {

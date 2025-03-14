@@ -16,28 +16,23 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.connectors
 
+import com.eclipsesource.schema.SchemaType
 import com.typesafe.config.ConfigFactory
 import org.scalatest.compatible.Assertion
 import play.api.Configuration
 import play.api.http.{HeaderNames, MimeTypes, Port}
-import play.api.mvc.{Result, Results}
+import play.api.mvc.{AnyContent, Result, Results}
 import play.api.routing.sird.*
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.http.CustomHeaderNames
-import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService
-import uk.gov.hmrc.cdsreimbursementclaim.models.EisErrorResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.SourceFaultDetail
 import uk.gov.hmrc.cdsreimbursementclaim.models.tpi02.*
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{TestDataFromFile, ValidateEisHeaders}
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.cdsreimbursementclaim.models.{CDFPayService, EisErrorResponse, SourceFaultDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{SchemaValidation, TestDataFromFile, ValidateEisHeaders}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import com.eclipsesource.schema.SchemaType
-import play.api.mvc.AnyContent
-import uk.gov.hmrc.cdsreimbursementclaim.utils.SchemaValidation
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.client.HttpClientV2
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class Tpi02ConnectorSpec extends ConnectorSpec with WithTpi02Connector with ValidateEisHeaders with SchemaValidation {
