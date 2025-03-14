@@ -17,25 +17,21 @@
 package uk.gov.hmrc.cdsreimbursementclaim.utils
 
 import com.typesafe.config.ConfigFactory
+import play.api.*
 import play.api.http.Port
 import play.api.inject.DefaultApplicationLifecycle
-import play.api.mvc.{RequestHeader, Result}
+import play.api.mvc.{AnyContent, Request, RequestHeader, Result}
 import play.api.routing.Router
 import play.api.test.WsTestClient
-import play.api.*
 import play.core.server.{ServerConfig, ServerProvider}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
-
-import scala.util.matching.Regex
-import play.api.mvc.Request
-import play.api.mvc.AnyContent
-import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
 
 import scala.collection.immutable.Seq
+import scala.util.matching.Regex
 
 /** Provides method to stub an external endpoint with the expected result.
   */

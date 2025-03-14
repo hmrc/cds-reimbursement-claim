@@ -24,22 +24,19 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{Country, PayeeType, SingleOverpaymentsClaim, Street}
-import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, PayeeType, Reimbursement, SingleOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReimbursementMethod
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsSingleClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Reimbursement
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsSingleClaimMappingSpec
     extends AnyWordSpec
@@ -95,13 +92,13 @@ class OverpaymentsSingleClaimMappingSpec
               claim.newEoriAndDan match {
                 case None                =>
                   GoodsDetails(
-                    descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
+                    descOfGoods = claim.additionalDetails.some.map(_.take(500)),
                     isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                   ).some
                 case Some(newEoriAndDan) =>
                   GoodsDetails(
                     descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
-                      .map(WAFRules.asSafeText)
+                      .map(_.take(500))
                       .map(_.take(500)),
                     isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                   ).some
@@ -475,13 +472,13 @@ class OverpaymentsSingleClaimMappingSpec
               claim.newEoriAndDan match {
                 case None                =>
                   GoodsDetails(
-                    descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
+                    descOfGoods = claim.additionalDetails.some.map(_.take(500)),
                     isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                   ).some
                 case Some(newEoriAndDan) =>
                   GoodsDetails(
                     descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
-                      .map(WAFRules.asSafeText)
+                      .map(_.take(500))
                       .map(_.take(500)),
                     isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                   ).some
@@ -861,13 +858,13 @@ class OverpaymentsSingleClaimMappingSpec
             claim.newEoriAndDan match {
               case None                =>
                 GoodsDetails(
-                  descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
+                  descOfGoods = claim.additionalDetails.some.map(_.take(500)),
                   isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                 ).some
               case Some(newEoriAndDan) =>
                 GoodsDetails(
                   descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
-                    .map(WAFRules.asSafeText)
+                    .map(_.take(500))
                     .map(_.take(500)),
                   isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                 ).some

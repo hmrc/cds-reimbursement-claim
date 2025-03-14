@@ -28,14 +28,14 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, PayeeType, ScheduledOverpaymentsClaim, Street}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsScheduledClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsScheduledClaimMappingV2Spec
     extends AnyWordSpec
@@ -79,13 +79,13 @@ class OverpaymentsScheduledClaimMappingV2Spec
                 claim.newEoriAndDan match {
                   case None                =>
                     GoodsDetails(
-                      descOfGoods = claim.additionalDetails.some.map(WAFRules.asSafeText),
+                      descOfGoods = claim.additionalDetails.some.map(_.take(500)),
                       isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                     ).some
                   case Some(newEoriAndDan) =>
                     GoodsDetails(
                       descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
-                        .map(WAFRules.asSafeText)
+                        .map(_.take(500))
                         .map(_.take(500)),
                       isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                     ).some

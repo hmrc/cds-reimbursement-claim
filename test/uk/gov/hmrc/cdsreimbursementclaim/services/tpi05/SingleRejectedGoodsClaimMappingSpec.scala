@@ -23,24 +23,22 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.CurrentMonthAdjustment
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, Reimbursement, ReimbursementMethodAnswer, SingleRejectedGoodsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate, TemporalAccessorOps}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators._
-import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, WAFRules}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, Lens}
 
 import java.util.UUID
-import uk.gov.hmrc.cdsreimbursementclaim.utils.Lens
 
 class SingleRejectedGoodsClaimMappingSpec
     extends AnyWordSpec
@@ -82,8 +80,8 @@ class SingleRejectedGoodsClaimMappingSpec
             Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
             Symbol("goodsDetails")(
               GoodsDetails(
-                descOfGoods = claim.detailsOfRejectedGoods.some.map(WAFRules.asSafeText),
-                anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances.map(WAFRules.asSafeText),
+                descOfGoods = claim.detailsOfRejectedGoods.some.map(_.take(500)),
+                anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances.map(_.take(500)),
                 dateOfInspection = claim.inspectionDate.toIsoLocalDate.some,
                 atTheImporterOrDeclarantAddress = claim.inspectionAddress.addressType.toTPI05DisplayString.some,
                 inspectionAddress = InspectionAddress(

@@ -23,7 +23,7 @@ import cats.syntax.either._
 import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.ImplementedBy
-import play.api.http.Status.OK
+import play.api.http.Status.{FORBIDDEN, OK}
 import play.api.libs.json.Format
 import play.api.libs.json.Json
 import play.api.mvc.Request
@@ -50,6 +50,7 @@ import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Try
+import play.api.Logger
 
 @ImplementedBy(classOf[DefaultClaimService])
 trait ClaimService {
@@ -297,6 +298,38 @@ class DefaultClaimService @Inject() (
   )
 
   private def submitClaimAndAudit[A](
+    submitClaimRequest: A,
+    eisSubmitClaimRequest: EisSubmitClaimRequest
+  )(implicit hc: HeaderCarrier, request: Request[?], requestFormat: Format[A]): EitherT[Future, Error, HttpResponse] = {
+    val timer = metrics.submitClaimTimer.time()
+    claimConnector
+      .submitClaim(
+        eisSubmitClaimRequest
+      )
+      .flatMap { httpResponse =>
+        timer.close()
+        auditSubmitClaimResponse(
+          httpResponse.status,
+          httpResponse.body,
+          submitClaimRequest,
+          eisSubmitClaimRequest
+        )
+        if httpResponse.status === FORBIDDEN
+        then {
+          Logger(this.getClass).warn("Re-submitting the claim with sanitized input.")
+          resubmitSanitizedClaimAndAudit(submitClaimRequest, eisSubmitClaimRequest)
+        } else
+          EitherT.cond(
+            httpResponse.status === OK,
+            httpResponse, {
+              metrics.submitClaimErrorCounter.inc()
+              Error(httpResponse)
+            }
+          )
+      }
+  }
+
+  private def resubmitSanitizedClaimAndAudit[A](
     submitClaimRequest: A,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[?], requestFormat: Format[A]): EitherT[Future, Error, HttpResponse] = {
