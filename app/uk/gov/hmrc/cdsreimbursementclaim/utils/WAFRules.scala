@@ -19,20 +19,25 @@ package uk.gov.hmrc.cdsreimbursementclaim.utils
 object WAFRules {
 
   def asSafeText(text: String): String =
-    text
-      .replaceAll("[']+", "'")
-      .replaceAll("[\"]+", "\"")
+    val sanitized = text
+      .filter {
+        case '"' | '`' | '\'' => false
+        case _                => true
+      }
       .replace("%", " percent ")
       .replace("$", " dollar ")
       .map(c =>
         c match {
-          case d if Character.isLetterOrDigit(d)                                                             => d
-          case '\n' | '\t'                                                                                   => c
-          case ' ' | '.' | ',' | ';' | ':' | '?' | '+' | '-' | '=' | '*' | '/' | '(' | ')' | '[' | ']' | '_' => c
-          case '£' | '€' | '¥'                                                                               => c
-          case '"' | '`' | '\''                                                                              => '’'
-          case _                                                                                             => ' '
+          case d if Character.isLetterOrDigit(d)                                                                    => d
+          case '\n' | '\t'                                                                                          => c
+          case ' ' | '.' | ',' | ';' | ':' | '?' | '+' | '-' | '=' | '*' | '/' | '(' | ')' | '[' | ']' | '_' | '\\' => c
+          case '£' | '€' | '¥'                                                                                      => c
+          case _                                                                                                    => ' '
         }
       )
       .replaceAll("[ ]+", " ")
+    println(s"Rejected text: $text")
+    println(s"Sanitized text: $sanitized")
+    sanitized
+
 }

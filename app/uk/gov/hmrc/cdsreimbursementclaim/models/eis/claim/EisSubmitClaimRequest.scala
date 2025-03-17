@@ -29,7 +29,7 @@ final case class EisSubmitClaimRequest(
     copy(
       postNewClaimsRequest = postNewClaimsRequest.copy(requestDetail =
         postNewClaimsRequest.requestDetail.copy(goodsDetails =
-          postNewClaimsRequest.requestDetail.goodsDetails.map(_.sanitizeDescOfGoods())
+          postNewClaimsRequest.requestDetail.goodsDetails.map(_.sanitizeFreeText())
         )
       )
     )

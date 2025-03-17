@@ -33,7 +33,7 @@ final case class GoodsDetails(
   dateOfInspection: Option[String] = None
 ) {
 
-  def sanitizeDescOfGoods(): GoodsDetails =
+  def sanitizeFreeText(): GoodsDetails =
     copy(
       descOfGoods = descOfGoods.map(WAFRules.asSafeText),
       anySpecialCircumstances = anySpecialCircumstances.map(WAFRules.asSafeText)
