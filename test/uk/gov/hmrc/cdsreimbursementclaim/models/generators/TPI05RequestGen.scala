@@ -322,6 +322,12 @@ object TPI05RequestGen {
     detail <- genC285ClaimRequestDetail
   } yield EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))
 
+  lazy val genC285EisRequestWithSpecialCharacters = for {
+    common <- genRequestCommon
+    detail <-
+      genC285ClaimRequestDetail.map(r => r.copy(goodsDetails = r.goodsDetails.map(_.copy(descOfGoods = Some("%%%")))))
+  } yield EisSubmitClaimRequest(PostNewClaimsRequest(common, detail))
+
   implicit lazy val arbitraryRequestCommon: Arbitrary[RequestCommon] =
     Arbitrary(genRequestCommon)
 

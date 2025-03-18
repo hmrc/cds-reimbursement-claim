@@ -333,10 +333,11 @@ class DefaultClaimService @Inject() (
     submitClaimRequest: A,
     eisSubmitClaimRequest: EisSubmitClaimRequest
   )(implicit hc: HeaderCarrier, request: Request[?], requestFormat: Format[A]): EitherT[Future, Error, HttpResponse] = {
-    val timer = metrics.submitClaimTimer.time()
+    val timer                          = metrics.submitClaimTimer.time()
+    val sanitizedEisSubmitClaimRequest = eisSubmitClaimRequest.sanitizeFreeTextFields
     claimConnector
       .submitClaim(
-        eisSubmitClaimRequest
+        sanitizedEisSubmitClaimRequest
       )
       .subflatMap { httpResponse =>
         timer.close()
@@ -344,7 +345,7 @@ class DefaultClaimService @Inject() (
           httpResponse.status,
           httpResponse.body,
           submitClaimRequest,
-          eisSubmitClaimRequest
+          sanitizedEisSubmitClaimRequest
         )
         Either.cond(
           httpResponse.status === OK,

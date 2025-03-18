@@ -36,8 +36,6 @@ object WAFRules {
         }
       )
       .replaceAll("[ ]+", " ")
-    println(s"Rejected text: $text")
-    println(s"Sanitized text: $sanitized")
     sanitized
 
 }
