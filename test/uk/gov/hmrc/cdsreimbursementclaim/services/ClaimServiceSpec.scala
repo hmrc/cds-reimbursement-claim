@@ -284,7 +284,7 @@ class ClaimServiceSpec
 
       "successfully re-submit a sanitized Single Overpayments claim" in forAll(
         genOverpaymentsSingleClaimAllTypes,
-        genC285EisRequest
+        genC285EisRequestWithSpecialCharacters
       ) {
         (
           singleOverpaymentsClaimData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]),
