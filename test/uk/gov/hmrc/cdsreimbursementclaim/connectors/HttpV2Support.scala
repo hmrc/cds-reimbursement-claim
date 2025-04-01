@@ -102,12 +102,6 @@ trait HttpV2Support { this: MockFactory & Matchers =>
       .expects(*)
       .returning(mockRequestBuilder)
 
-  private def mockRequestBuilderTransform() =
-    (mockRequestBuilder
-      .transform(_: WSRequest => WSRequest))
-      .expects(*)
-      .returning(mockRequestBuilder)
-
   private def mockRequestBuilderExecuteWithException[A](
     ex: Exception
   ): CallHandler2[HttpReads[A], ExecutionContext, Future[A]] =
