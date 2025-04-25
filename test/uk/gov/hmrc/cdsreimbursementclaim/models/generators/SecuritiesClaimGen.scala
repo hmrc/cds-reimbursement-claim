@@ -102,7 +102,7 @@ object SecuritiesClaimGen {
     securitiesReclaims  <- genSecuritiesReclaims
     bankAccountDetails  <- Gen.option(genBankAccountDetails)
     documents           <- Gen.listOf(genEvidences)
-    payeeType           <- Gen.oneOf[PayeeType](PayeeType.values)
+    payeeType           <- Gen.option(Gen.oneOf[PayeeType](PayeeType.values))
     additionalDetails   <- Gen.option(Gen.asciiPrintableStr)
 
     temporaryAdmissionMethodsOfDisposal <-
