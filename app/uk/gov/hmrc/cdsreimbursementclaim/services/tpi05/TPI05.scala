@@ -268,6 +268,13 @@ object TPI05 {
         )
       )
 
+    def withReimbursementParty(reimbursementParty: ReimbursementParty, payeeIndicatorOpt: Option[Claimant]): Builder =
+      copy(
+        validatedRequest.map(
+          _.copy(reimbursementParty = Some(reimbursementParty), payeeIndicator = payeeIndicatorOpt)
+        )
+      )
+
     def withClaimantAddress(claimantAddress: Address): Builder =
       copy(validatedRequest.map(_.copy(claimantAddress = Some(claimantAddress))))
 

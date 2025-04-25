@@ -53,7 +53,7 @@ class SecuritiesClaimMappingSpec
         common.originatingSystem     should ===(MDTP)
         detail.customDeclarationType should ===(CustomDeclarationType.MRN.some)
         detail.claimType             should ===(None)
-        detail.payeeIndicator        should ===(Some(Claimant.basedOn(claim.payeeType)))
+        detail.payeeIndicator        should ===(claim.payeeType.map(Claimant.basedOn))
         detail.claimantEORI          should ===(claim.claimantInformation.eori)
         detail.claimantEmailAddress  should ===(
           claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value

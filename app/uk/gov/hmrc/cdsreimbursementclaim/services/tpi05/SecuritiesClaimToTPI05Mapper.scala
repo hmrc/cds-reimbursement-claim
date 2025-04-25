@@ -142,7 +142,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
           case ClaimantType.Declarant => ReimbursementParty.Declarant
           case ClaimantType.User      => ReimbursementParty.Declarant
         },
-        Claimant.basedOn(claim.payeeType)
+        claim.payeeType.map(Claimant.basedOn)
       )
       .withSecurityPaymentDetails(
         reimbursementMethod = reimbursementMethod,
