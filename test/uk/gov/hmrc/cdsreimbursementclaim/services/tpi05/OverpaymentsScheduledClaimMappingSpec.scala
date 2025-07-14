@@ -91,7 +91,6 @@ class OverpaymentsScheduledClaimMappingSpec
                   case Some(newEoriAndDan) =>
                     GoodsDetails(
                       descOfGoods = (newEoriAndDan.asAdditionalDetailsText ++ claim.additionalDetails).some
-                        .map(_.take(500))
                         .map(_.take(500)),
                       isPrivateImporter = Some(if (claim.claimantType === ClaimantType.Consignee) Yes else No)
                     ).some

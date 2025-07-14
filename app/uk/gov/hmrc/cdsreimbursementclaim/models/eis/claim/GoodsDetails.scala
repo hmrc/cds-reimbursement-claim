@@ -20,7 +20,6 @@ import play.api.libs.json.{Json, OWrites, Reads}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.NewEoriAndDan
-import uk.gov.hmrc.cdsreimbursementclaim.utils.WAFRules
 
 final case class GoodsDetails(
   descOfGoods: Option[String],
@@ -31,15 +30,7 @@ final case class GoodsDetails(
   inspectionAddress: Option[InspectionAddress] = None,
   anySpecialCircumstances: Option[String] = None,
   dateOfInspection: Option[String] = None
-) {
-
-  def sanitizeFreeText(): GoodsDetails =
-    copy(
-      descOfGoods = descOfGoods.map(WAFRules.asSafeText),
-      anySpecialCircumstances = anySpecialCircumstances.map(WAFRules.asSafeText)
-    )
-
-}
+)
 
 object GoodsDetails {
 
