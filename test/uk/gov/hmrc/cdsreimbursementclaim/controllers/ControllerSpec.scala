@@ -25,10 +25,55 @@ import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.{Application, Configuration, Play}
 
 import scala.reflect.ClassTag
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUserRequest
+import uk.gov.hmrc.cdsreimbursementclaim.Fake
+import java.time.LocalDateTime
+import play.api.test.FakeRequest
+import uk.gov.hmrc.http.HeaderCarrier
+import play.api.mvc.Headers
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.MimeTypes.JSON
+import play.api.inject.bind
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
+import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 
 trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with MockFactory {
 
   val overrideBindings: List[GuiceableModule] = List.empty[GuiceableModule]
+
+  def buildApplication(
+    authConnector: AuthConnector,
+    declarationConnector: DeclarationConnector,
+    claimConnector: ClaimConnector
+  ): Application =
+    new GuiceApplicationBuilder()
+      .configure(
+        Configuration(
+          ConfigFactory.parseString(
+            """
+              | metrics.jvm = false
+              | metrics.logback = false
+              |
+              | auditing {
+              |  enabled = false
+              |  traceRequests = false
+              |  consumer {
+              |    baseUri {
+              |      host = localhost
+              |      port = 8100
+              |    }
+              |  }
+              |}
+          """.stripMargin
+          )
+        )
+      )
+      .overrides(bind[AuthConnector].to(authConnector))
+      .overrides(bind[ClaimConnector].to(claimConnector))
+      .overrides(bind[DeclarationConnector].to(declarationConnector))
+      .build()
 
   def buildFakeApplication(): Application =
     new GuiceApplicationBuilder()
@@ -68,5 +113,13 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
     Play.stop(fakeApplication)
     super.afterAll()
   }
+
+  def fakeRequestWithJsonBody(body: JsValue) =
+    new AuthenticatedUserRequest(
+      Fake.user,
+      LocalDateTime.now(),
+      HeaderCarrier(),
+      FakeRequest()
+    ).withHeaders(Headers.apply(CONTENT_TYPE -> JSON)).withBody(body)
 
 }
