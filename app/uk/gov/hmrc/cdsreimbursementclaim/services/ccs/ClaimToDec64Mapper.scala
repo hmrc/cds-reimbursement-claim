@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
-import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.Envelope
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 
 trait ClaimToDec64Mapper[R] {
-  def map(request: R, response: ClaimSubmitResponse): List[Envelope]
+  def map(request: R, response: ClaimSubmitResponse): List[String]
 }

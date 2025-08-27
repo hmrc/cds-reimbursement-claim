@@ -17,12 +17,12 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import ru.tinkoff.phobos.encoding.XmlEncoder
+import org.bson.types.ObjectId
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.CcsConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.ccs._
+import uk.gov.hmrc.cdsreimbursementclaim.models.ccs.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.ccs.CcsSubmissionRepo
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -30,7 +30,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpResponse}
 import uk.gov.hmrc.mongo.workitem.{ProcessingStatus, ResultStatus, WorkItem}
 
 import scala.concurrent.Future
-import org.bson.types.ObjectId
 
 @ImplementedBy(classOf[DefaultCcsSubmissionService])
 trait CcsSubmissionService {
@@ -82,14 +81,9 @@ class DefaultCcsSubmissionService @Inject() (
     val queueCcsSubmissions: List[EitherT[Future, Error, WorkItem[CcsSubmissionRequest]]] =
       claimToDec64FilesMapper
         .map(submitClaimRequest, submitClaimResponse)
-        .map(XmlEncoder[Envelope].encode(_))
-        .map(
-          _.fold(
-            _ => EitherT.leftT[Future, WorkItem[CcsSubmissionRequest]](Error("ERROR: failed to encode XML")),
-            encodedData =>
-              ccsSubmissionRepo.set(
-                CcsSubmissionRequest(encodedData, DefaultCcsSubmissionService.getHeaders(hc))
-              )
+        .map(payload =>
+          ccsSubmissionRepo.set(
+            CcsSubmissionRequest(payload, DefaultCcsSubmissionService.getHeaders(hc))
           )
         )
 

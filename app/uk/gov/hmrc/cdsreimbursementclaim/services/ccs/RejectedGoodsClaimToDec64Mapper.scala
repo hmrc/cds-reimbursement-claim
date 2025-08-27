@@ -25,32 +25,26 @@ import java.util.UUID
 class RejectedGoodsClaimToDec64Mapper[Claim <: RejectedGoodsClaim]
     extends ClaimToDec64Mapper[RejectedGoodsClaimRequest[Claim]] {
 
-  def map(request: RejectedGoodsClaimRequest[Claim], response: ClaimSubmitResponse): List[Envelope] =
+  def map(request: RejectedGoodsClaimRequest[Claim], response: ClaimSubmitResponse): List[String] =
     request.claim.documents.zipWithIndex.map { case (document, index) =>
-      Envelope(
-        Body(
-          BatchFileInterfaceMetadata(
-            correlationID = UUID.randomUUID().toString,
-            batchID = UUID.randomUUID().toString,
-            batchCount = index.toLong + 1,
-            batchSize = request.claim.documents.size.toLong,
-            checksum = document.checksum,
-            sourceLocation = document.downloadUrl,
-            sourceFileName = document.fileName,
-            sourceFileMimeType = document.fileMimeType,
-            fileSize = document.size,
-            properties = PropertiesType(
-              List(
-                PropertyType("CaseReference", response.caseNumber),
-                PropertyType("Eori", request.claim.claimantInformation.eori.value),
-                PropertyType("DeclarationId", request.claim.leadMrn.value),
-                PropertyType("DeclarationType", "MRN"),
-                PropertyType("ApplicationName", "NDRC"),
-                PropertyType("DocumentType", document.documentType.toDec64DisplayString),
-                PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
-              )
-            )
-          )
+      DEC64RequestBuilder(
+        correlationID = UUID.randomUUID().toString,
+        batchID = UUID.randomUUID().toString,
+        batchCount = index + 1,
+        batchSize = request.claim.documents.size,
+        checksum = document.checksum,
+        sourceLocation = document.downloadUrl,
+        sourceFileName = document.fileName,
+        sourceFileMimeType = document.fileMimeType,
+        fileSize = document.size,
+        properties = List(
+          ("CaseReference", response.caseNumber),
+          ("Eori", request.claim.claimantInformation.eori.value),
+          ("DeclarationId", request.claim.leadMrn.value),
+          ("DeclarationType", "MRN"),
+          ("ApplicationName", "NDRC"),
+          ("DocumentType", document.documentType.toDec64DisplayString),
+          ("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
         )
       )
     }.toList

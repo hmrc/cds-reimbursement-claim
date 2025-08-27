@@ -19,17 +19,17 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledRejectedGoodsClaim, SingleRejectedGoodsClaim}
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, MultipleOverpaymentsClaim, MultipleOverpaymentsClaimRequest, ScheduledOverpaymentsClaim, ScheduledOverpaymentsClaimRequest, SingleOverpaymentsClaim, SingleOverpaymentsClaimRequest}
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.*
 
-class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with ScalaCheckPropertyChecks {
+class OverpaymentsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with ScalaCheckPropertyChecks {
 
-  "Rejected Goods Claim to Dec64 Mapper" should {
+  "Overpayments Claim to Dec64 Mapper" should {
     "obtain the correct batch size for a Single Journey" in forAll {
-      (journey: SingleRejectedGoodsClaim, response: ClaimSubmitResponse) =>
-        val mapper       = singleCE1779ClaimToDec64FilesMapper
-        val dec64Request = mapper.map(RejectedGoodsClaimRequest(journey), response)
+      (journey: SingleOverpaymentsClaim, response: ClaimSubmitResponse) =>
+        val mapper       = singleOverpaymentsClaimToDec64FilesMapper
+        val dec64Request = mapper.map(SingleOverpaymentsClaimRequest(journey), response)
 
         dec64Request.map { payload =>
           payload should include("<ans2:name>CaseReference</ans2:name>")
@@ -44,9 +44,9 @@ class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with
     }
 
     "obtain the correct batch size for a Multiple Journey" in forAll {
-      (journey: MultipleRejectedGoodsClaim, response: ClaimSubmitResponse) =>
-        val mapper       = multipleCE1779ClaimToDec64FilesMapper
-        val dec64Request = mapper.map(RejectedGoodsClaimRequest(journey), response)
+      (journey: MultipleOverpaymentsClaim, response: ClaimSubmitResponse) =>
+        val mapper       = multipleOverpaymentsClaimToDec64FilesMapper
+        val dec64Request = mapper.map(MultipleOverpaymentsClaimRequest(journey), response)
 
         dec64Request.map { payload =>
           payload should include("<ans2:name>CaseReference</ans2:name>")
@@ -61,9 +61,9 @@ class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with
     }
 
     "obtain the correct batch size for a Scheduled Journey" in forAll {
-      (journey: ScheduledRejectedGoodsClaim, response: ClaimSubmitResponse) =>
-        val mapper       = scheduledCE1779ClaimToDec64FilesMapper
-        val dec64Request = mapper.map(RejectedGoodsClaimRequest(journey), response)
+      (journey: ScheduledOverpaymentsClaim, response: ClaimSubmitResponse) =>
+        val mapper       = scheduledOverpaymentsClaimToDec64FilesMapper
+        val dec64Request = mapper.map(ScheduledOverpaymentsClaimRequest(journey), response)
 
         dec64Request.map { payload =>
           payload should include("<ans2:name>CaseReference</ans2:name>")
@@ -72,7 +72,7 @@ class RejectedGoodsClaimToDec64MapperSpec extends AnyWordSpec with Matchers with
           payload should include("<ans2:name>DeclarationType</ans2:name>")
           payload should include("<ans2:name>ApplicationName</ans2:name>")
           payload should include("<ans2:name>DocumentType</ans2:name>")
-          payload should include(s"<ans2:batchSize>${journey.supportingEvidences.size + 1}</ans2:batchSize>")
+          payload should include(s"<ans2:batchSize>${journey.documents.size}</ans2:batchSize>")
           payload should include("<ans2:value>NDRC</ans2:value>")
         }
     }
