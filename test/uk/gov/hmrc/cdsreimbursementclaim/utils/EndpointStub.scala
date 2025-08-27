@@ -26,12 +26,8 @@ import play.api.test.WsTestClient
 import play.core.server.{ServerConfig, ServerProvider}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
-import uk.gov.hmrc.play.audit.http.HttpAuditing
-import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
 
 import scala.collection.immutable.Seq
-import scala.util.matching.Regex
 
 /** Provides method to stub an external endpoint with the expected result.
   */
@@ -74,19 +70,6 @@ trait EndpointStub {
     Play.start(application)
 
     val server = provider.createServer(config, application)
-
-    val httpAuditing = new HttpAuditing {
-      val appName        = "test"
-      val auditConnector = new AuditConnector {
-        override def auditingConfig: AuditingConfig = AuditingConfig.fromConfig(config.configuration)
-
-        override def auditChannel: AuditChannel = ???
-
-        override def datastreamMetrics: DatastreamMetrics = ???
-      }
-
-      override def auditDisabledForPattern: Regex = ".+".r
-    }
 
     try
       WsTestClient.withClient { wsClient =>

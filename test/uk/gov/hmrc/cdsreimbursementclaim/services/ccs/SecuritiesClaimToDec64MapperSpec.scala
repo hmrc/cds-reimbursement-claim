@@ -31,22 +31,16 @@ class SecuritiesClaimToDec64MapperSpec extends AnyWordSpec with Matchers with Sc
       val mapper       = securitiesClaimToDec64FilesMapper
       val dec64Request = mapper.map(request, response)
 
-      dec64Request.map { envelope =>
-        envelope.Body.BatchFileInterfaceMetadata.batchSize shouldBe request.claim.supportingEvidences.size
-        envelope.Body.BatchFileInterfaceMetadata.properties.property
-          .map(p => p.name)                                  should contain.allOf(
-          "CaseReference",
-          "Eori",
-          "DeclarationId",
-          "DeclarationType",
-          "RFS",
-          "ApplicationName",
-          "DocumentType"
-        )
-        envelope.Body.BatchFileInterfaceMetadata.properties.property
-          .map(p => (p.name, p.value))                       should contain(
-          "ApplicationName" -> "Securities"
-        )
+      dec64Request.map { payload =>
+        payload should include("<ans2:name>CaseReference</ans2:name>")
+        payload should include("<ans2:name>Eori</ans2:name>")
+        payload should include("<ans2:name>DeclarationId</ans2:name>")
+        payload should include("<ans2:name>DeclarationType</ans2:name>")
+        payload should include("<ans2:name>ApplicationName</ans2:name>")
+        payload should include("<ans2:name>DocumentType</ans2:name>")
+        payload should include("<ans2:name>RFS</ans2:name>")
+        payload should include(s"<ans2:batchSize>${request.claim.supportingEvidences.size}</ans2:batchSize>")
+        payload should include("<ans2:value>Securities</ans2:value>")
       }
     }
 

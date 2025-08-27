@@ -24,33 +24,27 @@ import java.util.UUID
 
 class SecuritiesClaimToDec64Mapper extends ClaimToDec64Mapper[SecuritiesClaimRequest] {
 
-  def map(request: SecuritiesClaimRequest, response: ClaimSubmitResponse): List[Envelope] =
+  def map(request: SecuritiesClaimRequest, response: ClaimSubmitResponse): List[String] =
     request.claim.supportingEvidences.zipWithIndex.map { case (document, index) =>
-      Envelope(
-        Body(
-          BatchFileInterfaceMetadata(
-            correlationID = UUID.randomUUID().toString,
-            batchID = UUID.randomUUID().toString,
-            batchCount = index.toLong + 1,
-            batchSize = request.claim.supportingEvidences.size.toLong,
-            checksum = document.checksum,
-            sourceLocation = document.downloadUrl,
-            sourceFileName = document.fileName,
-            sourceFileMimeType = document.fileMimeType,
-            fileSize = document.size,
-            properties = PropertiesType(
-              List(
-                PropertyType("CaseReference", response.caseNumber),
-                PropertyType("Eori", request.claim.claimantInformation.eori.value),
-                PropertyType("DeclarationId", request.claim.movementReferenceNumber.value),
-                PropertyType("DeclarationType", "MRN"),
-                PropertyType("RFS", request.claim.reasonForSecurity.dec64DisplayString),
-                PropertyType("ApplicationName", "Securities"),
-                PropertyType("DocumentType", document.documentType.toDec64DisplayString),
-                PropertyType("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
-              )
-            )
-          )
+      DEC64RequestBuilder(
+        correlationID = UUID.randomUUID().toString,
+        batchID = UUID.randomUUID().toString,
+        batchCount = index + 1,
+        batchSize = request.claim.supportingEvidences.size,
+        checksum = document.checksum,
+        sourceLocation = document.downloadUrl,
+        sourceFileName = document.fileName,
+        sourceFileMimeType = document.fileMimeType,
+        fileSize = document.size,
+        properties = List(
+          ("CaseReference", response.caseNumber),
+          ("Eori", request.claim.claimantInformation.eori.value),
+          ("DeclarationId", request.claim.movementReferenceNumber.value),
+          ("DeclarationType", "MRN"),
+          ("RFS", request.claim.reasonForSecurity.dec64DisplayString),
+          ("ApplicationName", "Securities"),
+          ("DocumentType", document.documentType.toDec64DisplayString),
+          ("DocumentReceivedDate", document.uploadedOn.toCdsDateTime)
         )
       )
     }.toList

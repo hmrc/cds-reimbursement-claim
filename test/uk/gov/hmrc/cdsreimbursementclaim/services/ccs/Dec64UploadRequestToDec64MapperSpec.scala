@@ -19,11 +19,10 @@ package uk.gov.hmrc.cdsreimbursementclaim.services.ccs
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimSubmitResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.Dec64UploadRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Dec64UploadRequestGen._
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen._
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, Dec64UploadRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Dec64UploadRequestGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.*
 
 @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
 class Dec64UploadRequestToDec64MapperSpec extends AnyWordSpec with Matchers with ScalaCheckPropertyChecks {
@@ -33,27 +32,23 @@ class Dec64UploadRequestToDec64MapperSpec extends AnyWordSpec with Matchers with
       val mapper       = dec64UploadRequestToDec64FilesMapper
       val dec64Request = mapper.map(request, response)
 
-      dec64Request.map { envelope =>
-        envelope.Body.BatchFileInterfaceMetadata.batchSize shouldBe request.uploadedFiles.size
-        envelope.Body.BatchFileInterfaceMetadata.properties.property
-          .map(p => p.name)                                  should contain.allOf(
-          "CaseReference",
-          "Eori",
-          "DeclarationId",
-          "DeclarationType",
-          "ApplicationName",
-          "DocumentType"
-        )
+      dec64Request.map { payload =>
+
+        payload should include("<ans2:name>CaseReference</ans2:name>")
+        payload should include("<ans2:name>Eori</ans2:name>")
+        payload should include("<ans2:name>DeclarationId</ans2:name>")
+        payload should include("<ans2:name>DeclarationType</ans2:name>")
+        payload should include("<ans2:name>ApplicationName</ans2:name>")
+        payload should include("<ans2:name>DocumentType</ans2:name>")
+        payload should include(s"<ans2:batchSize>${request.uploadedFiles.size}</ans2:batchSize>")
+        payload should include(s"<ans2:value>${request.applicationName}</ans2:value>")
+
         if (request.applicationName === "Securities") {
-          envelope.Body.BatchFileInterfaceMetadata.properties.property
-            .find(_.name === "RFS")
-            .getOrElse(fail("missing reason for security"))
-            .value shouldBe ReasonForSecurity.parseACC14Code(request.reasonForSecurity.get).get.dec64DisplayString
+          payload should include("<ans2:name>RFS</ans2:name>")
+          payload should include(
+            s"<ans2:value>${ReasonForSecurity.parseACC14Code(request.reasonForSecurity.get).get.dec64DisplayString}</ans2:value>"
+          )
         }
-        envelope.Body.BatchFileInterfaceMetadata.properties.property
-          .map(p => (p.name, p.value))                       should contain(
-          "ApplicationName" -> request.applicationName
-        )
       }
     }
 

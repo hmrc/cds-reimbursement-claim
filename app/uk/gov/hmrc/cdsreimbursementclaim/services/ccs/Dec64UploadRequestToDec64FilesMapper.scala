@@ -26,41 +26,35 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurit
 class Dec64UploadRequestToDec64FilesMapper extends ClaimToDec64Mapper[Dec64UploadRequest] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw"))
-  def map(request: Dec64UploadRequest, response: ClaimSubmitResponse): List[Envelope] =
+  def map(request: Dec64UploadRequest, response: ClaimSubmitResponse): List[String] =
     request.uploadedFiles.zipWithIndex.map { case (document, index) =>
-      Envelope(
-        Body(
-          BatchFileInterfaceMetadata(
-            correlationID = UUID.randomUUID().toString,
-            batchID = UUID.randomUUID().toString,
-            batchCount = index.toLong + 1,
-            batchSize = request.uploadedFiles.size.toLong,
-            checksum = document.checksum,
-            sourceLocation = document.downloadUrl,
-            sourceFileName = document.fileName,
-            sourceFileMimeType = document.fileMimeType,
-            fileSize = document.fileSize,
-            properties = PropertiesType(
-              List(
-                PropertyType("CaseReference", response.caseNumber),
-                PropertyType("Eori", request.eori),
-                PropertyType("DeclarationId", request.declarationId),
-                PropertyType("DeclarationType", "MRN"),
-                PropertyType("ApplicationName", request.applicationName),
-                PropertyType("DocumentType", document.description),
-                PropertyType("DocumentReceivedDate", document.uploadTimestamp.toCdsDateTime)
-              ) ++ (if (request.applicationName == "Securities")
-                      PropertyType(
-                        "RFS",
-                        request.reasonForSecurity
-                          .flatMap(ReasonForSecurity.parseACC14Code)
-                          .getOrElse(throw new Exception("Missing RFS property"))
-                          .dec64DisplayString
-                      ) :: Nil
-                    else Nil)
-            )
-          )
-        )
+      DEC64RequestBuilder(
+        correlationID = UUID.randomUUID().toString,
+        batchID = UUID.randomUUID().toString,
+        batchCount = index + 1,
+        batchSize = request.uploadedFiles.size,
+        checksum = document.checksum,
+        sourceLocation = document.downloadUrl,
+        sourceFileName = document.fileName,
+        sourceFileMimeType = document.fileMimeType,
+        fileSize = document.fileSize,
+        properties = List(
+          ("CaseReference", response.caseNumber),
+          ("Eori", request.eori),
+          ("DeclarationId", request.declarationId),
+          ("DeclarationType", "MRN"),
+          ("ApplicationName", request.applicationName),
+          ("DocumentType", document.description),
+          ("DocumentReceivedDate", document.uploadTimestamp.toCdsDateTime)
+        ) ++ (if (request.applicationName == "Securities")
+                (
+                  "RFS",
+                  request.reasonForSecurity
+                    .flatMap(ReasonForSecurity.parseACC14Code)
+                    .getOrElse(throw new Exception("Missing RFS property"))
+                    .dec64DisplayString
+                ) :: Nil
+              else Nil)
       )
     }
 }
