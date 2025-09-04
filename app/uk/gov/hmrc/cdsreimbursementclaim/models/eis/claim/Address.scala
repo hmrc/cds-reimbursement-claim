@@ -57,16 +57,16 @@ object Address {
       .toRight(CdsError("country code is mandatory"))
       .map { countryCode =>
         Address(
-          contactPerson = contactInformation.contactPerson,
-          addressLine1 = contactInformation.addressLine1,
-          addressLine2 = contactInformation.addressLine2,
-          addressLine3 = contactInformation.addressLine3,
-          street = contactInformation.street,
-          city = contactInformation.city,
+          contactPerson = contactInformation.contactPerson.noneIfEmpty,
+          addressLine1 = contactInformation.addressLine1.noneIfEmpty,
+          addressLine2 = contactInformation.addressLine2.noneIfEmpty,
+          addressLine3 = contactInformation.addressLine3.noneIfEmpty,
+          street = contactInformation.street.noneIfEmpty,
+          city = contactInformation.city.noneIfEmpty,
           countryCode = countryCode,
-          postalCode = contactInformation.postalCode,
-          telephoneNumber = contactInformation.telephoneNumber,
-          emailAddress = contactInformation.emailAddress
+          postalCode = contactInformation.postalCode.noneIfEmpty,
+          telephoneNumber = contactInformation.telephoneNumber.noneIfEmpty,
+          emailAddress = contactInformation.emailAddress.noneIfEmpty
         )
       }
 
@@ -74,15 +74,22 @@ object Address {
     Address(
       contactPerson = None,
       addressLine1 = Some(establishmentAddress.addressLine1),
-      addressLine2 = establishmentAddress.addressLine2,
-      addressLine3 = establishmentAddress.addressLine3,
+      addressLine2 = establishmentAddress.addressLine2.noneIfEmpty,
+      addressLine3 = establishmentAddress.addressLine3.noneIfEmpty,
       street = None,
       city = None,
       countryCode = establishmentAddress.countryCode,
-      postalCode = establishmentAddress.postalCode,
+      postalCode = establishmentAddress.postalCode.noneIfEmpty,
       telephoneNumber = None,
       emailAddress = None
     )
 
   implicit val format: OFormat[Address] = Json.format[Address]
+
+  extension (opt: Option[String]) {
+    def noneIfEmpty: Option[String] = opt.match {
+      case Some(value) if value.isBlank() => None
+      case _                              => opt
+    }
+  }
 }
