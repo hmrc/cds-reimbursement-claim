@@ -39,7 +39,7 @@ object DEC64RequestBuilder {
        |            <ans2:sourceSystemType>AWS</ans2:sourceSystemType>
        |            <ans2:interfaceName>DEC64</ans2:interfaceName>
        |            <ans2:interfaceVersion>1.0.0</ans2:interfaceVersion>
-       |            <ans2:correlationID>$correlationID</ans2:correlationID>
+       |            <ans2:correlationID>${correlationID.escapeXml}</ans2:correlationID>
        |            <ans2:batchID>$batchID</ans2:batchID>
        |            <ans2:batchSize>$batchSize</ans2:batchSize>
        |            <ans2:batchCount>$batchCount</ans2:batchCount>
@@ -50,9 +50,9 @@ object DEC64RequestBuilder {
        |            <ans2:properties>
        |${properties.map(property).mkString("\n")}
        |            </ans2:properties>
-       |            <ans2:sourceLocation>$sourceLocation</ans2:sourceLocation>
-       |            <ans2:sourceFileName>$sourceFileName</ans2:sourceFileName>
-       |            <ans2:sourceFileMimeType>$sourceFileMimeType</ans2:sourceFileMimeType>
+       |            <ans2:sourceLocation>${sourceLocation.escapeXml}</ans2:sourceLocation>
+       |            <ans2:sourceFileName>${sourceFileName.escapeXml}</ans2:sourceFileName>
+       |            <ans2:sourceFileMimeType>${sourceFileMimeType.escapeXml}</ans2:sourceFileMimeType>
        |            <ans2:destinations>
        |                <ans2:destination>
        |                    <ans2:destinationSystem>CDFPay</ans2:destinationSystem>
@@ -65,6 +65,17 @@ object DEC64RequestBuilder {
   def property(key: String, value: Any) =
     s"""              <ans2:property>
        |                 <ans2:name>$key</ans2:name>
-       |                 <ans2:value>$value</ans2:value>
+       |                 <ans2:value>${value.toString().escapeXml}</ans2:value>
        |              </ans2:property>""".stripMargin
+
+  extension (text: String) {
+    def escapeXml: String =
+      text
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;")
+  }
+
 }
