@@ -229,7 +229,7 @@ class OverpaymentsMultipleClaimMappingSpec
                               NdrcDetails(
                                 paymentMethod = details.paymentMethod,
                                 paymentReference = details.paymentReference,
-                                CMAEligible = None,
+                                CMAEligible = details.cmaEligible,
                                 taxType = taxCode,
                                 amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
                                 claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,

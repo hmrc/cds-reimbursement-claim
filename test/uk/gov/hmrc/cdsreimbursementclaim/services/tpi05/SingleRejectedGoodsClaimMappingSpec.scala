@@ -282,7 +282,7 @@ class SingleRejectedGoodsClaimMappingSpec
                           NdrcDetails(
                             paymentMethod = details.paymentMethod,
                             paymentReference = details.paymentReference,
-                            CMAEligible = None,
+                            CMAEligible = details.cmaEligible,
                             taxType = taxCode,
                             amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
                             claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
@@ -328,7 +328,7 @@ class SingleRejectedGoodsClaimMappingSpec
                   uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
                     paymentMethod = value,
                     paymentReference = value,
-                    cmaEligible = None,
+                    cmaEligible = detail.cmaEligible,
                     taxType = detail.taxType,
                     amount = amount.toString()
                   )

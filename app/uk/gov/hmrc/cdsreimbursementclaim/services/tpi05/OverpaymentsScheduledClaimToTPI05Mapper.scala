@@ -79,12 +79,13 @@ class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetail
       .withNdrcDetails(
         claimedReimbursement.map(reimbursement =>
           NdrcDetails.buildChecking(
-            reimbursement.taxCode,
-            reimbursement.paymentMethod,
-            reimbursement.paymentReference,
-            reimbursement.paidAmount.roundToTwoDecimalPlaces,
-            reimbursement.claimAmount.roundToTwoDecimalPlaces,
-            if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
+            taxCode = reimbursement.taxCode,
+            paymentMethod = reimbursement.paymentMethod,
+            paymentReference = reimbursement.paymentReference,
+            paidAmount = reimbursement.paidAmount.roundToTwoDecimalPlaces,
+            claimedAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces,
+            reimbursementMethod = if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None,
+            cmaEligible = None
           )
         )
       )
