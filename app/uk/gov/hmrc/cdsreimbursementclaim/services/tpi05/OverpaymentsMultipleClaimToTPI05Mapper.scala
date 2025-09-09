@@ -107,9 +107,11 @@ class OverpaymentsMultipleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails
                   taxCode = taxCode,
                   paymentMethod = foundNdrcDetails.paymentMethod,
                   paymentReference = foundNdrcDetails.paymentReference,
-                  BigDecimal(foundNdrcDetails.amount),
-                  claimedAmount.roundToTwoDecimalPlaces,
-                  if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
+                  paidAmount = BigDecimal(foundNdrcDetails.amount),
+                  claimedAmount = claimedAmount.roundToTwoDecimalPlaces,
+                  reimbursementMethod =
+                    if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None,
+                  cmaEligible = foundNdrcDetails.cmaEligible
                 )
               }
           }.toList

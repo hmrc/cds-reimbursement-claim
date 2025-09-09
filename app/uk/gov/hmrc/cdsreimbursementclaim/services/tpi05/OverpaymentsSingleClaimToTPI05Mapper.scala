@@ -102,12 +102,14 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
           reimbursement <- claim.reimbursements.toList
           ndrcDetails   <- nrdcDetails.filter(_.taxType === reimbursement.taxCode.value)
         } yield NdrcDetails.buildChecking(
-          reimbursement.taxCode,
-          ndrcDetails.paymentMethod,
-          ndrcDetails.paymentReference,
-          BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
-          reimbursement.amount.roundToTwoDecimalPlaces,
-          if (putReimbursementMethodInNDRCDetails) Some(reimbursement.reimbursementMethod) else None
+          taxCode = reimbursement.taxCode,
+          paymentMethod = ndrcDetails.paymentMethod,
+          paymentReference = ndrcDetails.paymentReference,
+          paidAmount = BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
+          claimedAmount = reimbursement.amount.roundToTwoDecimalPlaces,
+          reimbursementMethod =
+            if (putReimbursementMethodInNDRCDetails) Some(reimbursement.reimbursementMethod) else None,
+          cmaEligible = ndrcDetails.cmaEligible
         )
       )
 

@@ -294,7 +294,7 @@ class OverpaymentsSingleClaimMappingV2Spec
                       NdrcDetails(
                         paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
                         paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
-                        CMAEligible = None,
+                        CMAEligible = nrdcDetailsMap.get(taxCode.value).value.cmaEligible,
                         taxType = taxCode,
                         amount = nrdcDetailsMap.get(taxCode.value).value.amount,
                         claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,
@@ -414,7 +414,7 @@ class OverpaymentsSingleClaimMappingV2Spec
                         NdrcDetails(
                           paymentMethod = nrdcDetailsMap.get(taxCode.value).value.paymentMethod,
                           paymentReference = nrdcDetailsMap.get(taxCode.value).value.paymentReference,
-                          CMAEligible = None,
+                          CMAEligible = nrdcDetailsMap.get(taxCode.value).value.cmaEligible,
                           taxType = taxCode,
                           amount = nrdcDetailsMap.get(taxCode.value).value.amount,
                           claimAmount = reclaimAmount.roundToTwoDecimalPlaces.toString().some,

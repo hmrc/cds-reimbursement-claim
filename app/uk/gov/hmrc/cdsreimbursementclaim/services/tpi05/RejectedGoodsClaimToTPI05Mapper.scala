@@ -114,12 +114,14 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursem
               .toValidNel(CdsError(s"Cannot find NDRC details for tax code: ${taxCode.value}"))
               .andThen { foundNdrcDetails =>
                 NdrcDetails.buildChecking(
-                  taxCode,
-                  foundNdrcDetails.paymentMethod,
-                  foundNdrcDetails.paymentReference,
-                  BigDecimal(foundNdrcDetails.amount),
-                  claimedAmount.roundToTwoDecimalPlaces,
-                  if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
+                  taxCode = taxCode,
+                  paymentMethod = foundNdrcDetails.paymentMethod,
+                  paymentReference = foundNdrcDetails.paymentReference,
+                  paidAmount = BigDecimal(foundNdrcDetails.amount),
+                  claimedAmount = claimedAmount.roundToTwoDecimalPlaces,
+                  reimbursementMethod =
+                    if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None,
+                  cmaEligible = foundNdrcDetails.cmaEligible
                 )
               }
           }.toList

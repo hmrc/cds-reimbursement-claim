@@ -319,7 +319,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
                 uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
                   paymentMethod = value,
                   paymentReference = value,
-                  cmaEligible = None,
+                  cmaEligible = detail.cmaEligible,
                   taxType = detail.taxType,
                   amount = amount.toString()
                 )

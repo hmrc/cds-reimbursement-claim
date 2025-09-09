@@ -292,7 +292,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                             NdrcDetails(
                               paymentMethod = details.paymentMethod,
                               paymentReference = details.paymentReference,
-                              CMAEligible = None,
+                              CMAEligible = details.cmaEligible,
                               taxType = taxCode,
                               amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
                               claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
@@ -339,7 +339,7 @@ class MultipleRejectedGoodsClaimMappingSpec
                   ResponseNdrcDetails(
                     paymentMethod = value,
                     paymentReference = value,
-                    cmaEligible = None,
+                    cmaEligible = detail.cmaEligible,
                     taxType = detail.taxType,
                     amount = amount.toString()
                   )
