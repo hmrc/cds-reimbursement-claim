@@ -20,7 +20,6 @@ object AppDependencies {
     "org.scalatestplus.play" %% "scalatestplus-play"         % "7.0.2"          % Test,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"    % "2.7.0"          % Test,
     "com.vladsch.flexmark"    % "flexmark-all"               % "0.64.8"         % Test,
-    "org.pegdown"             % "pegdown"                    % "1.6.0"          % Test,
     "org.apache.pekko"       %% "pekko-testkit"              % "1.0.3"          % Test,
     "org.scala-lang.modules" %% "scala-xml"                  % "2.3.0"          % Test,
     "uk.gov.hmrc"            %% "play-json-schema-validator" % "0.1.0"          % Test
