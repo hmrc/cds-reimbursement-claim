@@ -34,7 +34,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, Lens}
@@ -54,8 +53,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
   "The Reject Goods claim mapper" should {
 
     "map a valid Scheduled claim to TPI05 request" in forAll(
-      genScheduledRejectedGoodsClaim(ClaimantType.Declarant),
-      genDisplayDeclaration
+      genScheduledRejectedGoodsClaim(ClaimantType.Declarant)
     ) { (claim: ScheduledRejectedGoodsClaim, declaration: DisplayDeclaration) =>
       val tpi05Request = mapper.map((claim, declaration))
 
