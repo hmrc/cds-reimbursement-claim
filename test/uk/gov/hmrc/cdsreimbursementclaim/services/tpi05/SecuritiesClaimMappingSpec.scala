@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxOptionId
+import org.scalacheck.Gen
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -25,11 +26,14 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType, ReasonForSecurity}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType, ReasonForSecurity, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails, PostNewClaimsRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.genMRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 class SecuritiesClaimMappingSpec
     extends AnyWordSpec
@@ -222,6 +226,154 @@ class SecuritiesClaimMappingSpec
 
       tpi05Request.left.map(_.value should be("Claimant Address could not be parsed: country code is mandatory"))
 
+    }
+
+    "fail when disposal method is multiple shipments but no export MRN provided" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedClaim = claim
+        .copy(
+          reasonForSecurity = ReasonForSecurity.temporaryAdmissions.head,
+          temporaryAdmissionMethodsOfDisposal =
+            Some(List(TemporaryAdmissionMethodOfDisposal.ExportedInMultipleShipments)),
+          exportMovementReferenceNumber = None
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Export MRN must be provided when disposal method is multiple shipments")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when export MRN provided but disposal method doesn't require it" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+      val exportMrn            = genMRN.sample.get
+      val disposalMethods      = Gen
+        .someOf(TemporaryAdmissionMethodOfDisposal.values -- TemporaryAdmissionMethodOfDisposal.requiresMrn)
+        .sample
+        .get
+
+      val updatedClaim = claim.copy(
+        reasonForSecurity = ReasonForSecurity.temporaryAdmissions.head,
+        temporaryAdmissionMethodsOfDisposal = Some(disposalMethods.toList),
+        exportMovementReferenceNumber = Some(List(exportMrn))
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Unexpected export MRN supplied")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when disposal method is missing for temporary admission security" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedClaim = claim.copy(
+        reasonForSecurity = ReasonForSecurity.temporaryAdmissions.head,
+        temporaryAdmissionMethodsOfDisposal = None
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("disposal method missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when no security deposits are present" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedDeclaration = declaration.copy(
+        displayResponseDetail = declaration.displayResponseDetail.copy(
+          securityDetails = None
+        )
+      )
+      val tpi05Request       = mapper.map(claim, updatedDeclaration)
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("No security deposits")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map when export MRN must be provided for single shipment" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedClaim = claim.copy(
+        temporaryAdmissionMethodsOfDisposal = Some(List(ExportedInSingleShipment)),
+        exportMovementReferenceNumber = None // Missing/No MRN so triggers error
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Export MRN must be provided when disposal method is single shipment")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map when disposal method provided for non-temporary-admission security" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+      val exportMrn            = genMRN.sample.get
+
+      val nonTempAdmissionReason = ReasonForSecurity.values.diff(ReasonForSecurity.temporaryAdmissions).head
+
+      val updatedClaim = claim.copy(
+        reasonForSecurity = nonTempAdmissionReason,
+        temporaryAdmissionMethodsOfDisposal = Some(List(ExportedInSingleShipment)),
+        exportMovementReferenceNumber = Some(List(exportMrn))
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Unexpected disposal method for non-temporary-admission security")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when acceptance date could not be parsed" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedDeclaration = declaration.copy(
+        displayResponseDetail = declaration.displayResponseDetail.copy(
+          acceptanceDate = "Foo"
+        )
+      )
+
+      val tpi05Request = mapper.map((claim, updatedDeclaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          val errorMessage = error.value.toString
+          assert(errorMessage.contains("acceptance date could not be parsed:"))
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
     }
   }
 }

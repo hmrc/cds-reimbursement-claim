@@ -378,5 +378,64 @@ class MultipleRejectedGoodsClaimMappingSpec
           )
       }
     }
+
+    "fail to map invalid claim amount" in {
+      val rejectedGoodsMultipleData = genMultipleRejectedGoodsClaimAllTypes.sample.get
+      val (claim, declarations)     = rejectedGoodsMultipleData
+      val updatedClaim              =
+        claim.copy(reimbursementClaims = Map(claim.leadMrn -> Map(TaxCode.A00 -> BigDecimal(0.00))))
+      val tpi05Request              = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Total reimbursement amount must be greater than zero")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing email" in {
+      val rejectedGoodsMultipleData = genMultipleRejectedGoodsClaimAllTypes.sample.get
+      val (claim, declarations)     = rejectedGoodsMultipleData
+      val updatedClaim              = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(emailAddress = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Email address is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing claimant name" in {
+      val rejectedGoodsMultipleData = genMultipleRejectedGoodsClaimAllTypes.sample.get
+      val (claim, declarations)     = rejectedGoodsMultipleData
+      val updatedClaim              = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(contactPerson = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Claimant name is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
   }
 }

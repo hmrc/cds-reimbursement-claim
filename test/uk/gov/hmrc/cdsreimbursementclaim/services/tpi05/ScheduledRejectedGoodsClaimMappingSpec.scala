@@ -378,6 +378,50 @@ class ScheduledRejectedGoodsClaimMappingSpec
           )
         }
       }
+
+      "fail to map missing email" in {
+        val rejectedGoodsScheduledData = genScheduledRejectedGoodsClaimAllTypes.sample.get
+        val (claim, declarations)      = rejectedGoodsScheduledData
+        val updatedClaim               = claim
+          .copy(
+            claimantInformation = claim.claimantInformation
+              .copy(
+                contactInformation = claim.claimantInformation.contactInformation
+                  .copy(emailAddress = None)
+              )
+          )
+
+        val tpi05Request = mapper.map((updatedClaim, declarations))
+
+        tpi05Request match {
+          case Left(error) =>
+            error.value should be("Email address is missing")
+          case Right(_)    =>
+            fail("Expected a Left, but got a Right")
+        }
+      }
+
+      "fail to map missing claimant name" in {
+        val rejectedGoodsScheduledData = genScheduledRejectedGoodsClaimAllTypes.sample.get
+        val (claim, declarations)      = rejectedGoodsScheduledData
+        val updatedClaim               = claim
+          .copy(
+            claimantInformation = claim.claimantInformation
+              .copy(
+                contactInformation = claim.claimantInformation.contactInformation
+                  .copy(contactPerson = None)
+              )
+          )
+
+        val tpi05Request = mapper.map((updatedClaim, declarations))
+
+        tpi05Request match {
+          case Left(error) =>
+            error.value should be("Claimant name is missing")
+          case Right(_)    =>
+            fail("Expected a Left, but got a Right")
+        }
+      }
     }
   }
 }

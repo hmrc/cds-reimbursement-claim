@@ -26,7 +26,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, CurrentMonthAdjustment, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, PayeeType, Reimbursement, SingleOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{BasisOfClaim, ClaimantType, Country, PayeeType, Reimbursement, ReimbursementMethodAnswer, SingleOverpaymentsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
@@ -34,9 +34,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Import
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsSingleClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.{genOverpaymentsSingleClaim, genOverpaymentsSingleClaimAllTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails as ResponseNdrcDetails
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CMAEligibleGen
+
+import java.util.UUID
 
 class OverpaymentsSingleClaimMappingSpec
     extends AnyWordSpec
@@ -1196,6 +1200,116 @@ class OverpaymentsSingleClaimMappingSpec
         )
       }
     }
+    "fail to map invalid claim amount" in {
+      val singleOverpaymentsData                            = genOverpaymentsSingleClaim(ClaimantType.Declarant).sample.get
+      val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
 
+      val taxType = displayDeclaration.displayResponseDetail.ndrcDetails.get.head.taxType
+
+      val updatedClaim = claim.copy(
+        reimbursements =
+          Seq(Reimbursement(TaxCode(taxType).get, BigDecimal(-1.00), ReimbursementMethodAnswer.BankAccountTransfer))
+      )
+      val tpi05Request = mapper.map(singleOverpaymentsData.copy(_1 = updatedClaim))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Total reimbursement amount must be greater than zero")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map invalid duplicate declaration" in {
+
+      val singleOverpaymentsData =
+        genOverpaymentsSingleClaim(ClaimantType.Declarant, Some(BasisOfClaim.DuplicateEntry)).sample
+          .getOrElse(fail("Failed to generate data"))
+      val (
+        claim: SingleOverpaymentsClaim,
+        displayDeclaration: DisplayDeclaration,
+        duplicateDeclaration: Option[DisplayDeclaration]
+      ) = singleOverpaymentsData
+      val value                  = UUID.randomUUID().toString
+      val amount                 = BigDecimal(123456789123.12)
+      val taxType                = duplicateDeclaration.map(_.displayResponseDetail.ndrcDetails.get.head.taxType).get
+
+      val updatedDuplicateDisplayDeclaration = duplicateDeclaration.map { declaration =>
+        declaration.copy(displayResponseDetail =
+          declaration.displayResponseDetail.copy(ndrcDetails =
+            Some(
+              List(
+                ResponseNdrcDetails(
+                  paymentMethod = value,
+                  paymentReference = value,
+                  cmaEligible = Some(CMAEligibleGen.CMAEligible),
+                  taxType = taxType,
+                  amount = amount.toString()
+                )
+              )
+            )
+          )
+        )
+      }
+
+      val tpi05Request = mapper.map(
+        singleOverpaymentsData.copy(_3 = updatedDuplicateDisplayDeclaration)
+      )
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be(
+            s"Failed to build Duplicate MRN detail - The payment method is expected to be 3 characters long: $value;\n" +
+              s"The payment reference is blank or exceeds 18 characters: $value;\n" +
+              s"Bad amount format: ${amount.toString}"
+          )
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing email" in {
+      val singleOverpaymentsData                     = genOverpaymentsSingleClaimAllTypes.sample.get
+      val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
+      val updatedClaim                               = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(emailAddress = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration, duplicateDeclaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Email address is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing claimant name" in {
+      val singleOverpaymentsData                     = genOverpaymentsSingleClaimAllTypes.sample.get
+      val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
+      val updatedClaim                               = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(contactPerson = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration, duplicateDeclaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Claimant name is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
   }
 }
