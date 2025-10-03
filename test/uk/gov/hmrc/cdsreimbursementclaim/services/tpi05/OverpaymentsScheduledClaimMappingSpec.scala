@@ -25,15 +25,16 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.CDFPayService.NDRC
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Declarant
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ReimbursementMethodAnswer.{BankAccountTransfer, Subsidy}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, PayeeType, ScheduledOverpaymentsClaim, Street}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AmountPaidWithCorrect, ClaimantType, Country, PayeeType, ScheduledOverpaymentsClaim, Street, TaxCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, ISOLocalDate}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsScheduledClaim
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.{genOverpaymentsMultipleClaim, genOverpaymentsScheduledClaim, genOverpaymentsScheduledClaimAllTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
@@ -307,5 +308,62 @@ class OverpaymentsScheduledClaimMappingSpec
         }
     }
 
+    "fail to map invalid claim amount" in {
+      val scheduledOverpaymentsData   = genOverpaymentsScheduledClaim(Declarant).sample.get
+      val (claim, displayDeclaration) = scheduledOverpaymentsData
+      val updatedClaim                =
+        claim.copy(reimbursementClaims = Map("Foo" -> Map(TaxCode.A00 -> AmountPaidWithCorrect(0.00, 5.00))))
+      val tpi05Request                = mapper.map(scheduledOverpaymentsData.copy(_1 = updatedClaim))
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Total reimbursement amount must be greater than zero")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing email" in {
+      val ScheduledOverpaymentsData = genOverpaymentsScheduledClaimAllTypes.sample.get
+      val (claim, declarations)     = ScheduledOverpaymentsData
+      val updatedClaim              = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(emailAddress = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Email address is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing claimant name" in {
+      val ScheduledOverpaymentsData = genOverpaymentsScheduledClaimAllTypes.sample.get
+      val (claim, declarations)     = ScheduledOverpaymentsData
+      val updatedClaim              = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(contactPerson = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Claimant name is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
   }
 }

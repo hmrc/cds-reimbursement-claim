@@ -116,12 +116,16 @@ object OverpaymentsClaimGen {
     } yield claim
 
   def genOverpaymentsSingleClaim(
-    claimantType: ClaimantType
+    claimantType: ClaimantType,
+    maybeBasisOfClaim: Option[BasisOfClaim] = None
   ): Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
     for {
       mrn                 <- genMRN
       claimantInformation <- genClaimantInformation
-      basisOfClaim        <- genBasisOfClaim
+      basisOfClaim        <- maybeBasisOfClaim match {
+                               case Some(basis) => Gen.oneOf(Seq(basis))
+                               case None        => genBasisOfClaim
+                             }
       bankAccountDetails  <- Gen.option(genBankAccountDetails)
       reimbursementMethod <- Gen.oneOf(ReimbursementMethodAnswer.values)
       declaration         <- genDisplayDeclaration.map { generatedDeclaration =>
