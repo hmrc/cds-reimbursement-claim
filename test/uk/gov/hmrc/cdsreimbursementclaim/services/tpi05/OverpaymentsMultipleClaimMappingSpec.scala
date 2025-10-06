@@ -36,8 +36,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Declarant
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
 
 class OverpaymentsMultipleClaimMappingSpec

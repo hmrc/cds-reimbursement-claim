@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cdsreimbursementclaim.utils
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json._
+import play.api.libs.json.*
+import uk.gov.hmrc.cdsreimbursementclaim.utils.EnumerationFormatSpec.Foo.A
 
 class EnumerationFormatSpec extends AnyWordSpec with Matchers {
 
@@ -99,6 +100,30 @@ class EnumerationFormatSpec extends AnyWordSpec with Matchers {
       Foo.queryBinder.unbind("foo", Foo.ABC) shouldBe "foo=ABC"
 
       an[Exception] shouldBe thrownBy(Foo.queryBinder.unbind("foo", Foo.C))
+    }
+
+    "tryParse" should {
+
+      "return key when valid ignoring case" in {
+        Foo.tryParse("A") shouldBe A
+        Foo.tryParse("a") shouldBe A
+      }
+
+      "throw an exception when invalid key" in {
+        val key       = "D"
+        val exception = intercept[IllegalArgumentException] {
+          Foo.tryParse(key)
+        }
+        exception.getMessage shouldBe "The [D] is NOT a value of the expected enum class."
+      }
+    }
+
+    "hasKey" should {
+      "correctly identify valid and invalid keys ignoring case" in {
+        Foo.hasKey("A") shouldBe true
+        Foo.hasKey("a") shouldBe true
+        Foo.hasKey("D") shouldBe false
+      }
     }
   }
 
