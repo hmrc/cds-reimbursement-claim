@@ -265,17 +265,20 @@
                   "maxLength": 17
                 },
                 "EU_VATNumber": {
-                  "type": "object",
-                  "properties": {
-                    "countryCode": {
-                      "type": "string",
-                      "minLength": 2,
-                      "maxLength": 2
-                    },
-                    "VATId": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 15
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "countryCode": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 2
+                      },
+                      "VATId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 15
+                      }
                     }
                   }
                 },
