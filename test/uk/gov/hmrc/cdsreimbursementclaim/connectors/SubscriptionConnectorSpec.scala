@@ -87,6 +87,31 @@ class SubscriptionConnectorSpec
         }
       }
 
+      "get the 200 with EU VAT number information" in {
+        val eori = Generators.sample[Eori]
+        givenEndpointStub {
+          case GET(p"/subscriptions/subscriptiondisplay/v1" ? q"EORI=${requestEori}") if requestEori === eori.value =>
+            SubscriptionTestData.subscriptionResponse200WithEUVatNumber
+          case _                                                                                                    =>
+            Results.ExpectationFailed
+        }(validateSubscriptionRequest) {
+          givenSubscriptionConnector { connector =>
+            val response = await(connector.getSubscription(eori))
+            inside(response) {
+              case Right(Some(SubscriptionResponse(SubscriptionDisplayResponse(_, Some(details))))) =>
+                details.XI_Subscription.get.XI_EORINo               shouldBe "XI00000000001"
+                details.XI_Subscription.get.EU_VATNumber.get.length shouldBe 5
+                details.XI_Subscription.get.EU_VATNumber.get
+                  .map(_.countryCode.get)                           shouldBe Seq("BE", "FR", "IE", "PL", "ES")
+                details.XI_Subscription.get.EU_VATNumber.get
+                  .map(_.VATid.get)                                 shouldBe Seq("0734428271", "84879687011", "001", "5263281342", "008")
+              case _                                                                                =>
+                fail("expected some subscription but got none")
+            }
+          }
+        }
+      }
+
       "get the 200 with business error" in {
         val eori = Generators.sample[Eori]
         givenEndpointStub {
@@ -288,6 +313,11 @@ object SubscriptionTestData extends TestDataFromFile {
   lazy val subscriptionResponse200WithoutXiEori: Result =
     Results
       .Ok(contentOfFile("conf/resources/sub09/companyInformationNoXiEori.json"))
+      .withHeaders(jsonContentType)
+
+  lazy val subscriptionResponse200WithEUVatNumber: Result =
+    Results
+      .Ok(contentOfFile("conf/resources/sub09/companyInformationResponseWithEUVatNumber.json"))
       .withHeaders(jsonContentType)
 
   lazy val subscriptionResponse400WithError: Result =
