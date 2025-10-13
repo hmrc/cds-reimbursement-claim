@@ -57,9 +57,9 @@ class OverpaymentsSingleClaimMappingSpec
       (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
         val tpi05Request = mapper `map` singleOverpaymentsData
 
-        val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
+        val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
 
-        val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
+        val nrdcDetailsMap = declaration.displayResponseDetail.ndrcDetails.toList.flatten
           .groupBy(_.taxType)
           .view
           .mapValues(_.minByOption(_.taxType).value)
@@ -69,7 +69,6 @@ class OverpaymentsSingleClaimMappingSpec
           common.originatingSystem should be(MDTP)
 
           details.claimantEORI should ===(claim.claimantInformation.eori)
-//          details.claimantEmailAddress should ===(claim.claimantInformation.)
 
           details should have(
             Symbol("CDFPayService")(NDRC),
@@ -127,7 +126,7 @@ class OverpaymentsSingleClaimMappingSpec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 importerEORIDetails = {
-                  val maybeConsigneeDetails = Some(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
+                  val maybeConsigneeDetails = Some(declaration.displayResponseDetail.effectiveConsigneeDetails)
                   val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
 
                   EORIInformation(
@@ -171,19 +170,19 @@ class OverpaymentsSingleClaimMappingSpec
               ).some
             ),
             Symbol("MRNDetails") {
-              val mrn = MRN(displayDeclaration.displayResponseDetail.declarationId)
+              val mrn = MRN(declaration.displayResponseDetail.declarationId)
               Some(
                 MrnDetail(
                   MRNNumber = mrn.some,
                   acceptanceDate = AcceptanceDate
-                    .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                    .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                     .flatMap(_.toTpi05DateString)
                     .toOption,
-                  declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+                  declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
                   mainDeclarationReference = (claim.movementReferenceNumber.value === mrn.value).some,
-                  procedureCode = displayDeclaration.displayResponseDetail.procedureCode.some,
+                  procedureCode = declaration.displayResponseDetail.procedureCode.some,
                   declarantDetails = {
-                    val declarantDetails = displayDeclaration.displayResponseDetail.declarantDetails
+                    val declarantDetails = declaration.displayResponseDetail.declarantDetails
                     val contactDetails   = declarantDetails.contactDetails.value
 
                     MRNInformation(
@@ -222,7 +221,7 @@ class OverpaymentsSingleClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                    val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(
@@ -260,7 +259,7 @@ class OverpaymentsSingleClaimMappingSpec
                       )
                     ).some
                   },
-                  accountDetails = displayDeclaration.displayResponseDetail.accountDetails.map(
+                  accountDetails = declaration.displayResponseDetail.accountDetails.map(
                     _.map(accountDetail =>
                       AccountDetail(
                         accountType = accountDetail.accountType,
@@ -291,7 +290,7 @@ class OverpaymentsSingleClaimMappingSpec
                       claim.bankAccountDetails
                         .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
                         .orElse(
-                          displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
+                          declaration.displayResponseDetail.bankDetails.map(bd =>
                             BankDetails(
                               bd.consigneeBankDetails.map(BankDetail.from),
                               bd.declarantBankDetails.map(BankDetail.from)
@@ -407,7 +406,7 @@ class OverpaymentsSingleClaimMappingSpec
                     bankDetails = claim.bankAccountDetails
                       .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
                       .orElse(
-                        displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
+                        declaration.displayResponseDetail.bankDetails.map(bd =>
                           BankDetails(
                             bd.consigneeBankDetails.map(BankDetail.from),
                             bd.declarantBankDetails.map(BankDetail.from)
@@ -436,9 +435,9 @@ class OverpaymentsSingleClaimMappingSpec
       (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
         val tpi05Request = mapper `map` singleOverpaymentsData
 
-        val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
+        val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
 
-        val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
+        val nrdcDetailsMap = declaration.displayResponseDetail.ndrcDetails.toList.flatten
           .groupBy(_.taxType)
           .view
           .mapValues(_.minByOption(_.taxType).value)
@@ -506,7 +505,7 @@ class OverpaymentsSingleClaimMappingSpec
                   contactInformation = claim.claimantInformation.contactInformation.some
                 ),
                 agentEORIDetails = {
-                  val declarantDetails    = displayDeclaration.displayResponseDetail.declarantDetails
+                  val declarantDetails    = declaration.displayResponseDetail.declarantDetails
                   val maybeContactDetails = declarantDetails.contactDetails
 
                   val maybeTelephone    = maybeContactDetails.flatMap(_.telephone)
@@ -555,19 +554,19 @@ class OverpaymentsSingleClaimMappingSpec
               ).some
             ),
             Symbol("MRNDetails") {
-              val mrn = MRN(displayDeclaration.displayResponseDetail.declarationId)
+              val mrn = MRN(declaration.displayResponseDetail.declarationId)
               Some(
                 MrnDetail(
                   MRNNumber = mrn.some,
                   acceptanceDate = AcceptanceDate
-                    .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                    .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                     .flatMap(_.toTpi05DateString)
                     .toOption,
-                  declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+                  declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
                   mainDeclarationReference = (claim.movementReferenceNumber.value === mrn.value).some,
-                  procedureCode = displayDeclaration.displayResponseDetail.procedureCode.some,
+                  procedureCode = declaration.displayResponseDetail.procedureCode.some,
                   declarantDetails = {
-                    val declarantDetails = displayDeclaration.displayResponseDetail.declarantDetails
+                    val declarantDetails = declaration.displayResponseDetail.declarantDetails
                     val contactDetails   = declarantDetails.contactDetails.value
 
                     MRNInformation(
@@ -606,7 +605,7 @@ class OverpaymentsSingleClaimMappingSpec
                     ).some
                   },
                   consigneeDetails = {
-                    val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                    val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails
                     val contactInformation = consigneeDetails.contactDetails.value
 
                     MRNInformation(
@@ -644,7 +643,7 @@ class OverpaymentsSingleClaimMappingSpec
                       )
                     ).some
                   },
-                  accountDetails = displayDeclaration.displayResponseDetail.accountDetails.map(
+                  accountDetails = declaration.displayResponseDetail.accountDetails.map(
                     _.map(accountDetail =>
                       AccountDetail(
                         accountType = accountDetail.accountType,
@@ -675,7 +674,7 @@ class OverpaymentsSingleClaimMappingSpec
                       claim.bankAccountDetails
                         .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
                         .orElse(
-                          displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
+                          declaration.displayResponseDetail.bankDetails.map(bd =>
                             BankDetails(
                               bd.consigneeBankDetails.map(BankDetail.from),
                               bd.declarantBankDetails.map(BankDetail.from)
@@ -791,7 +790,7 @@ class OverpaymentsSingleClaimMappingSpec
                     bankDetails = claim.bankAccountDetails
                       .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
                       .orElse(
-                        displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
+                        declaration.displayResponseDetail.bankDetails.map(bd =>
                           BankDetails(
                             bd.consigneeBankDetails.map(BankDetail.from),
                             bd.declarantBankDetails.map(BankDetail.from)
@@ -817,13 +816,13 @@ class OverpaymentsSingleClaimMappingSpec
     }
 
     "map a valid third-party User claim to TPI05 request" in forAll(
-      genOverpaymentsSingleClaim(ClaimantType.Consignee)
+      genOverpaymentsSingleClaim(ClaimantType.User)
     ) { (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
       val tpi05Request = mapper `map` singleOverpaymentsData
 
-      val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
+      val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
 
-      val nrdcDetailsMap = displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten
+      val nrdcDetailsMap = declaration.displayResponseDetail.ndrcDetails.toList.flatten
         .groupBy(_.taxType)
         .view
         .mapValues(_.minByOption(_.taxType).value)
@@ -873,48 +872,69 @@ class OverpaymentsSingleClaimMappingSpec
           ),
           Symbol("EORIDetails")(
             EoriDetails(
-              importerEORIDetails = EORIInformation(
-                EORINumber = claim.claimantInformation.eori,
-                CDSFullName = claim.claimantInformation.fullName,
-                CDSEstablishmentAddress = Address(
-                  contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
-                  addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
-                  addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
-                  addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-                  street = claim.claimantInformation.establishmentAddress.street,
-                  city = claim.claimantInformation.establishmentAddress.city,
-                  countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
-                  postalCode = claim.claimantInformation.establishmentAddress.postalCode,
-                  telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
-                  emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
-                ),
-                contactInformation = claim.claimantInformation.contactInformation.some
-              ),
+              importerEORIDetails = {
+                val maybeConsigneeDetails = Some(declaration.displayResponseDetail.effectiveConsigneeDetails)
+                val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
+
+                EORIInformation(
+                  EORINumber = maybeConsigneeDetails.map(_.EORI).value,
+                  CDSFullName = maybeConsigneeDetails.map(_.legalName).value,
+                  CDSEstablishmentAddress = Address(
+                    contactPerson = None,
+                    addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
+                    addressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2),
+                    addressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+                    street = Street.fromLines(
+                      maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
+                      maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
+                    ),
+                    city = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+                    countryCode = maybeConsigneeDetails
+                      .map(_.establishmentAddress.countryCode)
+                      .getOrElse(Country.uk.code),
+                    postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
+                    telephoneNumber = maybeContactDetails.flatMap(_.telephone),
+                    emailAddress = maybeContactDetails.flatMap(_.emailAddress)
+                  ),
+                  contactInformation = ContactInformation(
+                    contactPerson = maybeContactDetails.flatMap(_.contactName),
+                    addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
+                    addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
+                    addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
+                    street = Street.fromLines(
+                      maybeContactDetails.flatMap(_.addressLine1),
+                      maybeContactDetails.flatMap(_.addressLine2)
+                    ),
+                    city = maybeContactDetails.flatMap(_.addressLine3),
+                    countryCode = maybeContactDetails.flatMap(_.countryCode),
+                    postalCode = maybeContactDetails.flatMap(_.postalCode),
+                    telephoneNumber = maybeContactDetails.flatMap(_.telephone),
+                    faxNumber = None,
+                    emailAddress = maybeContactDetails.flatMap(_.emailAddress)
+                  ).some
+                )
+              },
               agentEORIDetails = {
-                val declarantDetails    = displayDeclaration.displayResponseDetail.declarantDetails
+                val declarantDetails    = declaration.displayResponseDetail.declarantDetails
                 val maybeContactDetails = declarantDetails.contactDetails
 
                 val maybeTelephone    = maybeContactDetails.flatMap(_.telephone)
                 val maybeEmailAddress = maybeContactDetails.flatMap(_.emailAddress)
 
-                val establishmentAddressLine1      = declarantDetails.establishmentAddress.addressLine1
-                val maybeEstablishmentAddressLine2 = declarantDetails.establishmentAddress.addressLine2
-                val maybeEstablishmentAddressLine3 = declarantDetails.establishmentAddress.addressLine3
-
                 EORIInformation(
                   EORINumber = declarantDetails.EORI,
                   CDSFullName = declarantDetails.legalName,
                   CDSEstablishmentAddress = Address(
-                    contactPerson = None,
-                    addressLine1 = Street.line1(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
-                    addressLine2 = Street.line2(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
-                    addressLine3 = maybeEstablishmentAddressLine3,
-                    street = Street.fromLines(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
-                    city = maybeEstablishmentAddressLine3,
-                    countryCode = declarantDetails.establishmentAddress.countryCode,
-                    postalCode = declarantDetails.establishmentAddress.postalCode,
-                    telephoneNumber = maybeTelephone,
-                    emailAddress = maybeEmailAddress
+                    contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
+                    addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
+                    addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
+                    addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+                    street = claim.claimantInformation.establishmentAddress.street,
+                    city = claim.claimantInformation.establishmentAddress.city,
+                    countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
+                    postalCode = claim.claimantInformation.establishmentAddress.postalCode,
+                    telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
+                    emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
                   ),
                   contactInformation = declarantDetails.contactDetails.map { contactDetails =>
                     val maybeAddress1 = contactDetails.addressLine1
@@ -940,19 +960,19 @@ class OverpaymentsSingleClaimMappingSpec
             ).some
           ),
           Symbol("MRNDetails") {
-            val mrn = MRN(displayDeclaration.displayResponseDetail.declarationId)
+            val mrn = MRN(declaration.displayResponseDetail.declarationId)
             Some(
               MrnDetail(
                 MRNNumber = mrn.some,
                 acceptanceDate = AcceptanceDate
-                  .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                  .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                   .flatMap(_.toTpi05DateString)
                   .toOption,
-                declarantReferenceNumber = displayDeclaration.displayResponseDetail.declarantReferenceNumber,
+                declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
                 mainDeclarationReference = (claim.movementReferenceNumber.value === mrn.value).some,
-                procedureCode = displayDeclaration.displayResponseDetail.procedureCode.some,
+                procedureCode = declaration.displayResponseDetail.procedureCode.some,
                 declarantDetails = {
-                  val declarantDetails = displayDeclaration.displayResponseDetail.declarantDetails
+                  val declarantDetails = declaration.displayResponseDetail.declarantDetails
                   val contactDetails   = declarantDetails.contactDetails.value
 
                   MRNInformation(
@@ -991,7 +1011,7 @@ class OverpaymentsSingleClaimMappingSpec
                   ).some
                 },
                 consigneeDetails = {
-                  val consigneeDetails   = displayDeclaration.displayResponseDetail.effectiveConsigneeDetails
+                  val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails
                   val contactInformation = consigneeDetails.contactDetails.value
 
                   MRNInformation(
@@ -1029,7 +1049,7 @@ class OverpaymentsSingleClaimMappingSpec
                     )
                   ).some
                 },
-                accountDetails = displayDeclaration.displayResponseDetail.accountDetails.map(
+                accountDetails = declaration.displayResponseDetail.accountDetails.map(
                   _.map(accountDetail =>
                     AccountDetail(
                       accountType = accountDetail.accountType,
@@ -1060,7 +1080,7 @@ class OverpaymentsSingleClaimMappingSpec
                     claim.bankAccountDetails
                       .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
                       .orElse(
-                        displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
+                        declaration.displayResponseDetail.bankDetails.map(bd =>
                           BankDetails(
                             bd.consigneeBankDetails.map(BankDetail.from),
                             bd.declarantBankDetails.map(BankDetail.from)
@@ -1176,7 +1196,7 @@ class OverpaymentsSingleClaimMappingSpec
                   bankDetails = claim.bankAccountDetails
                     .map(bd => BankDetails(BankDetail.from(bd).some, BankDetail.from(bd).some))
                     .orElse(
-                      displayDeclaration.displayResponseDetail.bankDetails.map(bd =>
+                      declaration.displayResponseDetail.bankDetails.map(bd =>
                         BankDetails(
                           bd.consigneeBankDetails.map(BankDetail.from),
                           bd.declarantBankDetails.map(BankDetail.from)
@@ -1201,10 +1221,10 @@ class OverpaymentsSingleClaimMappingSpec
       }
     }
     "fail to map invalid claim amount" in {
-      val singleOverpaymentsData                            = genOverpaymentsSingleClaim(ClaimantType.Declarant).sample.get
-      val (claim, displayDeclaration, duplicateDeclaration) = singleOverpaymentsData
+      val singleOverpaymentsData                     = genOverpaymentsSingleClaim(ClaimantType.Declarant).sample.get
+      val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
 
-      val taxType = displayDeclaration.displayResponseDetail.ndrcDetails.get.head.taxType
+      val taxType = declaration.displayResponseDetail.ndrcDetails.get.head.taxType
 
       val updatedClaim = claim.copy(
         reimbursements =
@@ -1227,7 +1247,7 @@ class OverpaymentsSingleClaimMappingSpec
           .getOrElse(fail("Failed to generate data"))
       val (
         claim: SingleOverpaymentsClaim,
-        displayDeclaration: DisplayDeclaration,
+        declaration: DisplayDeclaration,
         duplicateDeclaration: Option[DisplayDeclaration]
       ) = singleOverpaymentsData
       val value                  = UUID.randomUUID().toString

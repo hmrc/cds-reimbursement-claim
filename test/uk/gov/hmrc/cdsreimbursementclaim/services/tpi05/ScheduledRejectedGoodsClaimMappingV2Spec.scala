@@ -52,7 +52,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Scheduled claim to TPI05 request" in forAll(
+    "map a valid Declarant scheduled claim to TPI05 request" in forAll(
       genScheduledRejectedGoodsClaim(ClaimantType.Declarant)
     ) { (claim: ScheduledRejectedGoodsClaim, declaration: DisplayDeclaration) =>
       val tpi05Request = mapper.map((claim, declaration))
