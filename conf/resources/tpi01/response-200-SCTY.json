@@ -15,7 +15,7 @@
             "declarationID": "21LLLLLLLLLL12345",
             "claimStartDate": "20210320",
             "closedDate": "20211220",
-            "reasonForSecurity": "ACS",
+            "reasonForSecurity": "MDL",
             "caseStatus": "Partial Refund",
             "declarantEORI": "GB744638982000",
             "importerEORI": "GB744638982000",
@@ -27,7 +27,7 @@
           {
             "CDFPayCaseNumber": "SCTY-2110",
             "declarationID": "21LLLLLLLLLL12346",
-            "reasonForSecurity": "ACS",
+            "reasonForSecurity": "MDL",
             "caseStatus": "Partial Refund",
             "declarantEORI": "GB744638982007"
           }

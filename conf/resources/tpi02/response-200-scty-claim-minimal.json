@@ -9,7 +9,7 @@
             "CDFPayCaseFound": true,
             "SCTYCase": {
                 "CDFPayCaseNumber": "SCTY-2110",
-                "reasonForSecurity": "ACS",
+                "reasonForSecurity": "MDL",
                 "procedureCode": "10",
                 "caseStatus": "Partial Refund",
                 "declarantEORI": "GB744638982000"
