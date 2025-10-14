@@ -17,14 +17,14 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.email
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ScheduledRejectedGoodsClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 class ScheduledRejectedGoodsClaimToEmailMapper
-    extends ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] {
+    extends ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)] {
 
-  override def map(claim: (ScheduledRejectedGoodsClaim, DisplayDeclaration)): Either[CdsError, EmailRequest] = {
+  override def map(claim: (ScheduledRejectedGoodsClaim, ImportDeclaration)): Either[CdsError, EmailRequest] = {
     val (scheduledRejectedGoodsClaim, _) = claim
     for {
       email       <- scheduledRejectedGoodsClaim.claimantInformation.contactInformation.emailAddress.toRight(

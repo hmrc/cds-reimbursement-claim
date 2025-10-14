@@ -25,8 +25,9 @@ import java.time.LocalDate
 class ClaimTransformerSpec extends AnyWordSpec with Matchers with MockFactory {
 
   object Transformer extends ClaimTransformer[CaseDetails, SampleClass] {
-    override def fromTpi01Response(caseDetails: CaseDetails): SampleClass = mock[SampleClass]
+    override def fromTpi01Response(caseDetails: CaseDetails): SampleClass = ???
   }
+
   case class SampleClass(
     id: Int,
     name: String,
@@ -47,7 +48,8 @@ class ClaimTransformerSpec extends AnyWordSpec with Matchers with MockFactory {
       val uniqueList: Seq[SampleClass] = Transformer.removeDuplicates(list, item => item.name)
 
       uniqueList.length shouldBe 2
-      uniqueList          should contain.only(
+
+      uniqueList should contain.only(
         SampleClass(1, "Bob", "", None, LocalDate.now()),
         SampleClass(2, "Charlie", "", None, LocalDate.now())
       )

@@ -21,7 +21,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.services.DefaultDeclarationTransformerService.{maskBankDetails, toDisplayResponseDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
 
@@ -29,17 +29,17 @@ import javax.inject.Singleton
 
 @ImplementedBy(classOf[DefaultDeclarationTransformerService])
 trait DeclarationTransformerService {
-  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[DisplayDeclaration]]
+  def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[ImportDeclaration]]
 }
 
 @Singleton
 class DefaultDeclarationTransformerService @Inject() () extends DeclarationTransformerService with Logging {
-  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[DisplayDeclaration]] =
+  override def toDeclaration(declarationResponse: DeclarationResponse): Either[Error, Option[ImportDeclaration]] =
     declarationResponse.overpaymentDeclarationDisplayResponse.responseDetail match {
       case Some(responseDetail) =>
         Right(
           Some(
-            DisplayDeclaration(
+            ImportDeclaration(
               toDisplayResponseDetails(
                 responseDetail,
                 responseDetail.bankDetails.map(bankDetails => maskBankDetails(bankDetails))

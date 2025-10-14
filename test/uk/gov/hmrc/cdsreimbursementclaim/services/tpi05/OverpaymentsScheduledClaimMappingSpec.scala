@@ -33,7 +33,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.{genOverpaymentsScheduledClaim, genOverpaymentsScheduledClaimAllTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
@@ -50,7 +50,7 @@ class OverpaymentsScheduledClaimMappingSpec
   "The OverpaymentsScheduled claim mapper" should {
 
     "map a valid Declarant claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim(ClaimantType.Declarant)) {
-      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration)) =>
+      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, ImportDeclaration)) =>
         val tpi05Request = mapper `map` scheduledOverpaymentsData
 
         val (claim, declaration) = scheduledOverpaymentsData
@@ -309,7 +309,7 @@ class OverpaymentsScheduledClaimMappingSpec
     }
 
     "map a valid Consignee claim to TPI05 request" in forAll(genOverpaymentsScheduledClaim(ClaimantType.Consignee)) {
-      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration)) =>
+      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, ImportDeclaration)) =>
         val tpi05Request = mapper `map` scheduledOverpaymentsData
 
         val (claim, declaration) = scheduledOverpaymentsData
@@ -574,7 +574,7 @@ class OverpaymentsScheduledClaimMappingSpec
 
     "map a valid third-party User claim to TPI05 request" in forAll(
       genOverpaymentsScheduledClaim(ClaimantType.User)
-    ) { (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration)) =>
+    ) { (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, ImportDeclaration)) =>
       val tpi05Request = mapper `map` scheduledOverpaymentsData
 
       val (claim, declaration) = scheduledOverpaymentsData

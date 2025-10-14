@@ -23,7 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.*
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.genOverpaymentsScheduledClaim
 
@@ -39,9 +39,9 @@ class OverpaymentsScheduledClaimToEmailMapperSpec
   "The OverpaymentsScheduled claim mapper" should {
 
     "map a valid claim to email request" in forAll(genOverpaymentsScheduledClaim(ClaimantType.Declarant)) {
-      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, DisplayDeclaration)) =>
-        val (claim, displayDeclaration) = scheduledOverpaymentsData
-        val emailRequest                = mapper `map` scheduledOverpaymentsData
+      (scheduledOverpaymentsData: (ScheduledOverpaymentsClaim, ImportDeclaration)) =>
+        val (claim, declaration) = scheduledOverpaymentsData
+        val emailRequest         = mapper `map` scheduledOverpaymentsData
 
         inside(emailRequest) { case Right(EmailRequest(email, contactName, claimAmount)) =>
           email.value should ===(claim.claimantInformation.contactInformation.emailAddress.get)
@@ -51,22 +51,22 @@ class OverpaymentsScheduledClaimToEmailMapperSpec
     }
 
     "fail to map an invalid email to email request" in {
-      val scheduledOverpaymentsData   = genOverpaymentsScheduledClaim(ClaimantType.Declarant).sample.get
-      val (claim, displayDeclaration) = scheduledOverpaymentsData
-      val updatedClaim                = claim.copy(
+      val scheduledOverpaymentsData = genOverpaymentsScheduledClaim(ClaimantType.Declarant).sample.get
+      val (claim, declaration)      = scheduledOverpaymentsData
+      val updatedClaim              = claim.copy(
         claimantInformation = claim.claimantInformation.copy(
           contactInformation = claim.claimantInformation.contactInformation.copy(emailAddress = None)
         )
       )
-      val emailRequest                = mapper.map(scheduledOverpaymentsData.copy(_1 = updatedClaim))
+      val emailRequest              = mapper.map(scheduledOverpaymentsData.copy(_1 = updatedClaim))
 
       emailRequest.left.map(_.value should be("no email address provided with claim"))
     }
 
     "fail to map an invalid contact name to email request" in {
-      val scheduledOverpaymentsData   = genOverpaymentsScheduledClaim(ClaimantType.Declarant).sample.get
-      val (claim, displayDeclaration) = scheduledOverpaymentsData
-      val updatedClaim                = claim
+      val scheduledOverpaymentsData = genOverpaymentsScheduledClaim(ClaimantType.Declarant).sample.get
+      val (claim, declaration)      = scheduledOverpaymentsData
+      val updatedClaim              = claim
         .copy(
           claimantInformation = claim.claimantInformation
             .copy(
@@ -74,7 +74,7 @@ class OverpaymentsScheduledClaimToEmailMapperSpec
                 .copy(contactPerson = None)
             )
         )
-      val emailRequest                = mapper `map` scheduledOverpaymentsData.copy(_1 = updatedClaim)
+      val emailRequest              = mapper `map` scheduledOverpaymentsData.copy(_1 = updatedClaim)
 
       emailRequest.left.map(_.value should be("no contact name provided with claim"))
     }

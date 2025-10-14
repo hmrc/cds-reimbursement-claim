@@ -31,7 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.genTaxCod
 
 import java.net.URL
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclarationWithSecurities
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genImportDeclarationWithSecurities
 
 @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object SecuritiesClaimGen {
@@ -148,34 +148,34 @@ object SecuritiesClaimGen {
   implicit lazy val genSecuritiesClaimAndDeclaration: org.scalacheck.Gen[
     (
       uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim,
-      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
     )
   ] =
     for {
 
-      displayDeclaration <- genDisplayDeclarationWithSecurities
-      securityDetails     = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
-      taxDetails          = securityDetails.map(x => (x.securityDepositId, x.taxDetails)).toMap
-      randomDivisor      <- Gen.choose(0.1, 1.0)
-      reclaims            = taxDetails.view.mapValues(
-                              _.map(x =>
-                                (
-                                  TaxCode.getOrFail(x.taxType),
-                                  BigDecimal(x.amount) / randomDivisor
-                                )
-                              ).toMap
-                            )
-      securitiesClaim    <- genSecuritiesClaim.map(
-                              _.claim.copy(
-                                securitiesReclaims = reclaims.toMap
-                              )
-                            )
-    } yield (securitiesClaim, displayDeclaration)
+      declaration     <- genImportDeclarationWithSecurities
+      securityDetails  = declaration.displayResponseDetail.securityDetails.toList.flatten
+      taxDetails       = securityDetails.map(x => (x.securityDepositId, x.taxDetails)).toMap
+      randomDivisor   <- Gen.choose(0.1, 1.0)
+      reclaims         = taxDetails.view.mapValues(
+                           _.map(x =>
+                             (
+                               TaxCode.getOrFail(x.taxType),
+                               BigDecimal(x.amount) / randomDivisor
+                             )
+                           ).toMap
+                         )
+      securitiesClaim <- genSecuritiesClaim.map(
+                           _.claim.copy(
+                             securitiesReclaims = reclaims.toMap
+                           )
+                         )
+    } yield (securitiesClaim, declaration)
 
   implicit lazy val arbitrarySecuritiesClaimAndDeclaration: org.scalacheck.Arbitrary[
     (
       uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim,
-      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
     )
   ] =
     Arbitrary(genSecuritiesClaimAndDeclaration)
@@ -183,27 +183,26 @@ object SecuritiesClaimGen {
   implicit lazy val genTempAdmissionSecuritiesClaimAndDeclaration: org.scalacheck.Gen[
     (
       uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim,
-      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+      uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
     )
   ] =
     for {
-      reasonForSecurity                     <- Gen.oneOf(ReasonForSecurity.temporaryAdmissions)
-      methodsOfDisposal                     <- Gen.some(Gen.listOf(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values)))
-      exportMrn                             <- methodsOfDisposal
-                                                 .filter(mods => mods.exists(TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(_)))
-                                                 .as(Gen.some(Gen.listOfN(1, genMRN)))
-                                                 .getOrElse(Gen.const(None))
-      (securitiesClaim, displayDeclaration) <- genSecuritiesClaimAndDeclaration.map {
-                                                 case (securitiesClaim, displayDeclaration) =>
-                                                   (
-                                                     securitiesClaim.copy(
-                                                       reasonForSecurity = reasonForSecurity,
-                                                       temporaryAdmissionMethodsOfDisposal = methodsOfDisposal,
-                                                       exportMovementReferenceNumber = exportMrn
-                                                     ),
-                                                     displayDeclaration
-                                                   )
-                                               }
-    } yield (securitiesClaim, displayDeclaration)
+      reasonForSecurity              <- Gen.oneOf(ReasonForSecurity.temporaryAdmissions)
+      methodsOfDisposal              <- Gen.some(Gen.listOf(Gen.oneOf(TemporaryAdmissionMethodOfDisposal.values)))
+      exportMrn                      <- methodsOfDisposal
+                                          .filter(mods => mods.exists(TemporaryAdmissionMethodOfDisposal.requiresMrn.contains(_)))
+                                          .as(Gen.some(Gen.listOfN(1, genMRN)))
+                                          .getOrElse(Gen.const(None))
+      (securitiesClaim, declaration) <- genSecuritiesClaimAndDeclaration.map { case (securitiesClaim, declaration) =>
+                                          (
+                                            securitiesClaim.copy(
+                                              reasonForSecurity = reasonForSecurity,
+                                              temporaryAdmissionMethodsOfDisposal = methodsOfDisposal,
+                                              exportMovementReferenceNumber = exportMrn
+                                            ),
+                                            declaration
+                                          )
+                                        }
+    } yield (securitiesClaim, declaration)
 
 }

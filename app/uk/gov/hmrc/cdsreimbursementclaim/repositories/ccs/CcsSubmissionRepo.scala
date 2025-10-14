@@ -29,8 +29,7 @@ import uk.gov.hmrc.mongo.workitem.ResultStatus
 import uk.gov.hmrc.mongo.workitem.WorkItem
 import uk.gov.hmrc.mongo.workitem.WorkItemFields
 import uk.gov.hmrc.mongo.workitem.WorkItemRepository
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
+import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import java.time.Clock
 import java.time.Duration
@@ -58,8 +57,7 @@ trait CcsSubmissionRepo {
 @Singleton
 class DefaultCcsSubmissionRepo @Inject() (
   mongoComponent: MongoComponent,
-  configuration: Configuration,
-  servicesConfig: ServicesConfig
+  configuration: Configuration
 )(implicit ec: ExecutionContext)
     extends WorkItemRepository[CcsSubmissionRequest](
       collectionName = "ccs-submission-request-work-item",

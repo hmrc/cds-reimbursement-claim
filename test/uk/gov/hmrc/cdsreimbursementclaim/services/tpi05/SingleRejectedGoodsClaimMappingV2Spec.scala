@@ -32,7 +32,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, Individual}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators._
@@ -55,7 +55,7 @@ class SingleRejectedGoodsClaimMappingV2Spec
 
     "map a valid Declarant single claim to TPI05 request" in forAll(
       genSingleRejectedGoodsClaim(ClaimantType.Declarant)
-    ) { (details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
+    ) { (details: (SingleRejectedGoodsClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val tpi05Request         = mapper.map((claim, List(declaration)))
 
@@ -305,7 +305,7 @@ class SingleRejectedGoodsClaimMappingV2Spec
 
     "map a valid Consignee single claim to TPI05 request" in forAll(
       genSingleRejectedGoodsClaim(ClaimantType.Consignee)
-    ) { (details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
+    ) { (details: (SingleRejectedGoodsClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val tpi05Request         = mapper.map((claim, List(declaration)))
 
@@ -560,7 +560,7 @@ class SingleRejectedGoodsClaimMappingV2Spec
 
     "map a valid third-party User single claim to TPI05 request" in forAll(
       genSingleRejectedGoodsClaim(ClaimantType.User)
-    ) { (details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
+    ) { (details: (SingleRejectedGoodsClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val tpi05Request         = mapper.map((claim, List(declaration)))
 
@@ -837,17 +837,17 @@ class SingleRejectedGoodsClaimMappingV2Spec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+        val ndrcDetailsLens = new Lens[ImportDeclaration, Option[
           List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
         ]] {
           override def set(
-            root: DisplayDeclaration,
+            root: ImportDeclaration,
             value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
-          ): DisplayDeclaration =
+          ): ImportDeclaration =
             root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
         }
         forAll(genUUID, genBigDecimal, genSingleRejectedGoodsClaimAllTypes) {
-          (random: UUID, amount: BigDecimal, details: (SingleRejectedGoodsClaim, DisplayDeclaration)) =>
+          (random: UUID, amount: BigDecimal, details: (SingleRejectedGoodsClaim, ImportDeclaration)) =>
             val value       = random.toString
             val claim       = details._1
             val declaration = details._2
@@ -890,26 +890,26 @@ class SingleRejectedGoodsClaimMappingV2Spec
               root.copy(reimbursements = value)
           }
 
-        val ndrcLens = new Lens[DisplayDeclaration, Option[
+        val ndrcLens = new Lens[ImportDeclaration, Option[
           List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
         ]] {
           override def set(
-            root: DisplayDeclaration,
+            root: ImportDeclaration,
             value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
-          ): DisplayDeclaration =
+          ): ImportDeclaration =
             root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
         }
 
         forAll(genSingleRejectedGoodsClaimAllTypes, TaxCodesGen.genTaxCode) {
-          (details: (SingleRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
+          (details: (SingleRejectedGoodsClaim, ImportDeclaration), taxCode: TaxCode) =>
             val rejectedGoodsClaim = details._1
-            val displayDeclaration = details._2
+            val declaration        = details._2
 
             val claims = Seq(Reimbursement(taxCode, BigDecimal(7), ReimbursementMethodAnswer.BankAccountTransfer))
 
             val updatedClaim = reimbursementsLens.set(rejectedGoodsClaim, claims)
 
-            val updatedDeclaration = ndrcLens.set(displayDeclaration, None)
+            val updatedDeclaration = ndrcLens.set(declaration, None)
 
             val tpi05Request = mapper.map((updatedClaim, List(updatedDeclaration)))
 

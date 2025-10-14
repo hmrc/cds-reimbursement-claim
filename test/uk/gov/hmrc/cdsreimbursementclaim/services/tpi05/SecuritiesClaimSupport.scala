@@ -20,12 +20,12 @@ import cats.implicits.catsSyntaxEq
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, SecuritiesClaim, TaxCode, TaxReclaimDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.TaxDetails
 
 trait SecuritiesClaimSupport {
 
-  implicit class SecuritiesClaimOps(claimAndDeclaration: (SecuritiesClaim, DisplayDeclaration)) {
+  implicit class SecuritiesClaimOps(claimAndDeclaration: (SecuritiesClaim, ImportDeclaration)) {
     val (claim, declaration) = claimAndDeclaration
 
     def claimant: Claimant =

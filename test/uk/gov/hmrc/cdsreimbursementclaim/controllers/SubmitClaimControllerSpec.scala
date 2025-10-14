@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.Fake
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUserRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Dec64UploadRequestGen.arbitraryDec64UploadRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
@@ -45,6 +45,7 @@ import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import play.api.Configuration
+import play.api.mvc.WrappedRequest
 
 @SuppressWarnings(Array("org.wartremover.warts.GlobalExecutionContext"))
 class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyChecks {
@@ -124,11 +125,11 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
   // ) =
   //   (
   //     mockClaimService
-  //       .submitRejectedGoodsClaim(_: RejectedGoodsClaimRequest[Claim])(
+  //       .submitSingleRejectedGoodsClaim(_: RejectedGoodsClaimRequest[Claim])(
   //         _: HeaderCarrier,
   //         _: Request[_],
-  //         _: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
-  //         _: ClaimToEmailMapper[(Claim, List[DisplayDeclaration])],
+  //         _: ClaimToTPI05Mapper[(Claim, List[ImportDeclaration])],
+  //         _: ClaimToEmailMapper[(Claim, List[ImportDeclaration])],
   //         _: Format[RejectedGoodsClaimRequest[Claim]]
   //       )
   //     )
@@ -143,8 +144,8 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitMultipleRejectedGoodsClaim(_: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(
           _: HeaderCarrier,
           _: Request[_],
-          _: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
-          _: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+          _: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])],
+          _: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])],
           _: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
         )
       )
@@ -161,8 +162,8 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitScheduledRejectedGoodsClaim(_: RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim])(
           _: HeaderCarrier,
           _: Request[_],
-          _: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
-          _: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
+          _: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)],
+          _: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)],
           _: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
         )
       )
@@ -179,8 +180,8 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
         .submitSecuritiesClaim(_: SecuritiesClaimRequest)(
           _: HeaderCarrier,
           _: Request[_],
-          _: ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)],
-          _: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
+          _: ClaimToTPI05Mapper[(SecuritiesClaim, ImportDeclaration)],
+          _: ClaimToEmailMapper[(SecuritiesClaim, ImportDeclaration)],
           _: Format[SecuritiesClaimRequest]
         )
       )
@@ -199,7 +200,7 @@ class SubmitClaimControllerSpec extends ControllerSpec with ScalaCheckPropertyCh
       .expects(submitClaimRequest, submitClaimResponse, *, *)
       .returning(EitherT.pure(List(ccsSubmissionRequestWorkItem)))
 
-  private def fakeRequestWithJsonBody(body: JsValue) =
+  override def fakeRequestWithJsonBody(body: JsValue): WrappedRequest[JsValue] =
     request.withHeaders(Headers.apply(CONTENT_TYPE -> JSON)).withBody(body)
 
   "The controller" should {

@@ -17,38 +17,32 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
-import cats.syntax.option._
+import cats.instances.future.*
+import cats.instances.int.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
+import cats.syntax.option.*
 import com.google.inject.ImplementedBy
 import play.api.http.Status.OK
-import play.api.libs.json.Format
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.Request
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.metrics.Metrics
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, MultipleOverpaymentsClaimRequest, MultipleRejectedGoodsClaim, RejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimEvent
-import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.SubmitClaimResponseEvent
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimResponse
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimSubmitResponse, MultipleOverpaymentsClaimRequest, MultipleRejectedGoodsClaim, RejectedGoodsClaimRequest, ScheduledOverpaymentsClaimRequest, ScheduledRejectedGoodsClaim, SecuritiesClaim, SecuritiesClaimRequest, SingleOverpaymentsClaimRequest, SingleRejectedGoodsClaim}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, EisSubmitClaimResponse}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.audit.AuditService
 import uk.gov.hmrc.cdsreimbursementclaim.services.email.{ClaimToEmailMapper, OverpaymentsMultipleClaimToEmailMapper, OverpaymentsScheduledClaimToEmailMapper, OverpaymentsSingleClaimToEmailMapper}
 import uk.gov.hmrc.cdsreimbursementclaim.services.tpi05.{ClaimToTPI05Mapper, OverpaymentsMultipleClaimToTPI05Mapper, OverpaymentsScheduledClaimToTPI05Mapper, OverpaymentsSingleClaimToTPI05Mapper}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.HttpResponseOps.HttpResponseOps
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @ImplementedBy(classOf[DefaultClaimService])
@@ -81,21 +75,21 @@ trait ClaimService {
     emailMapper: OverpaymentsScheduledClaimToEmailMapper
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
-  def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](
-    rejectedGoodsClaimRequest: RejectedGoodsClaimRequest[Claim]
+  def submitSingleRejectedGoodsClaim(
+    rejectedGoodsClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]
   )(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
-    emailMapper: ClaimToEmailMapper[(Claim, List[DisplayDeclaration])],
-    claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
+    tpi05Binder: ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])],
+    emailMapper: ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
   def submitMultipleRejectedGoodsClaim(claimRequest: RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim])(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
-    emailMapper: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+    tpi05Binder: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])],
+    emailMapper: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
@@ -104,8 +98,8 @@ trait ClaimService {
   )(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
-    emailMapper: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
+    tpi05Binder: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)],
+    emailMapper: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 
@@ -114,8 +108,8 @@ trait ClaimService {
   )(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)],
-    emailMapper: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
+    tpi05Binder: ClaimToTPI05Mapper[(SecuritiesClaim, ImportDeclaration)],
+    emailMapper: ClaimToEmailMapper[(SecuritiesClaim, ImportDeclaration)],
     claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse]
 }
@@ -144,7 +138,7 @@ class DefaultClaimService @Inject() (
                                       .getDeclaration(claimRequest.claim.movementReferenceNumber)
                                       .subflatMap(_.toRight(Error(s"Could not retrieve display declaration")))
       maybeDuplicateDeclaratiion <- claimRequest.claim.duplicateMovementReferenceNumber.fold(
-                                      EitherT.rightT[Future, Error](None: Option[DisplayDeclaration])
+                                      EitherT.rightT[Future, Error](None: Option[ImportDeclaration])
                                     ) { duplicateMrn =>
                                       declarationService
                                         .getDeclaration(duplicateMrn)
@@ -182,12 +176,12 @@ class DefaultClaimService @Inject() (
       result      <- proceed((claimRequest.claim, declaration), claimRequest)
     } yield result
 
-  def submitRejectedGoodsClaim[Claim <: RejectedGoodsClaim](claimRequest: RejectedGoodsClaimRequest[Claim])(implicit
+  def submitSingleRejectedGoodsClaim(claimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim])(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])],
-    emailMapper: ClaimToEmailMapper[(Claim, List[DisplayDeclaration])],
-    claimRequestFormat: Format[RejectedGoodsClaimRequest[Claim]]
+    tpi05Binder: ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])],
+    emailMapper: ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])],
+    claimRequestFormat: Format[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     declarationService
       .getDeclaration(claimRequest.claim.leadMrn)
@@ -196,9 +190,9 @@ class DefaultClaimService @Inject() (
 
   def combineDeclarations(
     mrn: MRN,
-    maybeDeclaration: EitherT[Future, Error, Option[DisplayDeclaration]],
-    declarations: EitherT[Future, Error, List[DisplayDeclaration]]
-  ): EitherT[Future, Error, List[DisplayDeclaration]] =
+    maybeDeclaration: EitherT[Future, Error, Option[ImportDeclaration]],
+    declarations: EitherT[Future, Error, List[ImportDeclaration]]
+  ): EitherT[Future, Error, List[ImportDeclaration]] =
     for {
       decs <- declarations
       dec  <- maybeDeclaration.subflatMap(_.toRight(Error(s"Could not retrieve display declaration $mrn")))
@@ -206,8 +200,8 @@ class DefaultClaimService @Inject() (
 
   def obtainAcc14Declarations(mrns: List[MRN])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[DisplayDeclaration]] =
-    mrns.foldLeft(EitherT.rightT[Future, Error](List[DisplayDeclaration]())) { case (declarations, mrn) =>
+  ): EitherT[Future, Error, List[ImportDeclaration]] =
+    mrns.foldLeft(EitherT.rightT[Future, Error](List[ImportDeclaration]())) { case (declarations, mrn) =>
       val maybeDeclaration = declarationService.getDeclaration(mrn)
       combineDeclarations(mrn, maybeDeclaration, declarations)
     }
@@ -217,8 +211,8 @@ class DefaultClaimService @Inject() (
   )(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
-    emailMapper: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])],
+    tpi05Binder: ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])],
+    emailMapper: ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[MultipleRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     obtainAcc14Declarations(claimRequest.claim.movementReferenceNumbers)
@@ -229,8 +223,8 @@ class DefaultClaimService @Inject() (
   )(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
-    emailMapper: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)],
+    tpi05Binder: ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)],
+    emailMapper: ClaimToEmailMapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)],
     claimRequestFormat: Format[RejectedGoodsClaimRequest[ScheduledRejectedGoodsClaim]]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     declarationService
@@ -243,8 +237,8 @@ class DefaultClaimService @Inject() (
   )(implicit
     hc: HeaderCarrier,
     request: Request[?],
-    tpi05Binder: ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)],
-    emailMapper: ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)],
+    tpi05Binder: ClaimToTPI05Mapper[(SecuritiesClaim, ImportDeclaration)],
+    emailMapper: ClaimToEmailMapper[(SecuritiesClaim, ImportDeclaration)],
     claimRequestFormat: Format[SecuritiesClaimRequest]
   ): EitherT[Future, Error, ClaimSubmitResponse] =
     declarationService

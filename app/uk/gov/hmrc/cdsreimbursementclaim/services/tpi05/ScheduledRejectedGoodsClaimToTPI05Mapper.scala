@@ -21,16 +21,16 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
-    extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)]
+    extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)]
     with GetEoriDetails[ScheduledRejectedGoodsClaim] {
 
-  def map(details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
+  def map(details: (ScheduledRejectedGoodsClaim, ImportDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val claim       = details._1
     val declaration = details._2
     // todo CDSR-1795 TPI05 creation and validation - factor out common code

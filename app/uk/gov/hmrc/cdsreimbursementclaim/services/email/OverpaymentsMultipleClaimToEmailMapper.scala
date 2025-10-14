@@ -17,14 +17,14 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.email
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.MultipleOverpaymentsClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
 class OverpaymentsMultipleClaimToEmailMapper
-    extends ClaimToEmailMapper[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] {
+    extends ClaimToEmailMapper[(MultipleOverpaymentsClaim, List[ImportDeclaration])] {
   override def map(
-    claim: (MultipleOverpaymentsClaim, List[DisplayDeclaration])
+    claim: (MultipleOverpaymentsClaim, List[ImportDeclaration])
   ): Either[CdsError, EmailRequest] = {
     val (overpaymentsClaim, _) = claim
     for {

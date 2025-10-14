@@ -22,7 +22,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{AccountName, AccountNumber, SortCode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.AcceptanceDate
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 
@@ -77,7 +77,7 @@ class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with M
           )
         )
 
-        val displayDeclaration = DisplayDeclaration(
+        val declaration = ImportDeclaration(
           DisplayResponseDetail(
             declarationId = responseDetail.declarationId,
             acceptanceDate = AcceptanceDate(responseDetail.acceptanceDate)
@@ -97,7 +97,7 @@ class DeclarationTransformerServiceSpec extends AnyWordSpec with Matchers with M
           )
         )
 
-        transformer.toDeclaration(declarationResponse) shouldBe Right(Some(displayDeclaration))
+        transformer.toDeclaration(declarationResponse) shouldBe Right(Some(declaration))
       }
 
       "do not return a display declaration if response details does not exist" in {
