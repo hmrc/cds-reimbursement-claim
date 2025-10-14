@@ -1256,14 +1256,16 @@ class OverpaymentsSingleClaimMappingV2Spec
       val singleOverpaymentsData =
         genOverpaymentsSingleClaim(ClaimantType.Declarant, Some(BasisOfClaim.DuplicateEntry)).sample
           .getOrElse(fail("Failed to generate data"))
+
       val (
         claim: SingleOverpaymentsClaim,
         declaration: DisplayDeclaration,
         duplicateDeclaration: Option[DisplayDeclaration]
       ) = singleOverpaymentsData
-      val value                  = UUID.randomUUID().toString
-      val amount                 = BigDecimal(123456789123.12)
-      val taxType                = duplicateDeclaration.map(_.displayResponseDetail.ndrcDetails.get.head.taxType).get
+
+      val value   = UUID.randomUUID().toString
+      val amount  = BigDecimal(123456789123.12)
+      val taxType = duplicateDeclaration.map(_.displayResponseDetail.ndrcDetails.get.head.taxType).get
 
       val updatedDuplicateDisplayDeclaration = duplicateDeclaration.map { declaration =>
         declaration.copy(displayResponseDetail =
