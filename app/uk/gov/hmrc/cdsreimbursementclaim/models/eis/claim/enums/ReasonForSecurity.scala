@@ -24,7 +24,6 @@ sealed class ReasonForSecurity(val acc14Code: String, val dec64DisplayString: St
 
 object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
 
-  case object AccountSales extends ReasonForSecurity("ACS", "CAP Account Sales")
   case object CommunitySystemsOfDutyRelief extends ReasonForSecurity("MDC", "Missing Document: CSDR")
   case object EndUseRelief extends ReasonForSecurity("ENU", "End Use")
   case object InwardProcessingRelief extends ReasonForSecurity("IPR", "Inward Processing Relief")
@@ -44,7 +43,6 @@ object ReasonForSecurity extends EnumerationFormat[ReasonForSecurity] {
 
   override lazy val values: Set[ReasonForSecurity] =
     Set(
-      AccountSales,
       CommunitySystemsOfDutyRelief,
       EndUseRelief,
       InwardProcessingRelief,
