@@ -132,7 +132,7 @@ object OverpaymentsClaimGen {
                                val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
                                DisplayDeclaration(drd)
                              }
-      duplicateMrn        <- Gen.option(genMRN).map(_.filter(_ => basisOfClaim === DuplicateEntry))
+      duplicateMrn        <- if basisOfClaim === DuplicateEntry then genMRN.map(Some(_)) else Gen.const(None)
       duplicateDeclaration =
         duplicateMrn.map(dup => DisplayDeclaration(declaration.displayResponseDetail.copy(declarationId = dup.value)))
       claims              <- genClaimsFromDisplayDeclaration(declaration)

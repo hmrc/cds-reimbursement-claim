@@ -61,11 +61,20 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
           agentEORIDetails = EORIInformation.forDeclarant(declaration.displayResponseDetail.declarantDetails)
         )
 
-      case ClaimantType.Declarant | ClaimantType.User =>
+      case ClaimantType.Declarant =>
         EoriDetails(
           importerEORIDetails =
             EORIInformation.forConsignee(declaration.displayResponseDetail.effectiveConsigneeDetails),
           agentEORIDetails = claimantEoriInformation
+        )
+
+      case ClaimantType.User =>
+        EoriDetails(
+          importerEORIDetails =
+            EORIInformation.forConsignee(declaration.displayResponseDetail.effectiveConsigneeDetails),
+          agentEORIDetails = EORIInformation
+            .forDeclarant(declaration.displayResponseDetail.declarantDetails)
+            .copy(CDSEstablishmentAddress = claimantEoriInformation.CDSEstablishmentAddress)
         )
     }
   }
