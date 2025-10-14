@@ -20,13 +20,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, Ha
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EoriDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EORIInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.Address
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 
 trait GetEoriDetails[Claim <: HasClaimantInformation] {
 
   final def getEoriDetails(
     claim: Claim,
-    declaration: DisplayDeclaration
+    declaration: ImportDeclaration
   ): EoriDetails = {
 
     val claimantEoriInformation =

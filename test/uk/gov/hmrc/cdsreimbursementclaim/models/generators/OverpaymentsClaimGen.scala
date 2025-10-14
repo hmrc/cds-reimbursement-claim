@@ -21,9 +21,9 @@ import cats.implicits.catsSyntaxEq
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.BasisOfClaim.DuplicateEntry
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TPI05RequestGen.genContactInformation
@@ -108,8 +108,7 @@ object OverpaymentsClaimGen {
       documentType = documentType
     )
 
-  val genOverpaymentsSingleClaimAllTypes
-    : Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+  val genOverpaymentsSingleClaimAllTypes: Gen[(SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])] =
     for {
       claimantType <- Gen.oneOf(ClaimantType.values)
       claim        <- genOverpaymentsSingleClaim(claimantType)
@@ -118,7 +117,7 @@ object OverpaymentsClaimGen {
   def genOverpaymentsSingleClaim(
     claimantType: ClaimantType,
     maybeBasisOfClaim: Option[BasisOfClaim] = None
-  ): Gen[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+  ): Gen[(SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])] =
     for {
       mrn                 <- genMRN
       claimantInformation <- genClaimantInformation
@@ -128,14 +127,14 @@ object OverpaymentsClaimGen {
                              }
       bankAccountDetails  <- Gen.option(genBankAccountDetails)
       reimbursementMethod <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      declaration         <- genDisplayDeclaration.map { generatedDeclaration =>
+      declaration         <- genImportDeclaration.map { generatedDeclaration =>
                                val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                               DisplayDeclaration(drd)
+                               ImportDeclaration(drd)
                              }
       duplicateMrn        <- if basisOfClaim === DuplicateEntry then genMRN.map(Some(_)) else Gen.const(None)
       duplicateDeclaration =
-        duplicateMrn.map(dup => DisplayDeclaration(declaration.displayResponseDetail.copy(declarationId = dup.value)))
-      claims              <- genClaimsFromDisplayDeclaration(declaration)
+        duplicateMrn.map(dup => ImportDeclaration(declaration.displayResponseDetail.copy(declarationId = dup.value)))
+      claims              <- genClaimsFromImportDeclaration(declaration)
       evidences           <- Gen.nonEmptyListOf(genEvidences)
       additionalDetails   <- genRandomString
       payeeType           <- Gen.oneOf[PayeeType](PayeeType.Declarant, PayeeType.Consignee)
@@ -161,7 +160,7 @@ object OverpaymentsClaimGen {
       duplicateDeclaration
     )
 
-  lazy val genOverpaymentsMultipleClaim: Gen[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
+  lazy val genOverpaymentsMultipleClaim: Gen[(MultipleOverpaymentsClaim, List[ImportDeclaration])] =
     for {
       numMrns             <- Gen.choose(2, 10)
       mrns                <- Gen.listOfN(numMrns, genMRN)
@@ -176,15 +175,15 @@ object OverpaymentsClaimGen {
       declarations        <- Gen
                                .sequence(
                                  mrns.map(mrn =>
-                                   genDisplayDeclaration.map { generatedDeclaration =>
+                                   genImportDeclaration.map { generatedDeclaration =>
                                      val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                     DisplayDeclaration(drd)
+                                     ImportDeclaration(drd)
                                    }
                                  )
                                )
                                .map(_.asScala.toList)
                                .suchThat(_.nonEmpty)
-      claims              <- Gen.sequence(declarations.map(declaration => genClaimsFromDisplayDeclaration(declaration)))
+      claims              <- Gen.sequence(declarations.map(declaration => genClaimsFromImportDeclaration(declaration)))
       additionalDetails   <- genRandomString
       newEoriAndDan       <- Gen.oneOf(None, Some(NewEoriAndDan(Eori("foo-eori"), "foo-dan")))
     } yield (
@@ -204,13 +203,13 @@ object OverpaymentsClaimGen {
       declarations
     )
 
-  val genOverpaymentsScheduledClaimAllTypes: Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+  val genOverpaymentsScheduledClaimAllTypes: Gen[(ScheduledOverpaymentsClaim, ImportDeclaration)] =
     for {
       claimantType <- Gen.oneOf(ClaimantType.values)
       claim        <- genOverpaymentsScheduledClaim(claimantType)
     } yield claim
 
-  def genOverpaymentsScheduledClaim(claimantType: ClaimantType): Gen[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+  def genOverpaymentsScheduledClaim(claimantType: ClaimantType): Gen[(ScheduledOverpaymentsClaim, ImportDeclaration)] =
     for {
       mrn                 <- genMRN
       payeeType           <- Gen.oneOf[PayeeType](PayeeType.values)
@@ -218,9 +217,9 @@ object OverpaymentsClaimGen {
       basisOfClaim        <- genBasisOfClaim
       bankAccountDetails  <- Gen.option(genBankAccountDetails)
       reimbursementMethod <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      declaration         <- genDisplayDeclaration.map { generatedDeclaration =>
+      declaration         <- genImportDeclaration.map { generatedDeclaration =>
                                val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                               DisplayDeclaration(drd)
+                               ImportDeclaration(drd)
                              }
       claims              <- genScheduledOverpaymentClaims
       evidences           <- Gen.nonEmptyListOf(genEvidences)
@@ -256,10 +255,10 @@ object OverpaymentsClaimGen {
       .map(_.asScala.toMap)
   }
 
-  def genClaimsFromDisplayDeclaration(displayDeclaration: DisplayDeclaration): Gen[(MRN, Map[TaxCode, BigDecimal])] =
+  def genClaimsFromImportDeclaration(declaration: ImportDeclaration): Gen[(MRN, Map[TaxCode, BigDecimal])] =
     for {
-      claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
-    } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
+      claimAmount <- genClaimAmount(declaration.displayResponseDetail.ndrcDetails.toList.flatten)
+    } yield (MRN(declaration.displayResponseDetail.declarationId), claimAmount)
 
   implicit lazy val arbitrarySingleOverpaymentsRequest: Arbitrary[SingleOverpaymentsClaimRequest] =
     Arbitrary(genOverpaymentsSingleClaimAllTypes.map { case (claim, _, _) => SingleOverpaymentsClaimRequest(claim) })
@@ -271,7 +270,7 @@ object OverpaymentsClaimGen {
     Arbitrary(genOverpaymentsScheduledClaimAllTypes.map { case (claim, _) => ScheduledOverpaymentsClaimRequest(claim) })
 
   implicit lazy val arbitrarySingleOverpaymentsClaimDetails
-    : Arbitrary[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])] =
+    : Arbitrary[(SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])] =
     Arbitrary(genOverpaymentsSingleClaimAllTypes)
 
   implicit lazy val arbitraryOverpaymentsSingleClaim: Arbitrary[SingleOverpaymentsClaim] =
@@ -282,7 +281,7 @@ object OverpaymentsClaimGen {
     )
 
   implicit lazy val arbitraryMultipleOverpaymentsClaimDetails
-    : Arbitrary[(MultipleOverpaymentsClaim, List[DisplayDeclaration])] =
+    : Arbitrary[(MultipleOverpaymentsClaim, List[ImportDeclaration])] =
     Arbitrary(genOverpaymentsMultipleClaim)
 
   implicit lazy val arbitraryOverpaymentsMultipleClaim: Arbitrary[MultipleOverpaymentsClaim] =
@@ -293,7 +292,7 @@ object OverpaymentsClaimGen {
     )
 
   implicit lazy val arbitraryScheduledOverpaymentsClaimDetails
-    : Arbitrary[(ScheduledOverpaymentsClaim, DisplayDeclaration)] =
+    : Arbitrary[(ScheduledOverpaymentsClaim, ImportDeclaration)] =
     Arbitrary(genOverpaymentsScheduledClaimAllTypes)
 
   implicit lazy val arbitraryOverpaymentsScheduledClaim: Arbitrary[ScheduledOverpaymentsClaim] =

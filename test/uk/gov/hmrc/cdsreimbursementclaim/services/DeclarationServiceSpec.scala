@@ -43,7 +43,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.DeclarationRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
@@ -79,8 +79,8 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
       .returning(EitherT.fromEither[Future](response))
 
   def mockTransformDeclarationResponse(declarationResponse: DeclarationResponse)(
-    response: Either[Error, Option[DisplayDeclaration]]
-  ): CallHandler1[DeclarationResponse, Either[Error, Option[DisplayDeclaration]]] =
+    response: Either[Error, Option[ImportDeclaration]]
+  ): CallHandler1[DeclarationResponse, Either[Error, Option[ImportDeclaration]]] =
     (declarationTransformerServiceMock
       .toDeclaration(_: DeclarationResponse))
       .expects(declarationResponse)
@@ -96,7 +96,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           (
             mrn: MRN,
             declarationResponse: DeclarationResponse,
-            declaration: DisplayDeclaration
+            declaration: ImportDeclaration
           ) =>
             inSequence {
               mockDeclarationConnector(
@@ -120,7 +120,7 @@ class DeclarationServiceSpec extends AnyWordSpec with Matchers with MockFactory 
           (
             mrn: MRN,
             declarationResponse: DeclarationResponse,
-            declaration: DisplayDeclaration
+            declaration: ImportDeclaration
           ) =>
             inSequence {
               mockDeclarationConnector(

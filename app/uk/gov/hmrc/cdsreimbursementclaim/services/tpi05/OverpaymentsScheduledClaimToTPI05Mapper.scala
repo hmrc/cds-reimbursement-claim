@@ -21,17 +21,17 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ScheduledOverpaymentsClai
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, Claimant, DeclarationMode}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class OverpaymentsScheduledClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
-    extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, DisplayDeclaration)]
+    extends ClaimToTPI05Mapper[(ScheduledOverpaymentsClaim, ImportDeclaration)]
     with GetEoriDetails[ScheduledOverpaymentsClaim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable", "org.wartremover.warts.Throw"))
   override def map(
-    details: (ScheduledOverpaymentsClaim, DisplayDeclaration)
+    details: (ScheduledOverpaymentsClaim, ImportDeclaration)
   ): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, declaration) = details
     val contactInfo          = claim.claimantInformation.contactInformation

@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticateWithUserActions
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.services.DeclarationService
 import uk.gov.hmrc.cdsreimbursementclaim.utils.Logging
@@ -49,8 +49,8 @@ class DeclarationController @Inject() (
           logger.warn(s"could not get declaration", e)
           InternalServerError
         },
-        maybeDisplayDeclaration =>
-          maybeDisplayDeclaration.fold {
+        maybeImportDeclaration =>
+          maybeImportDeclaration.fold {
             logger.info(s"received no declaration information for ${mrn.value}")
             NoContent
           }(declaration => Ok(Json.toJson(declaration)))
@@ -68,7 +68,7 @@ class DeclarationController @Inject() (
               case GetDeclarationError.declarationNotFound      => BadRequest(Json.toJson(e))
               case _                                            => InternalServerError(Json.toJson(e))
             },
-          (declaration: DisplayDeclaration) => {
+          (declaration: ImportDeclaration) => {
             val acc14SecurityReason: Option[String] = declaration.displayResponseDetail.securityReason
             val hasCorrectRfs                       = acc14SecurityReason.contains(reasonForSecurity.acc14Code)
             val suppliedMrn                         = MRN(declaration.displayResponseDetail.declarationId).value

@@ -45,7 +45,9 @@ final case class NdrcClaimItem(
 }
 
 object NdrcClaimItem extends ClaimTransformer[NDRCCaseDetails, NdrcClaimItem] {
-  implicit val format: OFormat[NdrcClaimItem]                     = Json.format[NdrcClaimItem]
+
+  implicit val format: OFormat[NdrcClaimItem] = Json.format[NdrcClaimItem]
+
   def convert(responseDetail: ResponseDetail): Seq[NdrcClaimItem] =
     super.convert(responseDetail, _.NDRCCases)
 

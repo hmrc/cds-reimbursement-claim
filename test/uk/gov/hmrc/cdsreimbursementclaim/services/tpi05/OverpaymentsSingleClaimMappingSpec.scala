@@ -33,7 +33,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.{CMA, I
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.{genOverpaymentsSingleClaim, genOverpaymentsSingleClaimAllTypes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
@@ -54,7 +54,7 @@ class OverpaymentsSingleClaimMappingSpec
   "The OverpaymentsSingle claim mapper" should {
 
     "map a valid Declarant claim to TPI05 request" in forAll(genOverpaymentsSingleClaim(ClaimantType.Declarant)) {
-      (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
+      (singleOverpaymentsData: (SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])) =>
         val tpi05Request = mapper `map` singleOverpaymentsData
 
         val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
@@ -432,7 +432,7 @@ class OverpaymentsSingleClaimMappingSpec
     }
 
     "map a valid Consignee claim to TPI05 request" in forAll(genOverpaymentsSingleClaim(ClaimantType.Consignee)) {
-      (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
+      (singleOverpaymentsData: (SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])) =>
         val tpi05Request = mapper `map` singleOverpaymentsData
 
         val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
@@ -817,7 +817,7 @@ class OverpaymentsSingleClaimMappingSpec
 
     "map a valid third-party User claim to TPI05 request" in forAll(
       genOverpaymentsSingleClaim(ClaimantType.User)
-    ) { (singleOverpaymentsData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])) =>
+    ) { (singleOverpaymentsData: (SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])) =>
       val tpi05Request = mapper `map` singleOverpaymentsData
 
       val (claim, declaration, duplicateDeclaration) = singleOverpaymentsData
@@ -1247,14 +1247,14 @@ class OverpaymentsSingleClaimMappingSpec
           .getOrElse(fail("Failed to generate data"))
       val (
         claim: SingleOverpaymentsClaim,
-        declaration: DisplayDeclaration,
-        duplicateDeclaration: Option[DisplayDeclaration]
+        declaration: ImportDeclaration,
+        duplicateDeclaration: Option[ImportDeclaration]
       ) = singleOverpaymentsData
       val value                  = UUID.randomUUID().toString
       val amount                 = BigDecimal(123456789123.12)
       val taxType                = duplicateDeclaration.map(_.displayResponseDetail.ndrcDetails.get.head.taxType).get
 
-      val updatedDuplicateDisplayDeclaration = duplicateDeclaration.map { declaration =>
+      val updatedDuplicateImportDeclaration = duplicateDeclaration.map { declaration =>
         declaration.copy(displayResponseDetail =
           declaration.displayResponseDetail.copy(ndrcDetails =
             Some(
@@ -1273,7 +1273,7 @@ class OverpaymentsSingleClaimMappingSpec
       }
 
       val tpi05Request = mapper.map(
-        singleOverpaymentsData.copy(_3 = updatedDuplicateDisplayDeclaration)
+        singleOverpaymentsData.copy(_3 = updatedDuplicateImportDeclaration)
       )
 
       tpi05Request match {

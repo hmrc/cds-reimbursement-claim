@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.controllers.actions.AuthenticatedUserRe
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ReasonForSecurity
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.ReasonForSecurityGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
@@ -59,16 +59,16 @@ class DeclarationControllerSpec extends ControllerSpec {
   )
 
   def mockDeclarationService(mrn: MRN, reasonForSecurity: Option[String] = None)(
-    response: Either[Error, Option[DisplayDeclaration]]
-  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
+    response: Either[Error, Option[ImportDeclaration]]
+  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, Error, Option[ImportDeclaration]]] =
     (mockDeclarationService
       .getDeclaration(_: MRN, _: Option[String])(_: HeaderCarrier))
       .expects(mrn, reasonForSecurity, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockDeclarationServiceWithErrorCodes(mrn: MRN, reasonForSecurity: Option[String] = None)(
-    response: Either[GetDeclarationError, DisplayDeclaration]
-  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, GetDeclarationError, DisplayDeclaration]] =
+    response: Either[GetDeclarationError, ImportDeclaration]
+  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, GetDeclarationError, ImportDeclaration]] =
     (mockDeclarationService
       .getDeclarationWithErrorCodes(_: MRN, _: Option[String])(_: HeaderCarrier))
       .expects(mrn, reasonForSecurity, *)
@@ -80,7 +80,7 @@ class DeclarationControllerSpec extends ControllerSpec {
 
       "return 200 OK with a declaration JSON payload for a successful ACC-14 call" in {
         val mrn                  = sample[MRN]
-        val expectedResponseBody = sample[DisplayDeclaration]
+        val expectedResponseBody = sample[ImportDeclaration]
 
         mockDeclarationService(mrn)(Right(Some(expectedResponseBody)))
 
@@ -109,7 +109,7 @@ class DeclarationControllerSpec extends ControllerSpec {
         val mrn                  = sample[MRN]
         val reasonForSecurity    = sample[ReasonForSecurity]
         val expectedResponseBody =
-          genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code), Some(mrn)).sample
+          genImportDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code), Some(mrn)).sample
 
         mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.orNull))
 
@@ -117,7 +117,7 @@ class DeclarationControllerSpec extends ControllerSpec {
         status(result)        shouldBe OK
         contentAsJson(result) shouldBe Json.toJson(expectedResponseBody)
         contentAsJson(result)
-          .validate[DisplayDeclaration]
+          .validate[ImportDeclaration]
           .get
           .displayResponseDetail
           .securityReason     shouldBe Some(reasonForSecurity.acc14Code)
@@ -126,7 +126,7 @@ class DeclarationControllerSpec extends ControllerSpec {
       "return 400 BAD REQUEST with mismatchMrn a declaration JSON payload for a successful ACC-14 call for reasonForSecurity" in {
         val mrn                  = sample[MRN]
         val reasonForSecurity    = sample[ReasonForSecurity]
-        val expectedResponseBody = genDisplayDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
+        val expectedResponseBody = genImportDeclarationWithSecurityReason(Some(reasonForSecurity.acc14Code)).sample
 
         mockDeclarationServiceWithErrorCodes(mrn, Some(reasonForSecurity.acc14Code))(Right(expectedResponseBody.orNull))
 

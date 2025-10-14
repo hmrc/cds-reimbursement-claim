@@ -23,7 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.*
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.genScheduledRejectedGoodsClaim
 
@@ -39,9 +39,9 @@ class ScheduledRejectedGoodsClaimToEmailMapperSpec
   "The RejectedGoodsScheduled claim mapper" should {
 
     "map a valid claim to email request" in forAll(genScheduledRejectedGoodsClaim(ClaimantType.Declarant)) {
-      (rejectedGoodsScheduledData: (ScheduledRejectedGoodsClaim, DisplayDeclaration)) =>
-        val (claim, displayDeclaration) = rejectedGoodsScheduledData
-        val emailRequest                = mapper `map` rejectedGoodsScheduledData
+      (rejectedGoodsScheduledData: (ScheduledRejectedGoodsClaim, ImportDeclaration)) =>
+        val (claim, declaration) = rejectedGoodsScheduledData
+        val emailRequest         = mapper `map` rejectedGoodsScheduledData
 
         inside(emailRequest) { case Right(EmailRequest(email, contactName, claimAmount)) =>
           email.value should ===(claim.claimantInformation.contactInformation.emailAddress.get)
@@ -51,22 +51,22 @@ class ScheduledRejectedGoodsClaimToEmailMapperSpec
     }
 
     "fail to map an invalid email to email request" in {
-      val rejectedGoodsScheduledData  = genScheduledRejectedGoodsClaim(ClaimantType.Declarant).sample.get
-      val (claim, displayDeclaration) = rejectedGoodsScheduledData
-      val updatedClaim                = claim.copy(
+      val rejectedGoodsScheduledData = genScheduledRejectedGoodsClaim(ClaimantType.Declarant).sample.get
+      val (claim, declaration)       = rejectedGoodsScheduledData
+      val updatedClaim               = claim.copy(
         claimantInformation = claim.claimantInformation.copy(
           contactInformation = claim.claimantInformation.contactInformation.copy(emailAddress = None)
         )
       )
-      val emailRequest                = mapper.map(rejectedGoodsScheduledData.copy(_1 = updatedClaim))
+      val emailRequest               = mapper.map(rejectedGoodsScheduledData.copy(_1 = updatedClaim))
 
       emailRequest.left.map(_.value should be("no email address provided with claim"))
     }
 
     "fail to map an invalid contact name to email request" in {
-      val rejectedGoodsScheduledData  = genScheduledRejectedGoodsClaim(ClaimantType.Declarant).sample.get
-      val (claim, displayDeclaration) = rejectedGoodsScheduledData
-      val updatedClaim                = claim
+      val rejectedGoodsScheduledData = genScheduledRejectedGoodsClaim(ClaimantType.Declarant).sample.get
+      val (claim, declaration)       = rejectedGoodsScheduledData
+      val updatedClaim               = claim
         .copy(
           claimantInformation = claim.claimantInformation
             .copy(
@@ -74,7 +74,7 @@ class ScheduledRejectedGoodsClaimToEmailMapperSpec
                 .copy(contactPerson = None)
             )
         )
-      val emailRequest                = mapper `map` rejectedGoodsScheduledData.copy(_1 = updatedClaim)
+      val emailRequest               = mapper `map` rejectedGoodsScheduledData.copy(_1 = updatedClaim)
 
       emailRequest.left.map(_.value should be("no contact name provided with claim"))
     }

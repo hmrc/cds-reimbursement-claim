@@ -20,7 +20,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.EitherValues._
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.{AcceptanceDate, CdsDateTime, ISO8601DateTime, TemporalAccessorOps}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen._
@@ -161,7 +161,7 @@ object Acc14DeclarationGen {
       taxDetails = taxDetails
     )
 
-  lazy val genDisplayDeclaration: Gen[DisplayDeclaration] = for {
+  lazy val genImportDeclaration: Gen[ImportDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -180,7 +180,7 @@ object Acc14DeclarationGen {
                                   .listOfN(numNdrcDetails, genNdrcDetails)
                                   .map(_.groupBy(_.taxType).values.flatMap(_.headOption.toList).toList)
 
-  } yield DisplayDeclaration(
+  } yield ImportDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,
       acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
@@ -198,7 +198,7 @@ object Acc14DeclarationGen {
     )
   )
 
-  lazy val genDisplayDeclarationWithSecurities: Gen[DisplayDeclaration] = for {
+  lazy val genImportDeclarationWithSecurities: Gen[ImportDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -222,7 +222,7 @@ object Acc14DeclarationGen {
                                     .map(_.map(_.copy(paymentMethod = paymentMethod)))
                                 )
 
-  } yield DisplayDeclaration(
+  } yield ImportDeclaration(
     DisplayResponseDetail(
       declarationId = mrn.value,
       acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
@@ -240,12 +240,12 @@ object Acc14DeclarationGen {
       securityDetails = securityDetails
     )
   )
-  def genDisplayDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[DisplayDeclaration] =
-    genDisplayDeclarationWithSecurityReason(reasonForSecurity, None)
-  def genDisplayDeclarationWithSecurityReason(
+  def genImportDeclarationWithSecurityReason(reasonForSecurity: Option[String]): Gen[ImportDeclaration] =
+    genImportDeclarationWithSecurityReason(reasonForSecurity, None)
+  def genImportDeclarationWithSecurityReason(
     reasonForSecurity: Option[String],
     maybeMrn: Option[MRN]
-  ): Gen[DisplayDeclaration] = for {
+  ): Gen[ImportDeclaration] = for {
     mrn                      <- genMRN
     acceptanceDate           <- genAcceptanceDate
     declarantReferenceNumber <- Gen.option(genRandomString)
@@ -260,7 +260,7 @@ object Acc14DeclarationGen {
     maskedBankDetails        <- Gen.const(mask(bankDetails))
     numNdrcDetails           <- Gen.choose(1, 5)
     ndrcDetails              <- Gen.listOfN(numNdrcDetails, genNdrcDetails)
-  } yield DisplayDeclaration(
+  } yield ImportDeclaration(
     DisplayResponseDetail(
       declarationId = maybeMrn.getOrElse(mrn).value,
       acceptanceDate = acceptanceDate.toDisplayString.toEither.value,
@@ -326,8 +326,8 @@ object Acc14DeclarationGen {
   implicit lazy val arbitrarySecurityDetails: Arbitrary[SecurityDetails] =
     Arbitrary(genSecurityDetails)
 
-  implicit lazy val arbitraryDisplayDeclaration: Arbitrary[DisplayDeclaration] =
-    Arbitrary(genDisplayDeclaration)
+  implicit lazy val arbitraryImportDeclaration: Arbitrary[ImportDeclaration] =
+    Arbitrary(genImportDeclaration)
 
   implicit lazy val arbitraryResponseDetail: Arbitrary[ResponseDetail] =
     Arbitrary(genResponseDetail)

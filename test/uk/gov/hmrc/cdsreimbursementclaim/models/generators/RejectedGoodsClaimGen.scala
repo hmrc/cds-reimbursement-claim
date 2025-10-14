@@ -19,8 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.generators
 import org.scalacheck.{Arbitrary, Gen}
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.AddressGen.{genCountry, genPostcode}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.BankAccountDetailsGen.genBankAccountDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.{genEori, genMRN}
@@ -132,13 +132,13 @@ object RejectedGoodsClaimGen {
       documentType = documentType
     )
 
-  lazy val genSingleRejectedGoodsClaimAllTypes: Gen[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+  lazy val genSingleRejectedGoodsClaimAllTypes: Gen[(SingleRejectedGoodsClaim, ImportDeclaration)] =
     for {
       claimantType <- Gen.oneOf(ClaimantType.values)
       claim        <- genSingleRejectedGoodsClaim(claimantType)
     } yield claim
 
-  def genSingleRejectedGoodsClaim(claimantType: ClaimantType): Gen[(SingleRejectedGoodsClaim, DisplayDeclaration)] =
+  def genSingleRejectedGoodsClaim(claimantType: ClaimantType): Gen[(SingleRejectedGoodsClaim, ImportDeclaration)] =
     for {
       mrn                    <- genMRN
       payeeType              <- Gen.oneOf(PayeeType.values)
@@ -151,11 +151,11 @@ object RejectedGoodsClaimGen {
       inspectionAddress      <- genInspectionAddress
       detailsOfRejectedGoods <- genRandomString
       reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      declaration            <- genDisplayDeclaration.map { generatedDeclaration =>
+      declaration            <- genImportDeclaration.map { generatedDeclaration =>
                                   val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                  DisplayDeclaration(drd)
+                                  ImportDeclaration(drd)
                                 }
-      claims                 <- genClaimsFromDisplayDeclaration(declaration)
+      claims                 <- genClaimsFromImportDeclaration(declaration)
       evidences              <- Gen.nonEmptyListOf(genEvidences)
     } yield (
       SingleRejectedGoodsClaim(
@@ -190,12 +190,12 @@ object RejectedGoodsClaimGen {
       .map(_.asScala.toMap)
   }
 
-  def genClaimsFromDisplayDeclaration(displayDeclaration: DisplayDeclaration): Gen[(MRN, Map[TaxCode, BigDecimal])] =
+  def genClaimsFromImportDeclaration(declaration: ImportDeclaration): Gen[(MRN, Map[TaxCode, BigDecimal])] =
     for {
-      claimAmount <- genClaimAmount(displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten)
-    } yield (MRN(displayDeclaration.displayResponseDetail.declarationId), claimAmount)
+      claimAmount <- genClaimAmount(declaration.displayResponseDetail.ndrcDetails.toList.flatten)
+    } yield (MRN(declaration.displayResponseDetail.declarationId), claimAmount)
 
-  lazy val genMultipleRejectedGoodsClaimAllTypes: Gen[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+  lazy val genMultipleRejectedGoodsClaimAllTypes: Gen[(MultipleRejectedGoodsClaim, List[ImportDeclaration])] =
     for {
       claimantType <- Gen.oneOf(ClaimantType.values)
       claim        <- genMultipleRejectedGoodsClaim(claimantType)
@@ -203,7 +203,7 @@ object RejectedGoodsClaimGen {
 
   def genMultipleRejectedGoodsClaim(
     claimantType: ClaimantType
-  ): Gen[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+  ): Gen[(MultipleRejectedGoodsClaim, List[ImportDeclaration])] =
     for {
       numMrns                <- Gen.choose(2, 10)
       mrns                   <- Gen.listOfN(numMrns, genMRN)
@@ -222,14 +222,14 @@ object RejectedGoodsClaimGen {
       declarations           <- Gen
                                   .sequence(
                                     mrns.map(mrn =>
-                                      genDisplayDeclaration.map { generatedDeclaration =>
+                                      genImportDeclaration.map { generatedDeclaration =>
                                         val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                        DisplayDeclaration(drd)
+                                        ImportDeclaration(drd)
                                       }
                                     )
                                   )
                                   .map(_.asScala.toList)
-      claims                 <- Gen.sequence(declarations.map(declaration => genClaimsFromDisplayDeclaration(declaration)))
+      claims                 <- Gen.sequence(declarations.map(declaration => genClaimsFromImportDeclaration(declaration)))
     } yield (
       MultipleRejectedGoodsClaim(
         movementReferenceNumbers = mrns,
@@ -250,7 +250,7 @@ object RejectedGoodsClaimGen {
       declarations
     )
 
-  lazy val genScheduledRejectedGoodsClaimAllTypes: Gen[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] =
+  lazy val genScheduledRejectedGoodsClaimAllTypes: Gen[(ScheduledRejectedGoodsClaim, ImportDeclaration)] =
     for {
       claimantType <- Gen.oneOf(ClaimantType.values)
       claim        <- genScheduledRejectedGoodsClaim(claimantType)
@@ -258,7 +258,7 @@ object RejectedGoodsClaimGen {
 
   def genScheduledRejectedGoodsClaim(
     claimantType: ClaimantType
-  ): Gen[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] =
+  ): Gen[(ScheduledRejectedGoodsClaim, ImportDeclaration)] =
     for {
       mrn                    <- genMRN
       payeeType              <- Gen.oneOf[PayeeType](PayeeType.values)
@@ -271,9 +271,9 @@ object RejectedGoodsClaimGen {
       inspectionAddress      <- genInspectionAddress
       detailsOfRejectedGoods <- genRandomString
       reimbursementMethod    <- Gen.oneOf(ReimbursementMethodAnswer.values)
-      declaration            <- genDisplayDeclaration.map { generatedDeclaration =>
+      declaration            <- genImportDeclaration.map { generatedDeclaration =>
                                   val drd = generatedDeclaration.displayResponseDetail.copy(declarationId = mrn.value)
-                                  DisplayDeclaration(drd)
+                                  ImportDeclaration(drd)
                                 }
       claims                 <- genScheduledReimbursementClaims
       numEvidences           <- Gen.choose(2, 5)
@@ -312,7 +312,7 @@ object RejectedGoodsClaimGen {
       } yield claim
     )
 
-  implicit lazy val arbitraryMultipleClaimDetails: Arbitrary[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
+  implicit lazy val arbitraryMultipleClaimDetails: Arbitrary[(MultipleRejectedGoodsClaim, List[ImportDeclaration])] =
     Arbitrary(genMultipleRejectedGoodsClaimAllTypes)
 
   implicit lazy val arbitraryMultipleRejectedGoodsClaim: Arbitrary[MultipleRejectedGoodsClaim] =
@@ -329,6 +329,6 @@ object RejectedGoodsClaimGen {
       } yield claim
     )
 
-  implicit lazy val arbitraryScheduledClaimDetails: Arbitrary[(ScheduledRejectedGoodsClaim, DisplayDeclaration)] =
+  implicit lazy val arbitraryScheduledClaimDetails: Arbitrary[(ScheduledRejectedGoodsClaim, ImportDeclaration)] =
     Arbitrary(genScheduledRejectedGoodsClaimAllTypes)
 }

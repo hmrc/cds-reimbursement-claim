@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.ClaimantType.Declarant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.EmailRequest
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.{genMultipleRejectedGoodsClaim, genSingleRejectedGoodsClaim}
 
@@ -42,9 +42,9 @@ class RejectedGoodsClaimToEmailMapperSpec
     "mapping a single claim" should {
 
       "map a valid claim to email request" in forAll(genSingleRejectedGoodsClaim(ClaimantType.Declarant)) {
-        (rejectedGoodsSingleData: (RejectedGoodsClaim, DisplayDeclaration)) =>
-          val (claim, displayDeclaration) = rejectedGoodsSingleData
-          val emailRequest                = mapper `map` (rejectedGoodsSingleData._1, List(rejectedGoodsSingleData._2))
+        (rejectedGoodsSingleData: (RejectedGoodsClaim, ImportDeclaration)) =>
+          val (claim, declaration) = rejectedGoodsSingleData
+          val emailRequest         = mapper `map` (rejectedGoodsSingleData._1, List(rejectedGoodsSingleData._2))
 
           inside(emailRequest) { case Right(EmailRequest(email, contactName, claimAmount)) =>
             email.value should ===(claim.claimantInformation.contactInformation.emailAddress.get)
@@ -54,22 +54,22 @@ class RejectedGoodsClaimToEmailMapperSpec
       }
 
       "fail to map an invalid email to email request" in {
-        val rejectedGoodsSingleData     = genSingleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
-        val (claim, displayDeclaration) = rejectedGoodsSingleData
-        val updatedClaim                = claim.copy(
+        val rejectedGoodsSingleData = genSingleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
+        val (claim, declaration)    = rejectedGoodsSingleData
+        val updatedClaim            = claim.copy(
           claimantInformation = claim.claimantInformation.copy(
             contactInformation = claim.claimantInformation.contactInformation.copy(emailAddress = None)
           )
         )
-        val emailRequest                = mapper.map((updatedClaim, List(rejectedGoodsSingleData._2)))
+        val emailRequest            = mapper.map((updatedClaim, List(rejectedGoodsSingleData._2)))
 
         emailRequest.left.map(_.value should be("no email address provided with claim"))
       }
 
       "fail to map an invalid contact name to email request" in {
-        val rejectedGoodsSingleData     = genSingleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
-        val (claim, displayDeclaration) = rejectedGoodsSingleData
-        val updatedClaim                = claim
+        val rejectedGoodsSingleData = genSingleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
+        val (claim, declaration)    = rejectedGoodsSingleData
+        val updatedClaim            = claim
           .copy(
             claimantInformation = claim.claimantInformation
               .copy(
@@ -77,7 +77,7 @@ class RejectedGoodsClaimToEmailMapperSpec
                   .copy(contactPerson = None)
               )
           )
-        val emailRequest                = mapper.map((updatedClaim, List(rejectedGoodsSingleData._2)))
+        val emailRequest            = mapper.map((updatedClaim, List(rejectedGoodsSingleData._2)))
 
         emailRequest.left.map(_.value should be("no contact name provided with claim"))
       }
@@ -86,9 +86,9 @@ class RejectedGoodsClaimToEmailMapperSpec
     "mapping a multiple claim" should {
 
       "map a valid claim to email request" in forAll(genMultipleRejectedGoodsClaim(Declarant)) {
-        (rejectedGoodsMultipleData: (RejectedGoodsClaim, List[DisplayDeclaration])) =>
-          val (claim, displayDeclarations) = rejectedGoodsMultipleData
-          val emailRequest                 = mapper `map` rejectedGoodsMultipleData
+        (rejectedGoodsMultipleData: (RejectedGoodsClaim, List[ImportDeclaration])) =>
+          val (claim, importDeclarations) = rejectedGoodsMultipleData
+          val emailRequest                = mapper `map` rejectedGoodsMultipleData
 
           inside(emailRequest) { case Right(EmailRequest(email, contactName, claimAmount)) =>
             email.value should ===(claim.claimantInformation.contactInformation.emailAddress.get)
@@ -98,22 +98,22 @@ class RejectedGoodsClaimToEmailMapperSpec
       }
 
       "fail to map an invalid email to email request" in {
-        val rejectedGoodsMultipleData    = genMultipleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
-        val (claim, displayDeclarations) = rejectedGoodsMultipleData
-        val updatedClaim                 = claim.copy(
+        val rejectedGoodsMultipleData   = genMultipleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
+        val (claim, importDeclarations) = rejectedGoodsMultipleData
+        val updatedClaim                = claim.copy(
           claimantInformation = claim.claimantInformation.copy(
             contactInformation = claim.claimantInformation.contactInformation.copy(emailAddress = None)
           )
         )
-        val emailRequest                 = mapper.map(rejectedGoodsMultipleData.copy(_1 = updatedClaim))
+        val emailRequest                = mapper.map(rejectedGoodsMultipleData.copy(_1 = updatedClaim))
 
         emailRequest.left.map(_.value should be("no email address provided with claim"))
       }
 
       "fail to map an invalid contact name to email request" in {
-        val rejectedGoodsMultipleData    = genMultipleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
-        val (claim, displayDeclarations) = rejectedGoodsMultipleData
-        val updatedClaim                 = claim
+        val rejectedGoodsMultipleData   = genMultipleRejectedGoodsClaim(ClaimantType.Declarant).sample.get
+        val (claim, importDeclarations) = rejectedGoodsMultipleData
+        val updatedClaim                = claim
           .copy(
             claimantInformation = claim.claimantInformation
               .copy(
@@ -121,7 +121,7 @@ class RejectedGoodsClaimToEmailMapperSpec
                   .copy(contactPerson = None)
               )
           )
-        val emailRequest                 = mapper.map(rejectedGoodsMultipleData.copy(_1 = updatedClaim))
+        val emailRequest                = mapper.map(rejectedGoodsMultipleData.copy(_1 = updatedClaim))
 
         emailRequest.left.map(_.value should be("no contact name provided with claim"))
       }

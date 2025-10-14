@@ -31,7 +31,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.AllDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails as ResponseNdrcDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.*
@@ -56,7 +56,7 @@ class MultipleRejectedGoodsClaimMappingV2Spec
 
     "map a valid Declarant multiple claim to TPI05 request" in forAll(
       genMultipleRejectedGoodsClaim(ClaimantType.Declarant)
-    ) { (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration])) =>
+    ) { (details: (MultipleRejectedGoodsClaim, List[ImportDeclaration])) =>
       val (claim, declarations) = details
       val leadDeclaration       = declarations.head
       val tpi05Request          = mapper.map((claim, declarations))
@@ -322,13 +322,13 @@ class MultipleRejectedGoodsClaimMappingV2Spec
           root.copy(reimbursementClaims = value)
       }
 
-      val ndrcLens = new Lens[DisplayDeclaration, Option[List[ResponseNdrcDetails]]] {
-        override def set(root: DisplayDeclaration, value: Option[List[ResponseNdrcDetails]]): DisplayDeclaration =
+      val ndrcLens = new Lens[ImportDeclaration, Option[List[ResponseNdrcDetails]]] {
+        override def set(root: ImportDeclaration, value: Option[List[ResponseNdrcDetails]]): ImportDeclaration =
           root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
       }
 
       "mapping claim having incorrect NDRC details" in forAll {
-        (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]), random: UUID, amount: BigDecimal) =>
+        (details: (MultipleRejectedGoodsClaim, List[ImportDeclaration]), random: UUID, amount: BigDecimal) =>
           val (claim, declarations)             = details
           val value                             = random.toString
           val declarationWithInvalidNdrcDetails = declarations.map { declaration =>
@@ -361,7 +361,7 @@ class MultipleRejectedGoodsClaimMappingV2Spec
       }
 
       "cannot find NDRC details for claimed reimbursement" in forAll {
-        (details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]), taxCode: TaxCode) =>
+        (details: (MultipleRejectedGoodsClaim, List[ImportDeclaration]), taxCode: TaxCode) =>
           val (rejectedGoodsClaim, declarations) = details
           val reimbursement                      = Map(rejectedGoodsClaim.leadMrn -> Map(taxCode -> BigDecimal(7)))
 

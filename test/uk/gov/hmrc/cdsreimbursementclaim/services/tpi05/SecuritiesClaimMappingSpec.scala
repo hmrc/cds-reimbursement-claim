@@ -29,7 +29,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType, ReasonForSecurity, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails, PostNewClaimsRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.genMRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen.*
@@ -47,7 +47,7 @@ class SecuritiesClaimMappingSpec
 
   def isValid(
     claim: SecuritiesClaim,
-    declaration: DisplayDeclaration,
+    declaration: ImportDeclaration,
     result: Either[Error, EisSubmitClaimRequest]
   ): Unit =
     result match {
@@ -132,14 +132,14 @@ class SecuritiesClaimMappingSpec
 
   "The Securities claim mapper" should {
     "map a valid Securities claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
-      (details: (SecuritiesClaim, DisplayDeclaration)) =>
+      (details: (SecuritiesClaim, ImportDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map((claim, declaration))
         isValid(claim, declaration, tpi05Request)
     }
 
     "map a valid Securities IPR claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
-      (details: (SecuritiesClaim, DisplayDeclaration)) =>
+      (details: (SecuritiesClaim, ImportDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map(
           (
@@ -156,7 +156,7 @@ class SecuritiesClaimMappingSpec
 
     "map a valid temporary admission Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val tpi05Request         = mapper.map((claim, declaration))
       isValid(claim, declaration, tpi05Request)
@@ -173,7 +173,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid email in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -192,7 +192,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid contact person in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -211,7 +211,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid claimant address in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(

@@ -26,7 +26,6 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.generators.CcsSubmissionGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Generators.sample
 import uk.gov.hmrc.cdsreimbursementclaim.repositories.MongoTestSupport
 import uk.gov.hmrc.cdsreimbursementclaim.services.ccs.CcsSubmissionRequest
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.mongo.workitem.ProcessingStatus.{Failed, InProgress, PermanentlyFailed}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -56,8 +55,7 @@ class CcsSubmissionRepoSpec extends AnyWordSpec with Matchers with MongoTestSupp
 
   val repository = new DefaultCcsSubmissionRepo(
     mongoComponent,
-    config,
-    new ServicesConfig(config)
+    config
   )
 
   "CcsSubmission Repo" when {
