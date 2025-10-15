@@ -104,7 +104,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
                   addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
                   addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
                   addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-                  street = claim.claimantInformation.establishmentAddress.street,
+                  street = claim.claimantInformation.establishmentAddress.street.map(_.take(70)),
                   city = claim.claimantInformation.establishmentAddress.city,
                   countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
                   postalCode = claim.claimantInformation.establishmentAddress.postalCode,

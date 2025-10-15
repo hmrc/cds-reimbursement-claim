@@ -140,8 +140,8 @@ object TPI05RequestGen {
     telephone    <- genUkPhoneNumber
     num          <- Gen.choose(1, 100)
     street       <- genStringWithMaxSizeOfN(7)
-    addressLine2 <- Gen.option(genStringWithMaxSizeOfN(10))
-    addressLine3 <- Gen.option(genStringWithMaxSizeOfN(20))
+    addressLine2 <- Gen.option(genStringWithMaxSizeOfN(100))
+    addressLine3 <- Gen.option(genStringWithMaxSizeOfN(100))
     city         <- Gen.option(genRandomString)
     country      <- genCountry
     postalCode   <- Gen.option(genPostcode)
