@@ -99,7 +99,7 @@ class SubscriptionConnectorSpec
             val response = await(connector.getSubscription(eori))
             inside(response) {
               case Left(error) =>
-                error shouldBe "A call to SUB09 API failed with business error OK 005 - No form bundle found"
+                error shouldBe s"A call to SUB09 API for [${eori.value}] failed with business error OK 005 - No form bundle found"
               case other       =>
                 fail(s"expected error but got $other")
             }
@@ -119,7 +119,7 @@ class SubscriptionConnectorSpec
             val response = await(connector.getSubscription(eori))
             inside(response) {
               case Left(error) =>
-                error shouldBe "A call to SUB09 API failed with status 400 and errorCode=400, and errorMessage=005 - No form bundle foundd, and correlationId=d60de98c-f499-47f5-b2d6-e80966e8d19e"
+                error shouldBe s"A call to SUB09 API for [${eori.value}] failed with status 400 and errorCode=400, and errorMessage=005 - No form bundle foundd, and correlationId=d60de98c-f499-47f5-b2d6-e80966e8d19e"
               case other       =>
                 fail(s"expected error but got $other")
             }
@@ -138,7 +138,7 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
             result shouldBe Left(
-              "A call to SUB09 API failed with status 400 and errorCode=400, and errorMessage=REGIME missing or invalid, and correlationId=6bbd0963-f9f0-4d00-8169-9438d8d3044d"
+              s"A call to SUB09 API for [${eori.value}] failed with status 400 and errorCode=400, and errorMessage=REGIME missing or invalid, and correlationId=6bbd0963-f9f0-4d00-8169-9438d8d3044d"
             )
           }
         }
@@ -195,7 +195,7 @@ class SubscriptionConnectorSpec
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
             result shouldBe Left(
-              "A call to SUB09 API failed with status 500 and errorCode=500, and errorMessage=Send timeout, and correlationId=ee8ef3d2-e9cc-4a42-8bf6-f82e809a23a7"
+              s"A call to SUB09 API for [${eori.value}] failed with status 500 and errorCode=500, and errorMessage=Send timeout, and correlationId=ee8ef3d2-e9cc-4a42-8bf6-f82e809a23a7"
             )
           }
         }
@@ -211,7 +211,7 @@ class SubscriptionConnectorSpec
         }(validateSubscriptionRequest) {
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
-            result shouldBe Left("A call to SUB09 API failed with status 503 and empty body.")
+            result shouldBe Left(s"A call to SUB09 API for [${eori.value}] failed with status 503 and empty body.")
           }
         }
       }
@@ -226,7 +226,9 @@ class SubscriptionConnectorSpec
         }(validateSubscriptionRequest) {
           givenSubscriptionConnector { connector =>
             val result = await(connector.getSubscription(eori))
-            result shouldBe Left("A call to SUB09 API failed with status 503 and body: Some reason for the error.")
+            result shouldBe Left(
+              s"A call to SUB09 API for [${eori.value}] failed with status 503 and body: Some reason for the error."
+            )
           }
         }
       }

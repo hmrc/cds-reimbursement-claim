@@ -88,7 +88,9 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClientV2, val config: Se
           if (errorResponse.status == 404)
             Future.successful(Right(None))
           else {
-            Future.successful(Left(errorResponse.getErrorDescriptionWithPrefix("A call to SUB09 API")))
+            Future.successful(
+              Left(errorResponse.getErrorDescriptionWithPrefix(s"A call to SUB09 API for [${eori.value}]"))
+            )
           }
       }
       .recover { case NonFatal(e) =>
