@@ -79,7 +79,7 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClientV2, val config: Se
             case None    =>
               Future.successful(
                 Left(
-                  s"A call to SUB09 API failed with business error ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.status} ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.statusText
+                  s"A call to SUB09 API for [${eori.value}] failed with business error ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.status} ${subscriptionResponse.subscriptionDisplayResponse.responseCommon.statusText
                       .getOrElse("")}"
                 )
               )
@@ -92,7 +92,7 @@ class DefaultSubscriptionConnector @Inject() (http: HttpClientV2, val config: Se
           }
       }
       .recover { case NonFatal(e) =>
-        Left(s"A call to SUB09 API failed with the exception: $e")
+        Left(s"A call to SUB09 API for [${eori.value}] failed with the exception: $e")
       }
   }
 
