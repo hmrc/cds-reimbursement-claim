@@ -61,7 +61,7 @@ object Address {
           addressLine1 = contactInformation.addressLine1.noneIfEmpty,
           addressLine2 = contactInformation.addressLine2.noneIfEmpty,
           addressLine3 = contactInformation.addressLine3.noneIfEmpty,
-          street = contactInformation.street.noneIfEmpty,
+          street = contactInformation.street.map(_.take(70)).noneIfEmpty,
           city = contactInformation.city.noneIfEmpty,
           countryCode = countryCode,
           postalCode = contactInformation.postalCode.noneIfEmpty,

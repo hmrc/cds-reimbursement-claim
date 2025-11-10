@@ -84,7 +84,7 @@ class SubmitClaimController @Inject() (
   final val submitSingleRejectedGoodsClaim: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     withJsonBody[RejectedGoodsClaimRequest[SingleRejectedGoodsClaim]] {
       uploadDocumentsOnce {
-        claimService.submitRejectedGoodsClaim(_)
+        claimService.submitSingleRejectedGoodsClaim(_)
       }
     }
   }

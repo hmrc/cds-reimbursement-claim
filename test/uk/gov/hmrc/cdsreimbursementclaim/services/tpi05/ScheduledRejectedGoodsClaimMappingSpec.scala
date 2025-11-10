@@ -32,9 +32,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, Lens}
@@ -53,10 +52,9 @@ class ScheduledRejectedGoodsClaimMappingSpec
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Scheduled claim to TPI05 request" in forAll(
-      genScheduledRejectedGoodsClaim(ClaimantType.Declarant),
-      genDisplayDeclaration
-    ) { (claim: ScheduledRejectedGoodsClaim, declaration: DisplayDeclaration) =>
+    "map a valid Declarant scheduled claim to TPI05 request" in forAll(
+      genScheduledRejectedGoodsClaim(ClaimantType.Declarant)
+    ) { (claim: ScheduledRejectedGoodsClaim, declaration: ImportDeclaration) =>
       val tpi05Request = mapper.map((claim, declaration))
 
       inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
@@ -106,7 +104,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
                   addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
                   addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
                   addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-                  street = claim.claimantInformation.establishmentAddress.street,
+                  street = claim.claimantInformation.establishmentAddress.street.map(_.take(70)),
                   city = claim.claimantInformation.establishmentAddress.city,
                   countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
                   postalCode = claim.claimantInformation.establishmentAddress.postalCode,
@@ -294,20 +292,531 @@ class ScheduledRejectedGoodsClaimMappingSpec
       }
     }
 
+    "map a valid Consignee scheduled claim to TPI05 request" in forAll(
+      genScheduledRejectedGoodsClaim(ClaimantType.Consignee)
+    ) { (claim: ScheduledRejectedGoodsClaim, declaration: ImportDeclaration) =>
+      val tpi05Request = mapper.map((claim, declaration))
+
+      inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
+        common.originatingSystem should be(MDTP)
+
+        details.claimantEORI         should ===(claim.claimantInformation.eori)
+        details.claimantEmailAddress should ===(
+          claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
+        )
+
+        details should have(
+          Symbol("CDFPayService")(NDRC),
+          Symbol("newEORI")(None),
+          Symbol("newDAN")(None),
+          Symbol("dateReceived")(ISOLocalDate.now.some),
+          Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
+          Symbol("claimDate")(ISOLocalDate.now.some),
+          Symbol("claimType")(ClaimType.CE1179.some),
+          Symbol("claimant")(Some(if (claim.claimantType === ClaimantType.Consignee) Importer else Representative)),
+          Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
+          Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
+          Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
+          Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
+          Symbol("goodsDetails")(
+            GoodsDetails(
+              descOfGoods = claim.detailsOfRejectedGoods.some.map(_.take(500)),
+              anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances.map(_.take(500)),
+              dateOfInspection = claim.inspectionDate.toIsoLocalDate.some,
+              atTheImporterOrDeclarantAddress = claim.inspectionAddress.addressType.toTPI05DisplayString.some,
+              inspectionAddress = InspectionAddress(
+                addressLine1 = claim.inspectionAddress.addressLine1,
+                addressLine2 = claim.inspectionAddress.addressLine2,
+                addressLine3 = claim.inspectionAddress.addressLine3,
+                city = claim.inspectionAddress.city,
+                countryCode = claim.inspectionAddress.countryCode,
+                postalCode = claim.inspectionAddress.postalCode
+              ).some
+            ).some
+          ),
+          Symbol("EORIDetails")(
+            EoriDetails(
+              importerEORIDetails = EORIInformation(
+                EORINumber = claim.claimantInformation.eori,
+                CDSFullName = claim.claimantInformation.fullName,
+                CDSEstablishmentAddress = Address(
+                  contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
+                  addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
+                  addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
+                  addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+                  street = claim.claimantInformation.establishmentAddress.street.map(_.take(70)),
+                  city = claim.claimantInformation.establishmentAddress.city,
+                  countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
+                  postalCode = claim.claimantInformation.establishmentAddress.postalCode,
+                  telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
+                  emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
+                ),
+                contactInformation = claim.claimantInformation.contactInformation.some
+              ),
+              agentEORIDetails = {
+                val declarantDetails    = declaration.displayResponseDetail.declarantDetails
+                val maybeContactDetails = declarantDetails.contactDetails
+
+                val maybeTelephone    = maybeContactDetails.flatMap(_.telephone)
+                val maybeEmailAddress = maybeContactDetails.flatMap(_.emailAddress)
+
+                val establishmentAddressLine1      = declarantDetails.establishmentAddress.addressLine1
+                val maybeEstablishmentAddressLine2 = declarantDetails.establishmentAddress.addressLine2
+                val maybeEstablishmentAddressLine3 = declarantDetails.establishmentAddress.addressLine3
+
+                EORIInformation(
+                  EORINumber = declarantDetails.EORI,
+                  CDSFullName = declarantDetails.legalName,
+                  CDSEstablishmentAddress = Address(
+                    contactPerson = None,
+                    addressLine1 = Street.line1(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+                    addressLine2 = Street.line2(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+                    addressLine3 = maybeEstablishmentAddressLine3,
+                    street = Street.fromLines(Some(establishmentAddressLine1), maybeEstablishmentAddressLine2),
+                    city = maybeEstablishmentAddressLine3,
+                    countryCode = declarantDetails.establishmentAddress.countryCode,
+                    postalCode = declarantDetails.establishmentAddress.postalCode,
+                    telephoneNumber = maybeTelephone,
+                    emailAddress = maybeEmailAddress
+                  ),
+                  contactInformation = declarantDetails.contactDetails.map { contactDetails =>
+                    val maybeAddress1 = contactDetails.addressLine1
+                    val maybeAddress2 = contactDetails.addressLine2
+                    val maybeAddress3 = contactDetails.addressLine3
+
+                    ContactInformation(
+                      contactPerson = contactDetails.contactName,
+                      addressLine1 = Street.line1(maybeAddress1, maybeAddress2),
+                      addressLine2 = Street.line2(maybeAddress1, maybeAddress2),
+                      addressLine3 = maybeAddress3,
+                      street = Street.fromLines(maybeAddress1, maybeAddress2),
+                      city = maybeAddress3,
+                      countryCode = contactDetails.countryCode,
+                      postalCode = contactDetails.postalCode,
+                      telephoneNumber = maybeTelephone,
+                      faxNumber = None,
+                      emailAddress = maybeEmailAddress
+                    )
+                  }
+                )
+              }
+            ).some
+          ),
+          Symbol("MRNDetails")(
+            List(
+              MrnDetail(
+                MRNNumber = claim.movementReferenceNumber.some,
+                acceptanceDate = AcceptanceDate
+                  .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
+                  .flatMap(_.toTpi05DateString)
+                  .toOption,
+                declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
+                mainDeclarationReference = true.some,
+                procedureCode = declaration.displayResponseDetail.procedureCode.some,
+                declarantDetails = {
+                  val declarantDetails = declaration.displayResponseDetail.declarantDetails
+                  val contactDetails   = declarantDetails.contactDetails.value
+
+                  MRNInformation(
+                    EORI = declarantDetails.EORI,
+                    legalName = declarantDetails.legalName,
+                    establishmentAddress = Address(
+                      contactPerson = None,
+                      addressLine1 = declarantDetails.establishmentAddress.addressLine1.some,
+                      addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+                      addressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                      street = Street.fromLines(
+                        declarantDetails.establishmentAddress.addressLine1.some,
+                        declarantDetails.establishmentAddress.addressLine2
+                      ),
+                      city = declarantDetails.establishmentAddress.addressLine3,
+                      countryCode = declarantDetails.establishmentAddress.countryCode,
+                      postalCode = declarantDetails.establishmentAddress.postalCode,
+                      telephoneNumber = None,
+                      emailAddress = None
+                    ),
+                    contactDetails = Some(
+                      ContactInformation(
+                        contactPerson = contactDetails.contactName,
+                        addressLine1 = contactDetails.addressLine1,
+                        addressLine2 = contactDetails.addressLine2,
+                        addressLine3 = contactDetails.addressLine3,
+                        street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
+                        city = contactDetails.addressLine3,
+                        countryCode = contactDetails.countryCode,
+                        postalCode = contactDetails.postalCode,
+                        telephoneNumber = contactDetails.telephone,
+                        faxNumber = None,
+                        emailAddress = contactDetails.emailAddress
+                      )
+                    )
+                  ).some
+                },
+                consigneeDetails = {
+                  val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails
+                  val contactInformation = consigneeDetails.contactDetails.value
+
+                  MRNInformation(
+                    EORI = consigneeDetails.EORI,
+                    legalName = consigneeDetails.legalName,
+                    establishmentAddress = Address(
+                      contactPerson = None,
+                      addressLine1 = consigneeDetails.establishmentAddress.addressLine1.some,
+                      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+                      addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                      street = Street.fromLines(
+                        consigneeDetails.establishmentAddress.addressLine1.some,
+                        consigneeDetails.establishmentAddress.addressLine2
+                      ),
+                      city = consigneeDetails.establishmentAddress.addressLine3,
+                      countryCode = consigneeDetails.establishmentAddress.countryCode,
+                      postalCode = consigneeDetails.establishmentAddress.postalCode,
+                      telephoneNumber = None,
+                      emailAddress = None
+                    ),
+                    contactDetails = Some(
+                      ContactInformation(
+                        contactPerson = contactInformation.contactName,
+                        addressLine1 = contactInformation.addressLine1,
+                        addressLine2 = contactInformation.addressLine2,
+                        addressLine3 = contactInformation.addressLine3,
+                        street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
+                        city = contactInformation.addressLine3,
+                        countryCode = contactInformation.countryCode,
+                        postalCode = contactInformation.postalCode,
+                        telephoneNumber = contactInformation.telephone,
+                        faxNumber = None,
+                        emailAddress = contactInformation.emailAddress
+                      )
+                    )
+                  ).some
+                },
+                accountDetails = declaration.displayResponseDetail.accountDetails.map(
+                  _.map(accountDetail =>
+                    AccountDetail(
+                      accountType = accountDetail.accountType,
+                      accountNumber = accountDetail.accountNumber,
+                      EORI = accountDetail.eori,
+                      legalName = accountDetail.legalName,
+                      contactDetails = accountDetail.contactDetails.map { contactDetails =>
+                        ContactInformation(
+                          contactPerson = contactDetails.contactName,
+                          addressLine1 = contactDetails.addressLine1,
+                          addressLine2 = contactDetails.addressLine2,
+                          addressLine3 = contactDetails.addressLine3,
+                          street = contactDetails.addressLine4,
+                          city = None,
+                          countryCode = contactDetails.countryCode,
+                          postalCode = contactDetails.postalCode,
+                          telephoneNumber = contactDetails.telephone,
+                          faxNumber = None,
+                          emailAddress = contactDetails.emailAddress
+                        )
+                      }
+                    )
+                  )
+                ),
+                bankDetails = claim.firstNonEmptyBankDetails(declaration.displayResponseDetail.bankDetails),
+                NDRCDetails = claim.getClaimedReimbursements.map { reimbursement =>
+                  NdrcDetails(
+                    paymentMethod = reimbursement.paymentMethod,
+                    paymentReference = reimbursement.paymentReference,
+                    CMAEligible = None,
+                    taxType = reimbursement.taxCode,
+                    amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
+                    claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some,
+                    None
+                  )
+                }.some
+              )
+            ).some
+          ),
+          Symbol("caseType")(Bulk.some),
+          Symbol("declarationMode")(ParentDeclaration.some)
+        )
+      }
+    }
+
+    "map a valid third-party User scheduled claim to TPI05 request" in forAll(
+      genScheduledRejectedGoodsClaim(ClaimantType.User)
+    ) { (claim: ScheduledRejectedGoodsClaim, declaration: ImportDeclaration) =>
+      val tpi05Request = mapper.map((claim, declaration))
+
+      inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
+        common.originatingSystem should be(MDTP)
+
+        details.claimantEORI         should ===(claim.claimantInformation.eori)
+        details.claimantEmailAddress should ===(
+          claim.claimantInformation.contactInformation.emailAddress.map(Email(_)).value
+        )
+
+        details should have(
+          Symbol("CDFPayService")(NDRC),
+          Symbol("newEORI")(None),
+          Symbol("newDAN")(None),
+          Symbol("dateReceived")(ISOLocalDate.now.some),
+          Symbol("customDeclarationType")(CustomDeclarationType.MRN.some),
+          Symbol("claimDate")(ISOLocalDate.now.some),
+          Symbol("claimType")(ClaimType.CE1179.some),
+          Symbol("claimant")(Some(if (claim.claimantType === ClaimantType.Consignee) Importer else Representative)),
+          Symbol("payeeIndicator")(Some(if (claim.payeeType === PayeeType.Consignee) Importer else Representative)),
+          Symbol("claimAmountTotal")(claim.claimedAmountAsString.some),
+          Symbol("reimbursementMethod")(claim.tpi05ReimbursementMethod.some),
+          Symbol("basisOfClaim")(claim.basisOfClaim.toTPI05DisplayString.some),
+          Symbol("goodsDetails")(
+            GoodsDetails(
+              descOfGoods = claim.detailsOfRejectedGoods.some.map(_.take(500)),
+              anySpecialCircumstances = claim.basisOfClaimSpecialCircumstances.map(_.take(500)),
+              dateOfInspection = claim.inspectionDate.toIsoLocalDate.some,
+              atTheImporterOrDeclarantAddress = claim.inspectionAddress.addressType.toTPI05DisplayString.some,
+              inspectionAddress = InspectionAddress(
+                addressLine1 = claim.inspectionAddress.addressLine1,
+                addressLine2 = claim.inspectionAddress.addressLine2,
+                addressLine3 = claim.inspectionAddress.addressLine3,
+                city = claim.inspectionAddress.city,
+                countryCode = claim.inspectionAddress.countryCode,
+                postalCode = claim.inspectionAddress.postalCode
+              ).some
+            ).some
+          ),
+          Symbol("EORIDetails")(
+            EoriDetails(
+              importerEORIDetails = {
+                val maybeConsigneeDetails = Some(declaration.displayResponseDetail.effectiveConsigneeDetails)
+                val maybeContactDetails   = maybeConsigneeDetails.flatMap(_.contactDetails)
+
+                EORIInformation(
+                  EORINumber = maybeConsigneeDetails.map(_.EORI).value,
+                  CDSFullName = maybeConsigneeDetails.map(_.legalName).value,
+                  CDSEstablishmentAddress = Address(
+                    contactPerson = None,
+                    addressLine1 = maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
+                    addressLine2 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2),
+                    addressLine3 = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+                    street = Street.fromLines(
+                      maybeConsigneeDetails.map(_.establishmentAddress.addressLine1),
+                      maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine2)
+                    ),
+                    city = maybeConsigneeDetails.flatMap(_.establishmentAddress.addressLine3),
+                    countryCode = maybeConsigneeDetails
+                      .map(_.establishmentAddress.countryCode)
+                      .getOrElse(Country.uk.code),
+                    postalCode = maybeConsigneeDetails.flatMap(_.establishmentAddress.postalCode),
+                    telephoneNumber = maybeContactDetails.flatMap(_.telephone),
+                    emailAddress = maybeContactDetails.flatMap(_.emailAddress)
+                  ),
+                  contactInformation = ContactInformation(
+                    contactPerson = maybeContactDetails.flatMap(_.contactName),
+                    addressLine1 = maybeContactDetails.flatMap(_.addressLine1),
+                    addressLine2 = maybeContactDetails.flatMap(_.addressLine2),
+                    addressLine3 = maybeContactDetails.flatMap(_.addressLine3),
+                    street = Street.fromLines(
+                      maybeContactDetails.flatMap(_.addressLine1),
+                      maybeContactDetails.flatMap(_.addressLine2)
+                    ),
+                    city = maybeContactDetails.flatMap(_.addressLine3),
+                    countryCode = maybeContactDetails.flatMap(_.countryCode),
+                    postalCode = maybeContactDetails.flatMap(_.postalCode),
+                    telephoneNumber = maybeContactDetails.flatMap(_.telephone),
+                    faxNumber = None,
+                    emailAddress = maybeContactDetails.flatMap(_.emailAddress)
+                  ).some
+                )
+              },
+              agentEORIDetails = {
+                val declarantDetails    = declaration.displayResponseDetail.declarantDetails
+                val maybeContactDetails = declarantDetails.contactDetails
+
+                val maybeTelephone    = maybeContactDetails.flatMap(_.telephone)
+                val maybeEmailAddress = maybeContactDetails.flatMap(_.emailAddress)
+
+                EORIInformation(
+                  EORINumber = declarantDetails.EORI,
+                  CDSFullName = declarantDetails.legalName,
+                  CDSEstablishmentAddress = Address(
+                    contactPerson = claim.claimantInformation.establishmentAddress.contactPerson,
+                    addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
+                    addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
+                    addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
+                    street = claim.claimantInformation.establishmentAddress.street.map(_.take(70)),
+                    city = claim.claimantInformation.establishmentAddress.city,
+                    countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
+                    postalCode = claim.claimantInformation.establishmentAddress.postalCode,
+                    telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
+                    emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
+                  ),
+                  contactInformation = declarantDetails.contactDetails.map { contactDetails =>
+                    val maybeAddress1 = contactDetails.addressLine1
+                    val maybeAddress2 = contactDetails.addressLine2
+                    val maybeAddress3 = contactDetails.addressLine3
+
+                    ContactInformation(
+                      contactPerson = contactDetails.contactName,
+                      addressLine1 = Street.line1(maybeAddress1, maybeAddress2),
+                      addressLine2 = Street.line2(maybeAddress1, maybeAddress2),
+                      addressLine3 = maybeAddress3,
+                      street = Street.fromLines(maybeAddress1, maybeAddress2),
+                      city = maybeAddress3,
+                      countryCode = contactDetails.countryCode,
+                      postalCode = contactDetails.postalCode,
+                      telephoneNumber = maybeTelephone,
+                      faxNumber = None,
+                      emailAddress = maybeEmailAddress
+                    )
+                  }
+                )
+              }
+            ).some
+          ),
+          Symbol("MRNDetails")(
+            List(
+              MrnDetail(
+                MRNNumber = claim.movementReferenceNumber.some,
+                acceptanceDate = AcceptanceDate
+                  .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
+                  .flatMap(_.toTpi05DateString)
+                  .toOption,
+                declarantReferenceNumber = declaration.displayResponseDetail.declarantReferenceNumber,
+                mainDeclarationReference = true.some,
+                procedureCode = declaration.displayResponseDetail.procedureCode.some,
+                declarantDetails = {
+                  val declarantDetails = declaration.displayResponseDetail.declarantDetails
+                  val contactDetails   = declarantDetails.contactDetails.value
+
+                  MRNInformation(
+                    EORI = declarantDetails.EORI,
+                    legalName = declarantDetails.legalName,
+                    establishmentAddress = Address(
+                      contactPerson = None,
+                      addressLine1 = declarantDetails.establishmentAddress.addressLine1.some,
+                      addressLine2 = declarantDetails.establishmentAddress.addressLine2,
+                      addressLine3 = declarantDetails.establishmentAddress.addressLine3,
+                      street = Street.fromLines(
+                        declarantDetails.establishmentAddress.addressLine1.some,
+                        declarantDetails.establishmentAddress.addressLine2
+                      ),
+                      city = declarantDetails.establishmentAddress.addressLine3,
+                      countryCode = declarantDetails.establishmentAddress.countryCode,
+                      postalCode = declarantDetails.establishmentAddress.postalCode,
+                      telephoneNumber = None,
+                      emailAddress = None
+                    ),
+                    contactDetails = Some(
+                      ContactInformation(
+                        contactPerson = contactDetails.contactName,
+                        addressLine1 = contactDetails.addressLine1,
+                        addressLine2 = contactDetails.addressLine2,
+                        addressLine3 = contactDetails.addressLine3,
+                        street = Street.fromLines(contactDetails.addressLine1, contactDetails.addressLine2),
+                        city = contactDetails.addressLine3,
+                        countryCode = contactDetails.countryCode,
+                        postalCode = contactDetails.postalCode,
+                        telephoneNumber = contactDetails.telephone,
+                        faxNumber = None,
+                        emailAddress = contactDetails.emailAddress
+                      )
+                    )
+                  ).some
+                },
+                consigneeDetails = {
+                  val consigneeDetails   = declaration.displayResponseDetail.effectiveConsigneeDetails
+                  val contactInformation = consigneeDetails.contactDetails.value
+
+                  MRNInformation(
+                    EORI = consigneeDetails.EORI,
+                    legalName = consigneeDetails.legalName,
+                    establishmentAddress = Address(
+                      contactPerson = None,
+                      addressLine1 = consigneeDetails.establishmentAddress.addressLine1.some,
+                      addressLine2 = consigneeDetails.establishmentAddress.addressLine2,
+                      addressLine3 = consigneeDetails.establishmentAddress.addressLine3,
+                      street = Street.fromLines(
+                        consigneeDetails.establishmentAddress.addressLine1.some,
+                        consigneeDetails.establishmentAddress.addressLine2
+                      ),
+                      city = consigneeDetails.establishmentAddress.addressLine3,
+                      countryCode = consigneeDetails.establishmentAddress.countryCode,
+                      postalCode = consigneeDetails.establishmentAddress.postalCode,
+                      telephoneNumber = None,
+                      emailAddress = None
+                    ),
+                    contactDetails = Some(
+                      ContactInformation(
+                        contactPerson = contactInformation.contactName,
+                        addressLine1 = contactInformation.addressLine1,
+                        addressLine2 = contactInformation.addressLine2,
+                        addressLine3 = contactInformation.addressLine3,
+                        street = Street.fromLines(contactInformation.addressLine1, contactInformation.addressLine2),
+                        city = contactInformation.addressLine3,
+                        countryCode = contactInformation.countryCode,
+                        postalCode = contactInformation.postalCode,
+                        telephoneNumber = contactInformation.telephone,
+                        faxNumber = None,
+                        emailAddress = contactInformation.emailAddress
+                      )
+                    )
+                  ).some
+                },
+                accountDetails = declaration.displayResponseDetail.accountDetails.map(
+                  _.map(accountDetail =>
+                    AccountDetail(
+                      accountType = accountDetail.accountType,
+                      accountNumber = accountDetail.accountNumber,
+                      EORI = accountDetail.eori,
+                      legalName = accountDetail.legalName,
+                      contactDetails = accountDetail.contactDetails.map { contactDetails =>
+                        ContactInformation(
+                          contactPerson = contactDetails.contactName,
+                          addressLine1 = contactDetails.addressLine1,
+                          addressLine2 = contactDetails.addressLine2,
+                          addressLine3 = contactDetails.addressLine3,
+                          street = contactDetails.addressLine4,
+                          city = None,
+                          countryCode = contactDetails.countryCode,
+                          postalCode = contactDetails.postalCode,
+                          telephoneNumber = contactDetails.telephone,
+                          faxNumber = None,
+                          emailAddress = contactDetails.emailAddress
+                        )
+                      }
+                    )
+                  )
+                ),
+                bankDetails = claim.firstNonEmptyBankDetails(declaration.displayResponseDetail.bankDetails),
+                NDRCDetails = claim.getClaimedReimbursements.map { reimbursement =>
+                  NdrcDetails(
+                    paymentMethod = reimbursement.paymentMethod,
+                    paymentReference = reimbursement.paymentReference,
+                    CMAEligible = None,
+                    taxType = reimbursement.taxCode,
+                    amount = reimbursement.paidAmount.roundToTwoDecimalPlaces.toString(),
+                    claimAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces.toString().some,
+                    None
+                  )
+                }.some
+              )
+            ).some
+          ),
+          Symbol("caseType")(Bulk.some),
+          Symbol("declarationMode")(ParentDeclaration.some)
+        )
+      }
+    }
+
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+        val ndrcDetailsLens = new Lens[ImportDeclaration, Option[
           List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
         ]] {
           override def set(
-            root: DisplayDeclaration,
+            root: ImportDeclaration,
             value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
-          ): DisplayDeclaration =
+          ): ImportDeclaration =
             root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
         }
 
-        forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)) =>
+        forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, ImportDeclaration)) =>
           val value       = random.toString
           val claim       = details._1
           val declaration = details._2
@@ -320,7 +829,7 @@ class ScheduledRejectedGoodsClaimMappingSpec
                 uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
                   paymentMethod = value,
                   paymentReference = value,
-                  cmaEligible = None,
+                  cmaEligible = detail.cmaEligible,
                   taxType = detail.taxType,
                   amount = amount.toString()
                 )
@@ -351,25 +860,25 @@ class ScheduledRejectedGoodsClaimMappingSpec
               root.copy(reimbursementClaims = value)
           }
 
-        val ndrcLens = new Lens[DisplayDeclaration, Option[
+        val ndrcLens = new Lens[ImportDeclaration, Option[
           List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
         ]] {
           override def set(
-            root: DisplayDeclaration,
+            root: ImportDeclaration,
             value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
-          ): DisplayDeclaration =
+          ): ImportDeclaration =
             root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
         }
 
-        forAll { (details: (ScheduledRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
+        forAll { (details: (ScheduledRejectedGoodsClaim, ImportDeclaration), taxCode: TaxCode) =>
           val rejectedGoodsClaim = details._1
-          val displayDeclaration = details._2
+          val declaration        = details._2
 
           val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithCorrect(BigDecimal(8), BigDecimal(1))))
 
           val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim, claims)
 
-          val updatedDeclaration = ndrcLens.set(displayDeclaration, None)
+          val updatedDeclaration = ndrcLens.set(declaration, None)
 
           val tpi05Request = mapper.map((updatedClaim, updatedDeclaration))
 
@@ -378,6 +887,50 @@ class ScheduledRejectedGoodsClaimMappingSpec
               s"Failed to build MRN detail - Cannot find NDRC details for tax code: $taxCode"
             )
           )
+        }
+      }
+
+      "fail to map missing email" in {
+        val rejectedGoodsScheduledData = genScheduledRejectedGoodsClaimAllTypes.sample.get
+        val (claim, declarations)      = rejectedGoodsScheduledData
+        val updatedClaim               = claim
+          .copy(
+            claimantInformation = claim.claimantInformation
+              .copy(
+                contactInformation = claim.claimantInformation.contactInformation
+                  .copy(emailAddress = None)
+              )
+          )
+
+        val tpi05Request = mapper.map((updatedClaim, declarations))
+
+        tpi05Request match {
+          case Left(error) =>
+            error.value should be("Email address is missing")
+          case Right(_)    =>
+            fail("Expected a Left, but got a Right")
+        }
+      }
+
+      "fail to map missing claimant name" in {
+        val rejectedGoodsScheduledData = genScheduledRejectedGoodsClaimAllTypes.sample.get
+        val (claim, declarations)      = rejectedGoodsScheduledData
+        val updatedClaim               = claim
+          .copy(
+            claimantInformation = claim.claimantInformation
+              .copy(
+                contactInformation = claim.claimantInformation.contactInformation
+                  .copy(contactPerson = None)
+              )
+          )
+
+        val tpi05Request = mapper.map((updatedClaim, declarations))
+
+        tpi05Request match {
+          case Left(error) =>
+            error.value should be("Claimant name is missing")
+          case Right(_)    =>
+            fail("Expected a Left, but got a Right")
         }
       }
     }

@@ -43,7 +43,8 @@ object NdrcDetails {
     paymentReference: String,
     paidAmount: BigDecimal,
     claimedAmount: BigDecimal,
-    reimbursementMethod: Option[ReimbursementMethodAnswer]
+    reimbursementMethod: Option[ReimbursementMethodAnswer],
+    cmaEligible: Option[String]
   ): ValidatedNel[Error, NdrcDetails] = (
     Validator.validatePaymentMethod(paymentMethod),
     Validator.validatePaymentReference(paymentReference),
@@ -61,13 +62,13 @@ object NdrcDetails {
       validatedReimbursementMethod
     ) =>
       NdrcDetails(
-        validatedPaymentMethod,
-        validatedPaymentReference,
-        None,
-        validatedTaxCode,
-        validatedPaidAmount,
-        Some(validatedClaimedAmount),
-        validatedReimbursementMethod
+        paymentMethod = validatedPaymentMethod,
+        paymentReference = validatedPaymentReference,
+        CMAEligible = cmaEligible,
+        taxType = validatedTaxCode,
+        amount = validatedPaidAmount,
+        claimAmount = Some(validatedClaimedAmount),
+        reimbursementMethod = validatedReimbursementMethod
       )
   }
 

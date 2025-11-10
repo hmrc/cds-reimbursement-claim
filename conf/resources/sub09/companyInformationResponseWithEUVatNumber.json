@@ -1,0 +1,77 @@
+{
+    "subscriptionDisplayResponse": {
+        "responseCommon": {
+            "status": "OK",
+            "statusText": "Processed Successfully",
+            "processingDate": "2021-01-01T00:00:00Z",
+            "returnParameters": [
+                {
+                    "paramName": "ETMPFORMBUNDLENUMBER",
+                    "paramValue": "090000000000"
+                }
+            ]
+        },
+        "responseDetail": {
+            "EORINo": "GB000000000001",
+            "EORIStartDate": "2009-01-01",
+            "CDSFullName": "FOO BAR LIMITED",
+            "CDSEstablishmentAddress": {
+                "streetAndNumber": "123 WEST CIRCULAR ROAD",
+                "city": "LEEDS",
+                "postalCode": "LS9 7TF",
+                "countryCode": "GB"
+            },
+            "establishmentInTheCustomsTerritoryOfTheUnion": "0",
+            "contactInformation": {
+                "personOfContact": "FOO BAR LIMITED",
+                "sepCorrAddrIndicator": false,
+                "streetAndNumber": "255 NORTHCIRCULAR ROAD LEEDS",
+                "city": "LEEDS",
+                "postalCode": "LS9 7TF",
+                "countryCode": "GB",
+                "emailAddress": "foo.bar@mail.com",
+                "emailVerificationTimestamp": "2021-01-01T00:00:00Z"
+            },
+            "consentToDisclosureOfPersonalData": "0",
+            "shortName": "FOO BAR LIMITED",
+            "dateOfEstablishment": "1998-01-01",
+            "typeOfPerson": "2",
+            "ETMP_Master_Indicator": true,
+            "XI_Subscription": {
+                "XI_EORINo": "XI00000000001",
+                "PBEAddress": {
+                    "pbeAddressLine1": "FOO BAR BELFAST",
+                    "pbeAddressLine2": "303 Airport RD",
+                    "pbeAddressLine3": "Belfast",
+                    "pbePostCode": "BT3 9EJ"
+                },
+                "establishmentInTheCustomsTerritoryOfTheUnion": "1",
+                "XI_VATNumber": "XI00000000",
+                "XI_ConsentToDisclose": "0",
+                "EU_VATNumber": [
+                    {
+                        "countryCode": "BE",
+                        "VATid": "0734428271"
+                    },
+                    {
+                        "countryCode": "FR",
+                        "VATid": "84879687011"
+                    },
+                    {
+                        "countryCode": "IE",
+                        "VATid": "001"
+                    },
+                    {
+                        "countryCode": "PL",
+                        "VATid": "5263281342"
+                    },
+                    {
+                        "countryCode": "ES",
+                        "VATid": "008"
+                    }
+                ],
+                "XI_SICCode": "2014"
+            }
+        }
+    }
+}

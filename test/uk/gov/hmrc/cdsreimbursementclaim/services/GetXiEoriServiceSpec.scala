@@ -38,7 +38,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.test.Helpers.*
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.SubscriptionConnector
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Sub09ReponseGen
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.Eori
 import uk.gov.hmrc.cdsreimbursementclaim.models.sub09.SubscriptionResponse

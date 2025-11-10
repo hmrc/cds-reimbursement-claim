@@ -29,9 +29,7 @@ final case class EmailRequest(
 object EmailRequest {
 
   def apply(details: RequestDetail): Option[EmailRequest] = (
-    details.EORIDetails
-      .flatMap(_.agentEORIDetails.contactInformation)
-      .flatMap(_.contactPerson),
+    details.claimantName,
     details.claimAmountTotal.map(BigDecimal(_))
   ) mapN (EmailRequest(details.claimantEmailAddress, _, _))
 

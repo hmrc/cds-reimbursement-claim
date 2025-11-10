@@ -33,9 +33,10 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
+import uk.gov.hmrc.cdsreimbursementclaim.models.claim.TaxCode
 
 class OverpaymentsMultipleClaimMappingSpec
     extends AnyWordSpec
@@ -50,7 +51,7 @@ class OverpaymentsMultipleClaimMappingSpec
   "The OverpaymentsMultiple claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll {
-      (multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[DisplayDeclaration])) =>
+      (multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[ImportDeclaration])) =>
         val claim        = multipleOverpaymentsData._1
         val declarations = multipleOverpaymentsData._2
         val tpi05Request = mapper.map(multipleOverpaymentsData)
@@ -229,7 +230,7 @@ class OverpaymentsMultipleClaimMappingSpec
                               NdrcDetails(
                                 paymentMethod = details.paymentMethod,
                                 paymentReference = details.paymentReference,
-                                CMAEligible = None,
+                                CMAEligible = details.cmaEligible,
                                 taxType = taxCode,
                                 amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
                                 claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,
@@ -245,6 +246,71 @@ class OverpaymentsMultipleClaimMappingSpec
               }
             )
         }
+    }
+    "fail to map invalid claim amount" in {
+      val multipleOverpaymentsData = genOverpaymentsMultipleClaim.sample.get
+      val (claim, declarations)    = multipleOverpaymentsData
+      val updatedClaim             =
+        claim.copy(reimbursementClaims = Map(claim.leadMrn -> Map(TaxCode.A00 -> BigDecimal(0.00))))
+      val tpi05Request             = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Total reimbursement amount must be greater than zero")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing email" in {
+      val multipleOverpaymentsData = genOverpaymentsMultipleClaim.sample.get
+      val (claim, declarations)    = multipleOverpaymentsData
+      val updatedClaim             = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(emailAddress = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Email address is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map missing claimant name" in {
+      val multipleOverpaymentsData = genOverpaymentsMultipleClaim.sample.get
+      val (claim, declarations)    = multipleOverpaymentsData
+      val updatedClaim             = claim
+        .copy(
+          claimantInformation = claim.claimantInformation
+            .copy(
+              contactInformation = claim.claimantInformation.contactInformation
+                .copy(contactPerson = None)
+            )
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declarations))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Claimant name is missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "throw exception when missing lead declaration" in {
+      val multipleOverpaymentsData = genOverpaymentsMultipleClaim.sample.get
+      val (claim, declarations)    = multipleOverpaymentsData
+
+      an[Exception] shouldBe thrownBy(mapper.map((claim, List.empty)))
     }
   }
 }

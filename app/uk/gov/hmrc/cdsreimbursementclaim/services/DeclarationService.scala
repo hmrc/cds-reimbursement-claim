@@ -28,7 +28,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.GetDeclarationError
 import uk.gov.hmrc.cdsreimbursementclaim.models.dates.ISO8601DateTime
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.request.{DeclarationRequest, OverpaymentDeclarationDisplayRequest, RequestCommon, RequestDetail}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationResponse
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.DeclarationErrorResponse
@@ -44,11 +44,11 @@ import scala.concurrent.{ExecutionContext, Future}
 trait DeclarationService {
   def getDeclaration(mrn: MRN, securityReason: Option[String] = None)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Option[DisplayDeclaration]]
+  ): EitherT[Future, Error, Option[ImportDeclaration]]
 
   def getDeclarationWithErrorCodes(mrn: MRN, securityReason: Option[String] = None)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, GetDeclarationError, DisplayDeclaration]
+  ): EitherT[Future, GetDeclarationError, ImportDeclaration]
 }
 
 @Singleton
@@ -61,7 +61,7 @@ class DefaultDeclarationService @Inject() (
 
   def getDeclaration(mrn: MRN, securityReason: Option[String])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Option[DisplayDeclaration]] = {
+  ): EitherT[Future, Error, Option[ImportDeclaration]] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
@@ -81,9 +81,9 @@ class DefaultDeclarationService @Inject() (
       .subflatMap { response =>
         if (response.status === Status.OK) {
           for {
-            declarationResponse     <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
-            maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
-          } yield maybeDisplayDeclaration
+            declarationResponse    <- response.parseJSON[DeclarationResponse]().leftMap(Error(_))
+            maybeImportDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
+          } yield maybeImportDeclaration
         } else if (response.status == Status.BAD_REQUEST) {
           Right(None)
         } else {
@@ -94,7 +94,7 @@ class DefaultDeclarationService @Inject() (
 
   def getDeclarationWithErrorCodes(mrn: MRN, securityReason: Option[String])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, GetDeclarationError, DisplayDeclaration] = {
+  ): EitherT[Future, GetDeclarationError, ImportDeclaration] = {
     val declarationRequest = DeclarationRequest(
       OverpaymentDeclarationDisplayRequest(
         RequestCommon(
@@ -114,21 +114,21 @@ class DefaultDeclarationService @Inject() (
       .leftMap(_ => GetDeclarationError.unexpectedError)
       .subflatMap { response =>
         if (response.status === Status.OK) {
-          val maybeDisplayDeclaration = for {
-            declarationResponse     <-
+          val maybeImportDeclaration = for {
+            declarationResponse    <-
               response.parseJSON[DeclarationResponse]().leftMap(_ => GetDeclarationError.unexpectedError)
-            maybeDisplayDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
-          } yield maybeDisplayDeclaration
+            maybeImportDeclaration <- declarationTransformerService.toDeclaration(declarationResponse)
+          } yield maybeImportDeclaration
 
-          maybeDisplayDeclaration match {
-            case Right(None)                     => Left(GetDeclarationError.unexpectedError)
-            case Right(Some(displayDeclaration)) => Right(displayDeclaration)
-            case Left(_)                         => Left(GetDeclarationError.unexpectedError)
+          maybeImportDeclaration match {
+            case Right(None)              => Left(GetDeclarationError.unexpectedError)
+            case Right(Some(declaration)) => Right(declaration)
+            case Left(_)                  => Left(GetDeclarationError.unexpectedError)
           }
         } else if (response.status === Status.BAD_REQUEST) {
           response
             .parseJSON[DeclarationErrorResponse]() match {
-            case Left(_)              => GetDeclarationError.unexpectedError.asLeft[DisplayDeclaration]
+            case Left(_)              => GetDeclarationError.unexpectedError.asLeft[ImportDeclaration]
             case Right(errorResponse) =>
               {
                 errorResponse.errorDetail.sourceFaultDetail.detail.toList match {
@@ -136,7 +136,7 @@ class DefaultDeclarationService @Inject() (
                   case first :: Nil if first.startsWith("086") => GetDeclarationError.declarationNotFound
                   case _                                       => GetDeclarationError.unexpectedError
                 }
-              }.asLeft[DisplayDeclaration]
+              }.asLeft[ImportDeclaration]
           }
         } else {
           logger.warn(s"could not get declaration: http status: ${response.status}")

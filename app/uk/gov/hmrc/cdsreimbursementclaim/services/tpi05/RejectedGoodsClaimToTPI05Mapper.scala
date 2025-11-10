@@ -22,7 +22,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
@@ -30,12 +30,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
 class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursementMethodInNDRCDetails: Boolean)
-    extends ClaimToTPI05Mapper[(Claim, List[DisplayDeclaration])]
+    extends ClaimToTPI05Mapper[(Claim, List[ImportDeclaration])]
     with GetEoriDetails[Claim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable", "org.wartremover.warts.Throw"))
   override def map(
-    details: (Claim, List[DisplayDeclaration])
+    details: (Claim, List[ImportDeclaration])
   ): Either[CdsError, EisSubmitClaimRequest] = {
     val claim        = details._1
     val declarations = details._2
@@ -114,12 +114,14 @@ class RejectedGoodsClaimToTPI05Mapper[Claim <: RejectedGoodsClaim](putReimbursem
               .toValidNel(CdsError(s"Cannot find NDRC details for tax code: ${taxCode.value}"))
               .andThen { foundNdrcDetails =>
                 NdrcDetails.buildChecking(
-                  taxCode,
-                  foundNdrcDetails.paymentMethod,
-                  foundNdrcDetails.paymentReference,
-                  BigDecimal(foundNdrcDetails.amount),
-                  claimedAmount.roundToTwoDecimalPlaces,
-                  if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
+                  taxCode = taxCode,
+                  paymentMethod = foundNdrcDetails.paymentMethod,
+                  paymentReference = foundNdrcDetails.paymentReference,
+                  paidAmount = BigDecimal(foundNdrcDetails.amount),
+                  claimedAmount = claimedAmount.roundToTwoDecimalPlaces,
+                  reimbursementMethod =
+                    if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None,
+                  cmaEligible = foundNdrcDetails.cmaEligible
                 )
               }
           }.toList

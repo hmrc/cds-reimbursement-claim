@@ -17,13 +17,13 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.email
 
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 
-class SecuritiesClaimToEmailMapper extends ClaimToEmailMapper[(SecuritiesClaim, DisplayDeclaration)] {
+class SecuritiesClaimToEmailMapper extends ClaimToEmailMapper[(SecuritiesClaim, ImportDeclaration)] {
 
-  override def map(claim: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EmailRequest] = {
+  override def map(claim: (SecuritiesClaim, ImportDeclaration)): Either[CdsError, EmailRequest] = {
     val (securitiesClaim, _) = claim
     for {
       email       <- securitiesClaim.claimantInformation.contactInformation.emailAddress.toRight(

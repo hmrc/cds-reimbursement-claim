@@ -26,7 +26,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.C285
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{NdrcDetails => DeclarationNdrcDetails}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
@@ -35,12 +35,12 @@ import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 // todo CDSR-1795 TPI05 creation and validation - factor out common code
 class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
-    extends ClaimToTPI05Mapper[(SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])]
+    extends ClaimToTPI05Mapper[(SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])]
     with GetEoriDetails[SingleOverpaymentsClaim] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Option2Iterable"))
   override def map(
-    details: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])
+    details: (SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])
   ): Either[CdsError, EisSubmitClaimRequest] = {
     val (claim, declaration, duplicateDeclaration) = details
 
@@ -78,23 +78,23 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
 
   private def getMrnDetails(
     claim: SingleOverpaymentsClaim,
-    displayDeclaration: DisplayDeclaration,
+    declaration: ImportDeclaration,
     mrn: Option[MRN] = None,
     includeAccountDetails: Boolean = true
   ) = {
     val nrdcDetails: List[DeclarationNdrcDetails] =
-      displayDeclaration.displayResponseDetail.ndrcDetails.toList.flatten.sortBy(x => TaxCode.getOrFail(x.taxType))
+      declaration.displayResponseDetail.ndrcDetails.toList.flatten.sortBy(x => TaxCode.getOrFail(x.taxType))
     MrnDetail.build
       .withMrnNumber(mrn.getOrElse(claim.movementReferenceNumber))
-      .withAcceptanceDate(displayDeclaration.displayResponseDetail.acceptanceDate)
-      .withDeclarantReferenceNumber(displayDeclaration.displayResponseDetail.declarantReferenceNumber)
+      .withAcceptanceDate(declaration.displayResponseDetail.acceptanceDate)
+      .withDeclarantReferenceNumber(declaration.displayResponseDetail.declarantReferenceNumber)
       .withWhetherMainDeclarationReference(true)
-      .withProcedureCode(displayDeclaration.displayResponseDetail.procedureCode)
-      .withDeclarantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      .withConsigneeDetails(Some(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails))
-      .withAccountDetails(if (includeAccountDetails) displayDeclaration.displayResponseDetail.accountDetails else None)
+      .withProcedureCode(declaration.displayResponseDetail.procedureCode)
+      .withDeclarantDetails(declaration.displayResponseDetail.declarantDetails)
+      .withConsigneeDetails(Some(declaration.displayResponseDetail.effectiveConsigneeDetails))
+      .withAccountDetails(if (includeAccountDetails) declaration.displayResponseDetail.accountDetails else None)
       .withFirstNonEmptyBankDetails(
-        displayDeclaration.displayResponseDetail.bankDetails,
+        declaration.displayResponseDetail.bankDetails,
         claim.bankAccountDetails
       )
       .withNdrcDetails(
@@ -102,12 +102,14 @@ class OverpaymentsSingleClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: 
           reimbursement <- claim.reimbursements.toList
           ndrcDetails   <- nrdcDetails.filter(_.taxType === reimbursement.taxCode.value)
         } yield NdrcDetails.buildChecking(
-          reimbursement.taxCode,
-          ndrcDetails.paymentMethod,
-          ndrcDetails.paymentReference,
-          BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
-          reimbursement.amount.roundToTwoDecimalPlaces,
-          if (putReimbursementMethodInNDRCDetails) Some(reimbursement.reimbursementMethod) else None
+          taxCode = reimbursement.taxCode,
+          paymentMethod = ndrcDetails.paymentMethod,
+          paymentReference = ndrcDetails.paymentReference,
+          paidAmount = BigDecimal(ndrcDetails.amount).roundToTwoDecimalPlaces,
+          claimedAmount = reimbursement.amount.roundToTwoDecimalPlaces,
+          reimbursementMethod =
+            if (putReimbursementMethodInNDRCDetails) Some(reimbursement.reimbursementMethod) else None,
+          cmaEligible = ndrcDetails.cmaEligible
         )
       )
 

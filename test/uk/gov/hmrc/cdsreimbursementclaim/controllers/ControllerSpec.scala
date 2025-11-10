@@ -38,6 +38,7 @@ import play.api.inject.bind
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.ClaimConnector
 import uk.gov.hmrc.cdsreimbursementclaim.connectors.DeclarationConnector
+import play.api.mvc.WrappedRequest
 
 trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with MockFactory {
 
@@ -114,7 +115,7 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
     super.afterAll()
   }
 
-  def fakeRequestWithJsonBody(body: JsValue) =
+  def fakeRequestWithJsonBody(body: JsValue): WrappedRequest[JsValue] =
     new AuthenticatedUserRequest(
       Fake.user,
       LocalDateTime.now(),

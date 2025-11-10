@@ -19,8 +19,8 @@ package uk.gov.hmrc.cdsreimbursementclaim.models.tpi01
 import cats.implicits.catsSyntaxEq
 
 abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
+
   private val ENTRY_NUMBER = "^[0-9]{9}[a-zA-Z]{1}[0-9]{8}$".r
-//  private val MRN          = "^[0-9]{2}[a-zA-Z]{2}[0-9a-zA-Z]{13}[0-9]{1}$".r
 
   final def convert(
     responseDetail: ResponseDetail,
@@ -30,11 +30,8 @@ abstract class ClaimTransformer[T <: CaseDetails, S <: ClaimItem] {
       .flatMap(mapToCases)
       .getOrElse(Seq.empty)
       .map(fromTpi01Response)
-      .filter((item: ClaimItem) =>
-        item.declarationID.exists(id => !ENTRY_NUMBER.pattern.matcher(id).matches()
-//            && MRN.pattern.matcher(id).matches()
-        )
-      )
+      .filter((item: ClaimItem) => item.declarationID.exists(id => !ENTRY_NUMBER.pattern.matcher(id).matches()))
+
     removeDuplicates(result, _.CDFPayCaseNumber)
   }
 

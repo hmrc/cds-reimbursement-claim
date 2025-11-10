@@ -20,13 +20,13 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.claim.{ClaimantType, Country, Ha
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EoriDetails
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EORIInformation
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.Address
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 
 trait GetEoriDetails[Claim <: HasClaimantInformation] {
 
   final def getEoriDetails(
     claim: Claim,
-    declaration: DisplayDeclaration
+    declaration: ImportDeclaration
   ): EoriDetails = {
 
     val claimantEoriInformation =
@@ -44,7 +44,7 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
             claim.claimantInformation.establishmentAddress.addressLine2
           ),
           addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-          street = claim.claimantInformation.establishmentAddress.street,
+          street = claim.claimantInformation.establishmentAddress.street.map(_.take(70)),
           city = claim.claimantInformation.establishmentAddress.city,
           countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
           postalCode = claim.claimantInformation.establishmentAddress.postalCode,
@@ -61,11 +61,20 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
           agentEORIDetails = EORIInformation.forDeclarant(declaration.displayResponseDetail.declarantDetails)
         )
 
-      case ClaimantType.Declarant | ClaimantType.User =>
+      case ClaimantType.Declarant =>
         EoriDetails(
           importerEORIDetails =
             EORIInformation.forConsignee(declaration.displayResponseDetail.effectiveConsigneeDetails),
           agentEORIDetails = claimantEoriInformation
+        )
+
+      case ClaimantType.User =>
+        EoriDetails(
+          importerEORIDetails =
+            EORIInformation.forConsignee(declaration.displayResponseDetail.effectiveConsigneeDetails),
+          agentEORIDetails = EORIInformation
+            .forDeclarant(declaration.displayResponseDetail.declarantDetails)
+            .copy(CDSEstablishmentAddress = claimantEoriInformation.CDSEstablishmentAddress)
         )
     }
   }

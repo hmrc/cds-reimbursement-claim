@@ -81,7 +81,7 @@ final case class XiSubscription(
   XI_EORINo: String,
   PBEAddress: Option[PbeAddress],
   XI_VATNumber: Option[String],
-  EU_VATNumber: Option[EUVATNumber],
+  EU_VATNumber: Option[Seq[EUVATNumber]],
   XI_ConsentToDisclose: Option[String],
   XI_SICCode: Option[String]
 )
@@ -94,7 +94,7 @@ final case class PbeAddress(
   pbePostCode: Option[String]
 )
 
-final case class EUVATNumber(countryCode: Option[String], VATId: Option[String])
+final case class EUVATNumber(countryCode: Option[String], VATid: Option[String])
 
 final case class EmailAddress(value: String)
 

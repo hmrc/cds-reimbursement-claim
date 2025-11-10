@@ -33,7 +33,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.YesNo.{No, Yes}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{CaseType, ClaimType, CustomDeclarationType, DeclarationMode, ReimbursementMethod}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
@@ -50,7 +50,7 @@ class OverpaymentsMultipleClaimMappingV2Spec
   "The OverpaymentsMultiple claim mapper" should {
 
     "map a valid claim to TPI05 request" in forAll {
-      (multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[DisplayDeclaration])) =>
+      (multipleOverpaymentsData: (MultipleOverpaymentsClaim, List[ImportDeclaration])) =>
         val claim        = multipleOverpaymentsData._1
         val declarations = multipleOverpaymentsData._2
         val tpi05Request = mapper.map(multipleOverpaymentsData)
@@ -223,7 +223,7 @@ class OverpaymentsMultipleClaimMappingV2Spec
                               NdrcDetails(
                                 paymentMethod = details.paymentMethod,
                                 paymentReference = details.paymentReference,
-                                CMAEligible = None,
+                                CMAEligible = details.cmaEligible,
                                 taxType = taxCode,
                                 amount = BigDecimal(details.amount).roundToTwoDecimalPlaces.toString(),
                                 claimAmount = claimedAmount.roundToTwoDecimalPlaces.toString().some,

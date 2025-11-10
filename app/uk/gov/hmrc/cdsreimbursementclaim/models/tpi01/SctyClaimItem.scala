@@ -46,9 +46,12 @@ final case class SctyClaimItem(
 }
 
 object SctyClaimItem extends ClaimTransformer[SCTYCaseDetails, SctyClaimItem] {
-  implicit val format: OFormat[SctyClaimItem]                                 = Json.format[SctyClaimItem]
-  def convert(responseDetail: ResponseDetail): Seq[SctyClaimItem]             =
+
+  implicit val format: OFormat[SctyClaimItem] = Json.format[SctyClaimItem]
+
+  def convert(responseDetail: ResponseDetail): Seq[SctyClaimItem] =
     super.convert(responseDetail, _.SCTYCases)
+
   override def fromTpi01Response(caseDetails: SCTYCaseDetails): SctyClaimItem =
     SctyClaimItem(
       CDFPayCaseNumber = caseDetails.CDFPayCaseNumber,

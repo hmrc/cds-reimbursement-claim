@@ -36,7 +36,7 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.audit.{SubmitClaimEvent, SubmitClaimResponseEvent}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.EisSubmitClaimRequest
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.{Email, EmailRequest}
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen._
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.OverpaymentsClaimGen._
@@ -97,13 +97,12 @@ class ClaimServiceSpec
   implicit val overpaymentsScheduledClaimMapper: OverpaymentsScheduledClaimToTPI05Mapper =
     mock[OverpaymentsScheduledClaimToTPI05Mapper]
 
-  implicit val singleRejectedGoodsClaimMapper
-    : ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])] =
-    mock[ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])]]
+  implicit val singleRejectedGoodsClaimMapper: ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])] =
+    mock[ClaimToTPI05Mapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])]]
 
   implicit val multipleRejectedGoodsClaimMapper
-    : ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
-    mock[ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])]]
+    : ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])] =
+    mock[ClaimToTPI05Mapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])]]
 
   implicit val overpaymentsSingleClaimEmailMapperMock: OverpaymentsSingleClaimToEmailMapper =
     mock[OverpaymentsSingleClaimToEmailMapper]
@@ -115,20 +114,20 @@ class ClaimServiceSpec
     mock[OverpaymentsScheduledClaimToEmailMapper]
 
   implicit val singleRejectedGoodsClaimEmailMapperMock
-    : ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])] =
-    mock[ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[DisplayDeclaration])]]
+    : ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])] =
+    mock[ClaimToEmailMapper[(SingleRejectedGoodsClaim, List[ImportDeclaration])]]
 
   implicit val multipleRejectedGoodsClaimEmailMapperMock
-    : ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])] =
-    mock[ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[DisplayDeclaration])]]
+    : ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])] =
+    mock[ClaimToEmailMapper[(MultipleRejectedGoodsClaim, List[ImportDeclaration])]]
 
   def mockDeclarationRetrieving(mrn: MRN)(
-    displayDeclaration: DisplayDeclaration
-  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, Error, Option[DisplayDeclaration]]] =
+    declaration: ImportDeclaration
+  ): CallHandler3[MRN, Option[String], HeaderCarrier, EitherT[Future, Error, Option[ImportDeclaration]]] =
     (declarationServiceMock
       .getDeclaration(_: MRN, _: Option[String])(_: HeaderCarrier))
       .expects(mrn, *, *)
-      .returning(EitherT.rightT(Some(displayDeclaration)))
+      .returning(EitherT.rightT(Some(declaration)))
 
   def mockClaimMapping[A](claim: A, eis: EisSubmitClaimRequest)(implicit
     claimMapper: ClaimToTPI05Mapper[A]
@@ -228,7 +227,7 @@ class ClaimServiceSpec
         genC285EisRequest
       ) {
         (
-          singleOverpaymentsClaimData: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration]),
+          singleOverpaymentsClaimData: (SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration]),
           eisRequest: EisSubmitClaimRequest
         ) =>
           val (claim, declaration, duplicateDeclaration) = singleOverpaymentsClaimData
@@ -257,7 +256,7 @@ class ClaimServiceSpec
           inAnyOrder {
             mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration).atLeastOnce()
             (overpaymentsSingleClaimMapper
-              .map(_: (SingleOverpaymentsClaim, DisplayDeclaration, Option[DisplayDeclaration])))
+              .map(_: (SingleOverpaymentsClaim, ImportDeclaration, Option[ImportDeclaration])))
               .expects((claim, declaration, duplicateDeclaration))
               .returning(Right(eisRequest))
             (claim.duplicateMovementReferenceNumber, duplicateDeclaration).mapN(
@@ -287,7 +286,7 @@ class ClaimServiceSpec
         genC285EisRequest
       ) {
         (
-          scheduledOverpaymentsClaimData: (ScheduledOverpaymentsClaim, DisplayDeclaration),
+          scheduledOverpaymentsClaimData: (ScheduledOverpaymentsClaim, ImportDeclaration),
           eisRequest: EisSubmitClaimRequest
         ) =>
           val (claim, declaration) = scheduledOverpaymentsClaimData
@@ -317,7 +316,7 @@ class ClaimServiceSpec
             mockDeclarationRetrieving(claim.movementReferenceNumber)(declaration)
 
             (overpaymentsScheduledClaimMapper
-              .map(_: (ScheduledOverpaymentsClaim, DisplayDeclaration)))
+              .map(_: (ScheduledOverpaymentsClaim, ImportDeclaration)))
               .expects((claim, declaration))
               .returning(Right(eisRequest))
 
@@ -342,7 +341,7 @@ class ClaimServiceSpec
 
       "successfully submit a multiple Overpayments claim" in forAll {
         (
-          multipleOverpaymentsClaimData: (MultipleOverpaymentsClaim, List[DisplayDeclaration]),
+          multipleOverpaymentsClaimData: (MultipleOverpaymentsClaim, List[ImportDeclaration]),
           eisRequest: EisSubmitClaimRequest
         ) =>
           val claim                = multipleOverpaymentsClaimData._1
@@ -401,7 +400,7 @@ class ClaimServiceSpec
       "successfully submit a Single Rejected Goods claim" in forAll {
         (
           ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
-          displayDeclaration: DisplayDeclaration,
+          declaration: ImportDeclaration,
           eisRequest: EisSubmitClaimRequest
         ) =>
           val responseJsonBody = Json.parse(
@@ -427,8 +426,8 @@ class ClaimServiceSpec
           )
 
           inSequence {
-            mockDeclarationRetrieving(ce1779ClaimRequest.claim.leadMrn)(displayDeclaration)
-            mockClaimMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), eisRequest)
+            mockDeclarationRetrieving(ce1779ClaimRequest.claim.leadMrn)(declaration)
+            mockClaimMapping((ce1779ClaimRequest.claim, List(declaration)), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
@@ -439,16 +438,18 @@ class ClaimServiceSpec
               submitClaimRequest = ce1779ClaimRequest,
               eisSubmitClaimRequest = eisRequest
             )
-            mockClaimEmailRequestMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), emailRequest)
+            mockClaimEmailRequestMapping((ce1779ClaimRequest.claim, List(declaration)), emailRequest)
             mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Right(()))
           }
 
-          await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)
+          await(claimService.submitSingleRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(
+            submitClaimResponse
+          )
       }
 
       "successfully submit a Multiple Rejected Goods claim" in forAll {
         (
-          details: (MultipleRejectedGoodsClaim, List[DisplayDeclaration]),
+          details: (MultipleRejectedGoodsClaim, List[ImportDeclaration]),
           eisRequest: EisSubmitClaimRequest
         ) =>
           val claim                = details._1
@@ -505,7 +506,7 @@ class ClaimServiceSpec
       "successfully submit a Single Rejected Goods claim even though sending of the confirmation email was not successful" in forAll {
         (
           ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
-          displayDeclaration: DisplayDeclaration,
+          declaration: ImportDeclaration,
           eisRequest: EisSubmitClaimRequest
         ) =>
           val responseJsonBody = Json.parse(
@@ -531,8 +532,8 @@ class ClaimServiceSpec
           )
 
           inSequence {
-            mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(displayDeclaration)
-            mockClaimMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), eisRequest)
+            mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(declaration)
+            mockClaimMapping((ce1779ClaimRequest.claim, List(declaration)), eisRequest)
             mockAuditSubmitClaimEvent(eisRequest)
             mockSubmitClaim(eisRequest)(
               Right(HttpResponse(200, responseJsonBody, Map.empty[String, Seq[String]]))
@@ -543,11 +544,13 @@ class ClaimServiceSpec
               ce1779ClaimRequest,
               eisRequest
             )
-            mockClaimEmailRequestMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), emailRequest)
+            mockClaimEmailRequestMapping((ce1779ClaimRequest.claim, List(declaration)), emailRequest)
             mockSendClaimSubmitConfirmationEmail(emailRequest, submitClaimResponse)(Left(Error("some error")))
           }
 
-          await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(submitClaimResponse)
+          await(claimService.submitSingleRejectedGoodsClaim(ce1779ClaimRequest).value) shouldBe Right(
+            submitClaimResponse
+          )
       }
 
       "return an error" when {
@@ -555,7 +558,7 @@ class ClaimServiceSpec
         "a http response other than 200 OK was received" in forAll {
           (
             ce1779ClaimRequest: RejectedGoodsClaimRequest[SingleRejectedGoodsClaim],
-            displayDeclaration: DisplayDeclaration,
+            declaration: ImportDeclaration,
             eisRequest: EisSubmitClaimRequest
           ) =>
             val errorResponseJsonBody = Json.parse(
@@ -578,8 +581,8 @@ class ClaimServiceSpec
             )
 
             inSequence {
-              mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(displayDeclaration)
-              mockClaimMapping((ce1779ClaimRequest.claim, List(displayDeclaration)), eisRequest)
+              mockDeclarationRetrieving(ce1779ClaimRequest.claim.movementReferenceNumber)(declaration)
+              mockClaimMapping((ce1779ClaimRequest.claim, List(declaration)), eisRequest)
               mockAuditSubmitClaimEvent(eisRequest)
               mockSubmitClaim(eisRequest)(
                 Right(HttpResponse(400, errorResponseJsonBody, Map.empty[String, Seq[String]]))
@@ -592,7 +595,7 @@ class ClaimServiceSpec
               )
             }
 
-            await(claimService.submitRejectedGoodsClaim(ce1779ClaimRequest).value).isLeft shouldBe true
+            await(claimService.submitSingleRejectedGoodsClaim(ce1779ClaimRequest).value).isLeft shouldBe true
         }
 
       }

@@ -32,9 +32,8 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.CaseType.Bulk
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant.{Importer, Representative}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.DeclarationMode.ParentDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{ClaimType, CustomDeclarationType}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
-import uk.gov.hmrc.cdsreimbursementclaim.models.generators.Acc14DeclarationGen.genDisplayDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.RejectedGoodsClaimGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.TaxCodesGen.*
 import uk.gov.hmrc.cdsreimbursementclaim.utils.{BigDecimalOps, Lens}
@@ -53,10 +52,9 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
 
   "The Reject Goods claim mapper" should {
 
-    "map a valid Scheduled claim to TPI05 request" in forAll(
-      genScheduledRejectedGoodsClaim(ClaimantType.Declarant),
-      genDisplayDeclaration
-    ) { (claim: ScheduledRejectedGoodsClaim, declaration: DisplayDeclaration) =>
+    "map a valid Declarant scheduled claim to TPI05 request" in forAll(
+      genScheduledRejectedGoodsClaim(ClaimantType.Declarant)
+    ) { (claim: ScheduledRejectedGoodsClaim, declaration: ImportDeclaration) =>
       val tpi05Request = mapper.map((claim, declaration))
 
       inside(tpi05Request) { case Right(EisSubmitClaimRequest(PostNewClaimsRequest(common, details))) =>
@@ -106,7 +104,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
                   addressLine1 = claim.claimantInformation.establishmentAddress.addressLine1,
                   addressLine2 = claim.claimantInformation.establishmentAddress.addressLine2,
                   addressLine3 = claim.claimantInformation.establishmentAddress.addressLine3,
-                  street = claim.claimantInformation.establishmentAddress.street,
+                  street = claim.claimantInformation.establishmentAddress.street.map(_.take(70)),
                   city = claim.claimantInformation.establishmentAddress.city,
                   countryCode = claim.claimantInformation.establishmentAddress.countryCode.getOrElse(Country.uk.code),
                   postalCode = claim.claimantInformation.establishmentAddress.postalCode,
@@ -297,16 +295,16 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
     "fail with the error" when {
 
       "mapping claim having incorrect NDRC details" in {
-        val ndrcDetailsLens = new Lens[DisplayDeclaration, Option[
+        val ndrcDetailsLens = new Lens[ImportDeclaration, Option[
           List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
         ]] {
           override def set(
-            root: DisplayDeclaration,
+            root: ImportDeclaration,
             value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
-          ): DisplayDeclaration =
+          ): ImportDeclaration =
             root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
         }
-        forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)) =>
+        forAll { (random: UUID, amount: BigDecimal, details: (ScheduledRejectedGoodsClaim, ImportDeclaration)) =>
           val value       = random.toString
           val claim       = details._1
           val declaration = details._2
@@ -319,7 +317,7 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
                 uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails(
                   paymentMethod = value,
                   paymentReference = value,
-                  cmaEligible = None,
+                  cmaEligible = detail.cmaEligible,
                   taxType = detail.taxType,
                   amount = amount.toString()
                 )
@@ -350,24 +348,24 @@ class ScheduledRejectedGoodsClaimMappingV2Spec
               root.copy(reimbursementClaims = value)
           }
 
-        val ndrcLens = new Lens[DisplayDeclaration, Option[
+        val ndrcLens = new Lens[ImportDeclaration, Option[
           List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]
         ]] {
           override def set(
-            root: DisplayDeclaration,
+            root: ImportDeclaration,
             value: Option[List[uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.NdrcDetails]]
-          ): DisplayDeclaration =
+          ): ImportDeclaration =
             root.copy(displayResponseDetail = root.displayResponseDetail.copy(ndrcDetails = value))
         }
-        forAll { (details: (ScheduledRejectedGoodsClaim, DisplayDeclaration), taxCode: TaxCode) =>
+        forAll { (details: (ScheduledRejectedGoodsClaim, ImportDeclaration), taxCode: TaxCode) =>
           val rejectedGoodsClaim = details._1
-          val displayDeclaration = details._2
+          val declaration        = details._2
 
           val claims = Map("eu-duty" -> Map(taxCode -> AmountPaidWithCorrect(BigDecimal(8), BigDecimal(1))))
 
           val updatedClaim = reimbursementClaimsLens.set(rejectedGoodsClaim, claims)
 
-          val updatedDeclaration = ndrcLens.set(displayDeclaration, None)
+          val updatedDeclaration = ndrcLens.set(declaration, None)
 
           val tpi05Request = mapper.map((updatedClaim, updatedDeclaration))
 

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsreimbursementclaim.services.tpi05
 
 import cats.implicits.catsSyntaxOptionId
+import org.scalacheck.Gen
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -25,11 +26,14 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.cdsreimbursementclaim.config.MetaConfig.Platform.MDTP
 import uk.gov.hmrc.cdsreimbursementclaim.models.Error
 import uk.gov.hmrc.cdsreimbursementclaim.models.claim.SecuritiesClaim
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType, ReasonForSecurity}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.ExportedInSingleShipment
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, CustomDeclarationType, ReasonForSecurity, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.{EisSubmitClaimRequest, GoodsDetails, PostNewClaimsRequest}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.DisplayDeclaration
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.ImportDeclaration
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
+import uk.gov.hmrc.cdsreimbursementclaim.models.generators.IdGen.genMRN
 import uk.gov.hmrc.cdsreimbursementclaim.models.generators.SecuritiesClaimGen.*
+import uk.gov.hmrc.cdsreimbursementclaim.models.ids.MRN
 
 class SecuritiesClaimMappingSpec
     extends AnyWordSpec
@@ -43,7 +47,7 @@ class SecuritiesClaimMappingSpec
 
   def isValid(
     claim: SecuritiesClaim,
-    declaration: DisplayDeclaration,
+    declaration: ImportDeclaration,
     result: Either[Error, EisSubmitClaimRequest]
   ): Unit =
     result match {
@@ -110,16 +114,16 @@ class SecuritiesClaimMappingSpec
           }
         detail.claimantAddress.map { address =>
           val contactInformation = claim.claimantInformation.contactInformation
-          address.contactPerson     shouldBe contactInformation.contactPerson
-          address.addressLine1      shouldBe contactInformation.addressLine1
-          address.addressLine2      shouldBe contactInformation.addressLine2
-          address.addressLine3      shouldBe contactInformation.addressLine3
-          address.street            shouldBe contactInformation.street
-          address.city              shouldBe contactInformation.city
-          Some(address.countryCode) shouldBe contactInformation.countryCode
-          address.postalCode        shouldBe contactInformation.postalCode
-          address.telephoneNumber   shouldBe contactInformation.telephoneNumber
-          address.emailAddress      shouldBe contactInformation.emailAddress
+          address.contactPerson          shouldBe contactInformation.contactPerson
+          address.addressLine1           shouldBe contactInformation.addressLine1
+          address.addressLine2           shouldBe contactInformation.addressLine2
+          address.addressLine3           shouldBe contactInformation.addressLine3
+          address.street.map(_.take(70)) shouldBe contactInformation.street.map(_.take(70))
+          address.city                   shouldBe contactInformation.city
+          Some(address.countryCode)      shouldBe contactInformation.countryCode
+          address.postalCode             shouldBe contactInformation.postalCode
+          address.telephoneNumber        shouldBe contactInformation.telephoneNumber
+          address.emailAddress           shouldBe contactInformation.emailAddress
         }
         detail should have(
           Symbol("goodsDetails")(claim.additionalDetails.map(a => GoodsDetails(descOfGoods = Some(a))))
@@ -128,14 +132,14 @@ class SecuritiesClaimMappingSpec
 
   "The Securities claim mapper" should {
     "map a valid Securities claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
-      (details: (SecuritiesClaim, DisplayDeclaration)) =>
+      (details: (SecuritiesClaim, ImportDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map((claim, declaration))
         isValid(claim, declaration, tpi05Request)
     }
 
     "map a valid Securities IPR claim to TPI05 request" in forAll(genSecuritiesClaimAndDeclaration) {
-      (details: (SecuritiesClaim, DisplayDeclaration)) =>
+      (details: (SecuritiesClaim, ImportDeclaration)) =>
         val (claim, declaration) = details
         val tpi05Request         = mapper.map(
           (
@@ -152,7 +156,7 @@ class SecuritiesClaimMappingSpec
 
     "map a valid temporary admission Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val tpi05Request         = mapper.map((claim, declaration))
       isValid(claim, declaration, tpi05Request)
@@ -169,7 +173,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid email in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -188,7 +192,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid contact person in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -207,7 +211,7 @@ class SecuritiesClaimMappingSpec
 
     "fail for an invalid claimant address in Securities claim to TPI05 request" in forAll(
       genTempAdmissionSecuritiesClaimAndDeclaration
-    ) { (details: (SecuritiesClaim, DisplayDeclaration)) =>
+    ) { (details: (SecuritiesClaim, ImportDeclaration)) =>
       val (claim, declaration) = details
       val updatedClaim         = claim
         .copy(
@@ -222,6 +226,154 @@ class SecuritiesClaimMappingSpec
 
       tpi05Request.left.map(_.value should be("Claimant Address could not be parsed: country code is mandatory"))
 
+    }
+
+    "fail when disposal method is multiple shipments but no export MRN provided" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedClaim = claim
+        .copy(
+          reasonForSecurity = ReasonForSecurity.temporaryAdmissions.head,
+          temporaryAdmissionMethodsOfDisposal =
+            Some(List(TemporaryAdmissionMethodOfDisposal.ExportedInMultipleShipments)),
+          exportMovementReferenceNumber = None
+        )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Export MRN must be provided when disposal method is multiple shipments")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when export MRN provided but disposal method doesn't require it" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+      val exportMrn            = genMRN.sample.get
+      val disposalMethods      = Gen
+        .someOf(TemporaryAdmissionMethodOfDisposal.values -- TemporaryAdmissionMethodOfDisposal.requiresMrn)
+        .sample
+        .get
+
+      val updatedClaim = claim.copy(
+        reasonForSecurity = ReasonForSecurity.temporaryAdmissions.head,
+        temporaryAdmissionMethodsOfDisposal = Some(disposalMethods.toList),
+        exportMovementReferenceNumber = Some(List(exportMrn))
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Unexpected export MRN supplied")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when disposal method is missing for temporary admission security" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedClaim = claim.copy(
+        reasonForSecurity = ReasonForSecurity.temporaryAdmissions.head,
+        temporaryAdmissionMethodsOfDisposal = None
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("disposal method missing")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when no security deposits are present" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedDeclaration = declaration.copy(
+        displayResponseDetail = declaration.displayResponseDetail.copy(
+          securityDetails = None
+        )
+      )
+      val tpi05Request       = mapper.map(claim, updatedDeclaration)
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("No security deposits")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map when export MRN must be provided for single shipment" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedClaim = claim.copy(
+        temporaryAdmissionMethodsOfDisposal = Some(List(ExportedInSingleShipment)),
+        exportMovementReferenceNumber = None // Missing/No MRN so triggers error
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Export MRN must be provided when disposal method is single shipment")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail to map when disposal method provided for non-temporary-admission security" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+      val exportMrn            = genMRN.sample.get
+
+      val nonTempAdmissionReason = ReasonForSecurity.values.diff(ReasonForSecurity.temporaryAdmissions).head
+
+      val updatedClaim = claim.copy(
+        reasonForSecurity = nonTempAdmissionReason,
+        temporaryAdmissionMethodsOfDisposal = Some(List(ExportedInSingleShipment)),
+        exportMovementReferenceNumber = Some(List(exportMrn))
+      )
+
+      val tpi05Request = mapper.map((updatedClaim, declaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          error.value should be("Unexpected disposal method for non-temporary-admission security")
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
+    }
+
+    "fail when acceptance date could not be parsed" in {
+      val securitiesData       = genSecuritiesClaimAndDeclaration.sample.get
+      val (claim, declaration) = securitiesData
+
+      val updatedDeclaration = declaration.copy(
+        displayResponseDetail = declaration.displayResponseDetail.copy(
+          acceptanceDate = "Foo"
+        )
+      )
+
+      val tpi05Request = mapper.map((claim, updatedDeclaration))
+
+      tpi05Request match {
+        case Left(error) =>
+          val errorMessage = error.value.toString
+          assert(errorMessage.contains("acceptance date could not be parsed:"))
+        case Right(_)    =>
+          fail("Expected a Left, but got a Right")
+      }
     }
   }
 }

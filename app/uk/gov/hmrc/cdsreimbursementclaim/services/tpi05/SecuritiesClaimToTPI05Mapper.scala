@@ -27,15 +27,15 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.*
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.TemporaryAdmissionMethodOfDisposal.{ExportedInMultipleShipments, ExportedInSingleShipment}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.{Claimant, ExportMRN, ReasonForSecurity, ReimbursementMethod, ReimbursementParty, TemporaryAdmissionMethodOfDisposal}
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.response.{BankAccountDetails, BtaSource, ClaimantDetails, ConsigneeDetails, DeclarantDetails, SecurityDetails, TaxDetails}
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, response}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{ImportDeclaration, response}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 
 import java.time.LocalDate
 
-class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, DisplayDeclaration)] {
+class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, ImportDeclaration)] {
 
-  def map(request: (SecuritiesClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
-    val (claim, displayDeclaration) = request
+  def map(request: (SecuritiesClaim, ImportDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
+    val (claim, declaration) = request
     (for {
       email                                                        <- claim.claimantInformation.contactInformation.emailAddress.toRight(
                                                                         CdsError("Email address is missing")
@@ -45,20 +45,20 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
                                                                       )
       claimantEmail                                                 = Email(email)
       claimedAmount                                                 = claim.securitiesReclaims.flatMap(_._2.map { case (_, value: BigDecimal) => value }).sum
-      declarantDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.declarantDetails)
-      consigneeDetails                                              = mrnInfoFromClaimantDetails(displayDeclaration.displayResponseDetail.effectiveConsigneeDetails)
-      securities                                                    = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      declarantDetails                                              = mrnInfoFromClaimantDetails(declaration.displayResponseDetail.declarantDetails)
+      consigneeDetails                                              = mrnInfoFromClaimantDetails(declaration.displayResponseDetail.effectiveConsigneeDetails)
+      securities                                                    = declaration.displayResponseDetail.securityDetails.toList.flatten
       securityDetails                                              <- getSecurityDetails(securities, claim.securitiesReclaims)
       acceptanceDate                                               <- AcceptanceDate
-                                                                        .fromDisplayFormat(displayDeclaration.displayResponseDetail.acceptanceDate)
+                                                                        .fromDisplayFormat(declaration.displayResponseDetail.acceptanceDate)
                                                                         .toEither
                                                                         .leftMap(x => CdsError(s"acceptance date could not be parsed: $x"))
-      declarantReferenceNumber                                      = displayDeclaration.displayResponseDetail.declarantReferenceNumber
-      btaSource                                                     = displayDeclaration.displayResponseDetail.btaSource
-      btaDueDate                                                    = displayDeclaration.displayResponseDetail.btaDueDate
+      declarantReferenceNumber                                      = declaration.displayResponseDetail.declarantReferenceNumber
+      btaSource                                                     = declaration.displayResponseDetail.btaSource
+      btaDueDate                                                    = declaration.displayResponseDetail.btaDueDate
                                                                         .flatMap(EisBasicDate.parse(_).toOption)
-      accountDetails                                                = displayDeclaration.displayResponseDetail.accountDetails
-      securityDeposits                                              = displayDeclaration.displayResponseDetail.securityDetails.toList.flatten
+      accountDetails                                                = declaration.displayResponseDetail.accountDetails
+      securityDeposits                                              = declaration.displayResponseDetail.securityDetails.toList.flatten
       methodOfDisposals                                            <- (claim.temporaryAdmissionMethodsOfDisposal, claim.exportMovementReferenceNumber) match {
                                                                         case (Some(methods), None) if methods.contains(ExportedInSingleShipment)    =>
                                                                           Left(
@@ -104,9 +104,8 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         else securityDeposits.filter(deposit => claim.securitiesReclaims.exists(_._1 === deposit.securityDepositId))
       securityPaymentDetails                                       <-
         getSecurityPaymentDetails(
-          claim.claimantType,
           claim.bankAccountDetails,
-          displayDeclaration.displayResponseDetail.bankDetails,
+          declaration.displayResponseDetail.bankDetails,
           selectedSecurityDeposits
         )
       (bankDetails, useExistingPaymentDetails, reimbursementMethod) = securityPaymentDetails
@@ -126,7 +125,7 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
         dateClaimReceived = Some(EisBasicDate(LocalDate.now)),
         reasonForSecurity = claim.reasonForSecurity,
         declarationId = DeclarationId(claim.movementReferenceNumber.value),
-        procedureCode = ProcedureCode(displayDeclaration.displayResponseDetail.procedureCode),
+        procedureCode = ProcedureCode(declaration.displayResponseDetail.procedureCode),
         acceptanceDate = acceptanceDate,
         declarantReferenceNumber = declarantReferenceNumber.map(DeclarantReferenceNumber(_)),
         btaSource = btaSource.map(BtaSource(_)),
@@ -155,12 +154,11 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
   }
 
   private def getSecurityPaymentDetails(
-    claimantType: ClaimantType,
     bankAccountDetails: Option[BankAccountDetails],
     maybeBankDetails: Option[response.BankDetails],
     securityDeposits: List[SecurityDetails]
   ): Either[CdsError, (Option[BankDetails], Option[Boolean], Option[ReimbursementMethod])] =
-    getBankDetails(claimantType, bankAccountDetails, maybeBankDetails)
+    getBankDetails(bankAccountDetails, maybeBankDetails)
       .flatMap { implicit bankDetails =>
         securityDeposits.map(_.paymentMethod).distinct match {
           case paymentMethods @ _ :: otherPaymentMethods if otherPaymentMethods.nonEmpty =>
@@ -188,7 +186,6 @@ class SecuritiesClaimToTPI05Mapper extends ClaimToTPI05Mapper[(SecuritiesClaim, 
     }
 
   private def getBankDetails(
-    claimantType: ClaimantType,
     bankAccountDetails: Option[BankAccountDetails],
     maybeBankDetails: Option[response.BankDetails]
   ): Either[CdsError, BankDetails] =

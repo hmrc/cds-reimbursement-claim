@@ -21,16 +21,16 @@ import uk.gov.hmrc.cdsreimbursementclaim.models.dates.TemporalAccessorOps
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim._
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.ClaimType.CE1179
 import uk.gov.hmrc.cdsreimbursementclaim.models.eis.claim.enums.Claimant
-import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayDeclaration, DisplayResponseDetail}
+import uk.gov.hmrc.cdsreimbursementclaim.models.eis.declaration.{DisplayResponseDetail, ImportDeclaration}
 import uk.gov.hmrc.cdsreimbursementclaim.models.email.Email
 import uk.gov.hmrc.cdsreimbursementclaim.models.{Error => CdsError}
 import uk.gov.hmrc.cdsreimbursementclaim.utils.BigDecimalOps
 
 class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetails: Boolean)
-    extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, DisplayDeclaration)]
+    extends ClaimToTPI05Mapper[(ScheduledRejectedGoodsClaim, ImportDeclaration)]
     with GetEoriDetails[ScheduledRejectedGoodsClaim] {
 
-  def map(details: (ScheduledRejectedGoodsClaim, DisplayDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
+  def map(details: (ScheduledRejectedGoodsClaim, ImportDeclaration)): Either[CdsError, EisSubmitClaimRequest] = {
     val claim       = details._1
     val declaration = details._2
     // todo CDSR-1795 TPI05 creation and validation - factor out common code
@@ -94,12 +94,13 @@ class ScheduledRejectedGoodsClaimToTPI05Mapper(putReimbursementMethodInNDRCDetai
       .withNdrcDetails(
         claimedReimbursement.map(reimbursement =>
           NdrcDetails.buildChecking(
-            reimbursement.taxCode,
-            reimbursement.paymentMethod,
-            reimbursement.paymentReference,
-            reimbursement.paidAmount.roundToTwoDecimalPlaces,
-            reimbursement.claimAmount.roundToTwoDecimalPlaces,
-            if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None
+            taxCode = reimbursement.taxCode,
+            paymentMethod = reimbursement.paymentMethod,
+            paymentReference = reimbursement.paymentReference,
+            paidAmount = reimbursement.paidAmount.roundToTwoDecimalPlaces,
+            claimedAmount = reimbursement.claimAmount.roundToTwoDecimalPlaces,
+            reimbursementMethod = if (putReimbursementMethodInNDRCDetails) Some(claim.reimbursementMethod) else None,
+            cmaEligible = None
           )
         )
       )
