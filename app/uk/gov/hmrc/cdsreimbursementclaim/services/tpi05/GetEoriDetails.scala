@@ -75,6 +75,7 @@ trait GetEoriDetails[Claim <: HasClaimantInformation] {
           agentEORIDetails = EORIInformation
             .forDeclarant(declaration.displayResponseDetail.declarantDetails)
             .copy(CDSEstablishmentAddress = claimantEoriInformation.CDSEstablishmentAddress)
+            .copy(contactInformation = claimantEoriInformation.contactInformation)
         )
     }
   }

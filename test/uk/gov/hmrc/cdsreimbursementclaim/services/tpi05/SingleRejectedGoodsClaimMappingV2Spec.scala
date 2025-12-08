@@ -667,25 +667,7 @@ class SingleRejectedGoodsClaimMappingV2Spec
                     telephoneNumber = claim.claimantInformation.establishmentAddress.telephoneNumber,
                     emailAddress = claim.claimantInformation.establishmentAddress.emailAddress
                   ),
-                  contactInformation = declarantDetails.contactDetails.map { contactDetails =>
-                    val maybeAddress1 = contactDetails.addressLine1
-                    val maybeAddress2 = contactDetails.addressLine2
-                    val maybeAddress3 = contactDetails.addressLine3
-
-                    ContactInformation(
-                      contactPerson = contactDetails.contactName,
-                      addressLine1 = Street.line1(maybeAddress1, maybeAddress2),
-                      addressLine2 = Street.line2(maybeAddress1, maybeAddress2),
-                      addressLine3 = maybeAddress3,
-                      street = Street.fromLines(maybeAddress1, maybeAddress2),
-                      city = maybeAddress3,
-                      countryCode = contactDetails.countryCode,
-                      postalCode = contactDetails.postalCode,
-                      telephoneNumber = maybeTelephone,
-                      faxNumber = None,
-                      emailAddress = maybeEmailAddress
-                    )
-                  }
+                  contactInformation = claim.claimantInformation.contactInformation.some
                 )
               }
             ).some
