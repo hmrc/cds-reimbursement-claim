@@ -79,6 +79,7 @@ object CaseStatus {
       case "Resolved-Manual BTA/Refund"        => "Closed"
       case "Open-Extension Granted"            => "In Progress"
       case "Resolved-Withdrawn"                => "Closed"
+      case "Rework-Payment Details"            => "In Progress"
     }
 
   def caseSubStatusScty(caseStatus: String): Option[String] = caseStatus match {
