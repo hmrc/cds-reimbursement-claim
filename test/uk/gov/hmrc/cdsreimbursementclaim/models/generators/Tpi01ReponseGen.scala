@@ -83,7 +83,8 @@ object Tpi01ReponseGen {
     "Resolved-Auto BTA",
     "Resolved-Manual BTA/Refund",
     "Open-Extension Granted",
-    "Resolved-Withdrawn"
+    "Resolved-Withdrawn",
+    "Rework-Payment Details"
   )
 
   def isClosed(caseStatus: String): Boolean =
